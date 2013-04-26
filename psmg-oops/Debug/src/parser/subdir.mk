@@ -1,0 +1,33 @@
+################################################################################
+# Automatically-generated file. Do not edit!
+################################################################################
+
+# Add inputs and outputs from these tool invocations to the build variables 
+CPP_SRCS += \
+../src/parser/data.tab.cpp \
+../src/parser/data.yy.cpp \
+../src/parser/sml.tab.cpp \
+../src/parser/sml.yy.cpp 
+
+OBJS += \
+./src/parser/data.tab.o \
+./src/parser/data.yy.o \
+./src/parser/sml.tab.o \
+./src/parser/sml.yy.o 
+
+CPP_DEPS += \
+./src/parser/data.tab.d \
+./src/parser/data.yy.d \
+./src/parser/sml.tab.d \
+./src/parser/sml.yy.d 
+
+
+# Each subdirectory must supply rules for building sources it contributes
+src/parser/%.o: ../src/parser/%.cpp
+	@echo 'Building file: $<'
+	@echo 'Invoking: GCC C++ Compiler'
+	mpic++ -DDEBUG -I/usr/include/mpi -I/home/s0965328/workspace/oops/include -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	@echo 'Finished building: $<'
+	@echo ' '
+
+
