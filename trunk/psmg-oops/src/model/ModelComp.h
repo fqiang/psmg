@@ -178,8 +178,8 @@ class ModelComp{
 
  private:
 
-  /** Global list of all defined ModelComps */
-  static std::list<ModelComp*> global_list;
+//  /** Global list of all defined ModelComps */
+//  static std::list<ModelComp*> global_list;
 
   /** Number of ModelComps defined */
   static int tt_count;
