@@ -39,7 +39,7 @@ class SyntaxNodeIx : public SyntaxNode {
   vector<SyntaxNode*> sets;
 
   //! The expresson to the right of the ':' (if present)
-  SyntaxNode *qualifier;
+  SyntaxNode* qualifier;
 
   //! List of ModelComp for the indexing sets
 
