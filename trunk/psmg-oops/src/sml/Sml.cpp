@@ -141,3 +141,36 @@ ExpandedModelAbstract* Sml::generate_em2()
 
 	return emRoot;
 }
+
+
+int Sml::createTmpDirIfNotPresent()
+{
+	int err = 0;
+	bool fl_exists;
+	struct stat sbuf;
+	const char *tmpdirname = "tmp";
+
+	fl_exists = !(stat(tmpdirname, &sbuf) == -1);
+
+	if(!fl_exists)
+	{// tmp doesn't exist
+#ifdef HAVE_DIRECT_H
+		err = mkdir(tmpdirname);
+#else
+		err = mkdir(tmpdirname, S_IRWXU);
+#endif
+		if(err)
+			cerr << "ERROR: Failed to create temporary directory '"<< tmpdirname << "'.\n";
+	}
+	else
+	{	// tmp is present
+		// check that it's a directory with RWX permissions
+		bool isusable = S_ISDIR(sbuf.st_mode) && ((sbuf.st_mode & S_IRWXU)== S_IRWXU);
+		if (!isusable)
+		{
+			err = 1;
+			cerr << "ERROR: Cannot use '" << tmpdirname<< "' as temporary directory.\n";
+		}
+	}
+	return err;
+}

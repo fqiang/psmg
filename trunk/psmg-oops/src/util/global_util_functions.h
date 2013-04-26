@@ -25,53 +25,6 @@ class ModelComp;
 class AmplModel;
 void print_mem_usage(string name);
 
-int inline findAndReplace(string& source, const char* find, const char* replace)
-{
-	LOG_PAR("findAndReplace - find["<<find<<"] replace["<<replace<<"]");
-    int num=0;
-    size_t fLen = strlen(find);
-    size_t rLen = strlen(replace);
-
-    for (size_t pos=0; (pos=source.find(find, pos))!=string::npos; pos+=rLen)
-    {
-        num++;
-        source.replace(pos, fLen, replace);
-    }
-    return num;
-}
-
-int inline createTmpDirIfNotPresent()
-{
-	int err = 0;
-	bool fl_exists;
-	struct stat sbuf;
-	const char *tmpdirname = "tmp";
-
-	fl_exists = !(stat(tmpdirname, &sbuf) == -1);
-
-	if(!fl_exists)
-	{// tmp doesn't exist
-#ifdef HAVE_DIRECT_H
-		err = mkdir(tmpdirname);
-#else
-		err = mkdir(tmpdirname, S_IRWXU);
-#endif
-		if(err)
-			cerr << "ERROR: Failed to create temporary directory '"<< tmpdirname << "'.\n";
-	}
-	else
-	{	// tmp is present
-		// check that it's a directory with RWX permissions
-		bool isusable = S_ISDIR(sbuf.st_mode) && ((sbuf.st_mode & S_IRWXU)== S_IRWXU);
-		if (!isusable)
-		{
-			err = 1;
-			cerr << "ERROR: Cannot use '" << tmpdirname<< "' as temporary directory.\n";
-		}
-	}
-	return err;
-}
-
 namespace __gnu_cxx
 {
 	template<> struct hash< std::string >
