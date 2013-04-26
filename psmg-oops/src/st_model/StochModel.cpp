@@ -16,7 +16,7 @@
  */
 
 #include "StochModel.h"
-#include "../util/GlobalVariables.h"
+#include "../sml/GlobalVariables.h"
 #include "../util/global_util_functions.h"
 #include "../model/SyntaxNode.h"
 #include "../model/SyntaxNodeIx.h"

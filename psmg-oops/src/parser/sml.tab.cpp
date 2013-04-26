@@ -88,7 +88,7 @@
    #include "../model/IndexingSet.h"
    #include "../model/AmplModel.h"
    
-   #include "../util/GlobalVariables.h"
+   #include "../sml/GlobalVariables.h"
    #include "../util/global_util_functions.h"
    #include "../st_model/StochModel.h"
    #include "../st_model/StochModelComp.h"

@@ -20,8 +20,8 @@
 #include "../model/AmplModel.h"
 #include "../context/ExpandedModel2.h"
 #include "../context/ModelContext.h"
-#include "../util/GlobalVariables.h"
 #include "../util/global_util_functions.h"
+#include "../sml/GlobalVariables.h"
 #include <iostream>
 #include <sys/stat.h>
 #include <time.h>

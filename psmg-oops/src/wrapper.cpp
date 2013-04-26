@@ -23,7 +23,7 @@
 #include "./sml/Sml.h"
 #include "./oops/sml-oops.h"
 #include "./util/global_util_functions.h"
-#include "./util/GlobalVariables.h"
+#include "./sml/GlobalVariables.h"
 #include "./metric/Statistics.h"
 #include "./context/ExpandedModel2.h"
 #include "oops/parutil.h"

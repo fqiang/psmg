@@ -11,6 +11,7 @@
 #include <fstream>
 #include <string>
 #include "global_util_functions.h"
+#include "../sml/GlobalVariables.h"
 
 
 using namespace std;

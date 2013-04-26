@@ -4,12 +4,15 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../src/sml/GlobalVariables.cpp \
 ../src/sml/Sml.cpp 
 
 OBJS += \
+./src/sml/GlobalVariables.o \
 ./src/sml/Sml.o 
 
 CPP_DEPS += \
+./src/sml/GlobalVariables.d \
 ./src/sml/Sml.d 
 
 
