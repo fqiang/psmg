@@ -1550,28 +1550,7 @@ string SyntaxNode::setOrgSetComp(ModelComp** orgSetComp) {
 
 //End Feng
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/* --------------------------------------------------------------------------
- SyntaxNode::print()
- --------------------------------------------------------------------------- */
-/** Recursively prints the expression rooted at the current node in the
- *  expression tree.
- *
- *  @note use_global_names influences how nodes of type IDREF are printed.
- */
-ostream& operator<<(ostream&s, const SyntaxNode *node) {
-	if (node == NULL)
-		return s;
-	return node->put(s);
-}
-
-ostream& operator<<(ostream&s, const SyntaxNode &node) {
-	if (&node == NULL)
-		return s;
-	return node.put(s);
-}
-
-string print_SyntaxNodesymb(const SyntaxNode *node) {
+string SyntaxNode::print_SyntaxNodesymb(const SyntaxNode *node) {
 	//const ValueNode<long> *inode;
 	const ValueNode* dnode;
 	ostringstream ost;
@@ -1654,7 +1633,7 @@ string print_SyntaxNodesymb(const SyntaxNode *node) {
 /** Traverses down the tree and returns the topmost reference to the keyword
  *  in the Tree.
  */
-SyntaxNode* findKeywordinTree(SyntaxNode *root, int oc) {
+SyntaxNode* SyntaxNode::findKeywordinTree(SyntaxNode *root, int oc) {
 	if (root->getOpCode() == oc)
 		return root;
 
@@ -1700,7 +1679,7 @@ SyntaxNode* findKeywordinTree(SyntaxNode *root, int oc) {
  *       ->values[0] = pointer to entity in model list
  *       ->values[1 - n] = arguments
  */
-SyntaxNode* find_var_ref_in_context(AmplModel *context, SyntaxNode *ref) {
+SyntaxNode* SyntaxNode::find_var_ref_in_context(AmplModel *context, SyntaxNode *ref) {
 	/* 'ref' is a SyntaxNode representing an iditem.
 	 This can be either
 	 - a ID node where values[0] simply points to a name
@@ -1757,7 +1736,7 @@ SyntaxNode* find_var_ref_in_context(AmplModel *context, SyntaxNode *ref) {
 			"--> now Search for matches of " << idNode->id() <<" in current active indexings");
 
 	// see if this matches a dummy variable
-	tmp = find_var_ref_in_indexing(idNode->id());
+	tmp = SyntaxNode::find_var_ref_in_indexing(idNode->id());
 	if (tmp) {
 		LOG("    "<<idNode->id() << " is matched by dummy var in " << *tmp);
 		return ref;
@@ -1819,7 +1798,7 @@ SyntaxNode* find_var_ref_in_context(AmplModel *context, SyntaxNode *ref) {
  *  @return The Indexing expression in which the name occurs (or NULL if there
  *          is no match).
  */
-SyntaxNode* find_var_ref_in_indexing(const string& name) {
+SyntaxNode* SyntaxNode::find_var_ref_in_indexing(const string& name) {
 
 	SyntaxNodeIx *tmp;
 	SyntaxNode *ret = NULL;
@@ -1849,4 +1828,24 @@ void SyntaxNode::calculateBaseValueVector(unsigned long& size) {
 		size += sizeof(SyntaxNode*);
 		(*it)->calculateMemoryUsage(size);
 	}
+}
+
+/* --------------------------------------------------------------------------
+ SyntaxNode::print()
+ --------------------------------------------------------------------------- */
+/** Recursively prints the expression rooted at the current node in the
+ *  expression tree.
+ *
+ *  @note use_global_names influences how nodes of type IDREF are printed.
+ */
+ostream& operator<<(ostream&s, const SyntaxNode *node) {
+	if (node == NULL)
+		return s;
+	return node->put(s);
+}
+
+ostream& operator<<(ostream&s, const SyntaxNode &node) {
+	if (&node == NULL)
+		return s;
+	return node.put(s);
 }

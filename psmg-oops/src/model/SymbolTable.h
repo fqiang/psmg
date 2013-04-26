@@ -20,35 +20,15 @@
 
 #include <list>
 #include <string>
+#include "Entry.h"
 
+using namespace std;
 class ModelComp;
 
 class SymbolTable
 {
 
 public:
-	enum SymType {ST_NONE=0, ST_PARAM, ST_VAR, ST_CONS, ST_OBJ, ST_SET};
-
-	class Entry
-	{
-		private:
-			const std::string name;
-			const SymType type;
-
-		public: // should be private
-			ModelComp *mc;
-
-			Entry(const std::string new_id, const SymType new_type,
-			ModelComp *new_mc) :
-			name(new_id), type(new_type), mc(new_mc) {}
-
-			/** Retrieve the identifier for this entry */
-			const std::string& id() const { return name; }
-
-			/** Whether this entry is of type @a t */
-			bool isType(SymType t) const { return type == t; }
-	};
-
 	SymbolTable();
 	void copy(const SymbolTable& src)
 	{
@@ -62,9 +42,9 @@ public:
 	}
 	virtual ~SymbolTable(){
 	}
-	bool defineSymbol(SymType, char *id, ModelComp *mc);
+	bool defineSymbol(Entry::SymType, char *id, ModelComp *mc);
 	const Entry* findSymbol(const std::string& id) const;
-	std::list<Entry> getListByType(const SymType type) const;
+	list<Entry> getListByType(const Entry::SymType type) const;
 	void calculateMemoryUsage(unsigned long& actual);
 private:
 	static const int n_hash = 100;

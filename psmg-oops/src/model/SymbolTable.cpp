@@ -29,7 +29,7 @@ SymbolTable::SymbolTable()
 /* Note: original symbol table also checked that this variable was not defined
  * in an enclosing scope, rather than just hiding the previously defined
  * variables as we do now. */
-bool SymbolTable::defineSymbol(SymType type, char *id, ModelComp *mc)
+bool SymbolTable::defineSymbol(Entry::SymType type, char *id, ModelComp *mc)
 {
 	/* Calculate hashcode */
 	int hash = hash_function(id) % n_hash;
@@ -50,7 +50,7 @@ bool SymbolTable::defineSymbol(SymType type, char *id, ModelComp *mc)
 	return true;
 }
 
-const SymbolTable::Entry* SymbolTable::findSymbol(const string& id) const
+const Entry* SymbolTable::findSymbol(const string& id) const
 {
    /* Calculate hashcode */
    int hash = hash_function(id.c_str()) % n_hash;
@@ -100,7 +100,7 @@ unsigned long SymbolTable::hash_function(const char *str) const
 	return hash;
 }
 
-list<SymbolTable::Entry> SymbolTable::getListByType(const SymType type) const
+list<Entry> SymbolTable::getListByType(const Entry::SymType type) const
 {
 	list<Entry> result;
 

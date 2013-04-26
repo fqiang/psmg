@@ -604,19 +604,19 @@ AmplModel::findComponent(string id)
  *  It will first search this model's SymbolTable, and if it cannot find
  *  the component it will recurse to its parent node and so on up to the root.
  */
-const SymbolTable::Entry *AmplModel::findComponent(const string& id) const {
-   const SymbolTable::Entry *ent = symbol_table.findSymbol(id);
+const Entry *AmplModel::findComponent(const string& id) const {
+   const Entry *ent = symbol_table.findSymbol(id);
    if (!ent && parent)
      ent = parent->findComponent(id);
    return ent;
 }
 
 /** Returns a list of all objective functions in context */
-list<SymbolTable::Entry> AmplModel::getObjList() const {
-   list<SymbolTable::Entry> result = symbol_table.getListByType(SymbolTable::ST_OBJ);
+list<Entry> AmplModel::getObjList() const {
+   list<Entry> result = symbol_table.getListByType(Entry::ST_OBJ);
    if(parent) {
-      list<SymbolTable::Entry> pres = parent->getObjList();
-      for(list<SymbolTable::Entry>::const_iterator i=pres.begin(); i!=pres.end(); ++i)
+      list<Entry> pres = parent->getObjList();
+      for(list<Entry>::const_iterator i=pres.begin(); i!=pres.end(); ++i)
          result.push_back(*i);
    }
    return result;
