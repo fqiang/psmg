@@ -5,8 +5,8 @@
  *      Author: s0965328
  */
 
-#ifndef UTIL_H_
-#define UTIL_H_
+#ifndef GLOBAL_UTIL_FUNCTION_H_
+#define GLOBAL_UTIL_FUNCTION_H_
 
 #include <stdio.h>
 #include <cassert>
@@ -19,7 +19,6 @@
 #include <fstream>
 #include "CompilerMarco.h"
 #include "../metric/TimeStamp.h"
-#include "GlobalVariables.h"
 
 class ModelComp;
 class AmplModel;

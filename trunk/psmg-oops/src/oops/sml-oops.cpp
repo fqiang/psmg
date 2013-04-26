@@ -30,11 +30,12 @@
 #include "oops/BlockDiagSimpleAlg.h"
 
 #include "../context/ExpandedModel2.h"
-#include "../util/GlobalVariables.h"
+
+#include "../sml/GlobalVariables.h"
+#include "../sml/Sml.h"
 
 #include "OOPSBlock.h"
 #include "sml-oops.h"
-#include "../sml/Sml.h"
 #include <cstdlib>
 #include <cmath>
 #include <iostream>

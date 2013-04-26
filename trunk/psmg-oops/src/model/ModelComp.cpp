@@ -17,7 +17,7 @@
 
 #include "ModelComp.h"
 #include "AmplModel.h"
-#include "../util/GlobalVariables.h" //for GlobalVariables class
+#include "../sml/GlobalVariables.h" //for GlobalVariables class
 #include "SyntaxNode.h"
 #include "SyntaxNodeIx.h"
 #include "SyntaxNodeIDREF.h"

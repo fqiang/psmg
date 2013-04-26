@@ -20,7 +20,7 @@
 #include <fstream>
 #include <string>
 #include "OOPSBlock.h"
-#include "../util/GlobalVariables.h"
+#include "../sml/GlobalVariables.h"
 #include "../util/global_util_functions.h"
 
 using namespace std;

@@ -18,7 +18,7 @@
 #include "Param.h"
 #include "ParamValue.h"
 #include "../parser/data.tab.h"
-#include "../util/GlobalVariables.h"
+#include "../sml/GlobalVariables.h"
 #include "../model/ModelComp.h"
 #include "../model/SyntaxNode.h"
 #include "../model/SyntaxNodeIx.h"

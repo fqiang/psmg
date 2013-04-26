@@ -5,17 +5,14 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
 ../src/util/DummyVariableGenerator.cpp \
-../src/util/GlobalVariables.cpp \
 ../src/util/global_util_functions.cpp 
 
 OBJS += \
 ./src/util/DummyVariableGenerator.o \
-./src/util/GlobalVariables.o \
 ./src/util/global_util_functions.o 
 
 CPP_DEPS += \
 ./src/util/DummyVariableGenerator.d \
-./src/util/GlobalVariables.d \
 ./src/util/global_util_functions.d 
 
 

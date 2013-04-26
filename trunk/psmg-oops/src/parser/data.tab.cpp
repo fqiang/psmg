@@ -77,7 +77,7 @@
 #line 19 "data.tab.ypp"
 
    	#include "../util/global_util_functions.h"
-   	#include "../util/GlobalVariables.h"
+   	#include "../sml/GlobalVariables.h"
    	#include "../context/Set.h"
 	#include "../context/ModelContext.h"
    	#include "../context/Param.h"

@@ -26,7 +26,7 @@
 #include "changeitem.h"
 #include "../parser/sml.tab.h"
 #include "../context/ExpandedModel2.h"
-#include "../util/GlobalVariables.h"
+#include "../sml/GlobalVariables.h"
 #include "../util/global_util_functions.h"
 #include <cassert>
 #include <cctype>
