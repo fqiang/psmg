@@ -72,9 +72,6 @@ class AmplModel{
   /** Name of the block defining this (sub)model */
   std::string name;
 
-  /** Name with ancestors name prepended (excluding root) */
-//  std::string global_name;
-
   int n_vars;      //!< number of variable declarations 
   int n_cons;      //!< number of constraint declarations 
   int n_params;    //!< number of parameter declarations 
