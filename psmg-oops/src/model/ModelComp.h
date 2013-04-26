@@ -171,18 +171,7 @@ class ModelComp{
   void calculateMemoryUsage(unsigned long& size);
   //feng end
 
- protected:
-
-  /** Instance number of ModelComp */
-  int count;
-
  private:
-
-//  /** Global list of all defined ModelComps */
-//  static std::list<ModelComp*> global_list;
-
-  /** Number of ModelComps defined */
-  static int tt_count;
 
   /** Find dependencies for this component */
   void findDependencies(const SyntaxNode *nd);
