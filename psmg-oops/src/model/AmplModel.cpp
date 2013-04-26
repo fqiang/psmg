@@ -43,8 +43,6 @@ using namespace __gnu_cxx;
 list<changeitem> AmplModel::changes; // initialize to empty list
 AmplModel *AmplModel::root = NULL; //initialize root to NULL
 
-extern void modified_write(ostream &fout, ModelComp *comp);
-
 
 /* ---------------------------------------------------------------------------
 AmplModel::AmplModel()
@@ -94,9 +92,6 @@ AmplModel::~AmplModel()
 /* ---------------------------------------------------------------------------
 AmplModel::createExpandedModel2
 ---------------------------------------------------------------------------- */
-static string crush(const string& inst);
-static void getListOfInstances(istream& file, list<string>& li);
-
 ExpandedModelAbstract* AmplModel::createExpandedModel2(ModelContext* context,ExpandedModelAbstract* parent)
 {
 	LOG("createExpandedModel2- Model["<<this->name<<"]");
@@ -211,51 +206,6 @@ ExpandedModelAbstract* AmplModel::createExpandedModel2(ModelContext* context,Exp
 	return em2;
 }
 
-/* ---------------------------------------------------------------------------
-getListOfInstances
---------------------------------------------------------------------------- */
-/* Helper routine: read the set defining statement from the given string
-   extract all the set elements, crush them if mutidimensional and
-   return them in a list   */
-void getListOfInstances(istream& file, list<string>& li) {
-  for(string token=""; token!=":=" && !file.fail(); file >> token);
-  if(file.fail()) {
-    cerr << "Set definition must contain a ':='!" << endl;
-    exit(1);
-  }
-
-  for(char final=' '; !file.fail() && final!=';'; ) {
-     string token;
-     file >> token;
-     final = token.at(token.length()-1);
-     if(final==';') token = token.substr(0,token.length()-1);
-     li.push_back(token);
-     // FIXME: multidimensional?
-  }
-}
-
-/* ---------------------------------------------------------------------------
-crush
----------------------------------------------------------------------------- */
-/** Crushes a set element "(N0,N1)" into "N0N1". */
-string crush(const string& inst) {
-
-  if (inst[0] != '(')
-    return inst;
-
-  size_t last = inst.length() - 1;
-  size_t pos;
-  assert(inst[last] == ')');
-
-  // remove opening and closing brackets
-  string crush = inst.substr(1, last - 1);
-
-  // remove commas
-  while ((pos = crush.find(',')) != string::npos)
-    crush = crush.erase(pos, 1);
-
-  return crush;
-}
 
 /* ---------------------------------------------------------------------------
 AmplModel::print
