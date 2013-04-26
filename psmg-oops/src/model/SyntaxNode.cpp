@@ -73,7 +73,7 @@ SyntaxNode::SyntaxNode(int code, SyntaxNode *val1, SyntaxNode *val2, SyntaxNode*
 		values.push_back(val3);
 	}
 
-	LOG( "SyntaxNode constructor  --- "<<values.size()<<"<- opCode["<<opCode<<"] val1:["<<val1<<"] val2:["<<val2<<"] val3:["<<val3<<"]");
+	LOG("SyntaxNode constructor  --- "<<values.size()<<"<- opCode["<<opCode<<"] val1:["<<val1<<"] val2:["<<val2<<"] val3:["<<val3<<"]");
 }
 
 SyntaxNode::~SyntaxNode() {
@@ -164,10 +164,16 @@ void SyntaxNode::findIDREF(list<ModelComp*>& lmc) const {
 		//				NULL, NULL, NOARG));
 		lmc.push_back(((SyntaxNodeIDREF*) this)->ref);
 	}
-	else {
+	else
+	{
 		for(SyntaxNode::iterator i = begin();i != end();++i)
+		{
 			if (*i)
+			{
 				(*i)->findIDREF(lmc);
+
+			}
+		}
 	}
 }
 
@@ -460,7 +466,7 @@ int SyntaxNode::calculateVarDim() {
 		dim = nodeIdRef->ref->getSetDim();
 	}
 	else {
-		LOG( "opCode["<<this->opCode<<"] was not yet implemented --- calculateVarDim");
+		LOG("opCode["<<this->opCode<<"] was not yet implemented --- calculateVarDim");
 		assert(false);
 	}
 	return dim;
@@ -492,7 +498,7 @@ int SyntaxNode::calculateSetDim() {
 	else if (this->opCode == LBRACE) { //ListSet  a,b,c,d
 		LOG("size -- "<<this->values.size());
 		dim = this->values[0]->calculateSetDim();
-		assert(this->values.size()==1);
+		assert(this->values.size() == 1);
 	}
 	else if (this->opCode == COMMA) { //ListNode
 		dim = this->values[0]->calculateSetDim();
@@ -517,7 +523,7 @@ int SyntaxNode::calculateSetDim() {
 		dim = this->values[1]->calculateSetDim();
 	}
 	else {
-		LOG( "opCode["<<this->opCode<<"] was not yet implemented --- calculateSetDim");
+		LOG("opCode["<<this->opCode<<"] was not yet implemented --- calculateSetDim");
 		assert(false);
 	}
 
@@ -536,7 +542,7 @@ void SyntaxNode::calculateParamIndicies(vector<string>& paramIndiciesDummy, vect
 	}
 	else if (this->opCode == LBRACE) {
 		LOG("this ListSet size["<<this->values.size()<<"]");
-		assert(this->values.size()==1);
+		assert(this->values.size() == 1);
 		this->values[0]->calculateParamIndicies(paramIndiciesDummy, paramIndiciesComp, paramIndiciesMap);
 	}
 	else if (this->opCode == COMMA) {
@@ -555,11 +561,11 @@ void SyntaxNode::calculateParamIndicies(vector<string>& paramIndiciesDummy, vect
 		paramIndiciesComp.push_back(refn->ref);
 		paramIndiciesMap.insert(pair<string, ModelComp*>(idn->id(), refn->ref));
 		LOG("add parameter indices ["<<idn->id()<<"]--->["<<refn->ref->id<<"]");
-		assert(this->values.size()==2);
+		assert(this->values.size() == 2);
 		//should have no more
 	}
 	else {
-		LOG( "opCode["<<this->opCode<<"] was not yet implemented -- calculateNumParamIndicies");
+		LOG("opCode["<<this->opCode<<"] was not yet implemented -- calculateNumParamIndicies");
 		assert(false);
 	}
 }
@@ -589,11 +595,11 @@ Set* SyntaxNode::calculateSetValue(ModelContext* context) {
 		delete right;
 	}
 	else if (this->opCode == LBRACE) {
-		assert(this->values.size()==1);
+		assert(this->values.size() == 1);
 		value = this->values[0]->calculateSetValue(context);
 	}
 	else if (this->opCode == COMMA) {
-		assert(this->values.size()==1);
+		assert(this->values.size() == 1);
 		//so far, the list noly allow 1 in size
 		value = this->values[0]->calculateSetValue(context);
 	}
@@ -607,7 +613,7 @@ Set* SyntaxNode::calculateSetValue(ModelContext* context) {
 		}
 		else if (nodeIdRef->ref->type == TPARAM) {
 			Param* aParam = static_cast<Param*>(context->getCompValue(nodeIdRef->ref));
-			assert(aParam->card==1);
+			assert(aParam->card == 1);
 			int i = aParam->paramValues[""]->value;
 			value = new Set(1, "TMP");
 			ostringstream oss;
@@ -654,9 +660,9 @@ Set* SyntaxNode::calculateSetValue(ModelContext* context) {
 		}
 		else if (this->values[1]->values[0]->opCode == IDREF) {
 			SyntaxNodeIDREF* refn = static_cast<SyntaxNodeIDREF*>(this->values[1]->values[0]);
-			assert(refn->ref->type ==TPARAM);
+			assert(refn->ref->type == TPARAM);
 			Param* aParam = static_cast<Param*>(context->getCompValue(refn->ref));
-			assert(aParam->card==1);
+			assert(aParam->card == 1);
 			end = aParam->paramValues[""]->value;
 			LOG("set end ["<<end<<"]");
 		}
@@ -687,7 +693,7 @@ Set* SyntaxNode::calculateSetValue(ModelContext* context) {
 		value = this->evalSet(context);
 	}
 	else {
-		LOG( "calculateSetValue -- op not yet implmented -- opCode["<<this->opCode<<"]");
+		LOG("calculateSetValue -- op not yet implmented -- opCode["<<this->opCode<<"]");
 		assert(false);
 	}
 	return value;
@@ -710,7 +716,7 @@ Set* SyntaxNode::evalSet(ModelContext* context) {
 	Set* aSet = static_cast<Set*>(context->getCompValue(refn->ref));
 	vector<SetValue*>::iterator it = aSet->setValues_data_order.begin();
 	for(;it != aSet->setValues_data_order.end();it++) {
-		assert((*it)->valueList.size()==1);
+		assert((*it)->valueList.size() == 1);
 		string val = (*it)->valueList.front();
 		LOG("dummy val["<<val<<"]");
 		context->addDummySetValueMapTemp(dummy, refn->ref, val);
@@ -770,7 +776,7 @@ double SyntaxNode::calculateParamValue(hash_map<string, string>& dummyValueMap, 
 		vector<SetValue*>::iterator it = aSet->setValues_data_order.begin();
 		double sumVal = 0;
 		for(;it != aSet->setValues_data_order.end();it++) {
-			assert((*it)->valueList.size()==1);
+			assert((*it)->valueList.size() == 1);
 			string value = (*it)->valueList.front();
 			context->addDummySetValueMapTemp(dummy, refNode->ref, value);
 			sumVal += this->values[1]->evalTerm(dummyValueMap, paramIndicies, context);
@@ -779,9 +785,9 @@ double SyntaxNode::calculateParamValue(hash_map<string, string>& dummyValueMap, 
 		rval = sumVal;
 	}
 	else if (this->opCode == CARD) {
-		assert(this->values.size()==1);
-		assert(this->values[0]->values.size()==1);
-		assert( this->values[0]->values[0]->values[0]->values[0]->opCode == IDREF);
+		assert(this->values.size() == 1);
+		assert(this->values[0]->values.size() == 1);
+		assert(this->values[0]->values[0]->values[0]->values[0]->opCode == IDREF);
 		SyntaxNodeIDREF* refNode = static_cast<SyntaxNodeIDREF*>(this->values[0]->values[0]->values[0]->values[0]);
 		Set* aSet = static_cast<Set*>(context->getCompValue(refNode->ref));
 		rval = (double) aSet->getCard();
@@ -793,7 +799,7 @@ double SyntaxNode::calculateParamValue(hash_map<string, string>& dummyValueMap, 
 		rval = numerator / denominator;
 	}
 	else {
-		LOG( "calculateParamValue ---  opCode["<<this->opCode<<"] not yet implemented");
+		LOG("calculateParamValue ---  opCode["<<this->opCode<<"] not yet implemented");
 		assert(false);
 	}
 	return rval;
@@ -840,9 +846,9 @@ double SyntaxNode::evalTerm(hash_map<string, string>& dummyValueMap, hash_map<st
 	LOG("evalTerm  ---  opCode["<<this->opCode<<"]  "<<this->print());
 	double rval = 0;
 	if (this->opCode == IDREF) {
-		assert(this->values.size()<=2);
+		assert(this->values.size() <= 2);
 		SyntaxNodeIDREF* refn = static_cast<SyntaxNodeIDREF*>(this);
-		assert(refn->ref->type==TPARAM);
+		assert(refn->ref->type == TPARAM);
 		ModelComp* comp = refn->ref;
 		Param* theParam = static_cast<Param*>(context->getCompValue(comp));
 		vector<SyntaxNode*>::iterator it = this->values.begin();
@@ -865,7 +871,7 @@ double SyntaxNode::evalTerm(hash_map<string, string>& dummyValueMap, hash_map<st
 	else if (this->opCode == ORD) {
 		assert(this->values[0]->opCode == LBRACKET);
 		assert(this->values[0]->values[0]->opCode==COMMA);
-		assert(this->values[0]->values[0]->values[0]->opCode==0);
+		assert(this->values[0]->values[0]->values[0]->opCode == 0);
 		assert(this->values[0]->values[0]->values[0]->values[0]->opCode==ID);
 		IDNode* in = static_cast<IDNode*>(this->values[0]->values[0]->values[0]->values[0]);
 		string dummy = in->id();
@@ -874,7 +880,7 @@ double SyntaxNode::evalTerm(hash_map<string, string>& dummyValueMap, hash_map<st
 		rval = (double) (theSet->getSetOrder(dummyValueMap.find(dummy)->second));
 	}
 	else if (this->opCode == 42) {
-		assert(this->values.size()==2);
+		assert(this->values.size() == 2);
 		double left = this->values[0]->calculateParamValue(dummyValueMap, paramIndicies, context);
 		double right = this->values[1]->calculateParamValue(dummyValueMap, paramIndicies, context);
 		rval = left * right;
@@ -893,7 +899,7 @@ void SyntaxNode::foreachSetValue(vector<ModelComp*> comps, vector<string>& dummy
 	vector<SetValue*>::iterator it_setval = aSet->setValues_data_order.begin();
 	for(;it_setval != aSet->setValues_data_order.end();it_setval++) {
 		SetValue* sval = *it_setval;
-		assert( sval->valueList.size()==comps.size()&&comps.size()==dummyVars.size());
+		assert(sval->valueList.size() == comps.size() && comps.size() == dummyVars.size());
 		vector<string>::iterator it_sval = sval->valueList.begin();
 		vector<ModelComp*>::iterator it_comp = comps.begin();
 		vector<string>::iterator it_dummyVar = dummyVars.begin();
@@ -903,7 +909,7 @@ void SyntaxNode::foreachSetValue(vector<ModelComp*> comps, vector<string>& dummy
 
 		vector<double> currJcobs(jcobs.size(), 0);
 		this->values[1]->evalDiff(rowContext, colContext, currJcobs);
-		assert(currJcobs.size()==jcobs.size());
+		assert(currJcobs.size() == jcobs.size());
 		this->plusVector(jcobs, currJcobs, jcobs);
 
 		it_dummyVar = dummyVars.begin();
@@ -926,7 +932,7 @@ void SyntaxNode::findSyntaxNodeChild(SyntaxNode** node, int op) {
 bool SyntaxNode::isDepend(vector<ModelComp*> varComps) {
 	LOG("isDepend -- "<<this->print());
 	if (this->opCode == 0) {
-		assert(this->values.size()==1);
+		assert(this->values.size() == 1);
 		return this->values[0]->isDepend(varComps);
 	}
 	else if (this->opCode == IDREF) {
@@ -979,14 +985,14 @@ void SyntaxNode::handleSum(ModelContext* rowContext, vector<double>& jcobs, Mode
 
 	SyntaxNodeIDREF* consSumRef = static_cast<SyntaxNodeIDREF*>(cons_sum_node->values[1]);
 	if (col_index_node != NULL && consSumRef->ref == static_cast<SyntaxNodeIDREF*>(col_index_node->values[1])->ref) {
-		LOG( "EQUAL - CONS SUM Indexing["<<cons_sum_node->print()<<"] Col Model Indexing["<<col_index_node->print()<<"]");
+		LOG("EQUAL - CONS SUM Indexing["<<cons_sum_node->print()<<"] Col Model Indexing["<<col_index_node->print()<<"]");
 		string dummyVar = (colContext->dummySetMap.begin())->first;
 		rowContext->addDummySetValueMapTemp(dummyVar, (colContext->dummySetMap.begin())->second, (colContext->dummyValueMap.begin())->second);
 		this->values[1]->evalDiff(rowContext, colContext, jcobs);
 		rowContext->removeDummySetValueMapTemp(dummyVar);
 	}
 	else {
-		LOG( "NOT - CONS SUM Indexing["<<cons_sum_node->print()<<"] Col Model Indexing["<<col_index_node->print()<<"]");
+		LOG("NOT - CONS SUM Indexing["<<cons_sum_node->print()<<"] Col Model Indexing["<<col_index_node->print()<<"]");
 		if (this->values[1]->isDepend(colEm2->localVarComps)) {
 			vector<ModelComp*> comps;
 			Set* aSet = NULL;
@@ -998,13 +1004,13 @@ void SyntaxNode::handleSum(ModelContext* rowContext, vector<double>& jcobs, Mode
 			if (!rowContext->getCalcTempSet(hashKey, comps, &aSet, dummyVars)) {
 				this->values[0]->calcTempSetComp(rowContext, comps, &aSet, dummyVars);
 				LOG("sum { dummyVar } over "<<aSet->toString());
-				LOG( "-- Add Temp Set - hashKey["<<hashKey<<"] overSet "<<aSet->toString());
+				LOG("-- Add Temp Set - hashKey["<<hashKey<<"] overSet "<<aSet->toString());
 				rowContext->addCalcTempSet(hashKey, comps, aSet, dummyVars);
 			}
 			vector<SetValue*>::iterator it_setval = aSet->setValues_data_order.begin();
 			for(;it_setval != aSet->setValues_data_order.end();it_setval++) {
 				SetValue* sval = *it_setval;
-				assert( sval->valueList.size()==comps.size()&&comps.size()==dummyVars.size());
+				assert(sval->valueList.size() == comps.size() && comps.size() == dummyVars.size());
 				vector<string>::iterator it_sval = sval->valueList.begin();
 				vector<ModelComp*>::iterator it_comp = comps.begin();
 				vector<string>::iterator it_dummyVar = dummyVars.begin();
@@ -1014,7 +1020,7 @@ void SyntaxNode::handleSum(ModelContext* rowContext, vector<double>& jcobs, Mode
 
 				vector<double> currJcobs(jcobs.size(), 0);
 				this->values[1]->evalDiff(rowContext, colContext, currJcobs);
-				assert(currJcobs.size()==jcobs.size());
+				assert(currJcobs.size() == jcobs.size());
 				this->plusVector(jcobs, currJcobs, jcobs);
 
 				it_dummyVar = dummyVars.begin();
@@ -1024,7 +1030,7 @@ void SyntaxNode::handleSum(ModelContext* rowContext, vector<double>& jcobs, Mode
 			}
 		}
 		else {
-			LOG( "["<<this->values[1]->print()<<"] not depend on ["<<colEm2->model->name<<"]'s localvar");
+			LOG("["<<this->values[1]->print()<<"] not depend on ["<<colEm2->model->name<<"]'s localvar");
 		}
 	}
 }
@@ -1058,9 +1064,9 @@ void SyntaxNode::getVarKey(string& varKey, SyntaxNodeIDREF* refn, ModelContext* 
 }
 
 void SyntaxNode::evalDiff(ModelContext* rowContext, ModelContext* colContext, vector<double>& jcobs) {
-	LOG( "evalDiff --- opCode["<<this->opCode<<"] -- jcobs.size["<<jcobs.size()<<"] -- "<<this->print());
+	LOG("evalDiff --- opCode["<<this->opCode<<"] -- jcobs.size["<<jcobs.size()<<"] -- "<<this->print());
 	if (this->opCode == ASSIGN) {
-		assert(this->values.size()==2);
+		assert(this->values.size() == 2);
 		this->values[0]->evalDiff(rowContext, colContext, jcobs);
 		//right hand side ignored for diff calculation
 	}
@@ -1073,12 +1079,12 @@ void SyntaxNode::evalDiff(ModelContext* rowContext, ModelContext* colContext, ve
 			this->negateVector(jcobs);
 		}
 		else {
-			assert(this->values.size()==2);
+			assert(this->values.size() == 2);
 			vector<double> rightJcobs(jcobs.size(), 0);
 			vector<double> leftJcobs(jcobs.size(), 0);
 			this->values[0]->evalDiff(rowContext, colContext, leftJcobs);
 			this->values[1]->evalDiff(rowContext, colContext, rightJcobs);
-			assert( jcobs.size() == leftJcobs.size() && leftJcobs.size() == rightJcobs.size());
+			assert(jcobs.size() == leftJcobs.size() && leftJcobs.size() == rightJcobs.size());
 			this->minusVector(leftJcobs, rightJcobs, jcobs);
 		}
 	}
@@ -1087,12 +1093,12 @@ void SyntaxNode::evalDiff(ModelContext* rowContext, ModelContext* colContext, ve
 			this->values[0]->evalDiff(rowContext, colContext, jcobs);
 		}
 		else {
-			assert(this->values.size()==2);
+			assert(this->values.size() == 2);
 			vector<double> leftJcobs(jcobs.size(), 0);
 			vector<double> rightJcobs(jcobs.size(), 0);
 			this->values[0]->evalDiff(rowContext, colContext, leftJcobs);
 			this->values[1]->evalDiff(rowContext, colContext, rightJcobs);
-			assert( jcobs.size() == leftJcobs.size() && leftJcobs.size() == rightJcobs.size());
+			assert(jcobs.size() == leftJcobs.size() && leftJcobs.size() == rightJcobs.size());
 			this->plusVector(leftJcobs, rightJcobs, jcobs);
 		}
 	}
@@ -1118,7 +1124,7 @@ void SyntaxNode::evalDiff(ModelContext* rowContext, ModelContext* colContext, ve
 				ModelComp* varComp = *it_mc;
 				if (varComp == comp) {
 					if (!currVarKeyReady) {
-						LOG( "["<<varComp->id<<"] matches - now calculate varKey");
+						LOG("["<<varComp->id<<"] matches - now calculate varKey");
 						this->getVarKey(currVarKey, refn, rowContext);
 						currVarKeyReady = true;
 						LOG("current variable key - var_key["<<currVarKey<<"]");
@@ -1132,10 +1138,10 @@ void SyntaxNode::evalDiff(ModelContext* rowContext, ModelContext* colContext, ve
 						if (varKey.compare(currVarKey) == 0) {
 							*it_jcobs = 1;
 							found = true;
-							LOG( "["<<varComp->id<<"] matches ["<<varKey<<"] matches ");
+							LOG("["<<varComp->id<<"] matches ["<<varKey<<"] matches ");
 						}
 						else {
-							LOG( "["<<varComp->id<<"] matches ["<<varKey<<"] not match ");
+							LOG("["<<varComp->id<<"] matches ["<<varKey<<"] not match ");
 							*it_jcobs = 0;
 						}
 						it_jcobs++;
@@ -1143,7 +1149,7 @@ void SyntaxNode::evalDiff(ModelContext* rowContext, ModelContext* colContext, ve
 					}
 				}
 				else {
-					LOG( "["<<varComp->id<<"] not match - go to next varComp -- card["<<(*it_var)->card<<"]");
+					LOG("["<<varComp->id<<"] not match - go to next varComp -- card["<<(*it_var)->card<<"]");
 					for(int j = 0;j < (*it_var)->card;j++, it_jcobs++) {
 						*it_jcobs = 0;
 					}
@@ -1160,13 +1166,13 @@ void SyntaxNode::evalDiff(ModelContext* rowContext, ModelContext* colContext, ve
 	}
 	else if (this->opCode == 42) //42 is times -- handles only linear case
 			{
-		assert(this->values.size()==2);
+		assert(this->values.size() == 2);
 		vector<double> leftJcobs(jcobs.size(), 0);
 		vector<double> rightJcobs(jcobs.size(), 0);
 		this->values[0]->evalDiff(rowContext, colContext, leftJcobs);
 		this->values[1]->evalDiff(rowContext, colContext, rightJcobs);
-		assert( jcobs.size() == leftJcobs.size() && leftJcobs.size() == rightJcobs.size());
-		assert(this->isZeroVector(leftJcobs)||this->isZeroVector(rightJcobs));
+		assert(jcobs.size() == leftJcobs.size() && leftJcobs.size() == rightJcobs.size());
+		assert(this->isZeroVector(leftJcobs) || this->isZeroVector(rightJcobs));
 		if (this->isZeroVector(leftJcobs) && !this->isZeroVector(rightJcobs)) {
 			double val = this->values[0]->evalTerm(rowContext);
 			this->multVectorScalar(rightJcobs, val, jcobs);
@@ -1186,7 +1192,7 @@ void SyntaxNode::evalDiff(ModelContext* rowContext, ModelContext* colContext, ve
 
 	}
 	else {
-		LOG( " -- opCode["<<opCode<<"] is not implmeneted yet for automatic differentiation!");
+		LOG(" -- opCode["<<opCode<<"] is not implmeneted yet for automatic differentiation!");
 		assert(false);
 	}
 }
@@ -1270,7 +1276,7 @@ double SyntaxNode::evalRhs(ModelContext* context) {
 void SyntaxNode::calcTempSetComp(ModelContext* context, vector<ModelComp*>& comps, Set** theSet, vector<string>& dummyNames) {
 	LOG("calcTempSetComp --- opCode["<<this->opCode<<"]  "<<this->print());
 	if (this->opCode == LBRACE) {
-		assert(this->values.size()==1);
+		assert(this->values.size() == 1);
 		this->values[0]->calcTempSetComp(context, comps, theSet, dummyNames);
 	}
 	else if (this->opCode == IN) //the simple only one dimension case.
@@ -1279,7 +1285,7 @@ void SyntaxNode::calcTempSetComp(ModelContext* context, vector<ModelComp*>& comp
 		ModelComp* aComp = static_cast<SyntaxNodeIDREF*>(this->values[1])->ref;
 		Set* aSet = NULL;
 		Set* setCopy = NULL;
-		assert(this->values[1]->values.size()==0);
+		assert(this->values[1]->values.size() == 0);
 		aSet = static_cast<Set*>(context->getCompValue(aComp));
 
 		//creating set copy
@@ -1288,7 +1294,7 @@ void SyntaxNode::calcTempSetComp(ModelContext* context, vector<ModelComp*>& comp
 		//non copy version
 		*theSet = aSet;
 
-		assert((*theSet)->dim==1);
+		assert((*theSet)->dim == 1);
 		comps.push_back(aComp);
 		dummyNames.push_back(dummyName);
 
@@ -1320,7 +1326,7 @@ void SyntaxNode::calcTempSetComp(ModelContext* context, vector<ModelComp*>& comp
 		dummyNames.push_back(dummyName);
 	}
 	else if (this->opCode == COMMA) {
-		assert(this->values.size()<=3 && this->values.size()!=0);
+		assert(this->values.size() <= 3 && this->values.size() != 0);
 
 		ExpandedModel2* em2 = static_cast<ExpandedModel2*>(context->em);
 		vector<ExpandedModel2*> em2LevelList;
@@ -1329,7 +1335,7 @@ void SyntaxNode::calcTempSetComp(ModelContext* context, vector<ModelComp*>& comp
 			LOG("COMMA List -- handling ["<<(*it)->print()<<"]");
 			(*it)->calculateCompsDummyNames(context, comps, dummyNames);
 		}
-		assert( comps.size()==this->values.size()&&comps.size()==dummyNames.size());
+		assert(comps.size() == this->values.size() && comps.size() == dummyNames.size());
 
 		*theSet = new Set(this->values.size(), "TMP_UP" + context->moveUpLevel);
 		for(vector<ExpandedModel2*>::iterator em2LevelIt = em2LevelList.begin();em2LevelIt != em2LevelList.end();em2LevelIt++) {
@@ -1348,7 +1354,7 @@ void SyntaxNode::calculateCompsDummyNames(ModelContext* context, vector<ModelCom
 	ModelComp* aComp = static_cast<SyntaxNodeIDREF*>(this->values[1])->ref;
 	comps.push_back(aComp);
 	dummyNames.push_back(dummyName);
-	LOG( "calculateCompsDummyNames -- adding ModelComp["<<aComp->id<<"] dummyName["<<dummyName<<"]");
+	LOG("calculateCompsDummyNames -- adding ModelComp["<<aComp->id<<"] dummyName["<<dummyName<<"]");
 }
 
 void SyntaxNode::calculateSet(ModelContext* context, vector<ModelComp*>& comps, vector<string>& dummyNames, Set* theSet) {
@@ -1358,7 +1364,7 @@ void SyntaxNode::calculateSet(ModelContext* context, vector<ModelComp*>& comps, 
 	for(vector<string>::iterator it = dummyNames.begin();it != dummyNames.end();it++) {
 		string dummyName = *it;
 		string dummyVal = context->getDummyValue(dummyName);
-		LOG( "calculateSet -- dummyName["<<dummyName<<"]  --->  dummyVal["<<dummyVal<<"]");
+		LOG("calculateSet -- dummyName["<<dummyName<<"]  --->  dummyVal["<<dummyVal<<"]");
 		valueList.push_back(dummyVal);
 	}
 	theSet->addSetValue(new SetValue(valueList));
@@ -1399,7 +1405,7 @@ bool SyntaxNode::evalBool(ModelContext* context) {
 		Set* aSet = static_cast<Set*>(context->getCompValue(refn->ref));
 		vector<SetValue*>::iterator it = aSet->setValues_data_order.begin();
 		for(;it != aSet->setValues_data_order.end();it++) {
-			assert((*it)->valueList.size()==1);
+			assert((*it)->valueList.size() == 1);
 			int r1 = atoi((*it)->valueList.front().c_str());
 			LOG("--- value for r1["<<r1<<"]");
 			if (r0 == r1) {
@@ -1431,7 +1437,7 @@ double SyntaxNode::evalTerm(ModelContext* context) {
 	double rval;
 	if (this->opCode == IDREF) {
 		SyntaxNodeIDREF* refn = static_cast<SyntaxNodeIDREF*>(this);
-		assert(refn->ref->type==TPARAM);
+		assert(refn->ref->type == TPARAM);
 		ModelComp* comp = refn->ref;
 		Param* theParam = static_cast<Param*>(context->getCompValue(comp));
 
@@ -1462,7 +1468,7 @@ double SyntaxNode::evalTerm(ModelContext* context) {
 	else if (this->opCode == ORD) {
 		assert(this->values[0]->opCode == LBRACKET);
 		assert(this->values[0]->values[0]->opCode==COMMA);
-		assert(this->values[0]->values[0]->values[0]->opCode==0);
+		assert(this->values[0]->values[0]->values[0]->opCode == 0);
 		assert(this->values[0]->values[0]->values[0]->values[0]->opCode==ID);
 		IDNode* in = static_cast<IDNode*>(this->values[0]->values[0]->values[0]->values[0]);
 		string dummy = in->id();
@@ -1475,19 +1481,19 @@ double SyntaxNode::evalTerm(ModelContext* context) {
 	}
 
 	else if (this->opCode == LSBRACKET) {
-		assert(this->values.size()==2);
+		assert(this->values.size() == 2);
 		SyntaxNodeIDREF* refn = static_cast<SyntaxNodeIDREF*>(this->values[0]);
-		assert(refn->ref->type==TPARAM);
+		assert(refn->ref->type == TPARAM);
 		ModelComp* comp = refn->ref;
 		Param* aParam = static_cast<Param*>(context->getCompValue(comp));
 
 		assert(this->values[1]->opCode == COMMA);
-		assert(this->values[1]->values.size()==1);
+		assert(this->values[1]->values.size() == 1);
 		IDNode* idn = static_cast<IDNode*>(this->values[1]->values[0]);
 		string dummyVar = idn->id();
 		string dummyVal = context->getDummyValue(dummyVar);
 		rval = aParam->findParamValue(dummyVal);
-		LOG( "aParam["<<aParam->getName()<<"] dummy["<<idn->id()<<"] dummyVal["<<dummyVal<<"] --> rval["<<rval<<"]");
+		LOG("aParam["<<aParam->getName()<<"] dummy["<<idn->id()<<"] dummyVal["<<dummyVal<<"] --> rval["<<rval<<"]");
 	}
 	else if (this->opCode == ID) {
 		IDNode* idn = static_cast<IDNode*>(this);
@@ -1507,16 +1513,16 @@ double SyntaxNode::evalTerm(ModelContext* context) {
 		rval = vn->value;
 	}
 	else if (this->opCode == LBRACKET) {
-		assert(this->values.size()==1);
+		assert(this->values.size() == 1);
 		rval = this->values.front()->evalTerm(context);
 	}
 	else if (this->opCode == COMMA) {
-		assert(this->values.size()==1);
+		assert(this->values.size() == 1);
 		rval = this->values.front()->evalTerm(context);
 	}
 	else if (this->opCode == 43) //for +
 			{
-		assert(this->values.size()==2);
+		assert(this->values.size() == 2);
 		double left = this->values.at(0)->evalTerm(context);
 		double right = this->values.at(1)->evalTerm(context);
 		rval = left + right;
@@ -1537,13 +1543,13 @@ double SyntaxNode::evalTerm(ModelContext* context) {
 	}
 	else if (this->opCode == 42) //for *
 			{
-		assert(this->values.size()==2);
+		assert(this->values.size() == 2);
 		double left = this->values.at(0)->evalTerm(context);
 		double right = this->values.at(1)->evalTerm(context);
 		rval = left * right;
 	}
 	else {
-		LOG( "evalTerm -- single -- opCode["<<this->opCode<<"] not yet implmemented -- value_size["<<this->values.size()<<"]");
+		LOG("evalTerm -- single -- opCode["<<this->opCode<<"] not yet implmemented -- value_size["<<this->values.size()<<"]");
 		assert(false);
 	}
 	LOG("evalTerm -- rval["<<rval<<"]");
@@ -1555,7 +1561,7 @@ string SyntaxNode::setOrgSetComp(ModelComp** orgSetComp) {
 	string dummy = static_cast<IDNode*>(this->values[0])->id();
 	*orgSetComp = static_cast<SyntaxNodeIDREF*>(this->values[1])->ref;
 	LOG(""<<static_cast<SyntaxNodeIDREF*>(this->values[1])->ref);
-	LOG( "end setOrgSetComp - dummy["<<dummy<<"] ref["<<(*orgSetComp)->id<<"|"<<*orgSetComp<<"]");
+	LOG("end setOrgSetComp - dummy["<<dummy<<"] ref["<<(*orgSetComp)->id<<"|"<<*orgSetComp<<"]");
 	return dummy;
 }
 
@@ -1743,7 +1749,7 @@ SyntaxNode* SyntaxNode::find_var_ref_in_context(AmplModel *context, SyntaxNode *
 			stochparent = idNode->getStochParent();
 	}
 
-	LOG( "--> now Search for matches of " << idNode->id() <<" in current active indexings");
+	LOG("--> now Search for matches of " << idNode->id() <<" in current active indexings");
 
 	// see if this matches a dummy variable
 	tmp = SyntaxNode::find_var_ref_in_indexing(idNode->id());
@@ -1758,7 +1764,7 @@ SyntaxNode* SyntaxNode::find_var_ref_in_context(AmplModel *context, SyntaxNode *
 
 	// ret could be NULL if it is actually a STAGE or NODE dummy variable
 	if (!ret) {
-		LOG( "--> not found in either current index or current context's modelComp");
+		LOG("--> not found in either current index or current context's modelComp");
 		if (argNode) {
 			cerr << "dummy index of stageset or nodeset and argNode=true not "
 					"yet handled!" << endl;
@@ -1768,7 +1774,7 @@ SyntaxNode* SyntaxNode::find_var_ref_in_context(AmplModel *context, SyntaxNode *
 	}
 
 	if (argNode) {
-		LOG( "Adding argument list to node: " << *argNode);
+		LOG("Adding argument list to node: " << *argNode);
 		//free(idNode->values); // jdh - what does this do?
 		for(ListNode::iterator i = argNode->begin();i != argNode->end();++i)
 			ret->push_back(*i);

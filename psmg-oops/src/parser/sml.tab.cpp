@@ -87,11 +87,12 @@
    #include "../model/CompositeSet.h"
    #include "../model/IndexingSet.h"
    #include "../model/AmplModel.h"
+  
+   #include "../st_model/StochModel.h"
+   #include "../st_model/StochModelComp.h"
    
    #include "../sml/GlobalVariables.h"
    #include "../util/global_util_functions.h"
-   #include "../st_model/StochModel.h"
-   #include "../st_model/StochModelComp.h"
 
    #ifdef HAVE_DIRECT_H
    #include <direct.h> // for chdir() under MinGW
@@ -127,7 +128,7 @@
 
 
 /* Line 268 of yacc.c  */
-#line 131 "../src/parser/sml.tab.cpp"
+#line 132 "../src/parser/sml.tab.cpp"
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -418,7 +419,7 @@ typedef union YYSTYPE
 {
 
 /* Line 293 of yacc.c  */
-#line 79 "sml.tab.ypp"
+#line 80 "sml.tab.ypp"
 
   int optype;
   long *ival;
@@ -430,7 +431,7 @@ typedef union YYSTYPE
 
 
 /* Line 293 of yacc.c  */
-#line 434 "../src/parser/sml.tab.cpp"
+#line 435 "../src/parser/sml.tab.cpp"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -442,7 +443,7 @@ typedef union YYSTYPE
 
 
 /* Line 343 of yacc.c  */
-#line 446 "../src/parser/sml.tab.cpp"
+#line 447 "../src/parser/sml.tab.cpp"
 
 #ifdef short
 # undef short
@@ -809,23 +810,23 @@ static const yytype_int16 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   131,   131,   132,   135,   136,   137,   153,   154,   160,
-     166,   170,   205,   206,   215,   226,   230,   236,   244,   252,
-     267,   268,   269,   270,   271,   277,   277,   302,   302,   324,
-     324,   346,   346,   363,   363,   380,   380,   403,   404,   405,
-     406,   407,   408,   409,   412,   413,   414,   418,   419,   423,
-     424,   428,   429,   433,   434,   439,   440,   445,   454,   460,
-     471,   472,   480,   481,   485,   490,   493,   497,   502,   505,
-     507,   513,   520,   521,   524,   525,   542,   545,   548,   552,
-     555,   559,   563,   567,   588,   593,   596,   599,   603,   606,
-     611,   619,   620,   623,   627,   640,   641,   642,   643,   644,
-     645,   646,   647,   650,   651,   660,   671,   672,   676,   678,
-     684,   685,   686,   687,   688,   689,   690,   691,   695,   696,
-     701,   702,   703,   706,   707,   716,   721,   771,   775,   780,
-     789,   814,   818,   831,   832,   833,   834,   835,   836,   837,
-     838,   839,   840,   841,   844,   848,   849,   849,   855,   856,
-     857,   858,   859,   863,   868,   869,   872,   873,   874,   875,
-     878,   881,   884,   888
+       0,   132,   132,   133,   136,   137,   138,   154,   155,   161,
+     167,   171,   206,   207,   216,   227,   231,   237,   245,   253,
+     268,   269,   270,   271,   272,   278,   278,   303,   303,   325,
+     325,   347,   347,   364,   364,   381,   381,   404,   405,   406,
+     407,   408,   409,   410,   413,   414,   415,   419,   420,   424,
+     425,   429,   430,   434,   435,   440,   441,   446,   455,   461,
+     472,   473,   481,   482,   486,   491,   494,   498,   503,   506,
+     508,   514,   521,   522,   525,   526,   543,   546,   549,   553,
+     556,   560,   564,   568,   589,   594,   597,   600,   604,   607,
+     612,   620,   621,   624,   628,   641,   642,   643,   644,   645,
+     646,   647,   648,   651,   652,   661,   672,   673,   677,   679,
+     685,   686,   687,   688,   689,   690,   691,   692,   696,   697,
+     702,   703,   704,   707,   708,   717,   722,   772,   776,   781,
+     790,   815,   819,   832,   833,   834,   835,   836,   837,   838,
+     839,   840,   841,   842,   845,   849,   850,   850,   856,   857,
+     858,   859,   860,   864,   869,   870,   873,   874,   875,   876,
+     879,   882,   885,   889
 };
 #endif
 
@@ -2084,7 +2085,7 @@ yyreduce:
         case 8:
 
 /* Line 1806 of yacc.c  */
-#line 154 "sml.tab.ypp"
+#line 155 "sml.tab.ypp"
     {
                end_model(NULL);
                rem_indexing(NULL);
@@ -2094,7 +2095,7 @@ yyreduce:
   case 9:
 
 /* Line 1806 of yacc.c  */
-#line 160 "sml.tab.ypp"
+#line 161 "sml.tab.ypp"
     {
                      add_indexing((yyvsp[(3) - (4)].opPtrIx));
                      begin_model((char*)(yyvsp[(2) - (4)].string), (yyvsp[(3) - (4)].opPtrIx));
@@ -2104,7 +2105,7 @@ yyreduce:
   case 10:
 
 /* Line 1806 of yacc.c  */
-#line 166 "sml.tab.ypp"
+#line 167 "sml.tab.ypp"
     {
                   end_model(NULL);
                   rem_indexing(NULL);
@@ -2114,7 +2115,7 @@ yyreduce:
   case 11:
 
 /* Line 1806 of yacc.c  */
-#line 170 "sml.tab.ypp"
+#line 171 "sml.tab.ypp"
     {
                   end_model((char*)(yyvsp[(3) - (4)].string));
                   rem_indexing(NULL);
@@ -2124,7 +2125,7 @@ yyreduce:
   case 13:
 
 /* Line 1806 of yacc.c  */
-#line 206 "sml.tab.ypp"
+#line 207 "sml.tab.ypp"
     {
                end_smodel(NULL);
                rem_indexing(NULL);
@@ -2134,7 +2135,7 @@ yyreduce:
   case 14:
 
 /* Line 1806 of yacc.c  */
-#line 216 "sml.tab.ypp"
+#line 217 "sml.tab.ypp"
     {
                      add_indexing((yyvsp[(3) - (9)].opPtrIx));
                      begin_smodel((char*)(yyvsp[(2) - (9)].string), (yyvsp[(3) - (9)].opPtrIx), (yyvsp[(7) - (9)].opPtr));
@@ -2144,7 +2145,7 @@ yyreduce:
   case 15:
 
 /* Line 1806 of yacc.c  */
-#line 226 "sml.tab.ypp"
+#line 227 "sml.tab.ypp"
     {
                   end_smodel(NULL);
                   rem_indexing(NULL);
@@ -2154,7 +2155,7 @@ yyreduce:
   case 16:
 
 /* Line 1806 of yacc.c  */
-#line 230 "sml.tab.ypp"
+#line 231 "sml.tab.ypp"
     {
                   end_smodel((char*)(yyvsp[(3) - (4)].string));
                   rem_indexing(NULL);
@@ -2164,7 +2165,7 @@ yyreduce:
   case 18:
 
 /* Line 1806 of yacc.c  */
-#line 244 "sml.tab.ypp"
+#line 245 "sml.tab.ypp"
     {
                stages_glo = NULL;
             }
@@ -2173,7 +2174,7 @@ yyreduce:
   case 19:
 
 /* Line 1806 of yacc.c  */
-#line 252 "sml.tab.ypp"
+#line 253 "sml.tab.ypp"
     {              
                      if (!is_stoch_model) { 
                         cerr << "Syntax Error: keyword 'stages' can only be "
@@ -2187,7 +2188,7 @@ yyreduce:
   case 25:
 
 /* Line 1806 of yacc.c  */
-#line 277 "sml.tab.ypp"
+#line 278 "sml.tab.ypp"
     {
 		YAC_LOG("setdef:[SET ID indexing_opt] - ID=["<<(yyvsp[(2) - (3)].string)<<"] indexing_opt=["<<(yyvsp[(3) - (3)].opPtrIx)<<"]");
             if ((yyvsp[(3) - (3)].opPtrIx)) add_indexing((yyvsp[(3) - (3)].opPtrIx));
@@ -2197,7 +2198,7 @@ yyreduce:
   case 26:
 
 /* Line 1806 of yacc.c  */
-#line 280 "sml.tab.ypp"
+#line 281 "sml.tab.ypp"
     {
             YAC_LOG("stochattr_opt=[" << (yyvsp[(5) - (6)].opPtr)<<"]");
             YAC_LOG("setattributes_opt=[" <<(yyvsp[(6) - (6)].opPtr)<<"]");
@@ -2219,7 +2220,7 @@ yyreduce:
   case 27:
 
 /* Line 1806 of yacc.c  */
-#line 302 "sml.tab.ypp"
+#line 303 "sml.tab.ypp"
     {
                if ((yyvsp[(4) - (4)].opPtrIx)) add_indexing((yyvsp[(4) - (4)].opPtrIx));
             }
@@ -2228,7 +2229,7 @@ yyreduce:
   case 28:
 
 /* Line 1806 of yacc.c  */
-#line 304 "sml.tab.ypp"
+#line 305 "sml.tab.ypp"
     {
                ModelComp *newmc;
                if (is_stoch_model){
@@ -2249,7 +2250,7 @@ yyreduce:
   case 29:
 
 /* Line 1806 of yacc.c  */
-#line 324 "sml.tab.ypp"
+#line 325 "sml.tab.ypp"
     {
             if ((yyvsp[(3) - (3)].opPtrIx)) add_indexing((yyvsp[(3) - (3)].opPtrIx));
          }
@@ -2258,7 +2259,7 @@ yyreduce:
   case 30:
 
 /* Line 1806 of yacc.c  */
-#line 326 "sml.tab.ypp"
+#line 327 "sml.tab.ypp"
     {
             ModelComp *newmc;
             if (is_stoch_model){
@@ -2279,7 +2280,7 @@ yyreduce:
   case 31:
 
 /* Line 1806 of yacc.c  */
-#line 346 "sml.tab.ypp"
+#line 347 "sml.tab.ypp"
     {
             if ((yyvsp[(3) - (3)].opPtrIx)) add_indexing((yyvsp[(3) - (3)].opPtrIx));
          }
@@ -2288,7 +2289,7 @@ yyreduce:
   case 32:
 
 /* Line 1806 of yacc.c  */
-#line 348 "sml.tab.ypp"
+#line 349 "sml.tab.ypp"
     {
             ModelComp *newmc;
             if (is_stoch_model){
@@ -2309,7 +2310,7 @@ yyreduce:
   case 33:
 
 /* Line 1806 of yacc.c  */
-#line 363 "sml.tab.ypp"
+#line 364 "sml.tab.ypp"
     {
             if ((yyvsp[(3) - (3)].opPtrIx)) add_indexing((yyvsp[(3) - (3)].opPtrIx));
          }
@@ -2318,7 +2319,7 @@ yyreduce:
   case 34:
 
 /* Line 1806 of yacc.c  */
-#line 365 "sml.tab.ypp"
+#line 366 "sml.tab.ypp"
     {
             ModelComp *newmc;
             if (is_stoch_model){
@@ -2339,7 +2340,7 @@ yyreduce:
   case 35:
 
 /* Line 1806 of yacc.c  */
-#line 380 "sml.tab.ypp"
+#line 381 "sml.tab.ypp"
     { 
      		YAC_LOG("subject to rule matched - ID["<<(yyvsp[(2) - (3)].string)<<"]");
             if ((yyvsp[(3) - (3)].opPtrIx)) add_indexing((yyvsp[(3) - (3)].opPtrIx));
@@ -2349,7 +2350,7 @@ yyreduce:
   case 36:
 
 /* Line 1806 of yacc.c  */
-#line 383 "sml.tab.ypp"
+#line 384 "sml.tab.ypp"
     {
          	YAC_LOG("subject to rule part2");
          	ModelComp *newmc;
@@ -2373,70 +2374,70 @@ yyreduce:
   case 37:
 
 /* Line 1806 of yacc.c  */
-#line 403 "sml.tab.ypp"
+#line 404 "sml.tab.ypp"
     {(yyval.optype)=LE;}
     break;
 
   case 38:
 
 /* Line 1806 of yacc.c  */
-#line 404 "sml.tab.ypp"
+#line 405 "sml.tab.ypp"
     {(yyval.optype)=GE;}
     break;
 
   case 39:
 
 /* Line 1806 of yacc.c  */
-#line 405 "sml.tab.ypp"
+#line 406 "sml.tab.ypp"
     {(yyval.optype)=LT;}
     break;
 
   case 40:
 
 /* Line 1806 of yacc.c  */
-#line 406 "sml.tab.ypp"
+#line 407 "sml.tab.ypp"
     {(yyval.optype)=GT;}
     break;
 
   case 41:
 
 /* Line 1806 of yacc.c  */
-#line 407 "sml.tab.ypp"
+#line 408 "sml.tab.ypp"
     {(yyval.optype)=ASSIGN;}
     break;
 
   case 42:
 
 /* Line 1806 of yacc.c  */
-#line 408 "sml.tab.ypp"
+#line 409 "sml.tab.ypp"
     {(yyval.optype)=EQ;}
     break;
 
   case 43:
 
 /* Line 1806 of yacc.c  */
-#line 409 "sml.tab.ypp"
+#line 410 "sml.tab.ypp"
     {(yyval.optype)=NE;}
     break;
 
   case 44:
 
 /* Line 1806 of yacc.c  */
-#line 412 "sml.tab.ypp"
+#line 413 "sml.tab.ypp"
     { (yyval.opPtr) = new OpNode(ASSIGN, (yyvsp[(1) - (3)].opPtr), (yyvsp[(3) - (3)].opPtr)); }
     break;
 
   case 45:
 
 /* Line 1806 of yacc.c  */
-#line 413 "sml.tab.ypp"
+#line 414 "sml.tab.ypp"
     { (yyval.opPtr) = new OpNode(LT, (yyvsp[(1) - (3)].opPtr), (yyvsp[(3) - (3)].opPtr)); }
     break;
 
   case 46:
 
 /* Line 1806 of yacc.c  */
-#line 414 "sml.tab.ypp"
+#line 415 "sml.tab.ypp"
     { 
                OpNode *temp = new OpNode(LT, (yyvsp[(1) - (5)].opPtr), (yyvsp[(3) - (5)].opPtr));
                (yyval.opPtr) = new OpNode(LT, temp, (yyvsp[(5) - (5)].opPtr)); 
@@ -2446,14 +2447,14 @@ yyreduce:
   case 47:
 
 /* Line 1806 of yacc.c  */
-#line 418 "sml.tab.ypp"
+#line 419 "sml.tab.ypp"
     { (yyval.opPtr) = new OpNode(LE, (yyvsp[(1) - (3)].opPtr), (yyvsp[(3) - (3)].opPtr)); }
     break;
 
   case 48:
 
 /* Line 1806 of yacc.c  */
-#line 419 "sml.tab.ypp"
+#line 420 "sml.tab.ypp"
     { 
                OpNode *temp = new OpNode(LE, (yyvsp[(1) - (5)].opPtr), (yyvsp[(3) - (5)].opPtr));
                (yyval.opPtr) = new OpNode(LE, temp, (yyvsp[(5) - (5)].opPtr)); 
@@ -2463,14 +2464,14 @@ yyreduce:
   case 49:
 
 /* Line 1806 of yacc.c  */
-#line 423 "sml.tab.ypp"
+#line 424 "sml.tab.ypp"
     { (yyval.opPtr) = new OpNode(GT, (yyvsp[(1) - (3)].opPtr), (yyvsp[(3) - (3)].opPtr)); }
     break;
 
   case 50:
 
 /* Line 1806 of yacc.c  */
-#line 424 "sml.tab.ypp"
+#line 425 "sml.tab.ypp"
     { 
                OpNode *temp = new OpNode(GT, (yyvsp[(1) - (5)].opPtr), (yyvsp[(3) - (5)].opPtr));
                (yyval.opPtr) = new OpNode(GT, temp, (yyvsp[(5) - (5)].opPtr)); 
@@ -2480,14 +2481,14 @@ yyreduce:
   case 51:
 
 /* Line 1806 of yacc.c  */
-#line 428 "sml.tab.ypp"
+#line 429 "sml.tab.ypp"
     { (yyval.opPtr) = new OpNode(GE, (yyvsp[(1) - (3)].opPtr), (yyvsp[(3) - (3)].opPtr)); }
     break;
 
   case 52:
 
 /* Line 1806 of yacc.c  */
-#line 429 "sml.tab.ypp"
+#line 430 "sml.tab.ypp"
     { 
                OpNode *temp = new OpNode(GE, (yyvsp[(1) - (5)].opPtr), (yyvsp[(3) - (5)].opPtr));
                (yyval.opPtr) = new OpNode(GE, temp, (yyvsp[(5) - (5)].opPtr)); 
@@ -2497,28 +2498,28 @@ yyreduce:
   case 53:
 
 /* Line 1806 of yacc.c  */
-#line 433 "sml.tab.ypp"
+#line 434 "sml.tab.ypp"
     { (yyval.opPtr) = new OpNode(EQ, (yyvsp[(1) - (3)].opPtr), (yyvsp[(3) - (3)].opPtr)); }
     break;
 
   case 54:
 
 /* Line 1806 of yacc.c  */
-#line 434 "sml.tab.ypp"
+#line 435 "sml.tab.ypp"
     { (yyval.opPtr) = new OpNode(NE,(yyvsp[(1) - (3)].opPtr),(yyvsp[(3) - (3)].opPtr)); }
     break;
 
   case 55:
 
 /* Line 1806 of yacc.c  */
-#line 439 "sml.tab.ypp"
+#line 440 "sml.tab.ypp"
     {(yyval.opPtrIx)=NULL;}
     break;
 
   case 56:
 
 /* Line 1806 of yacc.c  */
-#line 440 "sml.tab.ypp"
+#line 441 "sml.tab.ypp"
     {
                YAC_LOG("indexing_opt : indexing rule matched!");
                (yyval.opPtrIx)=(yyvsp[(1) - (1)].opPtrIx);}
@@ -2527,7 +2528,7 @@ yyreduce:
   case 57:
 
 /* Line 1806 of yacc.c  */
-#line 445 "sml.tab.ypp"
+#line 446 "sml.tab.ypp"
     {
 					YAC_LOG("start_indexing : LBRACE setexpr_list rule matched!");
                      SyntaxNodeIx *tmp = 
@@ -2540,7 +2541,7 @@ yyreduce:
   case 58:
 
 /* Line 1806 of yacc.c  */
-#line 454 "sml.tab.ypp"
+#line 455 "sml.tab.ypp"
     {
                rem_indexing(NULL);
                SyntaxNode *tmp = 
@@ -2552,7 +2553,7 @@ yyreduce:
   case 59:
 
 /* Line 1806 of yacc.c  */
-#line 460 "sml.tab.ypp"
+#line 461 "sml.tab.ypp"
     {
                rem_indexing(NULL);
                SyntaxNodeIx *tmp = new SyntaxNodeIx(new SyntaxNode(LBRACE, (yyvsp[(1) - (2)].opPtr)));
@@ -2563,7 +2564,7 @@ yyreduce:
   case 61:
 
 /* Line 1806 of yacc.c  */
-#line 472 "sml.tab.ypp"
+#line 473 "sml.tab.ypp"
     {
                   if ((yyvsp[(1) - (3)].opPtr)->getOpCode() == COMMA)
                      (yyval.opPtr) = (yyvsp[(1) - (3)].opPtr)->push_back((yyvsp[(3) - (3)].opPtr));
@@ -2575,7 +2576,7 @@ yyreduce:
   case 63:
 
 /* Line 1806 of yacc.c  */
-#line 481 "sml.tab.ypp"
+#line 482 "sml.tab.ypp"
     {
              	YAC_LOG("ID IN setexpression rule matched!");
                   (yyval.opPtr) = new OpNode(IN, new IDNode((yyvsp[(1) - (3)].string)), (yyvsp[(3) - (3)].opPtr));
@@ -2585,7 +2586,7 @@ yyreduce:
   case 64:
 
 /* Line 1806 of yacc.c  */
-#line 485 "sml.tab.ypp"
+#line 486 "sml.tab.ypp"
     {
                   (yyval.opPtr) = new OpNode(IN, (yyvsp[(1) - (3)].opPtr), (yyvsp[(3) - (3)].opPtr));
                }
@@ -2594,14 +2595,14 @@ yyreduce:
   case 65:
 
 /* Line 1806 of yacc.c  */
-#line 490 "sml.tab.ypp"
+#line 491 "sml.tab.ypp"
     { (yyval.opPtr) = new SyntaxNode(LBRACKET, (yyvsp[(1) - (2)].opPtr)); }
     break;
 
   case 66:
 
 /* Line 1806 of yacc.c  */
-#line 493 "sml.tab.ypp"
+#line 494 "sml.tab.ypp"
     { 
 					YAC_LOG("mdim_dummy_start: LBRACKET ID rule matched!");
                      (yyval.opPtr) = new ListNode(COMMA, new IDNode((yyvsp[(2) - (2)].string)));
@@ -2611,7 +2612,7 @@ yyreduce:
   case 67:
 
 /* Line 1806 of yacc.c  */
-#line 497 "sml.tab.ypp"
+#line 498 "sml.tab.ypp"
     {
                      (yyval.opPtr) = (yyvsp[(1) - (3)].opPtr)->push_back(new IDNode((yyvsp[(3) - (3)].string)));
                   }
@@ -2620,7 +2621,7 @@ yyreduce:
   case 68:
 
 /* Line 1806 of yacc.c  */
-#line 502 "sml.tab.ypp"
+#line 503 "sml.tab.ypp"
     {
 		YAC_LOG("lexpr: expr rule matched! "<<(yyvsp[(1) - (1)].opPtr));
 		}
@@ -2629,7 +2630,7 @@ yyreduce:
   case 69:
 
 /* Line 1806 of yacc.c  */
-#line 505 "sml.tab.ypp"
+#line 506 "sml.tab.ypp"
     {
             (yyval.opPtr) = new SyntaxNode(LBRACKET, (yyvsp[(2) - (3)].opPtr)); }
     break;
@@ -2637,28 +2638,28 @@ yyreduce:
   case 72:
 
 /* Line 1806 of yacc.c  */
-#line 520 "sml.tab.ypp"
+#line 521 "sml.tab.ypp"
     {(yyval.opPtr)=NULL;}
     break;
 
   case 73:
 
 /* Line 1806 of yacc.c  */
-#line 521 "sml.tab.ypp"
+#line 522 "sml.tab.ypp"
     {(yyval.opPtr)=(yyvsp[(1) - (1)].opPtr);}
     break;
 
   case 74:
 
 /* Line 1806 of yacc.c  */
-#line 524 "sml.tab.ypp"
+#line 525 "sml.tab.ypp"
     {(yyval.opPtr)=(yyvsp[(1) - (1)].opPtr);}
     break;
 
   case 75:
 
 /* Line 1806 of yacc.c  */
-#line 525 "sml.tab.ypp"
+#line 526 "sml.tab.ypp"
     {
                   if ((yyvsp[(2) - (2)].opPtr)==NULL){
                      (yyval.opPtr) = (yyvsp[(1) - (2)].opPtr);
@@ -2679,7 +2680,7 @@ yyreduce:
   case 76:
 
 /* Line 1806 of yacc.c  */
-#line 542 "sml.tab.ypp"
+#line 543 "sml.tab.ypp"
     {
                   (yyval.opPtr) = new SyntaxNode(DIMEN, new ValueNode(*(yyvsp[(2) - (2)].ival)));
                }
@@ -2688,7 +2689,7 @@ yyreduce:
   case 77:
 
 /* Line 1806 of yacc.c  */
-#line 545 "sml.tab.ypp"
+#line 546 "sml.tab.ypp"
     {
                   (yyval.opPtr) = new SyntaxNode(WITHIN, (yyvsp[(2) - (2)].opPtr));
                }
@@ -2697,7 +2698,7 @@ yyreduce:
   case 78:
 
 /* Line 1806 of yacc.c  */
-#line 548 "sml.tab.ypp"
+#line 549 "sml.tab.ypp"
     {
             		YAC_LOG("match setexpression define rule");
                   (yyval.opPtr) = new OpNode(DEFINED, (yyvsp[(2) - (2)].opPtr));
@@ -2707,7 +2708,7 @@ yyreduce:
   case 79:
 
 /* Line 1806 of yacc.c  */
-#line 552 "sml.tab.ypp"
+#line 553 "sml.tab.ypp"
     {
                   (yyval.opPtr) = new SyntaxNode(DEFAULT, (yyvsp[(2) - (2)].opPtr));
                }
@@ -2716,14 +2717,14 @@ yyreduce:
   case 80:
 
 /* Line 1806 of yacc.c  */
-#line 555 "sml.tab.ypp"
+#line 556 "sml.tab.ypp"
     { (yyval.opPtr) = new SyntaxNode(ORDERED); }
     break;
 
   case 81:
 
 /* Line 1806 of yacc.c  */
-#line 559 "sml.tab.ypp"
+#line 560 "sml.tab.ypp"
     {
 					YAC_LOG("setexpression: LBRACE setexpression RBRACE -- rule matched");
 					(yyval.opPtr)= new ListSet((yyvsp[(2) - (3)].opPtr));
@@ -2733,7 +2734,7 @@ yyreduce:
   case 82:
 
 /* Line 1806 of yacc.c  */
-#line 563 "sml.tab.ypp"
+#line 564 "sml.tab.ypp"
     {
          		YAC_LOG("creating indexing set");
 				(yyval.opPtr) = new IndexingSet((yyvsp[(1) - (1)].opPtrIx));
@@ -2743,7 +2744,7 @@ yyreduce:
   case 83:
 
 /* Line 1806 of yacc.c  */
-#line 568 "sml.tab.ypp"
+#line 569 "sml.tab.ypp"
     {
 				YAC_LOG("create ListSet");
 				(yyval.opPtr) = new ListSet((yyvsp[(1) - (1)].opPtr));
@@ -2753,7 +2754,7 @@ yyreduce:
   case 84:
 
 /* Line 1806 of yacc.c  */
-#line 588 "sml.tab.ypp"
+#line 589 "sml.tab.ypp"
     {
              		(yyval.opPtr) = (yyvsp[(1) - (1)].opPtr);
              		YAC_LOG("setexpression: identifier -- rule matched");
@@ -2763,7 +2764,7 @@ yyreduce:
   case 85:
 
 /* Line 1806 of yacc.c  */
-#line 593 "sml.tab.ypp"
+#line 594 "sml.tab.ypp"
     {
                   (yyval.opPtr) = new CompositeSet((yyvsp[(2) - (3)].optype), (yyvsp[(1) - (3)].opPtr), (yyvsp[(3) - (3)].opPtr));
                }
@@ -2772,7 +2773,7 @@ yyreduce:
   case 86:
 
 /* Line 1806 of yacc.c  */
-#line 596 "sml.tab.ypp"
+#line 597 "sml.tab.ypp"
     {
                   (yyval.opPtr) = new CompositeSet((yyvsp[(2) - (3)].optype), (yyvsp[(1) - (3)].opPtr), (yyvsp[(3) - (3)].opPtr));
                }
@@ -2781,7 +2782,7 @@ yyreduce:
   case 87:
 
 /* Line 1806 of yacc.c  */
-#line 599 "sml.tab.ypp"
+#line 600 "sml.tab.ypp"
     {
                   cerr << "FIXME: ubsetop indexing setexpression\n";
                   exit(2);
@@ -2791,7 +2792,7 @@ yyreduce:
   case 88:
 
 /* Line 1806 of yacc.c  */
-#line 603 "sml.tab.ypp"
+#line 604 "sml.tab.ypp"
     {
                   (yyval.opPtr) = new SimpleSet((yyvsp[(1) - (3)].opPtr), (yyvsp[(3) - (3)].opPtr));
                }
@@ -2800,7 +2801,7 @@ yyreduce:
   case 89:
 
 /* Line 1806 of yacc.c  */
-#line 606 "sml.tab.ypp"
+#line 607 "sml.tab.ypp"
     {
                   cerr << "FIXME: SETOF\n";
                   exit(2);
@@ -2810,7 +2811,7 @@ yyreduce:
   case 90:
 
 /* Line 1806 of yacc.c  */
-#line 611 "sml.tab.ypp"
+#line 612 "sml.tab.ypp"
     {
                   (yyval.opPtr) = (yyvsp[(2) - (3)].opPtr);
                }
@@ -2819,21 +2820,21 @@ yyreduce:
   case 91:
 
 /* Line 1806 of yacc.c  */
-#line 619 "sml.tab.ypp"
+#line 620 "sml.tab.ypp"
     { (yyval.opPtr) = NULL; }
     break;
 
   case 92:
 
 /* Line 1806 of yacc.c  */
-#line 620 "sml.tab.ypp"
+#line 621 "sml.tab.ypp"
     { (yyval.opPtr) = (yyvsp[(1) - (1)].opPtr); }
     break;
 
   case 93:
 
 /* Line 1806 of yacc.c  */
-#line 623 "sml.tab.ypp"
+#line 624 "sml.tab.ypp"
     {
                      if ((yyvsp[(1) - (1)].opPtr)==NULL) {(yyval.opPtr) = NULL;}
                      else{(yyval.opPtr) = new ListNode(COMMA, (yyvsp[(1) - (1)].opPtr));}
@@ -2843,7 +2844,7 @@ yyreduce:
   case 94:
 
 /* Line 1806 of yacc.c  */
-#line 627 "sml.tab.ypp"
+#line 628 "sml.tab.ypp"
     {
                      if ((yyvsp[(3) - (3)].opPtr)==NULL){
                         (yyval.opPtr) = (yyvsp[(1) - (3)].opPtr);
@@ -2860,70 +2861,70 @@ yyreduce:
   case 95:
 
 /* Line 1806 of yacc.c  */
-#line 640 "sml.tab.ypp"
+#line 641 "sml.tab.ypp"
     {(yyval.opPtr) = new SyntaxNode(BINARY);}
     break;
 
   case 96:
 
 /* Line 1806 of yacc.c  */
-#line 641 "sml.tab.ypp"
+#line 642 "sml.tab.ypp"
     {(yyval.opPtr) = new SyntaxNode(INTEGER);}
     break;
 
   case 97:
 
 /* Line 1806 of yacc.c  */
-#line 642 "sml.tab.ypp"
+#line 643 "sml.tab.ypp"
     {(yyval.opPtr) = new SyntaxNode(SYMBOLIC);}
     break;
 
   case 98:
 
 /* Line 1806 of yacc.c  */
-#line 643 "sml.tab.ypp"
+#line 644 "sml.tab.ypp"
     {(yyval.opPtr) = new OpNode((yyvsp[(1) - (2)].optype), (yyvsp[(2) - (2)].opPtr));}
     break;
 
   case 99:
 
 /* Line 1806 of yacc.c  */
-#line 644 "sml.tab.ypp"
+#line 645 "sml.tab.ypp"
     {(yyval.opPtr) = new OpNode(IN, (yyvsp[(2) - (2)].opPtr));}
     break;
 
   case 100:
 
 /* Line 1806 of yacc.c  */
-#line 645 "sml.tab.ypp"
+#line 646 "sml.tab.ypp"
     {(yyval.opPtr) = new OpNode(ASSIGN, (yyvsp[(2) - (2)].opPtr));}
     break;
 
   case 101:
 
 /* Line 1806 of yacc.c  */
-#line 646 "sml.tab.ypp"
+#line 647 "sml.tab.ypp"
     {(yyval.opPtr) = new SyntaxNode(DEFAULT, (yyvsp[(2) - (2)].opPtr));}
     break;
 
   case 102:
 
 /* Line 1806 of yacc.c  */
-#line 647 "sml.tab.ypp"
+#line 648 "sml.tab.ypp"
     {(yyval.opPtr) = new OpNode(DEFINED, (yyvsp[(2) - (2)].opPtr));}
     break;
 
   case 103:
 
 /* Line 1806 of yacc.c  */
-#line 650 "sml.tab.ypp"
+#line 651 "sml.tab.ypp"
     {(yyval.opPtr) = NULL;}
     break;
 
   case 104:
 
 /* Line 1806 of yacc.c  */
-#line 651 "sml.tab.ypp"
+#line 652 "sml.tab.ypp"
     {
                   // check that this is in a stochastic model
                   if (!is_stoch_model){ 
@@ -2938,7 +2939,7 @@ yyreduce:
   case 105:
 
 /* Line 1806 of yacc.c  */
-#line 660 "sml.tab.ypp"
+#line 661 "sml.tab.ypp"
     {
                   // check that this is in a stochastic model
                   if (!is_stoch_model){ 
@@ -2953,21 +2954,21 @@ yyreduce:
   case 106:
 
 /* Line 1806 of yacc.c  */
-#line 671 "sml.tab.ypp"
+#line 672 "sml.tab.ypp"
     {(yyval.opPtr)=NULL;}
     break;
 
   case 107:
 
 /* Line 1806 of yacc.c  */
-#line 672 "sml.tab.ypp"
+#line 673 "sml.tab.ypp"
     {(yyval.opPtr) = (yyvsp[(1) - (1)].opPtr);}
     break;
 
   case 108:
 
 /* Line 1806 of yacc.c  */
-#line 676 "sml.tab.ypp"
+#line 677 "sml.tab.ypp"
     {
                   (yyval.opPtr) = addItemToListOrCreate(COMMA, NULL, (yyvsp[(1) - (1)].opPtr));}
     break;
@@ -2975,7 +2976,7 @@ yyreduce:
   case 109:
 
 /* Line 1806 of yacc.c  */
-#line 678 "sml.tab.ypp"
+#line 679 "sml.tab.ypp"
     {
                   (yyval.opPtr) = addItemToListOrCreate(COMMA, (ListNode*)(yyvsp[(1) - (3)].opPtr), (yyvsp[(3) - (3)].opPtr));
                }
@@ -2984,112 +2985,112 @@ yyreduce:
   case 110:
 
 /* Line 1806 of yacc.c  */
-#line 684 "sml.tab.ypp"
+#line 685 "sml.tab.ypp"
     {(yyval.opPtr) = new SyntaxNode(BINARY);}
     break;
 
   case 111:
 
 /* Line 1806 of yacc.c  */
-#line 685 "sml.tab.ypp"
+#line 686 "sml.tab.ypp"
     {(yyval.opPtr) = new SyntaxNode(INTEGER);}
     break;
 
   case 112:
 
 /* Line 1806 of yacc.c  */
-#line 686 "sml.tab.ypp"
+#line 687 "sml.tab.ypp"
     {(yyval.opPtr) = new SyntaxNode(SYMBOLIC);}
     break;
 
   case 113:
 
 /* Line 1806 of yacc.c  */
-#line 687 "sml.tab.ypp"
+#line 688 "sml.tab.ypp"
     {(yyval.opPtr) = new OpNode(LE, (yyvsp[(2) - (2)].opPtr));}
     break;
 
   case 114:
 
 /* Line 1806 of yacc.c  */
-#line 688 "sml.tab.ypp"
+#line 689 "sml.tab.ypp"
     {(yyval.opPtr) = new OpNode(GE, (yyvsp[(2) - (2)].opPtr));}
     break;
 
   case 115:
 
 /* Line 1806 of yacc.c  */
-#line 689 "sml.tab.ypp"
+#line 690 "sml.tab.ypp"
     {(yyval.opPtr) = new OpNode(DEFINED, (yyvsp[(2) - (2)].opPtr));}
     break;
 
   case 116:
 
 /* Line 1806 of yacc.c  */
-#line 690 "sml.tab.ypp"
+#line 691 "sml.tab.ypp"
     {(yyval.opPtr) = new OpNode(ASSIGN, (yyvsp[(2) - (2)].opPtr));}
     break;
 
   case 117:
 
 /* Line 1806 of yacc.c  */
-#line 691 "sml.tab.ypp"
+#line 692 "sml.tab.ypp"
     {(yyval.opPtr) = new SyntaxNode(DEFAULT, (yyvsp[(2) - (2)].opPtr));}
     break;
 
   case 118:
 
 /* Line 1806 of yacc.c  */
-#line 695 "sml.tab.ypp"
+#line 696 "sml.tab.ypp"
     {(yyval.opPtr) = new OpNode(IN, (yyvsp[(2) - (2)].opPtr));}
     break;
 
   case 119:
 
 /* Line 1806 of yacc.c  */
-#line 696 "sml.tab.ypp"
+#line 697 "sml.tab.ypp"
     {(yyval.opPtr) = new SyntaxNode(SUFFIX, (yyvsp[(3) - (3)].opPtr));}
     break;
 
   case 120:
 
 /* Line 1806 of yacc.c  */
-#line 701 "sml.tab.ypp"
+#line 702 "sml.tab.ypp"
     { (yyval.optype) = DIFF; }
     break;
 
   case 121:
 
 /* Line 1806 of yacc.c  */
-#line 702 "sml.tab.ypp"
+#line 703 "sml.tab.ypp"
     { (yyval.optype) = SYMDIFF; }
     break;
 
   case 122:
 
 /* Line 1806 of yacc.c  */
-#line 703 "sml.tab.ypp"
+#line 704 "sml.tab.ypp"
     { (yyval.optype) = CROSS; }
     break;
 
   case 123:
 
 /* Line 1806 of yacc.c  */
-#line 706 "sml.tab.ypp"
+#line 707 "sml.tab.ypp"
     { (yyval.optype) = UNION; }
     break;
 
   case 124:
 
 /* Line 1806 of yacc.c  */
-#line 707 "sml.tab.ypp"
+#line 708 "sml.tab.ypp"
     { (yyval.optype) = INTER; }
     break;
 
   case 125:
 
 /* Line 1806 of yacc.c  */
-#line 716 "sml.tab.ypp"
+#line 717 "sml.tab.ypp"
     {
                /* this is a simple identifier in global context */
                YAC_LOG("identifier: iditem rule matched  "<<(yyvsp[(1) - (1)].opPtr));
@@ -3100,7 +3101,7 @@ yyreduce:
   case 126:
 
 /* Line 1806 of yacc.c  */
-#line 721 "sml.tab.ypp"
+#line 722 "sml.tab.ypp"
     {
                /* identifier sets the context for the iditem:
                   The result of this is either a context setting or a
@@ -3151,7 +3152,7 @@ yyreduce:
   case 127:
 
 /* Line 1806 of yacc.c  */
-#line 771 "sml.tab.ypp"
+#line 772 "sml.tab.ypp"
     {                               /* simple identifier */
 			YAC_LOG("iditem : ID rule matched , "<<(yyvsp[(1) - (1)].string));
             (yyval.opPtr)=new IDNode((yyvsp[(1) - (1)].string));
@@ -3161,7 +3162,7 @@ yyreduce:
   case 128:
 
 /* Line 1806 of yacc.c  */
-#line 775 "sml.tab.ypp"
+#line 776 "sml.tab.ypp"
     { /* subscripted id'fier */
             YAC_LOG("ID "<<(yyvsp[(1) - (4)].string)<<" ["<<(yyvsp[(3) - (4)].opPtr)<<"]");
             (yyval.opPtr) = new SyntaxNode(LSBRACKET, new IDNode((yyvsp[(1) - (4)].string)), (yyvsp[(3) - (4)].opPtr));
@@ -3172,7 +3173,7 @@ yyreduce:
   case 129:
 
 /* Line 1806 of yacc.c  */
-#line 780 "sml.tab.ypp"
+#line 781 "sml.tab.ypp"
     {
             // This is of the type xh(-1,i) which is xh[i] at a previous stage
             // the ancestor information is conveyed by an ID SyntaxNode with 
@@ -3187,7 +3188,7 @@ yyreduce:
   case 130:
 
 /* Line 1806 of yacc.c  */
-#line 789 "sml.tab.ypp"
+#line 790 "sml.tab.ypp"
     {
             // the same as above, just different syntax "ancestor(1).xh[i]"
             // => need to change the ID node in iditem into a binary node
@@ -3210,7 +3211,7 @@ yyreduce:
   case 131:
 
 /* Line 1806 of yacc.c  */
-#line 814 "sml.tab.ypp"
+#line 815 "sml.tab.ypp"
     {
 				YAC_LOG("expr_list: expr rule matched! "<<(yyvsp[(1) - (1)].opPtr));
                (yyval.opPtr) = new ListNode(COMMA, (yyvsp[(1) - (1)].opPtr));
@@ -3220,7 +3221,7 @@ yyreduce:
   case 132:
 
 /* Line 1806 of yacc.c  */
-#line 818 "sml.tab.ypp"
+#line 819 "sml.tab.ypp"
     {      /* add item to list */
                /* epxr_list could be a simple node or a comma separated
                   list (CSL) already 
@@ -3237,77 +3238,77 @@ yyreduce:
   case 133:
 
 /* Line 1806 of yacc.c  */
-#line 831 "sml.tab.ypp"
+#line 832 "sml.tab.ypp"
     { YAC_LOG("expr: value rule matched!" <<(yyvsp[(1) - (1)].opPtr)); }
     break;
 
   case 134:
 
 /* Line 1806 of yacc.c  */
-#line 832 "sml.tab.ypp"
+#line 833 "sml.tab.ypp"
     { (yyval.opPtr) = new SyntaxNode(LBRACKET, (yyvsp[(2) - (3)].opPtr)); }
     break;
 
   case 135:
 
 /* Line 1806 of yacc.c  */
-#line 833 "sml.tab.ypp"
+#line 834 "sml.tab.ypp"
     { (yyval.opPtr) = new OpNode('+', (yyvsp[(1) - (3)].opPtr), (yyvsp[(3) - (3)].opPtr)); }
     break;
 
   case 136:
 
 /* Line 1806 of yacc.c  */
-#line 834 "sml.tab.ypp"
+#line 835 "sml.tab.ypp"
     { (yyval.opPtr) = new OpNode('-', (yyvsp[(1) - (3)].opPtr), (yyvsp[(3) - (3)].opPtr)); }
     break;
 
   case 137:
 
 /* Line 1806 of yacc.c  */
-#line 835 "sml.tab.ypp"
+#line 836 "sml.tab.ypp"
     { (yyval.opPtr) = new OpNode('-', (yyvsp[(2) - (2)].opPtr)); }
     break;
 
   case 138:
 
 /* Line 1806 of yacc.c  */
-#line 836 "sml.tab.ypp"
+#line 837 "sml.tab.ypp"
     { (yyval.opPtr) = new OpNode('*', (yyvsp[(1) - (3)].opPtr), (yyvsp[(3) - (3)].opPtr)); }
     break;
 
   case 139:
 
 /* Line 1806 of yacc.c  */
-#line 837 "sml.tab.ypp"
+#line 838 "sml.tab.ypp"
     { (yyval.opPtr) = new OpNode('/', (yyvsp[(1) - (3)].opPtr), (yyvsp[(3) - (3)].opPtr)); }
     break;
 
   case 140:
 
 /* Line 1806 of yacc.c  */
-#line 838 "sml.tab.ypp"
+#line 839 "sml.tab.ypp"
     { (yyval.opPtr) = new OpNode(POWER, (yyvsp[(1) - (3)].opPtr), (yyvsp[(3) - (3)].opPtr)); }
     break;
 
   case 141:
 
 /* Line 1806 of yacc.c  */
-#line 839 "sml.tab.ypp"
+#line 840 "sml.tab.ypp"
     { (yyval.opPtr) = new SyntaxNode(ELLIPSE, (yyvsp[(1) - (3)].opPtr), (yyvsp[(3) - (3)].opPtr)); }
     break;
 
   case 142:
 
 /* Line 1806 of yacc.c  */
-#line 840 "sml.tab.ypp"
+#line 841 "sml.tab.ypp"
     { (yyval.opPtr) = new SyntaxNode(LOGICAL_OR, (yyvsp[(1) - (3)].opPtr), (yyvsp[(3) - (3)].opPtr)); }
     break;
 
   case 143:
 
 /* Line 1806 of yacc.c  */
-#line 841 "sml.tab.ypp"
+#line 842 "sml.tab.ypp"
     { (yyval.opPtr) = new SyntaxNode(LOGICAL_AND, (yyvsp[(1) - (3)].opPtr), (yyvsp[(3) - (3)].opPtr));
     							YAC_LOG("expr: expr LOGICAL_AND expr -- rule matched ["<<(yyvsp[(1) - (3)].opPtr)<<"]  ["<<(yyvsp[(3) - (3)].opPtr)<<"]"); 
     }
@@ -3316,7 +3317,7 @@ yyreduce:
   case 144:
 
 /* Line 1806 of yacc.c  */
-#line 844 "sml.tab.ypp"
+#line 845 "sml.tab.ypp"
     {
     	(yyval.opPtr) = new SyntaxNode(NE,(yyvsp[(1) - (3)].opPtr),(yyvsp[(3) - (3)].opPtr));
     	YAC_LOG("expr: expr NE expr -- rule matched ["<<(yyvsp[(1) - (3)].opPtr)<<"]  ["<<(yyvsp[(3) - (3)].opPtr)<<"]");
@@ -3326,21 +3327,21 @@ yyreduce:
   case 145:
 
 /* Line 1806 of yacc.c  */
-#line 848 "sml.tab.ypp"
+#line 849 "sml.tab.ypp"
     { (yyval.opPtr) = new SyntaxNode('!', (yyvsp[(2) - (2)].opPtr)); }
     break;
 
   case 146:
 
 /* Line 1806 of yacc.c  */
-#line 849 "sml.tab.ypp"
+#line 850 "sml.tab.ypp"
     {add_indexing((yyvsp[(2) - (2)].opPtrIx));}
     break;
 
   case 147:
 
 /* Line 1806 of yacc.c  */
-#line 849 "sml.tab.ypp"
+#line 850 "sml.tab.ypp"
     {   /*feng - need a bracket to handle current indexing? eg. sum{}(expr) - sum{}(expr) vs sum{}(expr - sum{}(expr))*/
          /* reduction operator: do we need to keep track of the ID of the
             dummy variable(s)? */
@@ -3352,35 +3353,35 @@ yyreduce:
   case 148:
 
 /* Line 1806 of yacc.c  */
-#line 855 "sml.tab.ypp"
+#line 856 "sml.tab.ypp"
     { (yyval.opPtr) = new SyntaxNode(IF, (yyvsp[(2) - (4)].opPtr), (yyvsp[(4) - (4)].opPtr)); }
     break;
 
   case 149:
 
 /* Line 1806 of yacc.c  */
-#line 856 "sml.tab.ypp"
+#line 857 "sml.tab.ypp"
     { (yyval.opPtr) = new SyntaxNode(IF, (yyvsp[(2) - (6)].opPtr), (yyvsp[(4) - (6)].opPtr), (yyvsp[(6) - (6)].opPtr)); }
     break;
 
   case 150:
 
 /* Line 1806 of yacc.c  */
-#line 857 "sml.tab.ypp"
+#line 858 "sml.tab.ypp"
     { (yyval.opPtr) = new SyntaxNode(FIRST, (yyvsp[(3) - (4)].opPtr)); }
     break;
 
   case 151:
 
 /* Line 1806 of yacc.c  */
-#line 858 "sml.tab.ypp"
+#line 859 "sml.tab.ypp"
     { (yyval.opPtr) = new SyntaxNode(LAST, (yyvsp[(3) - (4)].opPtr)); }
     break;
 
   case 152:
 
 /* Line 1806 of yacc.c  */
-#line 859 "sml.tab.ypp"
+#line 860 "sml.tab.ypp"
     { 
          //$$ = new SyntaxNode(EXPECTATION, new SyntaxNode(LBRACKET, $3));}
          (yyval.opPtr) = new SyntaxNode(EXPECTATION, (yyvsp[(3) - (4)].opPtr));
@@ -3390,7 +3391,7 @@ yyreduce:
   case 153:
 
 /* Line 1806 of yacc.c  */
-#line 863 "sml.tab.ypp"
+#line 864 "sml.tab.ypp"
     { /* function definition */
          (yyval.opPtr) = new SyntaxNode((yyvsp[(1) - (4)].optype), new SyntaxNode(LBRACKET, (yyvsp[(3) - (4)].opPtr)));
       }
@@ -3399,49 +3400,49 @@ yyreduce:
   case 154:
 
 /* Line 1806 of yacc.c  */
-#line 868 "sml.tab.ypp"
+#line 869 "sml.tab.ypp"
     { (yyval.optype)=ORD; }
     break;
 
   case 155:
 
 /* Line 1806 of yacc.c  */
-#line 869 "sml.tab.ypp"
+#line 870 "sml.tab.ypp"
     { (yyval.optype)=CARD; }
     break;
 
   case 156:
 
 /* Line 1806 of yacc.c  */
-#line 872 "sml.tab.ypp"
+#line 873 "sml.tab.ypp"
     { (yyval.optype)=SUM; }
     break;
 
   case 157:
 
 /* Line 1806 of yacc.c  */
-#line 873 "sml.tab.ypp"
+#line 874 "sml.tab.ypp"
     { (yyval.optype)=MAX; }
     break;
 
   case 158:
 
 /* Line 1806 of yacc.c  */
-#line 874 "sml.tab.ypp"
+#line 875 "sml.tab.ypp"
     { (yyval.optype)=MIN; }
     break;
 
   case 159:
 
 /* Line 1806 of yacc.c  */
-#line 875 "sml.tab.ypp"
+#line 876 "sml.tab.ypp"
     { (yyval.optype)=PROD; }
     break;
 
   case 160:
 
 /* Line 1806 of yacc.c  */
-#line 878 "sml.tab.ypp"
+#line 879 "sml.tab.ypp"
     {
             (yyval.opPtr)=new ValueNode(*(yyvsp[(1) - (1)].ival));
          }
@@ -3450,7 +3451,7 @@ yyreduce:
   case 161:
 
 /* Line 1806 of yacc.c  */
-#line 881 "sml.tab.ypp"
+#line 882 "sml.tab.ypp"
     { 
             (yyval.opPtr)=new ValueNode(*(yyvsp[(1) - (1)].fval));
          }
@@ -3459,7 +3460,7 @@ yyreduce:
   case 162:
 
 /* Line 1806 of yacc.c  */
-#line 884 "sml.tab.ypp"
+#line 885 "sml.tab.ypp"
     { 
      		YAC_LOG("value: identifier rule matched! "<<(yyvsp[(1) - (1)].opPtr));
             (yyval.opPtr)=new SyntaxNode(0, (yyvsp[(1) - (1)].opPtr));
@@ -3469,7 +3470,7 @@ yyreduce:
   case 163:
 
 /* Line 1806 of yacc.c  */
-#line 888 "sml.tab.ypp"
+#line 889 "sml.tab.ypp"
     { 
             (yyval.opPtr) = new SyntaxNode(INFINITY);
          }
@@ -3478,7 +3479,7 @@ yyreduce:
 
 
 /* Line 1806 of yacc.c  */
-#line 3482 "../src/parser/sml.tab.cpp"
+#line 3483 "../src/parser/sml.tab.cpp"
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -3709,7 +3710,7 @@ yyreturn:
 
 
 /* Line 2067 of yacc.c  */
-#line 893 "sml.tab.ypp"
+#line 894 "sml.tab.ypp"
 
 
 void yyerror(const char *s) {
@@ -3843,7 +3844,7 @@ void end_smodel(char *name){
 add_indexing/rem_indexing
 -------------------------------------------------------------------------- */
 void  add_indexing(SyntaxNodeIx *indexing){
-   YAC_LOG("[add_index] - indexing:["<< *indexing<<"] "<<print_SyntaxNodesymb(indexing));
+   YAC_LOG("[add_index] - indexing:["<< *indexing<<"] "<<SyntaxNode::print_SyntaxNodesymb(indexing));
    list_of_indexing[n_indexing] = indexing;
    YAC_LOG("[add_index] - length of indexing now: " << n_indexing+1);
    n_indexing++;

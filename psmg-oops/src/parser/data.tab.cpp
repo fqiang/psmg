@@ -2007,10 +2007,10 @@ void parse_data(ModelContext* context) {
 	YAC_LOG("===============================================================");
 	rootContext = context;
   	datain = fopen(GlobalVariables::datafilename.c_str(), "r");
-  	if (datain==NULL){
-    	printf("ERROR: Data file '%s' error:%s \n",GlobalVariables::datafilename.c_str(),strerror(errno));
-    	exit(1);
-  	}
+ 	if (datain==NULL){
+   		printf("ERROR: Data file '%s' error:%s \n",GlobalVariables::datafilename.c_str(),strerror(errno));
+   		exit(1);
+ 	}
           
   	dataparse();
   	YAC_LOG("===============================================================");
