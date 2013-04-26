@@ -1,652 +1,429 @@
 AM: ----------------------------------------------------------
-AM: This is AmplModel (0xd3dc60): root
+AM: This is AmplModel (0x284a080): root
 AM: level: 0
 AM: parent: NULL
-AM: Nb submodels  : 1
-AM: Nb sets       : 4
-AM: Nb parameters : 9
-AM: Nb objectives : 0
+AM: Nb submodels  : 2
+AM: Nb sets       : 3
+AM: Nb parameters : 8
+AM: Nb objectives : 1
 AM: Nb variables  : 1
 AM: Nb constraints: 0
-AM: Nb objectives : 1
+AM: Nb objectives : 2
 AM: List components:
 MC: ----------------------------------------------------------
-MC: ModelComp: T (0xd3ae20)
-    type: parameter
+MC: ModelComp: NODES (0x28466c0)
+    type: set
+    attr: ordered
     dependencies (0):
     model: root
     count: 0
 MC: ----------------------------------------------------------
-MC: ModelComp: TIME (0xd3b270)
+MC: ModelComp: ARCS (0x284e850)
     type: set
-    attr: ordered := 0 .. T
-    dependencies (1):
-       root::T
+    attr: ordered
+    dependencies (0):
     model: root
     count: 1
 MC: ----------------------------------------------------------
-MC: ModelComp: NODES (0xd42f40)
+MC: ModelComp: COMM (0x284f060)
     type: set
+    attr: ordered
     dependencies (0):
     model: root
     count: 2
 MC: ----------------------------------------------------------
-MC: ModelComp: Parent (0xd43b40)
+MC: ModelComp: cost (0x284fc30)
     type: parameter
-    attr: symbolic
-    indexing: {NODES}
+    indexing: {ARCS}
 qualifier: 
 number of indexing expressions: 1
   0: dummyVar: 
-     set     : NODES
-LBR{(IDREF(0xd43750:NODES(0xd42f40))())
+     set     : ARCS
+LBR{(IDREF(0x284f900:ARCS(0x284e850))())
     dependencies (1):
-       root::NODES
+       root::ARCS
     model: root
     count: 3
 MC: ----------------------------------------------------------
-MC: ModelComp: Probs (0xd44700)
+MC: ModelComp: basecap (0x28507f0)
     type: parameter
-    indexing: {NODES}
+    indexing: {ARCS}
 qualifier: 
 number of indexing expressions: 1
   0: dummyVar: 
-     set     : NODES
-LBR{(IDREF(0xd44390:NODES(0xd42f40))())
+     set     : ARCS
+LBR{(IDREF(0x2850490:ARCS(0x284e850))())
     dependencies (1):
-       root::NODES
+       root::ARCS
     model: root
     count: 4
 MC: ----------------------------------------------------------
-MC: ModelComp: ASSETS (0xd44ef0)
-    type: set
-    dependencies (0):
+MC: ModelComp: arc_source (0x28513b0)
+    type: parameter
+    indexing: {ARCS}
+qualifier: 
+number of indexing expressions: 1
+  0: dummyVar: 
+     set     : ARCS
+LBR{(IDREF(0x2851050:ARCS(0x284e850))())
+    dependencies (1):
+       root::ARCS
     model: root
     count: 5
 MC: ----------------------------------------------------------
-MC: ModelComp: Price (0xd45ab0)
+MC: ModelComp: arc_target (0x2851f70)
     type: parameter
-    indexing: {ASSETS}
+    indexing: {ARCS}
 qualifier: 
 number of indexing expressions: 1
   0: dummyVar: 
-     set     : ASSETS
-LBR{(IDREF(0xd45780:ASSETS(0xd44ef0))())
+     set     : ARCS
+LBR{(IDREF(0x2851c10:ARCS(0x284e850))())
     dependencies (1):
-       root::ASSETS
+       root::ARCS
     model: root
     count: 6
 MC: ----------------------------------------------------------
-MC: ModelComp: Return (0xd467a0)
+MC: ModelComp: comm_source (0x2852b30)
     type: parameter
-    indexing: {ASSETS,NODES}
+    indexing: {COMM}
 qualifier: 
-number of indexing expressions: 2
+number of indexing expressions: 1
   0: dummyVar: 
-     set     : ASSETS
-  1: dummyVar: 
-     set     : NODES
-LBR{(COMMA(IDREF(0xd46300:ASSETS(0xd44ef0))(), IDREF(0xd46430:NODES(0xd42f40))()))
-    dependencies (2):
-       root::ASSETS
-       root::NODES
+     set     : COMM
+LBR{(IDREF(0x28527d0:COMM(0x284f060))())
+    dependencies (1):
+       root::COMM
     model: root
     count: 7
 MC: ----------------------------------------------------------
-MC: ModelComp: BENCHMARK (0xd46fb0)
-    type: set
-    dependencies (0):
+MC: ModelComp: comm_target (0x28536f0)
+    type: parameter
+    indexing: {COMM}
+qualifier: 
+number of indexing expressions: 1
+  0: dummyVar: 
+     set     : COMM
+LBR{(IDREF(0x2853390:COMM(0x284f060))())
+    dependencies (1):
+       root::COMM
     model: root
     count: 8
 MC: ----------------------------------------------------------
-MC: ModelComp: Vbenchmk (0xd47b60)
+MC: ModelComp: comm_demand (0x28542b0)
     type: parameter
-    indexing: {BENCHMARK}
+    indexing: {COMM}
 qualifier: 
 number of indexing expressions: 1
   0: dummyVar: 
-     set     : BENCHMARK
-LBR{(IDREF(0xd47830:BENCHMARK(0xd46fb0))())
+     set     : COMM
+LBR{(IDREF(0x2853f50:COMM(0x284f060))())
     dependencies (1):
-       root::BENCHMARK
+       root::COMM
     model: root
     count: 9
 MC: ----------------------------------------------------------
-MC: ModelComp: Bench2nd (0xd48720)
+MC: ModelComp: b (0x28563a0)
     type: parameter
-    indexing: {BENCHMARK}
+    attr: := if (comm_source[k] == ord(i)) then comm_demand[k] else if (comm_target[k] == ord(i)) then - comm_demand[k] else 0
+    indexing: {k in COMM,i in NODES}
 qualifier: 
-number of indexing expressions: 1
-  0: dummyVar: 
-     set     : BENCHMARK
-LBR{(IDREF(0xd483b0:BENCHMARK(0xd46fb0))())
-    dependencies (1):
-       root::BENCHMARK
+number of indexing expressions: 2
+  0: dummyVar: k
+     set     : COMM
+  1: dummyVar: i
+     set     : NODES
+LBR{(COMMA(IN((ID T), IDREF(0x2854b30:COMM(0x284f060))()), IN((ID T), IDREF(0x2854d20:NODES(0x28466c0))())))
+    dependencies (5):
+       root::COMM
+       root::NODES
+       root::comm_source
+       root::comm_demand
+       root::comm_target
     model: root
     count: 10
 MC: ----------------------------------------------------------
-MC: ModelComp: Gamma (0xd48f10)
-    type: parameter
-    dependencies (0):
+MC: ModelComp: sparecap (0x2857100)
+    type: variable
+    attr: >= 0
+    indexing: {ARCS}
+qualifier: 
+number of indexing expressions: 1
+  0: dummyVar: 
+     set     : ARCS
+LBR{(IDREF(0x2856cc0:ARCS(0x284e850))())
+    dependencies (1):
+       root::ARCS
     model: root
     count: 11
 MC: ----------------------------------------------------------
-MC: ModelComp: InitialWealth (0xd49740)
-    type: parameter
-    dependencies (0):
+MC: ModelComp: MCNFArcs (0x2858490)
+    type: submodel
+    indexing: {a in ARCS}
+qualifier: 
+number of indexing expressions: 1
+  0: dummyVar: a
+     set     : ARCS
+LBR{(IN((ID T), IDREF(0x2857980:ARCS(0x284e850))()))
+    dependencies (1):
+       root::ARCS
     model: root
     count: 12
 MC: ----------------------------------------------------------
-MC: ModelComp: slack2 (0xd4a500)
-    type: variable
-    attr: >= 0
-    indexing: {BENCHMARK,TIME}
-qualifier: 
-number of indexing expressions: 2
-  0: dummyVar: 
-     set     : BENCHMARK
-  1: dummyVar: 
-     set     : TIME
-LBR{(COMMA(IDREF(0xd49f70:BENCHMARK(0xd46fb0))(), IDREF(0xd4a0a0:TIME(0xd3b270))()))
-    dependencies (2):
-       root::BENCHMARK
-       root::TIME
-    model: root
-    count: 13
-MC: ----------------------------------------------------------
-MC: ModelComp: alm0 (0xd5b3d0)
+MC: ModelComp: MCNFNodes (0x2861b20)
     type: submodel
-    dependencies (0):
+    indexing: {n in NODES}
+qualifier: 
+number of indexing expressions: 1
+  0: dummyVar: n
+     set     : NODES
+LBR{(IN((ID T), IDREF(0x2861050:NODES(0x28466c0))()))
+    dependencies (1):
+       root::NODES
     model: root
-    count: 14
+    count: 19
+MC: ----------------------------------------------------------
+MC: ModelComp: costToInstall (0x286c920)
+    type: objective min
+    attr: sum {x in ARCS}sparecap[x] * cost[x]
+    dependencies (3):
+       root::ARCS
+       root::sparecap
+       root::cost
+    model: root
+    count: 27
 AM: now list the submodels:
 AM: ----------------------------------------------------------
-AM: This is AmplModel (0xd64c10): alm0
+AM: This is AmplModel (0x2857db0): MCNFArcs
+AM: level: 0
+AM: parent: root
+AM: Nb submodels  : 1
+AM: Nb sets       : 1
+AM: Nb parameters : 0
+AM: Nb objectives : 0
+AM: Nb variables  : 1
+AM: Nb constraints: 1
+AM: Nb objectives : 1
+AM: List components:
+MC: ----------------------------------------------------------
+MC: ModelComp: ARCSDIFF (0x2858ec0)
+    type: set
+    attr: := ARCS diff {a}
+    dependencies (1):
+       root::ARCS
+    model: MCNFArcs
+    count: 13
+MC: ----------------------------------------------------------
+MC: ModelComp: Net (0x285a250)
+    type: submodel
+    indexing: {k in COMM}
+qualifier: 
+number of indexing expressions: 1
+  0: dummyVar: k
+     set     : COMM
+LBR{(IN((ID T), IDREF(0x2859740:COMM(0x284f060))()))
+    dependencies (1):
+       root::COMM
+    model: MCNFArcs
+    count: 14
+MC: ----------------------------------------------------------
+MC: ModelComp: capslack (0x285e6e0)
+    type: variable
+    attr: >= 0
+    indexing: {ARCSDIFF}
+qualifier: 
+number of indexing expressions: 1
+  0: dummyVar: 
+     set     : ARCSDIFF
+LBR{(IDREF(0x285e300:ARCSDIFF(0x2858ec0))())
+    dependencies (1):
+       MCNFArcs::ARCSDIFF
+    model: MCNFArcs
+    count: 17
+MC: ----------------------------------------------------------
+MC: ModelComp: Capacity (0x2860710)
+    type: constraint
+    attr: sum {k in COMM}Flow[k,j] + capslack[j] - sparecap[j] = basecap[j]
+    indexing: {j in ARCSDIFF}
+qualifier: 
+number of indexing expressions: 1
+  0: dummyVar: j
+     set     : ARCSDIFF
+LBR{(IN((ID T), IDREF(0x285ef60:ARCSDIFF(0x2858ec0))()))
+    dependencies (6):
+       MCNFArcs::ARCSDIFF
+       root::COMM
+       Net::Flow
+       MCNFArcs::capslack
+       root::sparecap
+       root::basecap
+    model: MCNFArcs
+    count: 18
+AM: now list the submodels:
+AM: ----------------------------------------------------------
+AM: This is AmplModel (0x2859b70): Net
+AM: level: 0
+AM: parent: MCNFArcs
+AM: Nb submodels  : 0
+AM: Nb sets       : 0
+AM: Nb parameters : 0
+AM: Nb objectives : 0
+AM: Nb variables  : 1
+AM: Nb constraints: 1
+AM: Nb objectives : 0
+AM: List components:
+MC: ----------------------------------------------------------
+MC: ModelComp: Flow (0x285aeb0)
+    type: variable
+    attr: >= 0
+    indexing: {ARCSDIFF}
+qualifier: 
+number of indexing expressions: 1
+  0: dummyVar: 
+     set     : ARCSDIFF
+LBR{(IDREF(0x285aa40:ARCSDIFF(0x2858ec0))())
+    dependencies (1):
+       MCNFArcs::ARCSDIFF
+    model: Net
+    count: 15
+MC: ----------------------------------------------------------
+MC: ModelComp: FlowBalance (0x285d980)
+    type: constraint
+    attr: sum {j in ARCSDIFF: arc_target[j] == ord(i)}Flow[j] - sum {x in ARCSDIFF: arc_source[x] == ord(i)}Flow[x] = b[k,i]
+    indexing: {i in NODES}
+qualifier: 
+number of indexing expressions: 1
+  0: dummyVar: i
+     set     : NODES
+LBR{(IN((ID T), IDREF(0x285b730:NODES(0x28466c0))()))
+    dependencies (6):
+       root::NODES
+       MCNFArcs::ARCSDIFF
+       root::arc_target
+       Net::Flow
+       root::arc_source
+       root::b
+    model: Net
+    count: 16
+AM: ----------------------------------------------------------
+AM: This is AmplModel (0x2861440): MCNFNodes
 AM: level: 0
 AM: parent: root
 AM: Nb submodels  : 1
 AM: Nb sets       : 2
 AM: Nb parameters : 0
 AM: Nb objectives : 0
-AM: Nb variables  : 3
-AM: Nb constraints: 3
+AM: Nb variables  : 1
+AM: Nb constraints: 1
 AM: Nb objectives : 1
 AM: List components:
 MC: ----------------------------------------------------------
-MC: ModelComp: x_hold (0xd84690)
-    type: variable
-    attr: >= 0
-    indexing: {ASSETS}
-qualifier: 
-number of indexing expressions: 1
-  0: dummyVar: 
-     set     : ASSETS
-LBR{(IDREF(0xd83d30:ASSETS(0xd44ef0))())
-    dependencies (1):
-       root::ASSETS
-    model: alm0
-    count: 15
-MC: ----------------------------------------------------------
-MC: ModelComp: risk (0xd84ec0)
-    type: variable
-    attr: >= 0
-    indexing: {BENCHMARK}
-qualifier: 
-number of indexing expressions: 1
-  0: dummyVar: 
-     set     : BENCHMARK
-LBR{(IDREF(0xd856d0:BENCHMARK(0xd46fb0))())
-    dependencies (1):
-       root::BENCHMARK
-    model: alm0
-    count: 16
-MC: ----------------------------------------------------------
-MC: ModelComp: cash (0xd857d0)
-    type: variable
-    attr: >= 0
-    dependencies (0):
-    model: alm0
-    count: 17
-MC: ----------------------------------------------------------
-MC: ModelComp: StartBudget (0xd85fc0)
-    type: constraint
-    attr: (1 + Gamma) * sum {j in ASSETS}x_hold[j] * Price[j] + cash = InitialWealth
-    dependencies (6):
-       root::Gamma
-       root::ASSETS
-       alm0::x_hold
-       root::Price
-       alm0::cash
-       root::InitialWealth
-    model: alm0
-    count: 18
-MC: ----------------------------------------------------------
-MC: ModelComp: rootset (0xd872d0)
+MC: ModelComp: NODESDIFF (0x2862550)
     type: set
-    attr: := {this_nd in NODES: Parent[this_nd] == "null"}
-    dependencies (2):
+    attr: := NODES diff {n}
+    dependencies (1):
        root::NODES
-       root::Parent
-    model: alm0
-    count: 32
+    model: MCNFNodes
+    count: 20
 MC: ----------------------------------------------------------
-MC: ModelComp: ind0 (0xd87e20)
+MC: ModelComp: ARCSDIFF (0x2863d10)
     type: set
-    attr: := {this_nd in NODES: Parent[this_nd] in rootset}
+    attr: := {{m in ARCS: arc_source[m] != ord(n) && arc_target[m] != ord(n)}}
     dependencies (3):
-       root::NODES
-       root::Parent
-       alm0::rootset
-    model: alm0
-    count: 33
-MC: ----------------------------------------------------------
-MC: ModelComp: 1 (0xd83f30)
-    type: submodel
-    indexing: {ix0 in ind0}
-qualifier: 
-number of indexing expressions: 1
-  0: dummyVar: ix0
-     set     : ind0
-LBR{(IN((ID T), IDREF(0xd83ab0:ind0(0xd87e20))()))
-    dependencies (1):
-       alm0::ind0
-    model: alm0
-    count: 34
-MC: ----------------------------------------------------------
-MC: ModelComp: StochasticDominance2_up1 (0xd90c00)
-    type: constraint
-    attr: sum {ix0 in ind0}Probs[ix0] * (risk[ix0,l]) + slack2[l,1] = Bench2nd[l]
-    indexing: {l in BENCHMARK}
-qualifier: 
-number of indexing expressions: 1
-  0: dummyVar: l
-     set     : BENCHMARK
-LBR{(IN((ID T), IDREF(0xd919e0:BENCHMARK(0xd46fb0))()))
-    dependencies (6):
-       root::BENCHMARK
-       alm0::ind0
-       root::Probs
-       1::risk
-       root::slack2
-       root::Bench2nd
-    model: alm0
-    count: 25
-MC: ----------------------------------------------------------
-MC: ModelComp: StochasticDominance2_up2 (0xd9ae80)
-    type: constraint
-    attr: sum {ix0 in ind0,ix1 in ind1[ix0]}Probs[ix0] * Probs[ix1] * (risk[ix0,ix1,l]) + slack2[l,2] = Bench2nd[l]
-    indexing: {l in BENCHMARK}
-qualifier: 
-number of indexing expressions: 1
-  0: dummyVar: l
-     set     : BENCHMARK
-LBR{(IN((ID T), IDREF(0xd9bc60:BENCHMARK(0xd46fb0))()))
-    dependencies (8):
-       root::BENCHMARK
-       alm0::ind0
-       1::ind1
-       root::Probs
-       root::Probs
-       2::risk
-       root::slack2
-       root::Bench2nd
-    model: alm0
-    count: 25
-AM: now list the submodels:
-AM: ----------------------------------------------------------
-AM: This is AmplModel (0xd6beb0): 1
-AM: level: 0
-AM: parent: alm0
-AM: indexing: {ix0 in ind0}
-LBR{(IN((ID T), IDREF(0xd83ab0:ind0(0xd87e20))()))
-AM: Nb submodels  : 1
-AM: Nb sets       : 1
-AM: Nb parameters : 0
-AM: Nb objectives : 0
-AM: Nb variables  : 6
-AM: Nb constraints: 3
-AM: Nb objectives : 1
-AM: List components:
-MC: ----------------------------------------------------------
-MC: ModelComp: x_hold (0xd889c0)
-    type: variable
-    attr: >= 0
-    indexing: {ASSETS}
-qualifier: 
-number of indexing expressions: 1
-  0: dummyVar: 
-     set     : ASSETS
-LBR{(IDREF(0xd89230:ASSETS(0xd44ef0))())
-    dependencies (1):
-       root::ASSETS
-    model: 1
-    count: 15
-MC: ----------------------------------------------------------
-MC: ModelComp: risk (0xd89330)
-    type: variable
-    attr: >= 0
-    indexing: {BENCHMARK}
-qualifier: 
-number of indexing expressions: 1
-  0: dummyVar: 
-     set     : BENCHMARK
-LBR{(IDREF(0xd89bb0:BENCHMARK(0xd46fb0))())
-    dependencies (1):
-       root::BENCHMARK
-    model: 1
-    count: 16
-MC: ----------------------------------------------------------
-MC: ModelComp: cash (0xd89cf0)
-    type: variable
-    attr: >= 0
-    dependencies (0):
-    model: 1
-    count: 17
-MC: ----------------------------------------------------------
-MC: ModelComp: x_sold (0xd8a4e0)
-    type: variable
-    attr: >= 0
-    indexing: {ASSETS}
-qualifier: 
-number of indexing expressions: 1
-  0: dummyVar: 
-     set     : ASSETS
-LBR{(IDREF(0xd8adc0:ASSETS(0xd44ef0))())
-    dependencies (1):
-       root::ASSETS
-    model: 1
-    count: 19
-MC: ----------------------------------------------------------
-MC: ModelComp: x_bought (0xd8aec0)
-    type: variable
-    attr: >= 0
-    indexing: {ASSETS}
-qualifier: 
-number of indexing expressions: 1
-  0: dummyVar: 
-     set     : ASSETS
-LBR{(IDREF(0xd8b740:ASSETS(0xd44ef0))())
-    dependencies (1):
-       root::ASSETS
-    model: 1
-    count: 20
-MC: ----------------------------------------------------------
-MC: ModelComp: slack1 (0xd8b880)
-    type: variable
-    attr: >= 0
-    indexing: {BENCHMARK}
-qualifier: 
-number of indexing expressions: 1
-  0: dummyVar: 
-     set     : BENCHMARK
-LBR{(IDREF(0xd8c100:BENCHMARK(0xd46fb0))())
-    dependencies (1):
-       root::BENCHMARK
-    model: 1
+       root::ARCS
+       root::arc_source
+       root::arc_target
+    model: MCNFNodes
     count: 21
 MC: ----------------------------------------------------------
-MC: ModelComp: CashBalance (0xd8c240)
-    type: constraint
-    attr: cash + (1 + Gamma) * sum {j in ASSETS}Price[j] * x_bought[j] - cash - (1 - Gamma) * sum {j in ASSETS}Price[j] * x_sold[j] = 0
-    dependencies (10):
-       1::cash
-       root::Gamma
-       root::ASSETS
-       root::Price
-       1::x_bought
-       alm0::cash
-       root::Gamma
-       root::ASSETS
-       root::Price
-       1::x_sold
-    model: 1
+MC: ModelComp: Net (0x28650e0)
+    type: submodel
+    indexing: {k in COMM}
+qualifier: 
+number of indexing expressions: 1
+  0: dummyVar: k
+     set     : COMM
+LBR{(IN((ID T), IDREF(0x28645d0:COMM(0x284f060))()))
+    dependencies (1):
+       root::COMM
+    model: MCNFNodes
     count: 22
 MC: ----------------------------------------------------------
-MC: ModelComp: Inventory (0xd8df10)
+MC: ModelComp: capslacknode (0x2869570)
+    type: variable
+    attr: >= 0
+    indexing: {ARCSDIFF}
+qualifier: 
+number of indexing expressions: 1
+  0: dummyVar: 
+     set     : ARCSDIFF
+LBR{(IDREF(0x2869190:ARCSDIFF(0x2863d10))())
+    dependencies (1):
+       MCNFNodes::ARCSDIFF
+    model: MCNFNodes
+    count: 25
+MC: ----------------------------------------------------------
+MC: ModelComp: Capacity (0x286b5a0)
     type: constraint
-    attr: x_hold[j] - (1 + Return[j,ix0]) * x_hold[j] - x_bought[j] + x_sold[j] = 0
-    indexing: {j in ASSETS}
+    attr: sum {k in COMM}Flow[k,j] + capslacknode[j] - sparecap[j] = basecap[j]
+    indexing: {j in ARCSDIFF}
 qualifier: 
 number of indexing expressions: 1
   0: dummyVar: j
-     set     : ASSETS
-LBR{(IN((ID T), IDREF(0xd8f170:ASSETS(0xd44ef0))()))
+     set     : ARCSDIFF
+LBR{(IN((ID T), IDREF(0x2869df0:ARCSDIFF(0x2863d10))()))
     dependencies (6):
-       root::ASSETS
-       1::x_hold
-       root::Return
-       alm0::x_hold
-       1::x_bought
-       1::x_sold
-    model: 1
-    count: 23
-MC: ----------------------------------------------------------
-MC: ModelComp: StochasticDominance1 (0xd8f460)
-    type: constraint
-    attr: sum {j in ASSETS}Price[j] * x_hold[j] + cash + risk[l] - slack1[l] = Vbenchmk[l]
-    indexing: {l in BENCHMARK}
-qualifier: 
-number of indexing expressions: 1
-  0: dummyVar: l
-     set     : BENCHMARK
-LBR{(IN((ID T), IDREF(0xd90870:BENCHMARK(0xd46fb0))()))
-    dependencies (8):
-       root::BENCHMARK
-       root::ASSETS
-       root::Price
-       1::x_hold
-       1::cash
-       1::risk
-       1::slack1
-       root::Vbenchmk
-    model: 1
-    count: 24
-MC: ----------------------------------------------------------
-MC: ModelComp: ind1 (0xd91fb0)
-    type: set
-    attr: := {this_nd in NODES: Parent[this_nd] == ix0}
-    dependencies (2):
-       root::NODES
-       root::Parent
-    model: 1
-    count: 30
-MC: ----------------------------------------------------------
-MC: ModelComp: 2 (0xd64290)
-    type: submodel
-    indexing: {ix1 in ind1}
-qualifier: 
-number of indexing expressions: 1
-  0: dummyVar: ix1
-     set     : ind1
-LBR{(IN((ID T), IDREF(0xd64060:ind1(0xd91fb0))()))
-    dependencies (1):
-       1::ind1
-    model: 1
-    count: 31
-AM: now list the submodels:
-AM: ----------------------------------------------------------
-AM: This is AmplModel (0xd666e0): 2
-AM: level: 0
-AM: parent: 1
-AM: indexing: {ix1 in ind1}
-LBR{(IN((ID T), IDREF(0xd64060:ind1(0xd91fb0))()))
-AM: Nb submodels  : 0
-AM: Nb sets       : 1
-AM: Nb parameters : 0
-AM: Nb objectives : 1
-AM: Nb variables  : 7
-AM: Nb constraints: 4
-AM: Nb objectives : 0
-AM: List components:
-MC: ----------------------------------------------------------
-MC: ModelComp: x_hold (0xd92bf0)
-    type: variable
-    attr: >= 0
-    indexing: {ASSETS}
-qualifier: 
-number of indexing expressions: 1
-  0: dummyVar: 
-     set     : ASSETS
-LBR{(IDREF(0xd92dd0:ASSETS(0xd44ef0))())
-    dependencies (1):
-       root::ASSETS
-    model: 2
-    count: 15
-MC: ----------------------------------------------------------
-MC: ModelComp: risk (0xd935b0)
-    type: variable
-    attr: >= 0
-    indexing: {BENCHMARK}
-qualifier: 
-number of indexing expressions: 1
-  0: dummyVar: 
-     set     : BENCHMARK
-LBR{(IDREF(0xd93e30:BENCHMARK(0xd46fb0))())
-    dependencies (1):
-       root::BENCHMARK
-    model: 2
-    count: 16
-MC: ----------------------------------------------------------
-MC: ModelComp: cash (0xd93f70)
-    type: variable
-    attr: >= 0
-    dependencies (0):
-    model: 2
-    count: 17
-MC: ----------------------------------------------------------
-MC: ModelComp: x_sold (0xd94760)
-    type: variable
-    attr: >= 0
-    indexing: {ASSETS}
-qualifier: 
-number of indexing expressions: 1
-  0: dummyVar: 
-     set     : ASSETS
-LBR{(IDREF(0xd95040:ASSETS(0xd44ef0))())
-    dependencies (1):
-       root::ASSETS
-    model: 2
-    count: 19
-MC: ----------------------------------------------------------
-MC: ModelComp: x_bought (0xd95140)
-    type: variable
-    attr: >= 0
-    indexing: {ASSETS}
-qualifier: 
-number of indexing expressions: 1
-  0: dummyVar: 
-     set     : ASSETS
-LBR{(IDREF(0xd959c0:ASSETS(0xd44ef0))())
-    dependencies (1):
-       root::ASSETS
-    model: 2
-    count: 20
-MC: ----------------------------------------------------------
-MC: ModelComp: slack1 (0xd95b00)
-    type: variable
-    attr: >= 0
-    indexing: {BENCHMARK}
-qualifier: 
-number of indexing expressions: 1
-  0: dummyVar: 
-     set     : BENCHMARK
-LBR{(IDREF(0xd96380:BENCHMARK(0xd46fb0))())
-    dependencies (1):
-       root::BENCHMARK
-    model: 2
-    count: 21
-MC: ----------------------------------------------------------
-MC: ModelComp: CashBalance (0xd964c0)
-    type: constraint
-    attr: cash + (1 + Gamma) * sum {j in ASSETS}Price[j] * x_bought[j] - cash - (1 - Gamma) * sum {j in ASSETS}Price[j] * x_sold[j] = 0
-    dependencies (10):
-       2::cash
-       root::Gamma
-       root::ASSETS
-       root::Price
-       2::x_bought
-       1::cash
-       root::Gamma
-       root::ASSETS
-       root::Price
-       2::x_sold
-    model: 2
-    count: 22
-MC: ----------------------------------------------------------
-MC: ModelComp: Inventory (0xd98190)
-    type: constraint
-    attr: x_hold[j] - (1 + Return[j,ix1]) * x_hold[j] - x_bought[j] + x_sold[j] = 0
-    indexing: {j in ASSETS}
-qualifier: 
-number of indexing expressions: 1
-  0: dummyVar: j
-     set     : ASSETS
-LBR{(IN((ID T), IDREF(0xd993f0:ASSETS(0xd44ef0))()))
-    dependencies (6):
-       root::ASSETS
-       2::x_hold
-       root::Return
-       1::x_hold
-       2::x_bought
-       2::x_sold
-    model: 2
-    count: 23
-MC: ----------------------------------------------------------
-MC: ModelComp: StochasticDominance1 (0xd996e0)
-    type: constraint
-    attr: sum {j in ASSETS}Price[j] * x_hold[j] + cash + risk[l] - slack1[l] = Vbenchmk[l]
-    indexing: {l in BENCHMARK}
-qualifier: 
-number of indexing expressions: 1
-  0: dummyVar: l
-     set     : BENCHMARK
-LBR{(IN((ID T), IDREF(0xd9aaf0:BENCHMARK(0xd46fb0))()))
-    dependencies (8):
-       root::BENCHMARK
-       root::ASSETS
-       root::Price
-       2::x_hold
-       2::cash
-       2::risk
-       2::slack1
-       root::Vbenchmk
-    model: 2
-    count: 24
-MC: ----------------------------------------------------------
-MC: ModelComp: wealth (0xd9c480)
-    type: variable
-    attr: >= 0
-    dependencies (0):
-    model: 2
+       MCNFNodes::ARCSDIFF
+       root::COMM
+       Net::Flow
+       MCNFNodes::capslacknode
+       root::sparecap
+       root::basecap
+    model: MCNFNodes
     count: 26
+AM: now list the submodels:
+AM: ----------------------------------------------------------
+AM: This is AmplModel (0x2864a00): Net
+AM: level: 0
+AM: parent: MCNFNodes
+AM: Nb submodels  : 0
+AM: Nb sets       : 0
+AM: Nb parameters : 0
+AM: Nb objectives : 0
+AM: Nb variables  : 1
+AM: Nb constraints: 1
+AM: Nb objectives : 0
+AM: List components:
 MC: ----------------------------------------------------------
-MC: ModelComp: FinalWealth (0xd9c550)
+MC: ModelComp: Flow (0x2865d40)
+    type: variable
+    attr: >= 0
+    indexing: {ARCSDIFF}
+qualifier: 
+number of indexing expressions: 1
+  0: dummyVar: 
+     set     : ARCSDIFF
+LBR{(IDREF(0x28658d0:ARCSDIFF(0x2863d10))())
+    dependencies (1):
+       MCNFNodes::ARCSDIFF
+    model: Net
+    count: 23
+MC: ----------------------------------------------------------
+MC: ModelComp: FlowBlance (0x2868810)
     type: constraint
-    attr: wealth - sum {j in ASSETS}Price[j] * x_hold[j] - cash = 0
-    dependencies (5):
-       2::wealth
-       root::ASSETS
-       root::Price
-       2::x_hold
-       2::cash
-    model: 2
-    count: 27
-MC: ----------------------------------------------------------
-MC: ModelComp: objFunc (0xd9de20)
-    type: objective max
-    attr: Probs[ix0] * Probs[ix1] * (wealth)
-    dependencies (3):
-       root::Probs
-       root::Probs
-       2::wealth
-    model: 2
-    count: 28
-MC: ----------------------------------------------------------
-MC: ModelComp: ind2 (0xd9e8b0)
-    type: set
-    attr: := {this_nd in NODES: Parent[this_nd] == ix1}
-    dependencies (2):
-       root::NODES
-       root::Parent
-    model: 2
-    count: 29
+    attr: sum {j in ARCSDIFF: arc_target[j] == ord(i)}Flow[j] - sum {j in ARCSDIFF: arc_source[j] == ord(i)}Flow[j] = b[k,i]
+    indexing: {i in NODESDIFF}
+qualifier: 
+number of indexing expressions: 1
+  0: dummyVar: i
+     set     : NODESDIFF
+LBR{(IN((ID T), IDREF(0x28665c0:NODESDIFF(0x2862550))()))
+    dependencies (6):
+       MCNFNodes::NODESDIFF
+       MCNFNodes::ARCSDIFF
+       root::arc_target
+       Net::Flow
+       root::arc_source
+       root::b
+    model: Net
+    count: 24

@@ -2209,7 +2209,7 @@ yyreduce:
                newmc = new ModelComp((yyvsp[(2) - (6)].string), TSET, (yyvsp[(3) - (6)].opPtrIx), (yyvsp[(6) - (6)].opPtr));
             }
             current_model->addComp(newmc);
-            current_model->symbol_table.defineSymbol(SymbolTable::ST_SET, (yyvsp[(2) - (6)].string),
+            current_model->symbol_table.defineSymbol(Entry::ST_SET, (yyvsp[(2) - (6)].string),
                newmc); 
             if ((yyvsp[(3) - (6)].opPtrIx)) rem_indexing((yyvsp[(3) - (6)].opPtrIx));
             //$$=$2; 
@@ -2240,7 +2240,7 @@ yyreduce:
                }
                current_model->addComp(newmc);
                current_model->symbol_table.defineSymbol(
-                  SymbolTable::ST_PARAM, (yyvsp[(3) - (7)].string), newmc); 
+                  Entry::ST_PARAM, (yyvsp[(3) - (7)].string), newmc); 
                if ((yyvsp[(4) - (7)].opPtrIx)) rem_indexing((yyvsp[(4) - (7)].opPtrIx));
                //$$=$2; 
             }
@@ -2269,7 +2269,7 @@ yyreduce:
             }
 
             current_model->addComp(newmc);
-            current_model->symbol_table.defineSymbol(SymbolTable::ST_VAR, (yyvsp[(2) - (6)].string),
+            current_model->symbol_table.defineSymbol(Entry::ST_VAR, (yyvsp[(2) - (6)].string),
                newmc); 
             if ((yyvsp[(3) - (6)].opPtrIx)) rem_indexing((yyvsp[(3) - (6)].opPtrIx));
             //$$=$2; 
@@ -2299,7 +2299,7 @@ yyreduce:
             }
 
             current_model->addComp(newmc);
-            current_model->symbol_table.defineSymbol(SymbolTable::ST_OBJ, (yyvsp[(2) - (7)].string),
+            current_model->symbol_table.defineSymbol(Entry::ST_OBJ, (yyvsp[(2) - (7)].string),
                newmc);
             if ((yyvsp[(3) - (7)].opPtrIx)) rem_indexing((yyvsp[(3) - (7)].opPtrIx));
             (yyval.string)=(yyvsp[(2) - (7)].string);
@@ -2329,7 +2329,7 @@ yyreduce:
             }
 
             current_model->addComp(newmc);
-            current_model->symbol_table.defineSymbol(SymbolTable::ST_OBJ, (yyvsp[(2) - (7)].string),
+            current_model->symbol_table.defineSymbol(Entry::ST_OBJ, (yyvsp[(2) - (7)].string),
                newmc); 
             if ((yyvsp[(3) - (7)].opPtrIx)) rem_indexing((yyvsp[(3) - (7)].opPtrIx));
             (yyval.string)=(yyvsp[(2) - (7)].string);
@@ -2363,7 +2363,7 @@ yyreduce:
                	newmc = new ModelComp((yyvsp[(2) - (7)].string), TCON, (yyvsp[(3) - (7)].opPtrIx), (yyvsp[(7) - (7)].opPtr));
             }
             current_model->addComp(newmc);
-            current_model->symbol_table.defineSymbol(SymbolTable::ST_CONS, (yyvsp[(2) - (7)].string),
+            current_model->symbol_table.defineSymbol(Entry::ST_CONS, (yyvsp[(2) - (7)].string),
                newmc); 
             if ((yyvsp[(3) - (7)].opPtrIx)) rem_indexing((yyvsp[(3) - (7)].opPtrIx));
             (yyval.string)=(yyvsp[(2) - (7)].string);
@@ -3093,7 +3093,7 @@ yyreduce:
     {
                /* this is a simple identifier in global context */
                YAC_LOG("identifier: iditem rule matched  "<<(yyvsp[(1) - (1)].opPtr));
-               (yyval.opPtr) = find_var_ref_in_context(current_model, (yyvsp[(1) - (1)].opPtr));
+               (yyval.opPtr) = SyntaxNode::find_var_ref_in_context(current_model, (yyvsp[(1) - (1)].opPtr));
             }
     break;
 
@@ -3140,7 +3140,7 @@ yyreduce:
                }
                local_context = (((SyntaxNodeIDREF*)(yyvsp[(1) - (3)].opPtr))->ref)->other;
 
-               (yyval.opPtr) = find_var_ref_in_context(local_context, (yyvsp[(3) - (3)].opPtr));
+               (yyval.opPtr) = SyntaxNode::find_var_ref_in_context(local_context, (yyvsp[(3) - (3)].opPtr));
 
                YAC_LOG("Merge identifier:"<< *((yyvsp[(1) - (3)].opPtr)) <<"-----> iditem:"<<*((yyvsp[(3) - (3)].opPtr)));
                /* merge argument lists */

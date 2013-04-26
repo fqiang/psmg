@@ -201,22 +201,25 @@ public:
 	virtual void calculateMemoryUsage(unsigned long& size);
 	//end Feng
 
+
+	static SyntaxNode *findKeywordinTree(SyntaxNode *root, int oc);
+	static SyntaxNode* find_var_ref_in_context(AmplModel *context, SyntaxNode *ref);
+	static SyntaxNode* find_var_ref_in_indexing(const std::string& name);
+	static string print_SyntaxNodesymb(const SyntaxNode *node);
+
 private:
 	void findSyntaxNodeChild(SyntaxNode** node,int op);
 	bool isDepend(vector<ModelComp*> varComps);
 	void handleSum(ModelContext* rowContext, vector<double>& jcobs, ModelContext* colContext);
 	void foreachSetValue(vector<ModelComp*> comps, vector<string>& dummyVars, Set* aSet, ModelContext* rowContext, vector<double>& jcobs, ModelContext* colContext);
 	void getVarKey(string& varKey, SyntaxNodeIDREF* refn, ModelContext* rowContext);
+
 };
 
-std::string print_SyntaxNodesymb(const SyntaxNode *node);
 
 std::ostream& operator<<(std::ostream& s, const SyntaxNode &node);
 std::ostream& operator<<(std::ostream& s, const SyntaxNode *node);
 
 // Routines taken from ampl.h
-SyntaxNode *findKeywordinTree(SyntaxNode *root, int oc);
-SyntaxNode* find_var_ref_in_context(AmplModel *context, SyntaxNode *ref);
-SyntaxNode* find_var_ref_in_indexing(const std::string& name);
 
 #endif /* SYNTAXNODE1_H_ */
