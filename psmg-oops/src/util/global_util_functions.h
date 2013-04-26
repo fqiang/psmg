@@ -72,18 +72,6 @@ int inline createTmpDirIfNotPresent()
 	return err;
 }
 
-/* ---------------------------------------------------------------------------
-bool is_int(char *tok)
----------------------------------------------------------------------------- */
-/** Checks if a cstring represents a natural number (i.e [0-9]*) or not */
-bool inline is_int(const char *tok){
-  const char *cp = tok;
-  if (!cp) return false;
-  while (*cp)
-    if (!isdigit(*cp++)) return false;
-  return true;
-}
-
 namespace __gnu_cxx
 {
 	template<> struct hash< std::string >
