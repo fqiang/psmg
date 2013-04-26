@@ -12,7 +12,7 @@
 
 #ifdef DEBUG
 #define DEBUG_PRINT_ENABLED 0 //enable debug print
-#define DEBUG_YAC_ENABLED 1
+#define DEBUG_YAC_ENABLED 0
 #define SYS_MEMORY_USAGE_ENABLED 0
 #define MEMORY_LOG_ENABLED 0
 #else

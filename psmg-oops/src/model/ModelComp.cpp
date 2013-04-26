@@ -67,8 +67,6 @@ const string ModelComp::compTypes[] = { "var", "subject to", "param", "set", "mi
  model from which this object is referenced
  */
 
-list<ModelComp*> ModelComp::global_list;
-
 /** Construct a model component given its name, id, indexing and attribute
  *  sections.
  *  Also analyses dependencies in indexing and attribute and set the 
@@ -94,8 +92,6 @@ ModelComp::ModelComp(const string& id_, compType type_, SyntaxNode *indexing_, S
 
 	/* now set up the dependency list for the component */
 	setUpDependencies();
-
-	global_list.push_back(this);
 
 	ostringstream oss;
 	oss << this;
