@@ -36,10 +36,8 @@ using namespace __gnu_cxx;
 
 int ModelComp::tt_count = 0;  // initialise static class member
 
-const string ModelComp::nameTypes[] = { "variable", "constraint", "parameter",
-		"set", "objective min", "objective max", "submodel" };
-const string ModelComp::compTypes[] = { "var", "subject to", "param", "set",
-		"minimize", "maximize", "block" };
+const string ModelComp::nameTypes[] = { "variable", "constraint", "parameter", "set", "objective min", "objective max", "submodel" };
+const string ModelComp::compTypes[] = { "var", "subject to", "param", "set", "minimize", "maximize", "block" };
 
 //extern void modified_write(ostream &fout, ModelComp *comp);
 
@@ -86,16 +84,13 @@ list<ModelComp*> ModelComp::global_list;
  *         Root node of the attribute expression
  *                     IDs should have been replaced by IDREFs 
  */
-ModelComp::ModelComp(const string& id_, compType type_, SyntaxNode *indexing_,
-		SyntaxNode *attrib, int uplevel) :
-		type(type_), id(id_), attributes(attrib), model(NULL),setDim(0), setCard(0), isFromFile(false), count(ModelComp::tt_count++), moveUpLevel(
-				uplevel) {
+ModelComp::ModelComp(const string& id_, compType type_, SyntaxNode *indexing_, SyntaxNode *attrib, int uplevel) :
+		type(type_), id(id_), attributes(attrib), model(NULL), setDim(0), setCard(0), isFromFile(false), count(ModelComp::tt_count++), moveUpLevel(uplevel) {
 
 	this->indexing = dynamic_cast<SyntaxNodeIx*>(indexing_);
 	if (indexing)
 		(this->indexing)->splitExpression();
-	LOG(
-			"Creating model component (" << this->count << "): id="<<id<<" indexing="<<this->indexing<<" attribute="<<this->attributes<<" type"<<type);
+	LOG( "Creating model component (" << this->count << "): id="<<id<<" indexing="<<this->indexing<<" attribute="<<this->attributes<<" type"<<type);
 
 	/* now set up the dependency list for the component */
 	setUpDependencies();
@@ -127,10 +122,10 @@ void ModelComp::findDependencies(const SyntaxNode* nd) {
 	list<ModelComp*> lmc;
 	nd->findIDREF(lmc);
 	list<ModelComp*>::const_iterator p, q;
-	for (p = lmc.begin(); p != lmc.end(); ++p) {
+	for(p = lmc.begin();p != lmc.end();++p) {
 		// see if element already in the dependencies list
 		bool found = false;
-		for (q = dependencies.begin(); q != dependencies.end(); ++q)
+		for(q = dependencies.begin();q != dependencies.end();++q)
 			if (*p == *q)
 				found = true;
 		if (!found) {
@@ -161,8 +156,7 @@ void ModelComp::setUpDependencies() {
  ---------------------------------------------------------------------------- */
 /** Default constructor: just sets all fields to -1/NULL/false               */
 ModelComp::ModelComp(const string& id_) :
-		type(TNOTYPE), id(id_), attributes(NULL), indexing(NULL), model(NULL), other(NULL), count(-1), moveUpLevel(0)
-{
+		type(TNOTYPE), id(id_), attributes(NULL), indexing(NULL), model(NULL), other(NULL), count(-1), moveUpLevel(0) {
 	ostringstream oss;
 	oss << this;
 	this->hashKey = oss.str();
@@ -188,8 +182,7 @@ void ModelComp::dump(ostream& fout) const {
 		indexing->dump(fout);
 	}
 	fout << "    dependencies (" << dependencies.size() << "):\n";
-	for (list<ModelComp*>::const_iterator p = dependencies.begin();
-			p != dependencies.end(); ++p)
+	for(list<ModelComp*>::const_iterator p = dependencies.begin();p != dependencies.end();++p)
 		fout << "       " << (*p)->model->name << "::" << (*p)->id << endl;
 	fout << "    model: " << model->name << "\n";
 	fout << "    count: " << count << "\n";
@@ -260,8 +253,7 @@ ModelComp::clone() const {
  *  local indexing expression expanded
  */
 void ModelComp::moveUp(int level) {
-	LOG(
-			"enter moveUp --["<<level<<"]-- id["<<this->id<<"] indexing["<<this->indexing->print()<<"] attribute["<<this->attributes->print()<<"]");
+	LOG( "enter moveUp --["<<level<<"]-- id["<<this->id<<"] indexing["<<this->indexing->print()<<"] attribute["<<this->attributes->print()<<"]");
 	AmplModel *current = model;
 	int i, posm;
 
@@ -288,7 +280,7 @@ void ModelComp::moveUp(int level) {
 	// get list of models from current model to root
 	vector<AmplModel*> mlist;
 	int nlevels = 0;
-	for (AmplModel *tmp = current; tmp->parent != NULL; tmp = tmp->parent) {
+	for(AmplModel *tmp = current;tmp->parent != NULL;tmp = tmp->parent) {
 		LOG("adding model["<<tmp->name<<"] to list");
 		mlist.push_back(tmp);
 		nlevels++;
@@ -323,35 +315,31 @@ void ModelComp::moveUp(int level) {
 
 	// loop over all IDREF nodes
 	list<SyntaxNode*>::const_iterator p;
-	for (p = idrefnodes.begin(); p != idrefnodes.end(); ++p) {
+	for(p = idrefnodes.begin();p != idrefnodes.end();++p) {
 		SyntaxNodeIDREF *currSN = dynamic_cast<SyntaxNodeIDREF*>(*p);
 		ModelComp *currMC = currSN->ref;
 		AmplModel *currAM = currMC->model;
-		LOG(
-				"-- Moveup -- at currSN["<<currSN->print()<<"] currMC["<<currMC->id<<"] currAM["<<currAM->name<<"]");
+		LOG( "-- Moveup -- at currSN["<<currSN->print()<<"] currMC["<<currMC->id<<"] currAM["<<currAM->name<<"]");
 
 		// need to check if this model is below the new assigned model
 		bool found = false;
-		for (posm = 0; posm < level; posm++) {
+		for(posm = 0;posm < level;posm++) {
 			if (mlist[posm] == currAM) {
 				found = true;
 				break;
 			}
 		}
 		if (found) {
-			LOG(
-					"found currMC["<<currMC->id<<"] currAM["<<currAM->name<<"] syntaxNode["<<currSN->print()<<"] at posm["<<posm<<"]");
+			LOG( "found currMC["<<currMC->id<<"] currAM["<<currAM->name<<"] syntaxNode["<<currSN->print()<<"] at posm["<<posm<<"]");
 			// this is a model between the old and new model for ModelComp *this
 			// posm gives the position: 0 is the old model, level is the new
 			// one
 			// => need to add indexing expressions between posm and level-1
 			// starting with level-1
-			for (i = posm; i < level; ++i) {
+			for(i = posm;i < level;++i) {
 				SyntaxNodeIx *mix = mlist[i]->ix;
 				if (mix->getNComp() != 1) {
-					cerr
-							<< "ModelComp::moveUp() does not support intermediate models with !=1 dummy Var"
-							<< endl;
+					cerr << "ModelComp::moveUp() does not support intermediate models with !=1 dummy Var" << endl;
 					exit(1);
 				}
 				currSN->push_front(mix->getDummyVarExpr(0));
@@ -419,28 +407,25 @@ void ModelComp::reassignDependencies() {
 		attributes->findIDREF(&idrefnodes);
 
 	list<SyntaxNode*>::const_iterator p;
-	for (p = idrefnodes.begin(); p != idrefnodes.end(); ++p) {
+	for(p = idrefnodes.begin();p != idrefnodes.end();++p) {
 		SyntaxNodeIDREF *onidr = dynamic_cast<SyntaxNodeIDREF*>(*p);
 		ModelComp *mc = onidr->ref;
 		AmplModel *am = mc->model;
 
 		//check that this ModelComp belongs to this model
 		bool found = false;
-		for (list<ModelComp*>::iterator q = am->comps.begin();
-				q != am->comps.end(); q++) {
+		for(list<ModelComp*>::iterator q = am->comps.begin();q != am->comps.end();q++) {
 			if ((*q)->id == mc->id) {
 				found = true;
 				if ((*q) != mc) {
-					LOG(
-							"Model component " << mc->id << " referenced in "<< this->id << " is reassigned.");
+					LOG( "Model component " << mc->id << " referenced in "<< this->id << " is reassigned.");
 					onidr->ref = (*q);
 				}
 				newdep.push_back(*q);
 			}
 		}
 		if (!found) {
-			cerr << "ERROR: Model component " << mc->id << " referenced in "
-					<< this->id << " not found.\n";
+			cerr << "ERROR: Model component " << mc->id << " referenced in " << this->id << " not found.\n";
 			exit(1);
 		}
 	}
@@ -463,7 +448,8 @@ void ModelComp::setSetDim() {
 	if (this->attributes != NULL) {
 		SyntaxNode* attr = this->attributes;
 		setDim = attr->calculateSetDim();
-	} else {
+	}
+	else {
 		setDim = 1;
 	}
 }
@@ -498,10 +484,10 @@ void ModelComp::setParamIndicies() {
 	assert(this->type==TPARAM);
 	if (this->indexing != NULL) {
 		SyntaxNodeIx* ind = this->indexing;
-		ind->calculateParamIndicies(this->paramIndiciesDummy,
-				this->paramIndiciesComp, this->paramIndiciesMap);
+		ind->calculateParamIndicies(this->paramIndiciesDummy, this->paramIndiciesComp, this->paramIndiciesMap);
 		assert(this->paramIndiciesDummy.size()==this->paramIndiciesComp.size());
-	} else {
+	}
+	else {
 		assert(this->paramIndiciesDummy.size()==0);
 		//this->paramIndicies = NULL;
 	}
@@ -520,8 +506,7 @@ void ModelComp::calculateSetModelComp(ModelContext* context) {
 	assert(this->attributes != NULL);
 
 	Set* theSet = this->attributes->calculateSetValue(context);
-	LOG(
-			"the calculated set is   -- ["<<theSet->name<<"]  -- "<<theSet->toString());
+	LOG( "the calculated set is   -- ["<<theSet->name<<"]  -- "<<theSet->toString());
 	this->setCard = theSet->card;
 	assert(theSet->dim==this->setDim);
 	theSet->name = this->id;
@@ -535,8 +520,7 @@ void ModelComp::calculateParamModelComp(ModelContext* context) {
 	Param* paramValue = new Param(this->getNumParamIndicies(), this->id);
 	int total = 1;
 	vector<ModelComp*>::iterator i;
-	for (i = this->paramIndiciesComp.begin();
-			i != this->paramIndiciesComp.end(); i++) {
+	for(i = this->paramIndiciesComp.begin();i != this->paramIndiciesComp.end();i++) {
 		ModelComp* comp = (*i);
 		assert(comp->type==TSET);
 		Set* aSet = static_cast<Set*>(context->getCompValue(comp));
@@ -544,14 +528,13 @@ void ModelComp::calculateParamModelComp(ModelContext* context) {
 	}
 
 	vector<string>::iterator i2;
-	for (int j = 0; j < total; j++) {
+	for(int j = 0;j < total;j++) {
 		int curr = j;
 		hash_map<string, string> dummyValueMap;
 		vector<string> indicies;
 
-		for (i = this->paramIndiciesComp.begin(), i2 =
-				this->paramIndiciesDummy.begin()
-		; i != this->paramIndiciesComp.end(); i++, i2++) {
+		for(i = this->paramIndiciesComp.begin(), i2 = this->paramIndiciesDummy.begin()
+		;i != this->paramIndiciesComp.end();i++, i2++) {
 			ModelComp* comp = *i;
 			Set* aSet = static_cast<Set*>(context->getCompValue(comp));
 			LOG(" at set -- "<<aSet->name);
@@ -564,16 +547,14 @@ void ModelComp::calculateParamModelComp(ModelContext* context) {
 			indicies.push_back(key);
 		}
 		//now calculate the double value
-		double dval = this->attributes->calculateParamValue(dummyValueMap,
-				paramIndiciesMap, context);
+		double dval = this->attributes->calculateParamValue(dummyValueMap, paramIndiciesMap, context);
 		paramValue->addParamValue(new ParamValue(indicies, dval));
 	}
 	context->addCompValueMap(this, paramValue);
 }
 
 void ModelComp::calculateLocalVar(ModelContext* context, Var* aVar) {
-	LOG(
-			"calculateVarCard -- in model["<<this->model->name<<"] modelcomp["<<this->id<<"]aVar["<<aVar->name<<"] card["<<aVar->card<<"]");
+	LOG( "calculateVarCard -- in model["<<this->model->name<<"] modelcomp["<<this->id<<"]aVar["<<aVar->name<<"] card["<<aVar->card<<"]");
 	assert(this->type==TVAR);
 	int card = 1;
 	int numIndices = 0;
@@ -584,9 +565,9 @@ void ModelComp::calculateLocalVar(ModelContext* context, Var* aVar) {
 	numIndices = ind.size();
 	if (this->indexing == NULL) {
 		//do nothing.. card = 1,numIndicies = num of model's indices
-	} else if (this->indexing->sets_mc.size() > 0) {
-		for (vector<ModelComp*>::iterator it = this->indexing->sets_mc.begin();
-				it != this->indexing->sets_mc.end(); it++) {
+	}
+	else if (this->indexing->sets_mc.size() > 0) {
+		for(vector<ModelComp*>::iterator it = this->indexing->sets_mc.begin();it != this->indexing->sets_mc.end();it++) {
 			Set* aSet = static_cast<Set*>(context->getCompValue(*it));
 			card = aSet->card * card;
 			numIndices = numIndices + aSet->dim;
@@ -594,19 +575,16 @@ void ModelComp::calculateLocalVar(ModelContext* context, Var* aVar) {
 	}
 	aVar->card = card;
 	aVar->numIndicies = numIndices;
-	LOG(
-			"calculateVarCard -- in model["<<this->model->name<<"] modelcomp["<<this->id<<"]aVar["<<aVar->name<<"] card["<<aVar->card<<"] numIndicies["<<aVar->numIndicies<<"]");
+	LOG( "calculateVarCard -- in model["<<this->model->name<<"] modelcomp["<<this->id<<"]aVar["<<aVar->name<<"] card["<<aVar->card<<"] numIndicies["<<aVar->numIndicies<<"]");
 }
 
 void ModelComp::fillLocalVar(ModelContext* context, Var* aVar) {
-	LOG(
-			"fillLocalVar -- in model["<<this->model->name<<"] modelcomp["<<this->id<<"]aVar["<<aVar->name<<"] card["<<aVar->card<<"]");
+	LOG( "fillLocalVar -- in model["<<this->model->name<<"] modelcomp["<<this->id<<"]aVar["<<aVar->name<<"] card["<<aVar->card<<"]");
 	assert(this->type==TVAR);
 	double lower = -dINF;
 	double upper = dINF;
 	if (this->attributes != NULL) {
-		LOG(
-				"setting variable bounds -- attribute opCode["<<this->attributes->opCode<<"]  ["<<this->attributes->print()<<"]");
+		LOG( "setting variable bounds -- attribute opCode["<<this->attributes->opCode<<"]  ["<<this->attributes->print()<<"]");
 		assert(this->attributes->opCode == COMMA);
 		SyntaxNode* commaNode = this->attributes;
 		if (commaNode->values[0]->opCode == GE) {
@@ -614,7 +592,8 @@ void ModelComp::fillLocalVar(ModelContext* context, Var* aVar) {
 			assert(geNode->values[0]->opCode==-99);
 			ValueNode* vNode = static_cast<ValueNode*>(geNode->values[0]);
 			lower = vNode->value;
-		} else {
+		}
+		else {
 			LOG("other bounds not yet implemented");
 			assert(false);
 		}
@@ -627,7 +606,8 @@ void ModelComp::fillLocalVar(ModelContext* context, Var* aVar) {
 		//ind.push_back(this->id);
 		VarValue* val = new VarValue(ind, lower, upper);
 		aVar->addVarValue(val);
-	} else if (this->indexing->sets_mc.size() > 0) {
+	}
+	else if (this->indexing->sets_mc.size() > 0) {
 		LOG("Indexing -- ["<<this->indexing->print()<<"]");
 		LOG("sets_mc["<<this->indexing->sets_mc.size()<<"]");
 		vector<string> ind;
@@ -637,28 +617,23 @@ void ModelComp::fillLocalVar(ModelContext* context, Var* aVar) {
 		vector<ModelComp*>::iterator curr = this->indexing->sets_mc.begin();
 		this->fillLocalVarRecurive(context, aVar, curr, ind, lower, upper);
 	}
-	LOG(
-			"end fillLocalVar -- in ["<<this->id<<"]aVar["<<aVar->name<<"] - card["<<aVar->card<<"]");
+	LOG( "end fillLocalVar -- in ["<<this->id<<"]aVar["<<aVar->name<<"] - card["<<aVar->card<<"]");
 }
 
-void ModelComp::fillLocalVarRecurive(ModelContext* context, Var* aVar,
-		vector<ModelComp*>::iterator curr, vector<string>& ind, double lower,
-		double upper) {
+void ModelComp::fillLocalVarRecurive(ModelContext* context, Var* aVar, vector<ModelComp*>::iterator curr, vector<string>& ind, double lower, double upper) {
 	if (curr == this->indexing->sets_mc.end()) {
 		VarValue* val = new VarValue(ind, lower, upper);
 		aVar->addVarValue(val);
-	} else {
+	}
+	else {
 		LOG("-- fillLocalVar Recursive -- curr ModelComp["<<(*curr)->id<<"]");
 		Set* aSet = static_cast<Set*>(context->getCompValue(*curr));
-		for (vector<SetValue*>::iterator it_setval =
-				aSet->setValues_data_order.begin();
-				it_setval != aSet->setValues_data_order.end(); it_setval++) {
+		for(vector<SetValue*>::iterator it_setval = aSet->setValues_data_order.begin();it_setval != aSet->setValues_data_order.end();it_setval++) {
 			int size_before = ind.size();
 			(*it_setval)->fillValueList(ind);
 
 			if (curr != this->indexing->sets_mc.end()) {
-				this->fillLocalVarRecurive(context, aVar, curr + 1, ind, lower,
-						upper);
+				this->fillLocalVarRecurive(context, aVar, curr + 1, ind, lower, upper);
 			}
 
 			ind.resize(size_before);
@@ -678,8 +653,7 @@ void ModelComp::calculateMemoryUsage(unsigned long& size) {
 		this->indexing->calculateMemoryUsage(size);
 	}
 
-	for (list<ModelComp*>::iterator it = dependencies.begin();
-			it != dependencies.end(); it++) {
+	for(list<ModelComp*>::iterator it = dependencies.begin();it != dependencies.end();it++) {
 		size += sizeof(ModelComp*);
 	}
 }

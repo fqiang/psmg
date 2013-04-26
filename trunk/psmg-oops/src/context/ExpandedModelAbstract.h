@@ -90,10 +90,6 @@ class ExpandedModelAbstract {
 		//! Outputs the solution to the supplied stream at given indent
 		virtual void outputSolution(std::ostream &out, int indent=0) = 0;
 
-//		virtual void allocateExpandedModel(int myIndex) = 0;
-//
-//		virtual int getAtRank() = 0;
-
 		virtual void calculateMemoryUsage(unsigned long& size_str,unsigned long& size_data) = 0;
 
 	public:
