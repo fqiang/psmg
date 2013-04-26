@@ -34,8 +34,6 @@ using namespace std;
 
 using namespace __gnu_cxx;
 
-int ModelComp::tt_count = 0;  // initialise static class member
-
 const string ModelComp::nameTypes[] = { "variable", "constraint", "parameter", "set", "objective min", "objective max", "submodel" };
 const string ModelComp::compTypes[] = { "var", "subject to", "param", "set", "minimize", "maximize", "block" };
 
@@ -83,7 +81,7 @@ const string ModelComp::compTypes[] = { "var", "subject to", "param", "set", "mi
  *                     IDs should have been replaced by IDREFs 
  */
 ModelComp::ModelComp(const string& id_, compType type_, SyntaxNode *indexing_, SyntaxNode *attrib, int uplevel) :
-		type(type_), id(id_), attributes(attrib), model(NULL), setDim(0), setCard(0), isFromFile(false), count(ModelComp::tt_count++), moveUpLevel(uplevel) {
+		type(type_), id(id_), attributes(attrib), model(NULL), setDim(0), setCard(0), isFromFile(false), moveUpLevel(uplevel) {
 
 	this->indexing = dynamic_cast<SyntaxNodeIx*>(indexing_);
 	if (indexing)
@@ -151,8 +149,9 @@ void ModelComp::setUpDependencies() {
  ModelComp::ModelComp()
  ---------------------------------------------------------------------------- */
 /** Default constructor: just sets all fields to -1/NULL/false               */
-ModelComp::ModelComp(const string& id_) :
-		type(TNOTYPE), id(id_), attributes(NULL), indexing(NULL), model(NULL), other(NULL), count(-1), moveUpLevel(0) {
+ModelComp::ModelComp(const string& id_)
+	:type(TNOTYPE), id(id_), attributes(NULL), indexing(NULL), model(NULL), other(NULL), moveUpLevel(0)
+{
 	ostringstream oss;
 	oss << this;
 	this->hashKey = oss.str();
@@ -181,7 +180,6 @@ void ModelComp::dump(ostream& fout) const {
 	for(list<ModelComp*>::const_iterator p = dependencies.begin();p != dependencies.end();++p)
 		fout << "       " << (*p)->model->name << "::" << (*p)->id << endl;
 	fout << "    model: " << model->name << "\n";
-	fout << "    count: " << count << "\n";
 }
 
 /* ---------------------------------------------------------------------------
@@ -205,7 +203,6 @@ ModelComp::deep_copy() const {
 	newm->dependencies = dependencies;
 	newm->model = model;
 	newm->other = other;
-	newm->count = count;
 
 	LOG("end -- deep_copy -- ["<<this->id<<"]");
 	return newm;
@@ -227,7 +224,6 @@ ModelComp::clone() const {
 	newm->dependencies = dependencies;
 	newm->model = model;
 	newm->other = other;
-	newm->count = count;
 
 	return newm;
 }

@@ -419,7 +419,6 @@ StochModelComp* StochModelComp::clone() const
   newsmc->model = model;
   newsmc->stochmodel = stochmodel;
   newsmc->other = other;
-  newsmc->count = count;
 
   // and clone the additional StochModelComp entries
   
