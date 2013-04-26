@@ -41,7 +41,7 @@ const string ModelComp::nameTypes[] = { "variable", "constraint", "parameter",
 const string ModelComp::compTypes[] = { "var", "subject to", "param", "set",
 		"minimize", "maximize", "block" };
 
-extern void modified_write(ostream &fout, ModelComp *comp);
+//extern void modified_write(ostream &fout, ModelComp *comp);
 
 /* This should be an IDREF (or IDREFM) node that needs to be converted
  into its global name

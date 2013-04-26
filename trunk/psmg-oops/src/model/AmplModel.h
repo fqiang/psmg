@@ -159,8 +159,6 @@ class AmplModel{
 
   // Virtual methods implemented only for stochastic models
   virtual AmplModel* expandToFlatModel() { throw; }
-  virtual SyntaxNode* getProbs() const { throw; }
-
 
   //Feng start
 
