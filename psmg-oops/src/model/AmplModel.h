@@ -18,7 +18,6 @@
 #ifndef AMPLMODEL_H
 #define AMPLMODEL_H
 
-#include "SymbolTable.h"
 #include "ModelComp.h"
 #include "../context/ExpandedModelAbstract.h"
 #include "changeitem.h"
@@ -53,24 +52,9 @@ extern void parse_data(ModelContext* rootContext);
  */
 class AmplModel{
  public:
-  
-  /** Hash table of entries in this model. The symb_entry encodes name and
-   *  type of the model component. 
-   *
-   *  @attention This does not seem to be ever used to lookup model components
-   *  by name.
-   *
-   *  @attention Should have a global hash table of *all* defined model
-   *  components. Could be used in find_var_ref_in_context which does the job
-   *  of finding the ModelComponent object reference for components referred
-   *  to in expressions.
-   *             => Need a way to only look for a match in the current part
-   *                of the model tree.
-   */
-  SymbolTable symbol_table;
 
   /** Name of the block defining this (sub)model */
-  std::string name;
+  string name;
 
   int n_vars;      //!< number of variable declarations 
   int n_cons;      //!< number of constraint declarations 

@@ -48,8 +48,8 @@ AmplModel *AmplModel::root = NULL; //initialize root to NULL
 AmplModel::AmplModel()
 ---------------------------------------------------------------------------- */
 /** Constructor */
-AmplModel::AmplModel(const string& orig_name, AmplModel *par) :
-  name(orig_name),
+AmplModel::AmplModel(const string& _name, AmplModel *par) :
+  name(_name),
   n_vars(0),
   n_cons(0),
   n_params(0),
@@ -580,7 +580,6 @@ void AmplModel::calculateMemoryUsage(unsigned long& size)
 {
 	LOG("AmplModel::calculateMemoryUsage -- model["<<this->name<<"]");
 	size += sizeof(AmplModel);
-	this->symbol_table.calculateMemoryUsage(size);
 	size += this->name.size() + 1;
 	if(this->ix!=NULL)
 	{

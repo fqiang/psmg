@@ -15,7 +15,6 @@ CPP_SRCS += \
 ../src/model/OpNode.cpp \
 ../src/model/SetNode.cpp \
 ../src/model/SimpleSet.cpp \
-../src/model/SymbolTable.cpp \
 ../src/model/SyntaxNode.cpp \
 ../src/model/SyntaxNodeIDREF.cpp \
 ../src/model/SyntaxNodeIx.cpp \
@@ -33,7 +32,6 @@ OBJS += \
 ./src/model/OpNode.o \
 ./src/model/SetNode.o \
 ./src/model/SimpleSet.o \
-./src/model/SymbolTable.o \
 ./src/model/SyntaxNode.o \
 ./src/model/SyntaxNodeIDREF.o \
 ./src/model/SyntaxNodeIx.o \
@@ -51,7 +49,6 @@ CPP_DEPS += \
 ./src/model/OpNode.d \
 ./src/model/SetNode.d \
 ./src/model/SimpleSet.d \
-./src/model/SymbolTable.d \
 ./src/model/SyntaxNode.d \
 ./src/model/SyntaxNodeIDREF.d \
 ./src/model/SyntaxNodeIx.d \
