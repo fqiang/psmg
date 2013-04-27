@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <fstream>
 #include "CompilerMarco.h"
+#include "../sml/GlobalVariables.h"
 #include "../metric/TimeStamp.h"
 
 class ModelComp;

@@ -86,7 +86,7 @@ ModelComp::ModelComp(const string& id_, compType type_, SyntaxNode *indexing_, S
 	this->indexing = dynamic_cast<SyntaxNodeIx*>(indexing_);
 	if (indexing)
 		(this->indexing)->splitExpression();
-	LOG( "Creating model component (" << this->count << "): id="<<id<<" indexing="<<this->indexing<<" attribute="<<this->attributes<<" type"<<type);
+	LOG( "Creating model component : id="<<id<<" indexing="<<this->indexing<<" attribute="<<this->attributes<<" type"<<type);
 
 	/* now set up the dependency list for the component */
 	setUpDependencies();
