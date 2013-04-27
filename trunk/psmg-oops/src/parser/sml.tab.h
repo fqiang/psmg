@@ -301,7 +301,7 @@ typedef union YYSTYPE
 {
 
 /* Line 2068 of yacc.c  */
-#line 80 "sml.tab.ypp"
+#line 79 "sml.tab.ypp"
 
   int optype;
   long *ival;

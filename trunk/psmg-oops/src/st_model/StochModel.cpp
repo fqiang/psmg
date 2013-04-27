@@ -145,12 +145,10 @@ void StochModel::expandStagesOfComp_NO_AMPL()
 	LOG("starting expandStageOfComp_NO_AMPL -- ["<<this->name<<"]");
 	////////////////////////////////////////////////load data
 	LOG("loading data again for stage set");
-	chdir("..");
 	//AmplModel::root->updateCurrLevelModelComp(); -- already updated in StochModel constructor
 	ModelContext* rootCtx = new ModelContext(NULL);
 	parse_data(rootCtx);
 	AmplModel::root->calculateCurrLevelModelComp(rootCtx);
-	chdir("./tmp");
 	////////////////////////////////////////////////load data
 	int cnt = 0;
 	char buffer[500];
