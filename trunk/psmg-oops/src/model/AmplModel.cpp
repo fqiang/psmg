@@ -611,17 +611,6 @@ const Entry *AmplModel::findComponent(const string& id) const {
    return ent;
 }
 
-/** Returns a list of all objective functions in context */
-list<Entry> AmplModel::getObjList() const {
-   list<Entry> result = symbol_table.getListByType(Entry::ST_OBJ);
-   if(parent) {
-      list<Entry> pres = parent->getObjList();
-      for(list<Entry>::const_iterator i=pres.begin(); i!=pres.end(); ++i)
-         result.push_back(*i);
-   }
-   return result;
-}
-
 SyntaxNodeIDREF* AmplModel::find_var_ref_in_context(IDNode *ref)
 {
 	for(list<ModelComp*>::iterator p=comps.begin(); p!=comps.end(); ++p){
