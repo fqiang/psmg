@@ -94,29 +94,6 @@ int Sml::sml_gen_pre_checks()
    	}
    	fclose(inputFile);
 
-   	int errcode = createTmpDirIfNotPresent();
-	if(errcode)
-	{
-		return errcode;
-	}
-   	// Change directory to make things work
-   	errcode = chdir("tmp");
-   	if (errcode)
-   	{
-   	   	cerr << "Could not change working directory to 'tmp/'\n";
-   	   	cerr << "Cannot continue\n";
-   		return 3;
-   	}
-   	// Restore original directory
-   	errcode = chdir("..");
-   	if (errcode)
-   	{
-   	   	cerr << "Could not change working directory to 'tmp/'\n";
-   		cerr << "Cannot continue\n";
-    	return 4;
-   	}
-
-
    	return 0;
 }
 
@@ -140,37 +117,4 @@ ExpandedModelAbstract* Sml::generate_em2()
 	LOG("============== END ExpandedModel2 Generation =============================");
 
 	return emRoot;
-}
-
-
-int Sml::createTmpDirIfNotPresent()
-{
-	int err = 0;
-	bool fl_exists;
-	struct stat sbuf;
-	const char *tmpdirname = "tmp";
-
-	fl_exists = !(stat(tmpdirname, &sbuf) == -1);
-
-	if(!fl_exists)
-	{// tmp doesn't exist
-#ifdef HAVE_DIRECT_H
-		err = mkdir(tmpdirname);
-#else
-		err = mkdir(tmpdirname, S_IRWXU);
-#endif
-		if(err)
-			cerr << "ERROR: Failed to create temporary directory '"<< tmpdirname << "'.\n";
-	}
-	else
-	{	// tmp is present
-		// check that it's a directory with RWX permissions
-		bool isusable = S_ISDIR(sbuf.st_mode) && ((sbuf.st_mode & S_IRWXU)== S_IRWXU);
-		if (!isusable)
-		{
-			err = 1;
-			cerr << "ERROR: Cannot use '" << tmpdirname<< "' as temporary directory.\n";
-		}
-	}
-	return err;
 }

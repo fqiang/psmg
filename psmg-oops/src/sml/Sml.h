@@ -32,7 +32,6 @@ public:
 	static void deleteInstance();
 	static std::string smlVersion();
 	static void print_copy_right(ostream &out);
-	static int createTmpDirIfNotPresent();
 
 	void process_model_file();
 	ExpandedModelAbstract* generate_em();
