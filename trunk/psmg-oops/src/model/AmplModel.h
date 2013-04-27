@@ -125,9 +125,6 @@ class AmplModel{
   ExpandedModel* createExpandedModel(const std::string& smodelname,
                                      const std::string& sinstanceStub);
 
-  /** Add a dummy objective that uses (sums up) all variables in the model */
-  void addDummyObjective();
-
   /** Add a model component to the model */
   virtual void addComp(ModelComp *comp);
 
