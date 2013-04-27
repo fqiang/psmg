@@ -43,7 +43,7 @@ public:
 	virtual ~SymbolTable(){
 	}
 	bool defineSymbol(Entry::SymType, char *id, ModelComp *mc);
-	const Entry* findSymbol(const std::string& id) const;
+//	const Entry* findSymbol(const std::string& id) const;
 //	list<Entry> getListByType(const Entry::SymType type) const;
 	void calculateMemoryUsage(unsigned long& actual);
 private:

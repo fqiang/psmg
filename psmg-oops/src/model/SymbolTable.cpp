@@ -49,23 +49,23 @@ bool SymbolTable::defineSymbol(Entry::SymType type, char *id, ModelComp *mc)
 	/* Sucessfully defined NEW symbol */
 	return true;
 }
-
-const Entry* SymbolTable::findSymbol(const string& id) const
-{
-   /* Calculate hashcode */
-   int hash = hash_function(id.c_str()) % n_hash;
-
-   list<Entry>::const_iterator i;
-   for(i=table_[hash].begin(); i!=table_[hash].end(); ++i) {
-		if ((*i).id() == id){
-			break;
-		}
-   }
-
-   if(i==table_[hash].end()) return NULL;
-
-   return &(*i);
-}
+//
+//const Entry* SymbolTable::findSymbol(const string& id) const
+//{
+//   /* Calculate hashcode */
+//   int hash = hash_function(id.c_str()) % n_hash;
+//
+//   list<Entry>::const_iterator i;
+//   for(i=table_[hash].begin(); i!=table_[hash].end(); ++i) {
+//		if ((*i).id() == id){
+//			break;
+//		}
+//   }
+//
+//   if(i==table_[hash].end()) return NULL;
+//
+//   return &(*i);
+//}
 
 void SymbolTable::calculateMemoryUsage(unsigned long& size)
 {
