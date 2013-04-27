@@ -260,59 +260,6 @@ AmplModel::dump(ostream& fout) const {
   }
 }
 
-/* ---------------------------------------------------------------------------
-AmplModel::check()
----------------------------------------------------------------------------- */
-/** Check instance for consistency */
-void
-AmplModel::check() const {
-
-  if (name == "") {
-    cerr << "AmplModel::check: AmplModel has no name given\n";
-    exit(1);
-  }
-  if (node == NULL && name != "root") {
-    cerr << "AmplModel " << name << " is not root but has no ModelComp "
-       "node associated\n";
-    exit(1);
-  }
-  
-  if (n_vars<0){
-    cerr << "AmplModel " << name << ": n_vars = " << n_vars << "\n";
-    exit(1);
-  }
-  if (n_cons<0){
-    cerr << "AmplModel " << name << ": n_cons = " << n_cons << "\n";
-    exit(1);
-  }
-  if (n_params<0){
-    cerr << "AmplModel " << name << ": n_params = " << n_params << "\n";
-    exit(1);
-  }
-  if (n_sets<0){
-    cerr << "AmplModel " << name << ": n_sets = "<< n_sets << "\n";
-    exit(1);
-  }
-  if (n_objs<0){
-    cerr << "AmplModel " << name << ": n_objs = " << n_objs << "\n";
-    exit(1);
-  }
-  if (n_submodels<0){
-    cerr << "AmplModel " << name << ": n_submodels = " << n_submodels << "\n";
-    exit(1);
-  }
-  if (n_vars+n_cons+n_params+n_sets+n_submodels+n_objs!=n_total){
-    cerr << "AmplModel " << name << ": n_total does not equal sum of comps\n";
-    exit(1);
-  }
-  
-  if (parent == NULL && name != "root") {
-    cerr << "AmplModel " << name << " is not root but has no parent\n";
-    exit(1);
-  }
-}
-
-
 /* --------------------------------------------------------------------------
 AmplModel::removeComp()
 ---------------------------------------------------------------------------- */
