@@ -171,12 +171,6 @@ class AmplModel{
   void calculateMemoryUsage(unsigned long& size);
   //Feng end
 
-
- private:
-
-  /** Check instance for consistency */
-  void check() const;
-
 };
 
 #endif
