@@ -150,7 +150,6 @@ class AmplModel{
 
   /** Find a component with name id in correct scoping order */
   const Entry *findComponent(const std::string& id) const;
-  list<Entry> getObjList() const;
 
   virtual SyntaxNodeIDREF* find_var_ref_in_context(IDNode *ref);
 
