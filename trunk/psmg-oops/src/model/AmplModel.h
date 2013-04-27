@@ -145,8 +145,8 @@ class AmplModel{
 
   static void applyChanges(); //< apply the model changes stored in Q
 
-  /** Find a component with name id in correct scoping order */
-  const Entry *findComponent(const std::string& id) const;
+//  /** Find a component with name id in correct scoping order */
+//  const Entry *findComponent(const std::string& id) const;
 
   virtual SyntaxNodeIDREF* find_var_ref_in_context(IDNode *ref);
 
