@@ -443,20 +443,6 @@ void AmplModel::reassignModelIndexDependencies()
 	}
 }
 
-///* --------------------------------------------------------------------------
-//AmplModel::findComponent(string id)
-//---------------------------------------------------------------------------- */
-///** Find a component with name id in correct scoping order.
-// *
-// *  It will first search this model's SymbolTable, and if it cannot find
-// *  the component it will recurse to its parent node and so on up to the root.
-// */
-//const Entry *AmplModel::findComponent(const string& id) const {
-//   const Entry *ent = symbol_table.findSymbol(id);
-//   if (!ent && parent)
-//     ent = parent->findComponent(id);
-//   return ent;
-//}
 
 SyntaxNodeIDREF* AmplModel::find_var_ref_in_context(IDNode *ref)
 {
