@@ -150,8 +150,6 @@ void StochModel::expandStagesOfComp_NO_AMPL()
 	parse_data(rootCtx);
 	AmplModel::root->calculateCurrLevelModelComp(rootCtx);
 	////////////////////////////////////////////////load data
-	int cnt = 0;
-	char buffer[500];
 	list<ModelComp*>::iterator p;
 	for (p = comps.begin(); p != comps.end(); ++p)
 	{
@@ -234,8 +232,6 @@ AmplModel* StochModel::expandToFlatModel()
 		string amname = (stgcnt == 0) ? name + *st : *st;
 		am = new AmplModel(amname);
 
-		ModelComp *comp;
-
 		// loop over all components of the StochModel
 		for (list<ModelComp*>::iterator p = comps.begin(); p != comps.end();p++)
 		{
@@ -284,7 +280,7 @@ AmplModel* StochModel::expandToFlatModel()
 				// need to clone so that pointers to ->model, ->next are setup
 				// correctly
 				LOG("modelComp["<<smc->id<<"] is in amplModel["<<am->name<<"]");
-				comp = smc->clone();
+				ModelComp* comp = smc->clone();
 				//comp = smc->transcribeToModelComp(am);
 
 				am->addComp(comp);
@@ -330,18 +326,13 @@ AmplModel* StochModel::expandToFlatModel()
 				 the root node */
 				// set rootset := {this_nd in NODES:Parent[this_nd] == "null"};
 				// on_iinn: this_nd in NODES
-				on_iinN = new OpNode(IN, new IDNode("this_nd"),
-						nodeset->clone());
+				on_iinN = new OpNode(IN, new IDNode("this_nd"),nodeset->clone());
 				// onai: A[this_nd]
-				onai = new SyntaxNode(LSBRACKET, anc->clone(),
-						new ListNode(COMMA, new IDNode("this_nd")));
+				onai = new SyntaxNode(LSBRACKET, anc->clone(),new ListNode(COMMA, new IDNode("this_nd")));
 				// on2: A[this_nd]=="null"
 				on2 = new OpNode(EQ, onai, new IDNode("\"null\""));
 				// on1: :={this_nd in NODES:Parent[this_nd] == "null"};
-				on1 = new OpNode(
-						DEFINED,
-						new SyntaxNode(LBRACE,
-								new SyntaxNode(COLON, on_iinN, on2)));
+				on1 = new OpNode(DEFINED,new SyntaxNode(LBRACE,new SyntaxNode(COLON, on_iinN, on2)));
 				// and add this to the model
 				smctmp = new StochModelComp("rootset", TSET, NULL, on1, this);
 				am->addComp(smctmp);
@@ -446,7 +437,7 @@ AmplModel* StochModel::expandToFlatModel()
 //				LOG("                      ]");
 				am->addComp(newmc);
 				model_above->node = newmc;
-				model_above->ix = newmc->indexing;
+//				model_above->ix = newmc->indexing;
 			}
 			model_above = am;
 		}
@@ -457,7 +448,7 @@ AmplModel* StochModel::expandToFlatModel()
 //	am->setGlobalNameRecursive();
 	am->node = node;
 	LOG("setting up root ModelComp -- ampleModel["<<am->name<<"]'s modelComp -->["<<node->id<<"] indexing["<<node->indexing->print()<<"]");
-	am->ix = node->indexing;
+//	am->ix = node->indexing;
 
 	LOG("-----------------------------------------------------------\n");
 	LOG(" StochModel::expandToFlatModel: Finished Pass 1: ");

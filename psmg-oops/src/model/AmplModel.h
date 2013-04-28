@@ -80,7 +80,7 @@ class AmplModel{
    *  All models except root might have an indexing expression:
    *  block name{i in SET}.
    */
-  SyntaxNodeIx *ix;
+//  SyntaxNodeIx *ix;
     
   /** List of changes that should be applied to the models */
   static std::list<changeitem> changes;
