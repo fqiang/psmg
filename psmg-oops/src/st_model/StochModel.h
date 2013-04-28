@@ -91,7 +91,7 @@ class StochModel: public AmplModel{
   //! Retrieve the SyntaxNode corresponding to the probability term
   SyntaxNode* getProbs() const { return prob; }
 
-  SyntaxNodeIDREF* find_var_ref_in_context(IDNode *ref);
+  SyntaxNodeIDREF* createIdrefNode(IDNode *ref);
 
  private:
   //! Expand the STAGES set into the actual elements to be stored in stagenames
