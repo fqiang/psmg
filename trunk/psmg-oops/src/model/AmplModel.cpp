@@ -60,7 +60,6 @@ AmplModel::AmplModel(const string& _name, AmplModel *par) :
   level(0),
   node(NULL),
   parent(par),
-//  ix(NULL),
   isCompsUpdated(false)
 {
 
@@ -83,8 +82,6 @@ AmplModel::~AmplModel()
 		delete mc;
 	}
 	comps.clear();
-//	delete ix;
-//	ix = NULL;
 	changes.clear();
 
 }
@@ -233,10 +230,6 @@ AmplModel::dump(ostream& fout) const {
   fout << "AM: This is AmplModel (" << (void *) this << "): " << name << "\n";
   fout << "AM: level: " << level << "\n";
   fout << "AM: parent: " << (parent?parent->name:"NULL") << "\n";
-//  if (ix) {
-//    fout << "AM: indexing: " << ix << "\n";
-//    ix->dump(fout);
-//  }
   fout << "AM: Nb submodels  : " <<  n_submodels << "\n";
   fout << "AM: Nb sets       : " <<  n_sets << "\n";
   fout << "AM: Nb parameters : " <<  n_params << "\n";

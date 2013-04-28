@@ -330,8 +330,6 @@ void ModelComp::moveUp(int level) {
 			// starting with level-1
 			for(i = posm;i < level;++i) {
 				SyntaxNodeIx *mix = mlist[i]->node->indexing;
-				cout<<"right!!"<<endl;
-//				assert(mlist[i]->ix==mlist[i]->node->indexing);
 				if (mix->getNComp() != 1) {
 					cerr << "ModelComp::moveUp() does not support intermediate models with !=1 dummy Var" << endl;
 					exit(1);

@@ -437,7 +437,6 @@ AmplModel* StochModel::expandToFlatModel()
 //				LOG("                      ]");
 				am->addComp(newmc);
 				model_above->node = newmc;
-//				model_above->ix = newmc->indexing;
 			}
 			model_above = am;
 		}
@@ -445,10 +444,8 @@ AmplModel* StochModel::expandToFlatModel()
 
 	LOG("setting up parent -- ampleModel["<<am->name<<"]'s parent -->["<<parent->name<<"]");
 	am->parent = parent;
-//	am->setGlobalNameRecursive();
 	am->node = node;
 	LOG("setting up root ModelComp -- ampleModel["<<am->name<<"]'s modelComp -->["<<node->id<<"] indexing["<<node->indexing->print()<<"]");
-//	am->ix = node->indexing;
 
 	LOG("-----------------------------------------------------------\n");
 	LOG(" StochModel::expandToFlatModel: Finished Pass 1: ");
