@@ -60,7 +60,7 @@ AmplModel::AmplModel(const string& _name, AmplModel *par) :
   level(0),
   node(NULL),
   parent(par),
-  ix(NULL),
+//  ix(NULL),
   isCompsUpdated(false)
 {
 
@@ -83,8 +83,8 @@ AmplModel::~AmplModel()
 		delete mc;
 	}
 	comps.clear();
-	delete ix;
-	ix = NULL;
+//	delete ix;
+//	ix = NULL;
 	changes.clear();
 
 }
@@ -233,10 +233,10 @@ AmplModel::dump(ostream& fout) const {
   fout << "AM: This is AmplModel (" << (void *) this << "): " << name << "\n";
   fout << "AM: level: " << level << "\n";
   fout << "AM: parent: " << (parent?parent->name:"NULL") << "\n";
-  if (ix) {
-    fout << "AM: indexing: " << ix << "\n";
-    ix->dump(fout);
-  }
+//  if (ix) {
+//    fout << "AM: indexing: " << ix << "\n";
+//    ix->dump(fout);
+//  }
   fout << "AM: Nb submodels  : " <<  n_submodels << "\n";
   fout << "AM: Nb sets       : " <<  n_sets << "\n";
   fout << "AM: Nb parameters : " <<  n_params << "\n";
@@ -405,12 +405,12 @@ void AmplModel::reassignModelIndexDependencies()
 {
 	LOG("reassignModelIndexDependencies -- at Model["<<name<<"]");
 	//2. then reassign dependencies for this model's index to point to its own modelComp
-	if (this->ix)
+	if (this->node->indexing)
 	{
 		assert(this->parent!=NULL);
 		LOG("reassignDependencies in indexing -- "<<this->ix->print());
 		list<SyntaxNode*> refns;
-		this->ix->findIDREF(&refns);
+		this->node->indexing->findIDREF(&refns);
 		for(list<SyntaxNode*>::iterator it=refns.begin();it!=refns.end();it++)
 		{
 			SyntaxNodeIDREF* refn = static_cast<SyntaxNodeIDREF*>(*it);
@@ -426,8 +426,8 @@ void AmplModel::reassignModelIndexDependencies()
 				}
 			}
 		}
-		this->ix->resetSplitExpression();
-		this->ix->splitExpression();
+		this->node->indexing->resetSplitExpression();
+		this->node->indexing->splitExpression();
 	}
 	else
 	{
@@ -581,11 +581,11 @@ void AmplModel::calculateMemoryUsage(unsigned long& size)
 	LOG("AmplModel::calculateMemoryUsage -- model["<<this->name<<"]");
 	size += sizeof(AmplModel);
 	size += this->name.size() + 1;
-	if(this->ix!=NULL)
-	{
-		LOG(" ---   ix ["<<this->ix->print()<<"]");
-		this->ix->calculateMemoryUsage(size);
-	}
+//	if(this->ix!=NULL)
+//	{
+//		LOG(" ---   ix ["<<this->ix->print()<<"]");
+//		this->ix->calculateMemoryUsage(size);
+//	}
 	for(list<ModelComp*>::iterator it=comps.begin();it!=comps.end();it++)
 	{
 		size += sizeof(ModelComp*);
