@@ -437,7 +437,7 @@ void AmplModel::reassignModelIndexDependencies()
 }
 
 
-SyntaxNodeIDREF* AmplModel::find_var_ref_in_context(IDNode *ref)
+SyntaxNodeIDREF* AmplModel::createIdrefNode(IDNode *ref)
 {
 	for(list<ModelComp*>::iterator p=comps.begin(); p!=comps.end(); ++p){
 		ModelComp *thismc = *p;
@@ -462,7 +462,7 @@ SyntaxNodeIDREF* AmplModel::find_var_ref_in_context(IDNode *ref)
 	}
 
 	/* need also to look through parent model */
-	if (parent) return parent->find_var_ref_in_context(ref);
+	if (parent) return parent->createIdrefNode(ref);
 
 	/* need also to look through list of local variables */
 

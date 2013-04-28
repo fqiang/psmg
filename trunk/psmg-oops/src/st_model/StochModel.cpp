@@ -571,11 +571,11 @@ void StochModel::addComp(ModelComp *comp)
 	comp->setStochModel(this);
 }
 
-SyntaxNodeIDREF* StochModel::find_var_ref_in_context(IDNode *ref)
+SyntaxNodeIDREF* StochModel::createIdrefNode(IDNode *ref)
 {
 	if ((stagedummy && ref->id() == stagedummy->id())
 			|| (nodedummy && ref->id() == nodedummy->id()))
 		return NULL; // but don't generate an error
-	return AmplModel::find_var_ref_in_context(ref);
+	return AmplModel::createIdrefNode(ref);
 }
 

@@ -75,13 +75,6 @@ class AmplModel{
   /** The parent if this is a submodel of another model */
   AmplModel *parent;
 
-  /** Indexing expression.
-   *
-   *  All models except root might have an indexing expression:
-   *  block name{i in SET}.
-   */
-//  SyntaxNodeIx *ix;
-    
   /** List of changes that should be applied to the models */
   static std::list<changeitem> changes;
 
@@ -129,7 +122,7 @@ class AmplModel{
 
   static void applyChanges(); //< apply the model changes stored in Q
 
-  virtual SyntaxNodeIDREF* find_var_ref_in_context(IDNode *ref);
+  virtual SyntaxNodeIDREF* createIdrefNode(IDNode *ref);
 
   // Virtual methods implemented only for stochastic models
   virtual AmplModel* expandToFlatModel() { throw; }

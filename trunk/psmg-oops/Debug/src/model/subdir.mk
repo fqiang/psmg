@@ -6,7 +6,6 @@
 CPP_SRCS += \
 ../src/model/AmplModel.cpp \
 ../src/model/CompositeSet.cpp \
-../src/model/Entry.cpp \
 ../src/model/IDNode.cpp \
 ../src/model/IndexingSet.cpp \
 ../src/model/ListNode.cpp \
@@ -23,7 +22,6 @@ CPP_SRCS += \
 OBJS += \
 ./src/model/AmplModel.o \
 ./src/model/CompositeSet.o \
-./src/model/Entry.o \
 ./src/model/IDNode.o \
 ./src/model/IndexingSet.o \
 ./src/model/ListNode.o \
@@ -40,7 +38,6 @@ OBJS += \
 CPP_DEPS += \
 ./src/model/AmplModel.d \
 ./src/model/CompositeSet.d \
-./src/model/Entry.d \
 ./src/model/IDNode.d \
 ./src/model/IndexingSet.d \
 ./src/model/ListNode.d \

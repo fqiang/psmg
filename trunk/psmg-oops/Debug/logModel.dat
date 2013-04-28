@@ -1,5 +1,5 @@
 AM: ----------------------------------------------------------
-AM: This is AmplModel (0xcaae20): root
+AM: This is AmplModel (0x2947e20): root
 AM: level: 0
 AM: parent: NULL
 AM: Nb submodels  : 2
@@ -11,109 +11,109 @@ AM: Nb constraints: 0
 AM: Nb objectives : 2
 AM: List components:
 MC: ----------------------------------------------------------
-MC: ModelComp: NODES (0xcaa270)
+MC: ModelComp: NODES (0x2947270)
     type: set
     attr: ordered
     dependencies (0):
     model: root
 MC: ----------------------------------------------------------
-MC: ModelComp: ARCS (0xcaaf50)
+MC: ModelComp: ARCS (0x2947f50)
     type: set
     attr: ordered
     dependencies (0):
     model: root
 MC: ----------------------------------------------------------
-MC: ModelComp: COMM (0xcab320)
+MC: ModelComp: COMM (0x2948320)
     type: set
     attr: ordered
     dependencies (0):
     model: root
 MC: ----------------------------------------------------------
-MC: ModelComp: cost (0xcb3010)
+MC: ModelComp: cost (0x2950010)
     type: parameter
     indexing: {ARCS}
 qualifier: 
 number of indexing expressions: 1
   0: dummyVar: 
      set     : ARCS
-LBR{(IDREF(0xcab090:ARCS(0xcaaf50))())
+LBR{(IDREF(0x2948090:ARCS(0x2947f50))())
     dependencies (1):
        root::ARCS
     model: root
 MC: ----------------------------------------------------------
-MC: ModelComp: basecap (0xcb3b40)
+MC: ModelComp: basecap (0x2950b40)
     type: parameter
     indexing: {ARCS}
 qualifier: 
 number of indexing expressions: 1
   0: dummyVar: 
      set     : ARCS
-LBR{(IDREF(0xcb37e0:ARCS(0xcaaf50))())
+LBR{(IDREF(0x29507e0:ARCS(0x2947f50))())
     dependencies (1):
        root::ARCS
     model: root
 MC: ----------------------------------------------------------
-MC: ModelComp: arc_source (0xcb4670)
+MC: ModelComp: arc_source (0x2951670)
     type: parameter
     indexing: {ARCS}
 qualifier: 
 number of indexing expressions: 1
   0: dummyVar: 
      set     : ARCS
-LBR{(IDREF(0xcb4310:ARCS(0xcaaf50))())
+LBR{(IDREF(0x2951310:ARCS(0x2947f50))())
     dependencies (1):
        root::ARCS
     model: root
 MC: ----------------------------------------------------------
-MC: ModelComp: arc_target (0xcb51a0)
+MC: ModelComp: arc_target (0x29521a0)
     type: parameter
     indexing: {ARCS}
 qualifier: 
 number of indexing expressions: 1
   0: dummyVar: 
      set     : ARCS
-LBR{(IDREF(0xcb4e40:ARCS(0xcaaf50))())
+LBR{(IDREF(0x2951e40:ARCS(0x2947f50))())
     dependencies (1):
        root::ARCS
     model: root
 MC: ----------------------------------------------------------
-MC: ModelComp: comm_source (0xcb5cd0)
+MC: ModelComp: comm_source (0x2952cd0)
     type: parameter
     indexing: {COMM}
 qualifier: 
 number of indexing expressions: 1
   0: dummyVar: 
      set     : COMM
-LBR{(IDREF(0xcb5970:COMM(0xcab320))())
+LBR{(IDREF(0x2952970:COMM(0x2948320))())
     dependencies (1):
        root::COMM
     model: root
 MC: ----------------------------------------------------------
-MC: ModelComp: comm_target (0xcb6800)
+MC: ModelComp: comm_target (0x2953800)
     type: parameter
     indexing: {COMM}
 qualifier: 
 number of indexing expressions: 1
   0: dummyVar: 
      set     : COMM
-LBR{(IDREF(0xcb64a0:COMM(0xcab320))())
+LBR{(IDREF(0x29534a0:COMM(0x2948320))())
     dependencies (1):
        root::COMM
     model: root
 MC: ----------------------------------------------------------
-MC: ModelComp: comm_demand (0xcb7330)
+MC: ModelComp: comm_demand (0x2954330)
     type: parameter
     indexing: {COMM}
 qualifier: 
 number of indexing expressions: 1
   0: dummyVar: 
      set     : COMM
-LBR{(IDREF(0xcb6fd0:COMM(0xcab320))())
+LBR{(IDREF(0x2953fd0:COMM(0x2948320))())
     dependencies (1):
        root::COMM
     model: root
 MC: ----------------------------------------------------------
-MC: ModelComp: b (0xcb93a0)
+MC: ModelComp: b (0x29563a0)
     type: parameter
     attr: := if (comm_source[k] == ord(i)) then comm_demand[k] else if (comm_target[k] == ord(i)) then - comm_demand[k] else 0
     indexing: {k in COMM,i in NODES}
@@ -123,7 +123,7 @@ number of indexing expressions: 2
      set     : COMM
   1: dummyVar: i
      set     : NODES
-LBR{(COMMA(IN((ID T), IDREF(0xcb7b20:COMM(0xcab320))()), IN((ID T), IDREF(0xcb7d20:NODES(0xcaa270))())))
+LBR{(COMMA(IN((ID T), IDREF(0x2954b20:COMM(0x2948320))()), IN((ID T), IDREF(0x2954d20:NODES(0x2947270))())))
     dependencies (5):
        root::COMM
        root::NODES
@@ -132,7 +132,7 @@ LBR{(COMMA(IN((ID T), IDREF(0xcb7b20:COMM(0xcab320))()), IN((ID T), IDREF(0xcb7d
        root::comm_target
     model: root
 MC: ----------------------------------------------------------
-MC: ModelComp: sparecap (0xcba070)
+MC: ModelComp: sparecap (0x2957070)
     type: variable
     attr: >= 0
     indexing: {ARCS}
@@ -140,36 +140,36 @@ qualifier:
 number of indexing expressions: 1
   0: dummyVar: 
      set     : ARCS
-LBR{(IDREF(0xcb9c30:ARCS(0xcaaf50))())
+LBR{(IDREF(0x2956c30:ARCS(0x2947f50))())
     dependencies (1):
        root::ARCS
     model: root
 MC: ----------------------------------------------------------
-MC: ModelComp: MCNFArcs (0xcbad20)
+MC: ModelComp: MCNFArcs (0x2957d20)
     type: submodel
     indexing: {a in ARCS}
 qualifier: 
 number of indexing expressions: 1
   0: dummyVar: a
      set     : ARCS
-LBR{(IN((ID T), IDREF(0xcba860:ARCS(0xcaaf50))()))
+LBR{(IN((ID T), IDREF(0x2957860:ARCS(0x2947f50))()))
     dependencies (1):
        root::ARCS
     model: root
 MC: ----------------------------------------------------------
-MC: ModelComp: MCNFNodes (0xcc33f0)
+MC: ModelComp: MCNFNodes (0x29603f0)
     type: submodel
     indexing: {n in NODES}
 qualifier: 
 number of indexing expressions: 1
   0: dummyVar: n
      set     : NODES
-LBR{(IN((ID T), IDREF(0xcc2f70:NODES(0xcaa270))()))
+LBR{(IN((ID T), IDREF(0x295ff70:NODES(0x2947270))()))
     dependencies (1):
        root::NODES
     model: root
 MC: ----------------------------------------------------------
-MC: ModelComp: costToInstall (0xccd7f0)
+MC: ModelComp: costToInstall (0x296a7f0)
     type: objective min
     attr: sum {x in ARCS}sparecap[x] * cost[x]
     dependencies (3):
@@ -179,7 +179,7 @@ MC: ModelComp: costToInstall (0xccd7f0)
     model: root
 AM: now list the submodels:
 AM: ----------------------------------------------------------
-AM: This is AmplModel (0xcbac90): MCNFArcs
+AM: This is AmplModel (0x2957c90): MCNFArcs
 AM: level: 0
 AM: parent: root
 AM: Nb submodels  : 1
@@ -191,26 +191,26 @@ AM: Nb constraints: 1
 AM: Nb objectives : 1
 AM: List components:
 MC: ----------------------------------------------------------
-MC: ModelComp: ARCSDIFF (0xcbb720)
+MC: ModelComp: ARCSDIFF (0x2958720)
     type: set
     attr: := ARCS diff {a}
     dependencies (1):
        root::ARCS
     model: MCNFArcs
 MC: ----------------------------------------------------------
-MC: ModelComp: Net (0xcbc3d0)
+MC: ModelComp: Net (0x29593d0)
     type: submodel
     indexing: {k in COMM}
 qualifier: 
 number of indexing expressions: 1
   0: dummyVar: k
      set     : COMM
-LBR{(IN((ID T), IDREF(0xcbbf10:COMM(0xcab320))()))
+LBR{(IN((ID T), IDREF(0x2958f10:COMM(0x2948320))()))
     dependencies (1):
        root::COMM
     model: MCNFArcs
 MC: ----------------------------------------------------------
-MC: ModelComp: capslack (0xcc0720)
+MC: ModelComp: capslack (0x295d720)
     type: variable
     attr: >= 0
     indexing: {ARCSDIFF}
@@ -218,12 +218,12 @@ qualifier:
 number of indexing expressions: 1
   0: dummyVar: 
      set     : ARCSDIFF
-LBR{(IDREF(0xcc0340:ARCSDIFF(0xcbb720))())
+LBR{(IDREF(0x295d340:ARCSDIFF(0x2958720))())
     dependencies (1):
        MCNFArcs::ARCSDIFF
     model: MCNFArcs
 MC: ----------------------------------------------------------
-MC: ModelComp: Capacity (0xcc26c0)
+MC: ModelComp: Capacity (0x295f6c0)
     type: constraint
     attr: sum {k in COMM}Flow[k,j] + capslack[j] - sparecap[j] = basecap[j]
     indexing: {j in ARCSDIFF}
@@ -231,7 +231,7 @@ qualifier:
 number of indexing expressions: 1
   0: dummyVar: j
      set     : ARCSDIFF
-LBR{(IN((ID T), IDREF(0xcc0f10:ARCSDIFF(0xcbb720))()))
+LBR{(IN((ID T), IDREF(0x295df10:ARCSDIFF(0x2958720))()))
     dependencies (6):
        MCNFArcs::ARCSDIFF
        root::COMM
@@ -242,7 +242,7 @@ LBR{(IN((ID T), IDREF(0xcc0f10:ARCSDIFF(0xcbb720))()))
     model: MCNFArcs
 AM: now list the submodels:
 AM: ----------------------------------------------------------
-AM: This is AmplModel (0xcbc340): Net
+AM: This is AmplModel (0x2959340): Net
 AM: level: 0
 AM: parent: MCNFArcs
 AM: Nb submodels  : 0
@@ -254,7 +254,7 @@ AM: Nb constraints: 1
 AM: Nb objectives : 0
 AM: List components:
 MC: ----------------------------------------------------------
-MC: ModelComp: Flow (0xcbd010)
+MC: ModelComp: Flow (0x295a010)
     type: variable
     attr: >= 0
     indexing: {ARCSDIFF}
@@ -262,12 +262,12 @@ qualifier:
 number of indexing expressions: 1
   0: dummyVar: 
      set     : ARCSDIFF
-LBR{(IDREF(0xcbcba0:ARCSDIFF(0xcbb720))())
+LBR{(IDREF(0x2959ba0:ARCSDIFF(0x2958720))())
     dependencies (1):
        MCNFArcs::ARCSDIFF
     model: Net
 MC: ----------------------------------------------------------
-MC: ModelComp: FlowBalance (0xcbfa50)
+MC: ModelComp: FlowBalance (0x295ca50)
     type: constraint
     attr: sum {j in ARCSDIFF: arc_target[j] == ord(i)}Flow[j] - sum {x in ARCSDIFF: arc_source[x] == ord(i)}Flow[x] = b[k,i]
     indexing: {i in NODES}
@@ -275,7 +275,7 @@ qualifier:
 number of indexing expressions: 1
   0: dummyVar: i
      set     : NODES
-LBR{(IN((ID T), IDREF(0xcbd800:NODES(0xcaa270))()))
+LBR{(IN((ID T), IDREF(0x295a800:NODES(0x2947270))()))
     dependencies (6):
        root::NODES
        MCNFArcs::ARCSDIFF
@@ -285,7 +285,7 @@ LBR{(IN((ID T), IDREF(0xcbd800:NODES(0xcaa270))()))
        root::b
     model: Net
 AM: ----------------------------------------------------------
-AM: This is AmplModel (0xcc3360): MCNFNodes
+AM: This is AmplModel (0x2960360): MCNFNodes
 AM: level: 0
 AM: parent: root
 AM: Nb submodels  : 1
@@ -297,14 +297,14 @@ AM: Nb constraints: 1
 AM: Nb objectives : 1
 AM: List components:
 MC: ----------------------------------------------------------
-MC: ModelComp: NODESDIFF (0xcc3df0)
+MC: ModelComp: NODESDIFF (0x2960df0)
     type: set
     attr: := NODES diff {n}
     dependencies (1):
        root::NODES
     model: MCNFNodes
 MC: ----------------------------------------------------------
-MC: ModelComp: ARCSDIFF (0xcc5520)
+MC: ModelComp: ARCSDIFF (0x2962520)
     type: set
     attr: := {{m in ARCS: arc_source[m] != ord(n) && arc_target[m] != ord(n)}}
     dependencies (3):
@@ -313,19 +313,19 @@ MC: ModelComp: ARCSDIFF (0xcc5520)
        root::arc_target
     model: MCNFNodes
 MC: ----------------------------------------------------------
-MC: ModelComp: Net (0xcc6210)
+MC: ModelComp: Net (0x2963210)
     type: submodel
     indexing: {k in COMM}
 qualifier: 
 number of indexing expressions: 1
   0: dummyVar: k
      set     : COMM
-LBR{(IN((ID T), IDREF(0xcc5d50:COMM(0xcab320))()))
+LBR{(IN((ID T), IDREF(0x2962d50:COMM(0x2948320))()))
     dependencies (1):
        root::COMM
     model: MCNFNodes
 MC: ----------------------------------------------------------
-MC: ModelComp: capslacknode (0xcca560)
+MC: ModelComp: capslacknode (0x2967560)
     type: variable
     attr: >= 0
     indexing: {ARCSDIFF}
@@ -333,12 +333,12 @@ qualifier:
 number of indexing expressions: 1
   0: dummyVar: 
      set     : ARCSDIFF
-LBR{(IDREF(0xcca180:ARCSDIFF(0xcc5520))())
+LBR{(IDREF(0x2967180:ARCSDIFF(0x2962520))())
     dependencies (1):
        MCNFNodes::ARCSDIFF
     model: MCNFNodes
 MC: ----------------------------------------------------------
-MC: ModelComp: Capacity (0xccc500)
+MC: ModelComp: Capacity (0x2969500)
     type: constraint
     attr: sum {k in COMM}Flow[k,j] + capslacknode[j] - sparecap[j] = basecap[j]
     indexing: {j in ARCSDIFF}
@@ -346,7 +346,7 @@ qualifier:
 number of indexing expressions: 1
   0: dummyVar: j
      set     : ARCSDIFF
-LBR{(IN((ID T), IDREF(0xccad50:ARCSDIFF(0xcc5520))()))
+LBR{(IN((ID T), IDREF(0x2967d50:ARCSDIFF(0x2962520))()))
     dependencies (6):
        MCNFNodes::ARCSDIFF
        root::COMM
@@ -357,7 +357,7 @@ LBR{(IN((ID T), IDREF(0xccad50:ARCSDIFF(0xcc5520))()))
     model: MCNFNodes
 AM: now list the submodels:
 AM: ----------------------------------------------------------
-AM: This is AmplModel (0xcc6180): Net
+AM: This is AmplModel (0x2963180): Net
 AM: level: 0
 AM: parent: MCNFNodes
 AM: Nb submodels  : 0
@@ -369,7 +369,7 @@ AM: Nb constraints: 1
 AM: Nb objectives : 0
 AM: List components:
 MC: ----------------------------------------------------------
-MC: ModelComp: Flow (0xcc6e50)
+MC: ModelComp: Flow (0x2963e50)
     type: variable
     attr: >= 0
     indexing: {ARCSDIFF}
@@ -377,12 +377,12 @@ qualifier:
 number of indexing expressions: 1
   0: dummyVar: 
      set     : ARCSDIFF
-LBR{(IDREF(0xcc69e0:ARCSDIFF(0xcc5520))())
+LBR{(IDREF(0x29639e0:ARCSDIFF(0x2962520))())
     dependencies (1):
        MCNFNodes::ARCSDIFF
     model: Net
 MC: ----------------------------------------------------------
-MC: ModelComp: FlowBlance (0xcc9890)
+MC: ModelComp: FlowBlance (0x2966890)
     type: constraint
     attr: sum {j in ARCSDIFF: arc_target[j] == ord(i)}Flow[j] - sum {j in ARCSDIFF: arc_source[j] == ord(i)}Flow[j] = b[k,i]
     indexing: {i in NODESDIFF}
@@ -390,7 +390,7 @@ qualifier:
 number of indexing expressions: 1
   0: dummyVar: i
      set     : NODESDIFF
-LBR{(IN((ID T), IDREF(0xcc7640:NODESDIFF(0xcc3df0))()))
+LBR{(IN((ID T), IDREF(0x2964640:NODESDIFF(0x2960df0))()))
     dependencies (6):
        MCNFNodes::NODESDIFF
        MCNFNodes::ARCSDIFF

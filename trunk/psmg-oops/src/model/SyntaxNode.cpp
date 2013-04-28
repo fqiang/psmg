@@ -1760,7 +1760,7 @@ SyntaxNode* SyntaxNode::find_var_ref_in_context(AmplModel *context, SyntaxNode *
 
 	// try to find a match in the local context
 	LOG("--> continue searching in this_context["<<context->name<<"]");
-	ret = context->find_var_ref_in_context(idNode);
+	ret = context->createIdrefNode(idNode);
 
 	// ret could be NULL if it is actually a STAGE or NODE dummy variable
 	if (!ret) {
