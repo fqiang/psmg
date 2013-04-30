@@ -7,7 +7,6 @@ CPP_SRCS += \
 ../src/context/ExpandedModel2.cpp \
 ../src/context/ModelContext.cpp \
 ../src/context/Param.cpp \
-../src/context/ParamValue.cpp \
 ../src/context/Set.cpp \
 ../src/context/SetValue.cpp \
 ../src/context/Var.cpp \
@@ -17,7 +16,6 @@ OBJS += \
 ./src/context/ExpandedModel2.o \
 ./src/context/ModelContext.o \
 ./src/context/Param.o \
-./src/context/ParamValue.o \
 ./src/context/Set.o \
 ./src/context/SetValue.o \
 ./src/context/Var.o \
@@ -27,7 +25,6 @@ CPP_DEPS += \
 ./src/context/ExpandedModel2.d \
 ./src/context/ModelContext.d \
 ./src/context/Param.d \
-./src/context/ParamValue.d \
 ./src/context/Set.d \
 ./src/context/SetValue.d \
 ./src/context/Var.d \
