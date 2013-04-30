@@ -401,7 +401,7 @@ void AmplModel::reassignModelIndexDependencies()
 	if (this->node->indexing)
 	{
 		assert(this->parent!=NULL);
-		LOG("reassignDependencies in indexing -- "<<this->ix->print());
+		LOG("reassignDependencies in indexing -- "<<this->node->indexing->print());
 		list<SyntaxNode*> refns;
 		this->node->indexing->findIDREF(&refns);
 		for(list<SyntaxNode*>::iterator it=refns.begin();it!=refns.end();it++)
@@ -413,7 +413,7 @@ void AmplModel::reassignModelIndexDependencies()
 				LOG("ModelComp["<<(*it2)->id);
 				if((*it2)->id.compare(id)==0)
 				{
-					LOG("reassignDependencies for TMODEL["<<this->name<<"] indexing["<<this->ix->print()<<"]");
+					LOG("reassignDependencies for TMODEL["<<this->name<<"] indexing["<<this->node->indexing->print()<<"]");
 					refn->ref = *it2;
 					break;
 				}
@@ -574,11 +574,6 @@ void AmplModel::calculateMemoryUsage(unsigned long& size)
 	LOG("AmplModel::calculateMemoryUsage -- model["<<this->name<<"]");
 	size += sizeof(AmplModel);
 	size += this->name.size() + 1;
-//	if(this->ix!=NULL)
-//	{
-//		LOG(" ---   ix ["<<this->ix->print()<<"]");
-//		this->ix->calculateMemoryUsage(size);
-//	}
 	for(list<ModelComp*>::iterator it=comps.begin();it!=comps.end();it++)
 	{
 		size += sizeof(ModelComp*);

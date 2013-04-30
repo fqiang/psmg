@@ -16,7 +16,6 @@
  */
 
 #include "Param.h"
-#include "ParamValue.h"
 #include "../parser/data.tab.h"
 #include "../sml/GlobalVariables.h"
 #include "../model/ModelComp.h"
@@ -41,26 +40,20 @@ Param::Param(int numInd_,string name_):numIndicies(numInd_),name(name_),card(0)
 
 Param::~Param()
 {
-	hash_map<string,ParamValue*>::iterator it=paramValues.begin();
-	for(;it!=paramValues.end();it++)
-	{
-		delete it->second;
-	}
 	paramValues.clear();
 }
 
-void Param::addParamValue(ParamValue* value)
+void Param::addParamValue(string indiciesKey, double value)
 {
-	assert(value->indices.size()==this->numIndicies);
-	LOG("Add ParamValue index["<<card<<"] ["<<value->toString()<<"]");
-	paramValues.insert(pair<string,ParamValue*>(value->getParamIndicesKey(),value));
+	LOG("Add ParamValue index["<<card<<"] ["<<indiciesKey<<" <= "<<value<<"]");
+	paramValues.insert(pair<string,double>(indiciesKey,value));
 	card++;
 }
 
 double Param::findParamValue(string indiciesKey)
 {
 	LOG("-- findParamValue in    - "<<endl<<this->toString());
-	double rval = (this->paramValues.find(indiciesKey)->second)->value;
+	double rval = (this->paramValues.find(indiciesKey)->second);
 	LOG("-- findParamValue in    - ["<<rval<<"]");
 	return rval;
 }
@@ -68,10 +61,10 @@ double Param::findParamValue(string indiciesKey)
 string Param::toString() const
 {
 	ostringstream oss;
-	hash_map<string,ParamValue*>::const_iterator i;
+	hash_map<string,double>::const_iterator i;
 	for(i=this->paramValues.begin();i!=this->paramValues.end();i++)
 	{
-		oss<<(*i).second->toString()<<endl;
+		oss<<(*i).first<<"-->"<<(*i).second<<endl;
 	}
 	return oss.str();
 }
@@ -85,11 +78,10 @@ void Param::calculateMemoryUsage(unsigned long& size)
 {
 	size += sizeof(Param);
 	size += name.size() + 1;
-	hash_map<string,ParamValue*>::iterator it = paramValues.begin();
+	hash_map<string,double>::iterator it = paramValues.begin();
 	for(;it!=paramValues.end();it++)
 	{
-		size += sizeof(pair<string,ParamValue*>);
+		size += sizeof(pair<string,double>);
 		size += (*it).first.size() + 1;
-		(*it).second->calculateMemoryUsage(size);
 	}
 }

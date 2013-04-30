@@ -614,7 +614,7 @@ Set* SyntaxNode::calculateSetValue(ModelContext* context) {
 		else if (nodeIdRef->ref->type == TPARAM) {
 			Param* aParam = static_cast<Param*>(context->getCompValue(nodeIdRef->ref));
 			assert(aParam->card == 1);
-			int i = aParam->paramValues[""]->value;
+			int i = aParam->paramValues[""];
 			value = new Set(1, "TMP");
 			ostringstream oss;
 			oss << i;
@@ -663,7 +663,7 @@ Set* SyntaxNode::calculateSetValue(ModelContext* context) {
 			assert(refn->ref->type == TPARAM);
 			Param* aParam = static_cast<Param*>(context->getCompValue(refn->ref));
 			assert(aParam->card == 1);
-			end = aParam->paramValues[""]->value;
+			end = aParam->paramValues[""];
 			LOG("set end ["<<end<<"]");
 		}
 		else {

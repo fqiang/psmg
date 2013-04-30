@@ -23,7 +23,6 @@
 #include "SyntaxNodeIDREF.h"
 #include "../util/global_util_functions.h"
 #include "../context/Param.h"
-#include "../context/ParamValue.h"
 #include "../parser/sml.tab.h"
 #include "ValueNode.h"
 #include <cassert>
@@ -523,8 +522,8 @@ void ModelComp::calculateParamModelComp(ModelContext* context) {
 	for(int j = 0;j < total;j++) {
 		int curr = j;
 		hash_map<string, string> dummyValueMap;
-		vector<string> indicies;
-
+//		vector<string> indicies;
+		ostringstream oss(ostringstream::out);
 		for(i = this->paramIndiciesComp.begin(), i2 = this->paramIndiciesDummy.begin()
 		;i != this->paramIndiciesComp.end();i++, i2++) {
 			ModelComp* comp = *i;
@@ -536,11 +535,13 @@ void ModelComp::calculateParamModelComp(ModelContext* context) {
 			string key = aSet->setKeys.find(index + 1)->second;
 			LOG("add dummay map ["<<dummy<<"] ---> ["<<key<<"]");
 			dummyValueMap.insert(pair<string, string>(dummy, key));
-			indicies.push_back(key);
+//			indicies.push_back(key);
+			oss<<key;
 		}
 		//now calculate the double value
 		double dval = this->attributes->calculateParamValue(dummyValueMap, paramIndiciesMap, context);
-		paramValue->addParamValue(new ParamValue(indicies, dval));
+//		paramValue->addParamValue(new ParamValue(indicies, dval));
+		paramValue->addParamValue(oss.str(), dval);
 	}
 	context->addCompValueMap(this, paramValue);
 }

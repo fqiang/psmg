@@ -19,7 +19,6 @@
 
 #include "CompDescr.h"
 #include "Set.h"
-#include "ParamValue.h"
 #include <string>
 #include <ext/hash_map>
 
@@ -42,12 +41,12 @@ class Param: public CompDescr{
 
 	public:
 		int card;  			//number of values
-		hash_map<string,ParamValue*> paramValues;
+		hash_map<string,double> paramValues;
 
 		Param(int numInd_,string name_);
 		~Param();
 
-		void addParamValue(ParamValue*);
+		void addParamValue(string indiciesKey, double);
 		double findParamValue(string indiciesKey);
 		string toString() const;
 		string getName();
