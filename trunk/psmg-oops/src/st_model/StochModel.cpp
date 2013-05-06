@@ -113,13 +113,12 @@ void StochModel::expandStages_NO_AMPL()
 
 	Set* aSet = static_cast<Set*>(rootCtx->getCompValue(stageComp));
 	assert(aSet!=NULL);
-	vector<SetValue*>::iterator it = aSet->setValues_data_order.begin();
+	vector<string>::iterator it = aSet->setValues_data_order.begin();
 	for(;it!=aSet->setValues_data_order.end();it++)
 	{
-		SetValue* setVal = *it;
-		assert(setVal->valueList.size()==1);
-		stagenames.push_back(setVal->valueList.front());
-		LOG("setVal ["<<setVal->toString()<<"]");
+		assert(aSet->dim==1);
+		stagenames.push_back((*it));
+		LOG("stagename -  ["<<*it<<"]");
 	}
 	delete rootCtx;
 	LOG("end expandStages_NO_AMPL --- ");
@@ -160,12 +159,12 @@ void StochModel::expandStagesOfComp_NO_AMPL()
 		{
 			Set* aSet = stageSet->calculateSetValue(rootCtx);
 			LOG("ModelComp["<<smc->id<<"] "<<aSet->toString());
-			vector<SetValue*>::iterator it;
+			vector<string>::iterator it;
 			it = aSet->setValues_data_order.begin();
 			for(;it!=aSet->setValues_data_order.end();it++)
 			{
-				assert((*it)->valueList.size()==1);
-				smc->addStageName((*it)->valueList.front());
+				assert(aSet->dim == 1);
+				smc->addStageName((*it));
 			}
 		}
 	}

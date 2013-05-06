@@ -45,7 +45,7 @@ Param::~Param()
 
 void Param::addParamValue(string indiciesKey, double value)
 {
-	LOG("Add ParamValue index["<<card<<"] ["<<indiciesKey<<" <= "<<value<<"]");
+	LOG("Add ParamValue name["<<name<<"] index["<<card<<"] ["<<indiciesKey<<" <= "<<value<<"]");
 	paramValues.insert(pair<string,double>(indiciesKey,value));
 	card++;
 }

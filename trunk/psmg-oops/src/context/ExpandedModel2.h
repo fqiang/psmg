@@ -10,6 +10,7 @@
 
 #include "ModelContext.h"
 #include "../model/AmplModel.h"
+#include "ExpandedModelAbstract.h"
 #include <ext/hash_map>
 #include <map>
 #include <set>
@@ -27,8 +28,8 @@ public:
 	vector<ModelComp*>  localCons;
 	ModelComp* objComp;
 
-	int numLocalCons;
-	int numLocalVars;
+	unsigned int numLocalCons;
+	unsigned int numLocalVars;
 	string name;
 
 	//solutions
@@ -53,7 +54,7 @@ public:
 
 	string getName() const;
 	void addLocalCon(ModelComp*);
-	void addLocalVar(ModelComp*,Var*);
+	void addLocalVar(ModelComp*);
 	int getNLocalCons() const;
 	int getNLocalVars() const;
 	int getNzJacobianOfIntersection(ExpandedModelAbstract *emcol);

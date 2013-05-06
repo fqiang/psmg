@@ -30,6 +30,7 @@ class StochModel;
 class SyntaxNode;
 class SyntaxNodeIx;
 class ModelContext;
+class ExpandedModel2;
 
 enum { NOARG = 0,
        WITHARG = 1,
@@ -146,6 +147,7 @@ class ModelComp{
   int setCard; //belong to set
   bool isFromFile;
   int numVarIndicies; //belong to TVar
+  int varCard;
 
   vector<string> paramIndiciesDummy; //belong to param  dummay->Set*
   vector<ModelComp*> paramIndiciesComp;
@@ -163,9 +165,9 @@ class ModelComp{
   int getNumParamIndicies();
   void calculateParamModelComp(ModelContext* context);
 
-  void fillLocalVar(ModelContext* context,Var* aVar);
-  void calculateLocalVar(ModelContext* context,Var* aVar);
-  void fillLocalVarRecurive(ModelContext* context,Var* aVar,vector<ModelComp*>::iterator curr,vector<string>& ind,double lower,double upper);
+  void fillLocalVar(ExpandedModel2* em2);
+  void calculateLocalVar(ModelContext* context);
+  void fillLocalVarRecurive(ModelContext* context,Var* aVar,vector<ModelComp*>::iterator it,ostringstream& oss);
 
   string& getHashKey();
   void calculateMemoryUsage(unsigned long& size);

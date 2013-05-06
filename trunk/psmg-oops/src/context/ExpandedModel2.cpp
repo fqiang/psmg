@@ -89,14 +89,13 @@ void ExpandedModel2::addLocalCon(ModelComp* conComp)
 	LOG("addLocalCon -- numLocalCons["<<this->numLocalCons<<"]");
 }
 
-void ExpandedModel2::addLocalVar(ModelComp* varComp,Var* aVar)
+void ExpandedModel2::addLocalVar(ModelComp* varComp)
 {
-	LOG("insert - varComp["<<(unsigned long)varComp<<"] - aVar["<<aVar->name<<"]");
+	assert(varComp->type == TVAR);
+	LOG("insert - varComp["<<(unsigned long)varComp<<"] - varComp["<<varComp->id<<"]");
 	this->localVarComps.push_back(varComp);
-	this->localVars.push_back(aVar);
-	assert(this->localVarComps.size()==this->localVars.size());
-	this->numLocalVars+=aVar->getCard();
-	LOG("addLocalVar -- ["<<this->name<<"] --var size["<<this->localVars.size()<<"] numLocalVars["<<this->numLocalVars<<"]");
+	this->numLocalVars+=varComp->varCard;
+	LOG("addLocalVar -- ["<<this->name<<"] --var size["<<this->localVarComps.size()<<"] numLocalVars["<<this->numLocalVars<<"]");
 }
 
 int ExpandedModel2::getNLocalCons() const
@@ -126,18 +125,18 @@ void ExpandedModel2::levelTraversal(vector<ExpandedModel2*>& em2List,int level)
 
 void ExpandedModel2::fillLocalVar()
 {
+	LOG("start fillLocalVar -- ");
 	assert(this->context->isCompsCalculated == true);
 	if(!this->localVarFilled)
 	{
 		vector<ModelComp*>::iterator it_varComp =this->localVarComps.begin();
-		vector<Var*>::iterator it_var = this->localVars.begin();
-		assert(this->localVarComps.size()==this->localVars.size());
-		for(;it_varComp!=this->localVarComps.end();it_varComp++,it_var++)
+		for(;it_varComp!=this->localVarComps.end();it_varComp++)
 		{
-			(*it_varComp)->fillLocalVar(this->context,*it_var);
+			(*it_varComp)->fillLocalVar(this);
 		}
 		this->localVarFilled = true;
 	}
+	LOG("end fillLocalVar -- ");
 }
 
 ModelContext* ExpandedModel2::recursiveInitContext()
@@ -225,12 +224,11 @@ int ExpandedModel2::getNzJacobianOfIntersection(ExpandedModelAbstract *emcol_)
 			assert(conComp->indexing->getDummyVarExpr(0)->opCode==258); //ID=258
 			string dummyVar = static_cast<IDNode*>(conComp->indexing->getDummyVarExpr(0))->id();
 			Set* aSet = static_cast<Set*>(this->context->getCompValue(setComp));
-			vector<SetValue*>::iterator it4 = aSet->setValues_data_order.begin();
+			vector<string>::iterator it4 = aSet->setValues_data_order.begin();
 			LOG("constraints over Set - "<<aSet->toString());
 			for(;it4!=aSet->setValues_data_order.end();it4++)
 			{
-				assert((*it4)->valueList.size()==1); //for now only support 1 dim set for constraints over
-				string dummyVal = (*it4)->valueList[0];
+				string dummyVal = (*it4);
 				LOG("constraint dummy["<<dummyVar<<" --> "<<dummyVal<<"]");
 				this->context->addDummySetValueMapCons(dummyVar,setComp,dummyVal);
 
@@ -238,7 +236,7 @@ int ExpandedModel2::getNzJacobianOfIntersection(ExpandedModelAbstract *emcol_)
 				vector<double> jcobs(emcol->numLocalVars,0.0); //vector operation
 				conComp->attributes->evalDiff(this->context,emcol->context,jcobs);
 				vector<Var*>::iterator it_var = emcol->localVars.begin();
-				vector<VarValue*>::iterator it_varList = (*it_var)->varList.begin();
+				vector<string>::iterator it_varList = (*it_var)->indicies.begin();
 
 				vector<double>::iterator it_jcobs = jcobs.begin();
 				assert(jcobs.size()==emcol->numLocalVars);
@@ -253,16 +251,16 @@ int ExpandedModel2::getNzJacobianOfIntersection(ExpandedModelAbstract *emcol_)
 					}
 					if(emcol->context->varNameReady == false)
 					{
-						string& varKey = (*it_varList)->varKey;
+						string& varKey = (*it_varList);
 						string varName = emcol->name+"_"+(*it_var)->name+"["+varKey+"]";
 						emcol->context->localVarNames.push_back(varName);
 
 						//increment.
 						it_varList++;
-						if(it_varList==(*it_var)->varList.end())
+						if(it_varList==(*it_var)->indicies.end())
 						{
 							it_var++;
-							it_varList=it_var==emcol->localVars.end()?it_varList:(*it_var)->varList.begin();
+							it_varList=it_var==emcol->localVars.end()?it_varList:(*it_var)->indicies.begin();
 						}
 					}
 				}
@@ -298,7 +296,7 @@ int ExpandedModel2::getNzJacobianOfIntersection(ExpandedModelAbstract *emcol_)
 			assert(jcobs.size()==emcol->numLocalVars);
 			conComp->attributes->evalDiff(this->context,emcol->context,jcobs);
 			vector<Var*>::iterator it_var = emcol->localVars.begin();
-			vector<VarValue*>::iterator it_varList = (*it_var)->varList.begin();
+			vector<string>::iterator it_varList = (*it_var)->indicies.begin();
 			vector<double>::iterator it_jcobs = jcobs.begin();
 			assert(jcobs.size()==emcol->numLocalVars);
 			for(int i=0;it_jcobs!=jcobs.end();it_jcobs++,i++)
@@ -313,16 +311,16 @@ int ExpandedModel2::getNzJacobianOfIntersection(ExpandedModelAbstract *emcol_)
 				if(emcol->context->varNameReady == false)
 				{
 					//string varKey = it_vmap->second->getVarKey();
-					string& varKey = (*it_varList)->varKey;
+					string& varKey = (*it_varList);
 					string varName = emcol->name+"_"+(*it_var)->name+"["+varKey+"]";
 					emcol->context->localVarNames.push_back(varName);
 
 					//increment.
 					it_varList++;
-					if(it_varList==(*it_var)->varList.end())
+					if(it_varList==(*it_var)->indicies.end())
 					{
 						it_var++;
-						it_varList=it_var==emcol->localVars.end()?it_varList:(*it_var)->varList.begin();
+						it_varList=it_var==emcol->localVars.end()?it_varList:(*it_var)->indicies.begin();
 					}
 				}
 			}
@@ -563,10 +561,11 @@ void ExpandedModel2::getColUpBounds(double *elts)
 	for(;it!=this->localVars.end();it++)
 	{
 		Var* aVar = *it;
-		vector<VarValue*>::iterator it2 = aVar->varList.begin();
-		for(;it2!=aVar->varList.end();it2++)
+		vector<string>::iterator it2 = aVar->indicies.begin();
+		assert(aVar->indicies.size()==aVar->card);
+		for(;it2!=aVar->indicies.end();it2++)
 		{
-			elts[i]=(*it2)->ub;
+			elts[i]=aVar->ub;
 			i++;
 		}
 	}
@@ -588,10 +587,11 @@ void ExpandedModel2::getColLowBounds(double *elts)
 	{
 
 		Var* aVar = *it;
-		vector<VarValue*>::iterator it2 = aVar->varList.begin();
-		for(;it2!=aVar->varList.end();it2++)
+		vector<string>::iterator it2 = aVar->indicies.begin();
+		assert(aVar->indicies.size()==aVar->card);
+		for(;it2!=aVar->indicies.end();it2++)
 		{
-			elts[i]=(*it2)->lb;
+			elts[i]=aVar->lb;
 			i++;
 		}
 	}

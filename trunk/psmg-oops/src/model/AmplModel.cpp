@@ -120,14 +120,9 @@ ExpandedModelAbstract* AmplModel::createExpandedModel2(ModelContext* context,Exp
 		if (mc->type == TVAR)
 		{
 			LOG("   model-name ["<<name<<"] Comp["<<mc->id<<"] is TVAR type");
-			Var* aVar = new Var(mc->id);
-
-			//mc->fillLocalVar(context,aVar);
-			mc->calculateLocalVar(context,aVar);
-			em2->addLocalVar(mc,aVar);
-			mc->setNumVarIndicies(aVar->numIndicies);
-			//context->addLocalVar(mc,aVar);
-			LOG("   local var:"<<endl<<aVar->toString());
+			mc->calculateLocalVar(context);
+			em2->addLocalVar(mc);
+			LOG("   local var:"<<endl<<mc->id);
 		}
 		else if(mc->type==TCON)
 		{
@@ -158,22 +153,21 @@ ExpandedModelAbstract* AmplModel::createExpandedModel2(ModelContext* context,Exp
 				vector<string> ds;
 				vector<ModelComp*> cs;
 				ind->calculateParamIndicies(ds,cs,dummys);//feng - actually should named calculate model indicies
-				vector<SetValue*>::iterator it;
+				vector<string>::iterator it;
 				LOG("creating child  ExpandedModel2 over the set:"<<set->toString());
 				for(it=set->setValues_data_order.begin();it!=set->setValues_data_order.end();it++)
 				{
 					ModelContext* childContext = new ModelContext(context);
-					assert((*it)->valueList.size()==1);  //not work for composite set yet!
-					string value = (*it)->valueList[0];
+					assert(set->dim==1);  //not work for composite set yet!
 					hash_map<string,ModelComp*>::iterator it2;
 					assert(dummys.size()==1); //only 1 index for model for now!
 					for(it2=dummys.begin();it2!=dummys.end();it2++)
 					{
 						string dummy = it2->first;
-						LOG("creating child["<<mc->id<<"] for ["<<this->name<<"] "<<dummy<<"=["<<value<<"]");
+						LOG("creating child["<<mc->id<<"] for ["<<this->name<<"] "<<dummy<<"=["<<dummy<<"]");
 						ModelComp* comp = it2->second;
 						AmplModel* submod = mc->other;
-						childContext->addDummySetValueMap(dummy,comp,value);
+						childContext->addDummySetValueMap(dummy,comp,*it);
 						ExpandedModelAbstract* subem = submod->createExpandedModel2(childContext,em2);
 						ExpandedModel2* subem2 = static_cast<ExpandedModel2*>(subem);
 						assert(childContext->em==subem2);
