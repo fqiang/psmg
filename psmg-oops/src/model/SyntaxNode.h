@@ -180,7 +180,7 @@ public:
 	double calculateParamValue(hash_map<string, string>& dummyMap, hash_map<string, ModelComp*>& paramIndicies, ModelContext* context);
 	bool evalBool(hash_map<string, string>& dummyMap, hash_map<string, ModelComp*>& paramIndicies, ModelContext* context);
 	double evalTerm(hash_map<string, string>& dummyMap, hash_map<string, ModelComp*>& paramIndicies, ModelContext* context);
-	double evalDiff(ModelContext* rowContext, ModelContext* colContext, ModelComp* varComp, string& varKey);
+//	double evalDiff(ModelContext* rowContext, ModelContext* colContext, ModelComp* varComp, string& varKey);
 	void evalDiff(ModelContext* rowContext, ModelContext* colContext, vector<double>& jcobs);
 	bool isZeroVector(vector<double>& v);
 	void multVectorScalar(vector<double>& v, double scalar, vector<double>& result);
@@ -188,9 +188,9 @@ public:
 	void minusVector(vector<double>& left, vector<double>& right, vector<double>& result);
 	void negateVector(vector<double>& v);
 	double evalRhs(ModelContext* context);
-	void calcTempSetComp(ModelContext* context, vector<ModelComp*>& theComp, Set** aSet, vector<string>& dummyVars);
-	void calculateCompsDummyNames(ModelContext* context, vector<ModelComp*>&comps, vector<string>& dummyNames);
-	void calculateSet(ModelContext* context, vector<ModelComp*>& comps, vector<string>& dummyNames, Set* theSet);
+	void calcSumSetComp(ModelContext* context, IndexSet** aSet);
+	void calculateCompsDummyNames(ModelContext* context, IndexSet* iset);
+	void calculateSet(ModelContext* context, IndexSet* iset);
 	string setOrgSetComp(ModelComp** orgSetComp);
 	bool evalBool(ModelContext* context);
 	double evalTerm(ModelContext* context);

@@ -24,6 +24,7 @@
 #include "../util/global_util_functions.h"
 #include "../context/Param.h"
 #include "../parser/sml.tab.h"
+#include "../context/ExpandedModel2.h"
 #include "ValueNode.h"
 #include <cassert>
 #include <cstdlib>
@@ -80,7 +81,7 @@ const string ModelComp::compTypes[] = { "var", "subject to", "param", "set", "mi
  *                     IDs should have been replaced by IDREFs 
  */
 ModelComp::ModelComp(const string& id_, compType type_, SyntaxNode *indexing_, SyntaxNode *attrib, int uplevel) :
-		type(type_), id(id_), attributes(attrib), model(NULL), setDim(0), setCard(0), isFromFile(false), moveUpLevel(uplevel) {
+		type(type_), id(id_), attributes(attrib), model(NULL), setDim(0), setCard(0), numVarIndicies(0),varCard(0),isFromFile(false), moveUpLevel(uplevel) {
 
 	this->indexing = dynamic_cast<SyntaxNodeIx*>(indexing_);
 	if (indexing)
@@ -546,9 +547,51 @@ void ModelComp::calculateParamModelComp(ModelContext* context) {
 	context->addCompValueMap(this, paramValue);
 }
 
-void ModelComp::calculateLocalVar(ModelContext* context, Var* aVar) {
-	LOG( "calculateVarCard -- in model["<<this->model->name<<"] modelcomp["<<this->id<<"]aVar["<<aVar->name<<"] card["<<aVar->card<<"]");
+void ModelComp::calculateLocalVar(ModelContext* context) {
+	LOG( "calculateLocalVar -- in model["<<this->model->name<<"] modelcomp["<<this->id<<"]");
 	assert(this->type==TVAR);
+	this->varCard = 1;
+	this->numVarIndicies = 0;
+	vector<string> ind;
+	if (context != NULL) {
+		context->fillDummyValue(ind);
+	}
+	numVarIndicies = ind.size();
+	if (this->indexing == NULL) {
+		//do nothing.. card = 1,numIndicies = num of model's indices
+	}
+	else if (this->indexing->sets_mc.size() > 0) {
+		for(vector<ModelComp*>::iterator it = this->indexing->sets_mc.begin();it != this->indexing->sets_mc.end();it++) {
+			varCard = (*it)->setCard * varCard;
+			numVarIndicies = numVarIndicies + (*it)->setDim;
+		}
+	}
+	LOG( "calculateLocalVar -- in model["<<this->model->name<<"] modelcomp["<<this->id<<"]");
+}
+
+void ModelComp::fillLocalVarRecurive(ModelContext* context,Var* aVar,vector<ModelComp*>::iterator it, ostringstream& oss){
+	if(it==this->indexing->sets_mc.end())
+	{
+		aVar->addVarValue(oss,D_NaN);
+	}
+	else
+	{
+		Set* aSet = static_cast<Set*>(context->getCompValue(*it));
+		for(vector<string>::iterator it_setval = aSet->setValues_data_order.begin();it_setval != aSet->setValues_data_order.end();it_setval++) {
+			ostringstream copy(oss.str());
+			oss<<*it_setval;
+			this->fillLocalVarRecurive(context, aVar, it + 1, oss);
+			oss.str("");
+			oss.clear();
+			oss<<copy.str();
+		}
+	}
+}
+
+void ModelComp::fillLocalVar(ExpandedModel2* em2)
+{
+	assert(this->type==TVAR);
+	ModelContext* context = em2->context;
 	int card = 1;
 	int numIndices = 0;
 	vector<string> ind;
@@ -561,21 +604,14 @@ void ModelComp::calculateLocalVar(ModelContext* context, Var* aVar) {
 	}
 	else if (this->indexing->sets_mc.size() > 0) {
 		for(vector<ModelComp*>::iterator it = this->indexing->sets_mc.begin();it != this->indexing->sets_mc.end();it++) {
-			Set* aSet = static_cast<Set*>(context->getCompValue(*it));
-			card = aSet->card * card;
-			numIndices = numIndices + aSet->dim;
+			card = (*it)->setCard * card;
+			numIndices = numIndices + (*it)->setDim;
 		}
 	}
-	aVar->card = card;
-	aVar->numIndicies = numIndices;
-	LOG( "calculateVarCard -- in model["<<this->model->name<<"] modelcomp["<<this->id<<"]aVar["<<aVar->name<<"] card["<<aVar->card<<"] numIndicies["<<aVar->numIndicies<<"]");
-}
 
-void ModelComp::fillLocalVar(ModelContext* context, Var* aVar) {
-	LOG( "fillLocalVar -- in model["<<this->model->name<<"] modelcomp["<<this->id<<"]aVar["<<aVar->name<<"] card["<<aVar->card<<"]");
-	assert(this->type==TVAR);
-	double lower = -dINF;
-	double upper = dINF;
+	//compute variable bounds
+	double lower = D_NEG_INFI;
+	double upper = D_POS_INFI;
 	if (this->attributes != NULL) {
 		LOG( "setting variable bounds -- attribute opCode["<<this->attributes->opCode<<"]  ["<<this->attributes->print()<<"]");
 		assert(this->attributes->opCode == COMMA);
@@ -591,47 +627,30 @@ void ModelComp::fillLocalVar(ModelContext* context, Var* aVar) {
 			assert(false);
 		}
 	}
+
+	Var* aVar = new Var(this->id,card,numIndices,upper,lower);
+
+	//compute variable sets
 	if (this->indexing == NULL) {
 		LOG("this["<<this->id<<"] has no indexing over");
-		vector<string> ind;
-		context->fillDummyValue(ind);
-		//fix -- shouldn't fill the id, id is capture in modelComp
-		//ind.push_back(this->id);
-		VarValue* val = new VarValue(ind, lower, upper);
-		aVar->addVarValue(val);
+		ostringstream oss(ostringstream::out);
+		context->fillDummyValue(oss);
+		aVar->addVarValue(oss,D_NaN);
 	}
 	else if (this->indexing->sets_mc.size() > 0) {
 		LOG("Indexing -- ["<<this->indexing->print()<<"]");
 		LOG("sets_mc["<<this->indexing->sets_mc.size()<<"]");
-		vector<string> ind;
+		ostringstream oss(ostringstream::out);
 		if (context != NULL) {
-			context->fillDummyValue(ind);
+			context->fillDummyValue(oss);
 		}
-		vector<ModelComp*>::iterator curr = this->indexing->sets_mc.begin();
-		this->fillLocalVarRecurive(context, aVar, curr, ind, lower, upper);
-	}
-	LOG( "end fillLocalVar -- in ["<<this->id<<"]aVar["<<aVar->name<<"] - card["<<aVar->card<<"]");
-}
 
-void ModelComp::fillLocalVarRecurive(ModelContext* context, Var* aVar, vector<ModelComp*>::iterator curr, vector<string>& ind, double lower, double upper) {
-	if (curr == this->indexing->sets_mc.end()) {
-		VarValue* val = new VarValue(ind, lower, upper);
-		aVar->addVarValue(val);
+		vector<ModelComp*>::iterator it = this->indexing->sets_mc.begin();
+		this->fillLocalVarRecurive(context,aVar,it,oss);
 	}
-	else {
-		LOG("-- fillLocalVar Recursive -- curr ModelComp["<<(*curr)->id<<"]");
-		Set* aSet = static_cast<Set*>(context->getCompValue(*curr));
-		for(vector<SetValue*>::iterator it_setval = aSet->setValues_data_order.begin();it_setval != aSet->setValues_data_order.end();it_setval++) {
-			int size_before = ind.size();
-			(*it_setval)->fillValueList(ind);
+	em2->localVars.push_back(aVar);
 
-			if (curr != this->indexing->sets_mc.end()) {
-				this->fillLocalVarRecurive(context, aVar, curr + 1, ind, lower, upper);
-			}
-
-			ind.resize(size_before);
-		}
-	}
+	LOG( "fillLocalVar -- in model["<<this->model->name<<"] modelcomp["<<this->id<<"] aVar["<<aVar->name<<"] card["<<aVar->card<<"] numIndicies["<<aVar->numIndicies<<"]");
 }
 
 void ModelComp::calculateMemoryUsage(unsigned long& size) {

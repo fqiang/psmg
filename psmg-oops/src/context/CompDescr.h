@@ -19,6 +19,8 @@
 
 #include <string>
 
+using namespace std;
+
 /** @class CompDescr
  *  A superclass for all Component Description classes such as Set and
  *  CompDescrParam.

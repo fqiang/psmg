@@ -11,6 +11,7 @@
 #include "ValueNode.h"
 #include "ListNode.h"
 #include "IDNode.h"
+#include "../context/IndexSet.h"
 #include "../parser/sml.tab.h"
 #include "../util/global_util_functions.h"
 #include "../context/Param.h"
@@ -618,8 +619,7 @@ Set* SyntaxNode::calculateSetValue(ModelContext* context) {
 			value = new Set(1, "TMP");
 			ostringstream oss;
 			oss << i;
-			SetValue* val = new SetValue(oss.str());
-			value->addSetValue(val);
+			value->addSetValue(oss);
 		}
 		else {
 			LOG("type ["<<nodeIdRef->ref->type<<"not suppose to be here!");
@@ -634,8 +634,9 @@ Set* SyntaxNode::calculateSetValue(ModelContext* context) {
 		IDNode* idn = static_cast<IDNode*>(this);
 		value = new Set(1, "DUM");
 		string dummy = idn->id();
-		SetValue* val = new SetValue(context->getDummyValue(dummy));
-		value->addSetValue(val);
+		ostringstream oss(ostringstream::out);
+		oss<<context->getDummyValue(dummy);
+		value->addSetValue(oss);
 	}
 	else if (this->opCode == 32) {
 		LOG(this->values[0]);
@@ -675,8 +676,7 @@ Set* SyntaxNode::calculateSetValue(ModelContext* context) {
 		for(int i = start;i <= end;i++) {
 			ostringstream oss;
 			oss << i;
-			SetValue* val = new SetValue(oss.str());
-			value->addSetValue(val);
+			value->addSetValue(oss);
 		}
 
 	}
@@ -685,9 +685,8 @@ Set* SyntaxNode::calculateSetValue(ModelContext* context) {
 		ostringstream oss;
 		int i = valn->value;
 		oss << i;
-		SetValue* val = new SetValue(oss.str());
 		value = new Set(1, "TMP");
-		value->addSetValue(val);
+		value->addSetValue(oss);
 	}
 	else if (this->opCode == COLON) {
 		value = this->evalSet(context);
@@ -714,15 +713,13 @@ Set* SyntaxNode::evalSet(ModelContext* context) {
 	SyntaxNodeIDREF* refn = static_cast<SyntaxNodeIDREF*>(this->values[0]->values[1]);
 	LOG("ModelComp is ["<<refn->ref->id<<"]");
 	Set* aSet = static_cast<Set*>(context->getCompValue(refn->ref));
-	vector<SetValue*>::iterator it = aSet->setValues_data_order.begin();
+	vector<string>::iterator it = aSet->setValues_data_order.begin();
 	for(;it != aSet->setValues_data_order.end();it++) {
-		assert((*it)->valueList.size() == 1);
-		string val = (*it)->valueList.front();
+		string val = (*it);
 		LOG("dummy val["<<val<<"]");
 		context->addDummySetValueMapTemp(dummy, refn->ref, val);
 		if (this->values[1]->evalBool(context)) {
-			SetValue* setVal = new SetValue(val);
-			value->addSetValue(setVal);
+			value->addSetValue(val);
 		}
 		context->removeDummySetValueMapTemp(dummy);
 	}
@@ -773,11 +770,10 @@ double SyntaxNode::calculateParamValue(hash_map<string, string>& dummyValueMap, 
 		SyntaxNodeIDREF* refNode = static_cast<SyntaxNodeIDREF*>(this->values[0]->values[0]->values[1]);
 		string dummy = idNode->id();
 		Set* aSet = static_cast<Set*>(context->getCompValue(refNode->ref));
-		vector<SetValue*>::iterator it = aSet->setValues_data_order.begin();
+		vector<string>::iterator it = aSet->setValues_data_order.begin();
 		double sumVal = 0;
 		for(;it != aSet->setValues_data_order.end();it++) {
-			assert((*it)->valueList.size() == 1);
-			string value = (*it)->valueList.front();
+			string value = (*it);
 			context->addDummySetValueMapTemp(dummy, refNode->ref, value);
 			sumVal += this->values[1]->evalTerm(dummyValueMap, paramIndicies, context);
 			context->removeDummySetValueMapTemp(dummy);
@@ -877,7 +873,7 @@ double SyntaxNode::evalTerm(hash_map<string, string>& dummyValueMap, hash_map<st
 		string dummy = in->id();
 		ModelComp* comp = paramIndicies.find(dummy)->second;
 		Set* theSet = static_cast<Set*>(context->getCompValue(comp));
-		rval = (double) (theSet->getSetOrder(dummyValueMap.find(dummy)->second));
+		rval = (double) (theSet->setOrder(dummyValueMap.find(dummy)->second));
 	}
 	else if (this->opCode == 42) {
 		assert(this->values.size() == 2);
@@ -895,29 +891,29 @@ double SyntaxNode::evalTerm(hash_map<string, string>& dummyValueMap, hash_map<st
 	return rval;
 }
 
-void SyntaxNode::foreachSetValue(vector<ModelComp*> comps, vector<string>& dummyVars, Set* aSet, ModelContext* rowContext, vector<double>& jcobs, ModelContext* colContext) {
-	vector<SetValue*>::iterator it_setval = aSet->setValues_data_order.begin();
-	for(;it_setval != aSet->setValues_data_order.end();it_setval++) {
-		SetValue* sval = *it_setval;
-		assert(sval->valueList.size() == comps.size() && comps.size() == dummyVars.size());
-		vector<string>::iterator it_sval = sval->valueList.begin();
-		vector<ModelComp*>::iterator it_comp = comps.begin();
-		vector<string>::iterator it_dummyVar = dummyVars.begin();
-		for(;it_comp != comps.end();it_comp++, it_dummyVar++, it_sval++) {
-			rowContext->addDummySetValueMapTemp((*it_dummyVar), *it_comp, *it_sval);
-		}
-
-		vector<double> currJcobs(jcobs.size(), 0);
-		this->values[1]->evalDiff(rowContext, colContext, currJcobs);
-		assert(currJcobs.size() == jcobs.size());
-		this->plusVector(jcobs, currJcobs, jcobs);
-
-		it_dummyVar = dummyVars.begin();
-		for(;it_dummyVar != dummyVars.end();it_dummyVar++) {
-			rowContext->removeDummySetValueMapTemp(*it_dummyVar);
-		}
-	}
-}
+//void SyntaxNode::foreachSetValue(vector<ModelComp*> comps, vector<string>& dummyVars, Set* aSet, ModelContext* rowContext, vector<double>& jcobs, ModelContext* colContext) {
+//	vector<string>::iterator it_setval = aSet->setValues_data_order.begin();
+//	for(;it_setval != aSet->setValues_data_order.end();it_setval++) {
+//		SetValue* sval = *it_setval;
+//		assert(sval->valueList.size() == comps.size() && comps.size() == dummyVars.size());
+//		vector<string>::iterator it_sval = sval->valueList.begin();
+//		vector<ModelComp*>::iterator it_comp = comps.begin();
+//		vector<string>::iterator it_dummyVar = dummyVars.begin();
+//		for(;it_comp != comps.end();it_comp++, it_dummyVar++, it_sval++) {
+//			rowContext->addDummySetValueMapTemp((*it_dummyVar), *it_comp, *it_sval);
+//		}
+//
+//		vector<double> currJcobs(jcobs.size(), 0);
+//		this->values[1]->evalDiff(rowContext, colContext, currJcobs);
+//		assert(currJcobs.size() == jcobs.size());
+//		this->plusVector(jcobs, currJcobs, jcobs);
+//
+//		it_dummyVar = dummyVars.begin();
+//		for(;it_dummyVar != dummyVars.end();it_dummyVar++) {
+//			rowContext->removeDummySetValueMapTemp(*it_dummyVar);
+//		}
+//	}
+//}
 
 void SyntaxNode::findSyntaxNodeChild(SyntaxNode** node, int op) {
 	if (this->opCode == op) {
@@ -994,27 +990,30 @@ void SyntaxNode::handleSum(ModelContext* rowContext, vector<double>& jcobs, Mode
 	else {
 		LOG("NOT - CONS SUM Indexing["<<cons_sum_node->print()<<"] Col Model Indexing["<<col_index_node->print()<<"]");
 		if (this->values[1]->isDepend(colEm2->localVarComps)) {
-			vector<ModelComp*> comps;
-			Set* aSet = NULL;
-			vector<string> dummyVars;
-			ostringstream oss;
+//			vector<ModelComp*> comps;
+//			vector<string> dummyVars;
+			IndexSet* iset = NULL;
+			ostringstream oss(ostringstream::out);
 			oss //<< rowContext->getModelDummyValAsKey() //don't need this one since context is hirechical structured! -Feng
 			<< rowContext->getConsDummyValAsKey() << (void*) ((this->values[0])) << colContext;
 			string hashKey = oss.str();
-			if (!rowContext->getCalcTempSet(hashKey, comps, &aSet, dummyVars)) {
-				this->values[0]->calcTempSetComp(rowContext, comps, &aSet, dummyVars);
-				LOG("sum { dummyVar } over "<<aSet->toString());
-				LOG("-- Add Temp Set - hashKey["<<hashKey<<"] overSet "<<aSet->toString());
-				rowContext->addCalcTempSet(hashKey, comps, aSet, dummyVars);
+			if (!rowContext->getCalcSumSet(hashKey, &iset))
+			{
+				iset = new IndexSet("TEMP_SUM");
+				this->values[0]->calcSumSetComp(rowContext, &iset);
+				LOG("sum { dummyVar } over "<<iset->toString());
+				LOG("-- Add Temp Set - hashKey["<<hashKey<<"] overSet "<<iset->toString());
+				rowContext->addCalcSumSet(hashKey, iset);
 			}
-			vector<SetValue*>::iterator it_setval = aSet->setValues_data_order.begin();
-			for(;it_setval != aSet->setValues_data_order.end();it_setval++) {
-				SetValue* sval = *it_setval;
-				assert(sval->valueList.size() == comps.size() && comps.size() == dummyVars.size());
-				vector<string>::iterator it_sval = sval->valueList.begin();
-				vector<ModelComp*>::iterator it_comp = comps.begin();
-				vector<string>::iterator it_dummyVar = dummyVars.begin();
-				for(;it_comp != comps.end();it_comp++, it_dummyVar++, it_sval++) {
+
+			vector< vector<string> >::iterator it_setval = iset->setIndicies.begin();
+			for(;it_setval != iset->setIndicies.end();it_setval++) {
+				vector<string> sval = *it_setval;
+				assert(iset->comps.size()== sval.size() && iset->comps.size() == iset->dummyVarNames.size());
+				vector<ModelComp*>::iterator it_comp = iset->comps.begin();
+				vector<string>::iterator it_dummyVar = iset->dummyVarNames.begin();
+				vector<string>::iterator it_sval = sval.begin();
+				for(;it_comp != iset->comps.end();it_comp++, it_dummyVar++,it_sval++) {
 					rowContext->addDummySetValueMapTemp((*it_dummyVar), *it_comp, *it_sval);
 				}
 
@@ -1023,8 +1022,8 @@ void SyntaxNode::handleSum(ModelContext* rowContext, vector<double>& jcobs, Mode
 				assert(currJcobs.size() == jcobs.size());
 				this->plusVector(jcobs, currJcobs, jcobs);
 
-				it_dummyVar = dummyVars.begin();
-				for(;it_dummyVar != dummyVars.end();it_dummyVar++) {
+				it_dummyVar = iset->dummyVarNames.begin();
+				for(;it_dummyVar != iset->dummyVarNames.end();it_dummyVar++) {
 					rowContext->removeDummySetValueMapTemp(*it_dummyVar);
 				}
 			}
@@ -1131,10 +1130,10 @@ void SyntaxNode::evalDiff(ModelContext* rowContext, ModelContext* colContext, ve
 					}
 
 					//now checking varKey in Var set if matches any
-					vector<VarValue*>::iterator it2 = (*it_var)->varList.begin();
+					vector<string>::iterator it2 = (*it_var)->indicies.begin();
 
-					while(!found && it2 != (*it_var)->varList.end()) {
-						string& varKey = (*it2)->varKey;
+					while(!found && it2 != (*it_var)->indicies.end()) {
+						string& varKey = (*it2);
 						if (varKey.compare(currVarKey) == 0) {
 							*it_jcobs = 1;
 							found = true;
@@ -1273,30 +1272,22 @@ double SyntaxNode::evalRhs(ModelContext* context) {
 	return rval;
 }
 
-void SyntaxNode::calcTempSetComp(ModelContext* context, vector<ModelComp*>& comps, Set** theSet, vector<string>& dummyNames) {
+void SyntaxNode::calcSumSetComp(ModelContext* context, IndexSet** iset) {
 	LOG("calcTempSetComp --- opCode["<<this->opCode<<"]  "<<this->print());
 	if (this->opCode == LBRACE) {
 		assert(this->values.size() == 1);
-		this->values[0]->calcTempSetComp(context, comps, theSet, dummyNames);
+		this->values[0]->calcSumSetComp(context, iset);
 	}
 	else if (this->opCode == IN) //the simple only one dimension case.
 	{
 		string dummyName = static_cast<IDNode*>(this->values[0])->id();
 		ModelComp* aComp = static_cast<SyntaxNodeIDREF*>(this->values[1])->ref;
-		Set* aSet = NULL;
-		Set* setCopy = NULL;
 		assert(this->values[1]->values.size() == 0);
-		aSet = static_cast<Set*>(context->getCompValue(aComp));
+		Set* aSet = static_cast<Set*>(context->getCompValue(aComp));
 
-		//creating set copy
-//		setCopy = new Set(*aSet);
-//		*theSet = setCopy;
-		//non copy version
-		*theSet = aSet;
-
-		assert((*theSet)->dim == 1);
-		comps.push_back(aComp);
-		dummyNames.push_back(dummyName);
+		(*iset)->comps.push_back(aComp);
+		(*iset)->dummyVarNames.push_back(dummyName);
+		(*iset)->addSet(aSet);
 
 	}
 	else if (this->opCode == COLON) {
@@ -1305,41 +1296,43 @@ void SyntaxNode::calcTempSetComp(ModelContext* context, vector<ModelComp*>& comp
 		ModelComp* aComp = static_cast<SyntaxNodeIDREF*>(val0->values[1])->ref;
 
 		Set* aSet = static_cast<Set*>(context->getCompValue(aComp));
-		Set* newSet = new Set(aSet->dim, "TMP");
 
-		vector<SetValue*>::iterator it = aSet->setValues_data_order.begin();
+		vector<string>::iterator it = aSet->setValues_data_order.begin();
 		for(;it != aSet->setValues_data_order.end();it++) {
-			string dummyVal = (*it)->getKey();
+			string dummyVal = (*it);
 			context->addDummySetValueMapTemp(dummyName, aComp, dummyVal);
 			bool isIn = this->values[1]->evalBool(context);
 			if (isIn) {
 				LOG("add ["<<dummyVal<<"] to temp set");
-				newSet->addSetValue(new SetValue(dummyVal));
+				vector<string> ind;
+				ind.push_back(dummyVal);
+				(*iset)->setIndicies.push_back(ind);
 			}
 			else {
 				LOG("   ["<<dummyVal<<"] is not in temp set");
 			}
 			context->removeDummySetValueMapTemp(dummyName);
 		}
-		*theSet = newSet;
-		comps.push_back(aComp);
-		dummyNames.push_back(dummyName);
+		(*iset)->comps.push_back(aComp);
+		(*iset)->dummyVarNames.push_back(dummyName);
 	}
 	else if (this->opCode == COMMA) {
+		LOG(this->print());
 		assert(this->values.size() <= 3 && this->values.size() != 0);
 
 		ExpandedModel2* em2 = static_cast<ExpandedModel2*>(context->em);
-		vector<ExpandedModel2*> em2LevelList;
-		em2->levelTraversal(em2LevelList, context->moveUpLevel);
 		for(vector<SyntaxNode*>::iterator it = this->values.begin();it != this->values.end();it++) {
 			LOG("COMMA List -- handling ["<<(*it)->print()<<"]");
-			(*it)->calculateCompsDummyNames(context, comps, dummyNames);
+			(*it)->calculateCompsDummyNames(context, (*iset));
 		}
-		assert(comps.size() == this->values.size() && comps.size() == dummyNames.size());
+		assert((*iset)->comps.size() == this->values.size() && (*iset)->comps.size() == (*iset)->dummyVarNames.size());
 
-		*theSet = new Set(this->values.size(), "TMP_UP" + context->moveUpLevel);
+		vector<ExpandedModel2*> em2LevelList;
+		em2->levelTraversal(em2LevelList, context->moveUpLevel);
+
+		(*iset)->name = "TMP_UP" + context->moveUpLevel;
 		for(vector<ExpandedModel2*>::iterator em2LevelIt = em2LevelList.begin();em2LevelIt != em2LevelList.end();em2LevelIt++) {
-			this->calculateSet((*em2LevelIt)->context, comps, dummyNames, *theSet);
+			this->calculateSet((*em2LevelIt)->context,*iset);
 		}
 	}
 	else {
@@ -1349,25 +1342,25 @@ void SyntaxNode::calcTempSetComp(ModelContext* context, vector<ModelComp*>& comp
 	}
 }
 
-void SyntaxNode::calculateCompsDummyNames(ModelContext* context, vector<ModelComp*>&comps, vector<string>& dummyNames) {
+void SyntaxNode::calculateCompsDummyNames(ModelContext* context, IndexSet* iset) {
 	string dummyName = static_cast<IDNode*>(this->values[0])->id();
 	ModelComp* aComp = static_cast<SyntaxNodeIDREF*>(this->values[1])->ref;
-	comps.push_back(aComp);
-	dummyNames.push_back(dummyName);
+	iset->comps.push_back(aComp);
+	iset->dummyVarNames.push_back(dummyName);
 	LOG("calculateCompsDummyNames -- adding ModelComp["<<aComp->id<<"] dummyName["<<dummyName<<"]");
 }
 
-void SyntaxNode::calculateSet(ModelContext* context, vector<ModelComp*>& comps, vector<string>& dummyNames, Set* theSet) {
+void SyntaxNode::calculateSet(ModelContext* context, IndexSet* iset) {
 	LOG("calculateSet --- opCode["<<this->opCode<<"]  "<<this->print());
 	assert(this->opCode == COMMA);
-	vector<string> valueList;
-	for(vector<string>::iterator it = dummyNames.begin();it != dummyNames.end();it++) {
+	vector<string> isetval;
+	for(vector<string>::iterator it = iset->dummyVarNames.begin();it != iset->dummyVarNames.end();it++) {
 		string dummyName = *it;
 		string dummyVal = context->getDummyValue(dummyName);
+		isetval.push_back(dummyVal);
 		LOG("calculateSet -- dummyName["<<dummyName<<"]  --->  dummyVal["<<dummyVal<<"]");
-		valueList.push_back(dummyVal);
 	}
-	theSet->addSetValue(new SetValue(valueList));
+	iset->setIndicies.push_back(isetval);
 }
 
 bool SyntaxNode::evalBool(ModelContext* context) {
@@ -1403,10 +1396,10 @@ bool SyntaxNode::evalBool(ModelContext* context) {
 		SyntaxNodeIDREF* refn = static_cast<SyntaxNodeIDREF*>(this->values[1]);
 		assert(refn->ref->type == TSET);
 		Set* aSet = static_cast<Set*>(context->getCompValue(refn->ref));
-		vector<SetValue*>::iterator it = aSet->setValues_data_order.begin();
+		vector<string>::iterator it = aSet->setValues_data_order.begin();
 		for(;it != aSet->setValues_data_order.end();it++) {
-			assert((*it)->valueList.size() == 1);
-			int r1 = atoi((*it)->valueList.front().c_str());
+//			assert((*it)->valueList.size() == 1);
+			int r1 = atoi((*it).c_str());
 			LOG("--- value for r1["<<r1<<"]");
 			if (r0 == r1) {
 				rval = true;
@@ -1474,7 +1467,7 @@ double SyntaxNode::evalTerm(ModelContext* context) {
 		string dummy = in->id();
 		ModelComp* comp = context->getDummySet(dummy);
 		Set* theSet = static_cast<Set*>(context->getCompValue(comp));
-		rval = (double) (theSet->getSetOrder(context->getDummyValue(dummy)));
+		rval = (double) (theSet->setOrder(context->getDummyValue(dummy)));
 	}
 	else if (this->opCode == 0) {
 		rval = this->values[0]->evalTerm(context);

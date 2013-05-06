@@ -11,6 +11,7 @@
 #include "../util/global_util_functions.h"
 #include "Var.h"
 #include "Set.h"
+#include "IndexSet.h"
 #include "../model/ModelComp.h"
 #include <ext/hash_map>
 #include <string>
@@ -40,10 +41,11 @@ public:
 
 	__gnu_cxx::hash_map<int,string> cacheModelDummyVarKey; //-- used in the getModelDummyValAsKey(int& num);
 
-	__gnu_cxx::hash_map<string,vector<ModelComp*> > tempSetModelCompMap;
-	__gnu_cxx::hash_map<string,Set* > tempSetSetMap;
-	__gnu_cxx::hash_map<string,vector<string> > tempSetDummyVarMap;
+//	__gnu_cxx::hash_map<string,vector<ModelComp*> > tempSetModelCompMap;
+//	__gnu_cxx::hash_map<string,Set* > tempSetSetMap;
+//	__gnu_cxx::hash_map<string,vector<string> > tempSetDummyVarMap;
 
+	__gnu_cxx::hash_map<string,IndexSet*> tempISetMap;
 
 //	string modelDummyValKey;
 //	bool isModelDummyValKeyCalculated;
@@ -66,7 +68,7 @@ public:
 	void addDummySetValueMapTemp(string& dummyVar,ModelComp* comp,string val);
 	void removeDummySetValueMapCons(string& dummyVar);
 	void removeDummySetValueMapTemp(string& dummyVar);
-	string getDummyValue(string& dummyVar);
+	string& getDummyValue(string& dummyVar);
 	string getDummyValueCons(string& dummyVar);
 	string getDummyValueTemp(string& dummyVar);
 	ModelComp* getDummySet(string& dummyVar);
@@ -77,7 +79,11 @@ public:
 	void removeCurrLevelCompValueMap(ModelComp* comp);
 	string getContextId();
 	void fillDummyValue(vector<string>&);
+	void fillDummyValue(ostringstream&);
 
+
+	bool getCalcSumSet(string& hashKey,IndexSet** iset);
+	void addCalcSumSet(string& hashKey,IndexSet* iset);
 	bool getCalcTempSet(string& hashKey,vector<ModelComp*>& comps,Set** aSet,vector<string>& dummyVars);
 	void addCalcTempSet(string& hashKey,vector<ModelComp*>& comps,Set* aSet,vector<string>& dummyVars);
 

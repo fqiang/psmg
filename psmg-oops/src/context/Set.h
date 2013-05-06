@@ -18,7 +18,6 @@
 #define SET_H
 
 #include "CompDescr.h"
-#include "SetValue.h"
 #include "../util/global_util_functions.h"
 #include <ext/hash_map>
 #include <string>
@@ -31,26 +30,25 @@ class Set: public CompDescr{
 
 	public:
 		int dim; //same as in ModelComp
-		int card;
 		string name;
-		vector<SetValue*> setValues_data_order;
-		__gnu_cxx::hash_map<string,SetValue*> setValues;
-		__gnu_cxx::hash_map<string,int> setOrders;
-		__gnu_cxx::hash_map<int,string> setKeys;
+		int card;
+		vector<string> setValues_data_order;
+		hash_map<string,int> setOrders;
+		hash_map<int,string> setKeys;
 
 		Set(int dim_,string name_);
 		virtual ~Set();
 		Set(const Set& dest);
 
-		int getSetOrder(string key);
-		void addSetValue(SetValue* element);
-		void fillSetValues(string datalist);
+		int setOrder(string key);
+		void addSetValue(string& key);
+		void addSetValue(ostringstream& oss);
+		void fillSetValues(char*& data);
 		Set* setDiff(Set* sub);
 		Set* setCross(Set* other);
-		int  setOrder(string key);
 		int getCard();
 		string toString() const;
-		bool contains(SetValue&);
+		bool contains(string&);
 		void calculateMemoryUsage(unsigned long& size);
 	private:
 };

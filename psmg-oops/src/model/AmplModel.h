@@ -19,7 +19,6 @@
 #define AMPLMODEL_H
 
 #include "ModelComp.h"
-#include "../context/ExpandedModelAbstract.h"
 #include "changeitem.h"
 #include <list>
 #include <string>

@@ -38,75 +38,66 @@ Set::Set(int dim_,string name_): dim(dim_),name(name_),card(0)
 Set::Set(const Set& src):dim(src.dim),name(src.name),card(0)
 {
 	LOG("make set copy -- from name["<<name<<"] -- "<<src.toString());
-	__gnu_cxx::hash_map<string,SetValue*>::const_iterator i;
-	for(i=src.setValues.begin();i!=src.setValues.end();i++)
+	vector<string>::const_iterator i;
+	for(i=src.setValues_data_order.begin();i!=src.setValues_data_order.end();i++)
 	{
-		SetValue* value = (*i).second;
-		SetValue* tmp = new SetValue(*value);
-		this->addSetValue(tmp);
+		string value = (*i);
+		this->addSetValue(value);
 	}
 }
 
 Set::~Set()
 {
 	LOG("Set destructor called ");
-	vector<SetValue*>::iterator it = this->setValues_data_order.begin();
-	for(;it!=this->setValues_data_order.end();it++)
-	{
-		delete (*it);
-	}
 	this->setValues_data_order.clear();
-	this->setValues.clear();
 	this->setOrders.clear();
 	this->setKeys.clear();
 }
 
-void Set::addSetValue(SetValue* value)
+void Set::addSetValue(string& value)
 {
 	card++;
-	assert(value->valueList.size()==this->dim);
-	LOG("Add SetValue index["<<card<<"] ["<<value->toString()<<"]");
-	this->setValues.insert(pair<string,SetValue*>(value->getKey(),value));
-	this->setOrders.insert(pair<string,int>(value->getKey(),card));
-	this->setKeys.insert(pair<int,string>(card,value->getKey()));
+	LOG("Add SetValue index["<<card<<"] ["<<value<<"]");
 	this->setValues_data_order.push_back(value);
+	this->setOrders.insert(pair<string,int>(value,card));
+	this->setKeys.insert(pair<int,string>(card,value));
 	LOG("addSetValue -- "<<this->toString());
 }
 
-int Set::setOrder(string key)
+
+void Set::addSetValue(ostringstream& oss)
 {
-	__gnu_cxx::hash_map<string,int>::iterator i = this->setOrders.find(key);
-	assert(i!=this->setOrders.end());
-	return (*i).second;
+	card++;
+	LOG("Add SetValue oss index["<<card<<"] ["<<oss.str()<<"]");
+	this->setValues_data_order.push_back(oss.str());
+	this->setOrders.insert(pair<string,int>(oss.str(),card));
+	this->setKeys.insert(pair<int,string>(card,oss.str()));
+	LOG("addSetValue -- "<<this->toString());
 }
 
-void Set::fillSetValues(string datalist)
+void Set::fillSetValues(char*& data)
 {
-	char* data = new char[datalist.length() + 1];
-	strcpy(data,datalist.c_str());
+//	char* data = datalist.c_str();
 	char* token;
 	token = strtok(data,",() ");
 
-	vector<string> toks;
-	int tokenNum = 0;
-	while(token!=NULL)
+	ostringstream oss(ostringstream::out);
+	unsigned int tokenNum = 0;
+	do
 	{
-		string tok(token);
-		if(tokenNum%this->dim == 0 && toks.size()!=0)
-		{
-			SetValue* value = new SetValue(toks);
-			this->addSetValue(value);
-			toks.clear();
-		}
-		toks.push_back(tok);
-		token = strtok(NULL,",() ");
+		oss<<token;
 		tokenNum++;
-	}
-	//add the last set value
-	this->addSetValue(new SetValue(toks));
-	toks.clear();
-
-	delete [] data;
+		if(tokenNum%this->dim == 0)
+		{
+			this->addSetValue(oss);
+			oss.str("");
+			oss.clear();
+		}
+		token = strtok(NULL,",() ");
+	}while(token!=NULL);
+	LOG("Set::fillSetValues -- tokenNum-"<<tokenNum<<"] -- ");
+	LOG("set --------");
+	LOG(this->toString());
 }
 
 Set* Set::setDiff(Set* sub)
@@ -114,14 +105,14 @@ Set* Set::setDiff(Set* sub)
 	assert(this->dim == sub->dim);
 	LOG("call set diff  ["<<this->name<<"  DIFF  "<<sub->name<<"]");
 	Set* rval = new Set(this->dim,this->name+"_DIFF_"+sub->name);
-	__gnu_cxx::hash_map<string,SetValue*>::iterator i;
-	for(i= this->setValues.begin();i!=this->setValues.end();i++)
+
+	vector<string>::iterator i;
+	for(i= this->setValues_data_order.begin();i!=this->setValues_data_order.end();i++)
 	{
-		string currKey = (*i).first;
-		if(sub->setValues.find(currKey)==sub->setValues.end())
+		string currKey = (*i);
+		if(sub->setOrders.find(currKey)==sub->setOrders.end())
 		{
-			SetValue* v = new SetValue((*i).second->valueList);
-			rval->addSetValue(v);
+			rval->addSetValue(currKey);
 		}
 	}
 	return rval;
@@ -131,25 +122,29 @@ Set* Set::setCross(Set* other)
 {
 	LOG("call set cross  ["<<this->name<<"  CROSS  "<<other->name<<"]");
 	Set* rval = new Set(this->dim*other->dim,this->name+"CROSS"+other->name);
-	__gnu_cxx::hash_map<string,SetValue*>::iterator i;
-	__gnu_cxx::hash_map<string,SetValue*>::iterator j;
-	for(i= this->setValues.begin();i!=this->setValues.end();i++)
+	vector<string>::iterator i;
+	vector<string>::iterator j;
+	ostringstream oss(ostringstream::out);
+	for(i= this->setValues_data_order.begin();i!=this->setValues_data_order.end();i++)
 	{
-		for(j= other->setValues.begin();i!=other->setValues.end();i++)
+		for(j= other->setValues_data_order.begin();i!=other->setValues_data_order.end();i++)
 		{
-			vector<string> val;
-			copy((*i).second->valueList.begin(),(*i).second->valueList.end(),val.begin());
-			copy((*j).second->valueList.begin(),(*j).second->valueList.end(),val.end());
-			SetValue* v = new SetValue(val);
-			rval->addSetValue(v);
+			oss<<*i;
+			oss<<*j;
+			rval->addSetValue(oss);
+			oss.str("");
+			oss.clear();
 		}
 	}
 	return rval;
 }
 
-int Set::getSetOrder(string indiciesKey)
+
+int Set::setOrder(string key)
 {
-	return this->setOrders.find(indiciesKey)->second;
+	__gnu_cxx::hash_map<string,int>::iterator i = this->setOrders.find(key);
+	assert(i!=this->setOrders.end());
+	return (*i).second;
 }
 
 int Set::getCard()
@@ -160,20 +155,19 @@ int Set::getCard()
 string Set::toString() const
 {
 	ostringstream oss;
-	__gnu_cxx::hash_map<string,SetValue*>::const_iterator i;
-	for(i= this->setValues.begin();i!=this->setValues.end();i++)
+	vector<string>::const_iterator i;
+	for(i= this->setValues_data_order.begin();i!=this->setValues_data_order.end();i++)
 	{
-		oss<<(*i).second->toString();
+		oss<<(*i)<<"|";
 	}
 	return oss.str();
 }
 
-bool Set::contains(SetValue& value)
+bool Set::contains(string& value)
 {
 	bool isIn = true;
-	string key = value.getKey();
-	__gnu_cxx::hash_map<string,SetValue*>::iterator i = this->setValues.find(key);
-	if(i==this->setValues.end())
+	__gnu_cxx::hash_map<string,int>::iterator i = this->setOrders.find(value);
+	if(i==this->setOrders.end())
 	{
 		isIn = false;
 	}
@@ -184,16 +178,9 @@ void Set::calculateMemoryUsage(unsigned long& size)
 {
 	size += sizeof(Set);
 	size += name.size() + 1;
-	for(vector<SetValue*>::iterator it=setValues_data_order.begin();it!=setValues_data_order.end();it++)
+	for(vector<string>::iterator it=setValues_data_order.begin();it!=setValues_data_order.end();it++)
 	{
-		size += sizeof(SetValue*);
-		(*it)->calculateMemoryUsage(size);
-	}
-	for(hash_map<string,SetValue*>::iterator it=setValues.begin();it!=setValues.end();it++)
-	{
-		size += sizeof(pair<string,SetValue*>);
-		size += (*it).first.size() + 1;
-		//(*it).second->calculateMemoryUsage(size);  //ready count in setValues_data_order
+		size += (*it).size() + 1;
 	}
 	for(hash_map<string,int>::iterator it=setOrders.begin();it!=setOrders.end();it++)
 	{

@@ -5,30 +5,27 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
 ../src/context/ExpandedModel2.cpp \
+../src/context/IndexSet.cpp \
 ../src/context/ModelContext.cpp \
 ../src/context/Param.cpp \
 ../src/context/Set.cpp \
-../src/context/SetValue.cpp \
-../src/context/Var.cpp \
-../src/context/VarValue.cpp 
+../src/context/Var.cpp 
 
 OBJS += \
 ./src/context/ExpandedModel2.o \
+./src/context/IndexSet.o \
 ./src/context/ModelContext.o \
 ./src/context/Param.o \
 ./src/context/Set.o \
-./src/context/SetValue.o \
-./src/context/Var.o \
-./src/context/VarValue.o 
+./src/context/Var.o 
 
 CPP_DEPS += \
 ./src/context/ExpandedModel2.d \
+./src/context/IndexSet.d \
 ./src/context/ModelContext.d \
 ./src/context/Param.d \
 ./src/context/Set.d \
-./src/context/SetValue.d \
-./src/context/Var.d \
-./src/context/VarValue.d 
+./src/context/Var.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
