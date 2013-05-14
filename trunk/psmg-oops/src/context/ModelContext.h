@@ -28,9 +28,13 @@ class ModelContext {
 public:
 	ModelContext* parent;
 	bool isUsed;
+
+	//! use for block index, at this time only work for one dummy varaible for block
 	__gnu_cxx::hash_map<string,ModelComp*> dummySetMap;
 	__gnu_cxx::hash_map<string,string> dummyValueMap;
-	__gnu_cxx::hash_map<string,CompDescr*> compValueMap; //key is ModelComp*
+
+	//! data storage for this expanded model tree node. key is ModelComp*
+	__gnu_cxx::hash_map<string,CompDescr*> compValueMap;
 
 	__gnu_cxx::hash_map<string,ModelComp*> dummySetMapCons;
 	__gnu_cxx::hash_map<string,string> dummyValueMapCons;
@@ -40,10 +44,6 @@ public:
 
 
 	__gnu_cxx::hash_map<int,string> cacheModelDummyVarKey; //-- used in the getModelDummyValAsKey(int& num);
-
-//	__gnu_cxx::hash_map<string,vector<ModelComp*> > tempSetModelCompMap;
-//	__gnu_cxx::hash_map<string,Set* > tempSetSetMap;
-//	__gnu_cxx::hash_map<string,vector<string> > tempSetDummyVarMap;
 
 	__gnu_cxx::hash_map<string,IndexSet*> tempISetMap;
 

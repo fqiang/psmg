@@ -134,7 +134,7 @@ class AmplModel{
   void calculateCurrLevelModelComp(ModelContext* context);
   void calculateModelCompRecursive(ModelContext* context);
   void calculateCurrLevelSetModelComp(ModelContext* context);
-  void clearCalculateCurrLevelSetModelComp(ModelContext* context);
+  void clearNoneRootSetModelComp(ModelContext* context);
   void calculateCurrLevelParamModelComp(ModelContext* context);
   ExpandedModel2* createExpandedModel2(ModelContext* context,ExpandedModel2* parent);
   void reassignModelIndexDependencies();

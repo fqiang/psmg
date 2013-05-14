@@ -145,9 +145,8 @@ class ModelComp{
   //Feng
   int setDim; //belong to set
   int setCard; //belong to set
-  bool isFromFile;
   int varIndicies; //belong to TVar
-  int varCard;
+  int varCard; //belong to TVar
 
   vector<string> paramIndiciesDummy; //belong to param  dummay->Set*
   vector<ModelComp*> paramIndiciesComp;

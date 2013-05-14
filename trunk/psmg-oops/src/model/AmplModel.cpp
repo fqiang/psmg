@@ -140,38 +140,28 @@ ExpandedModel2* AmplModel::createExpandedModel2(ModelContext* context,ExpandedMo
 			if(mc->indexing!=NULL)
 			{
 				assert(mc->indexing->sets_mc.size()==1);
-				ModelComp* setComp = mc->indexing->sets_mc[0];
+				assert(mc->indexing->opCode==LBRACE);
+				assert(mc->indexing->values.size()==1);
+				assert(mc->indexing->values[0]->opCode == IN);
+
+				ModelComp* setComp = static_cast<SyntaxNodeIDREF*>(mc->indexing->values[0]->values[1])->ref;
+				string dummy = static_cast<IDNode*>(mc->indexing->values[0]->values[0])->id();
 				Set* set = static_cast<Set*>(context->getCompValue(setComp));
-				assert(set->dim == 1);
-				int card = set->card;
-				LOG("Name["<<name<<"]'s Comp["<<mc->id<<"] card["<<card<<"]");
+				assert(set->dim == 1); //only support one dimensional set for block index set for now!
+				LOG("Name["<<name<<"]'s Comp["<<mc->id<<"] card["<<set->card<<"]");
 
-
-				SyntaxNode* ind = static_cast<SyntaxNode*>(mc->indexing);
-				hash_map<string,ModelComp*> dummys;
-				vector<string> ds;
-				vector<ModelComp*> cs;
-				ind->calculateParamIndicies(ds,cs,dummys);//feng - actually should named calculate model indicies
 				vector<string>::iterator it;
 				LOG("creating child  ExpandedModel2 over the set:"<<set->toString());
 				for(it=set->setValues_data_order.begin();it!=set->setValues_data_order.end();it++)
 				{
 					ModelContext* childContext = new ModelContext(context);
-					assert(set->dim==1);  //not work for composite set yet!
-					hash_map<string,ModelComp*>::iterator it2;
-					assert(dummys.size()==1); //only 1 index for model for now!
-					for(it2=dummys.begin();it2!=dummys.end();it2++)
-					{
-						string dummy = it2->first;
-						LOG("creating child["<<mc->id<<"] for ["<<this->name<<"] "<<dummy<<"=["<<dummy<<"]");
-						ModelComp* comp = it2->second;
-						AmplModel* submod = mc->other;
-						childContext->addDummySetValueMap(dummy,comp,*it);
-						ExpandedModel2* subem2 = submod->createExpandedModel2(childContext,em2);
-						assert(childContext->em==subem2);
-						em2->children.push_back(subem2);
-						LOG("child expandedModel2 ["<<subem2->getName());
-					}
+					LOG("creating child["<<mc->id<<"] for ["<<this->name<<"] "<<dummy<<"=["<<dummy<<"]");
+					AmplModel* submod = mc->other;
+					childContext->addDummySetValueMap(dummy,setComp,*it);
+					ExpandedModel2* subem2 = submod->createExpandedModel2(childContext,em2);
+					assert(childContext->em==subem2);
+					em2->children.push_back(subem2);
+					LOG("child expandedModel2 ["<<subem2->getName());
 				}
 			}
 			else
@@ -190,7 +180,7 @@ ExpandedModel2* AmplModel::createExpandedModel2(ModelContext* context,ExpandedMo
 			LOG("Name["<<name<<"]'s Comp["<<mc->id<<"] is OTHER type");
 		}
 	}
-	this->clearCalculateCurrLevelSetModelComp(context);
+	this->clearNoneRootSetModelComp(context);
 	LOG("End createExpandedModel2 - model["<<this->name<<"]");
 	return em2;
 }
@@ -531,15 +521,15 @@ void AmplModel::calculateCurrLevelSetModelComp(ModelContext* context)
 	}
 }
 
-void AmplModel::clearCalculateCurrLevelSetModelComp(ModelContext* context)
+void AmplModel::clearNoneRootSetModelComp(ModelContext* context)
 {
 	for(list<ModelComp*>::iterator i=comps.begin();i!=comps.end();i++)
 	{
 		ModelComp *comp = *i;
-		if(comp->type==TSET && comp->isFromFile == false)
+		//keep all the set values for root node
+		if(comp->type==TSET && this->parent != NULL)
 		{
 			LOG("this["<<this->name<<"]");
-//			assert(this->parent == NULL);
 			LOG("removeCompValueMap   SET comp["<<comp->id<<"] -- "<<comp);
 			context->removeCurrLevelCompValueMap(comp);
 			LOG("end removeCompValueMap   -- ["<<comp->id<<"] -- "<<comp);
