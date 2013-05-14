@@ -98,12 +98,6 @@ void ModelContext::addDummySetValueMapTemp(string& dummyVar,ModelComp* comp,stri
 	LOG_SYS_MEM("AfteraddDummySetValueMapTemp");
 }
 
-//void ModelContext::removeDummySetValueMap(string& dummyVar)
-//{
-//	this->dummySetMap.erase(dummyVar);
-//	this->dummyValueMap.erase(dummyVar);
-//}
-
 void ModelContext::removeDummySetValueMapCons(string& dummyVar)
 {
 	this->dummySetMapCons.erase(dummyVar);

@@ -81,7 +81,7 @@ const string ModelComp::compTypes[] = { "var", "subject to", "param", "set", "mi
  *                     IDs should have been replaced by IDREFs 
  */
 ModelComp::ModelComp(const string& id_, compType type_, SyntaxNode *indexing_, SyntaxNode *attrib, int uplevel) :
-		type(type_), id(id_), attributes(attrib), model(NULL), setDim(0), setCard(0), varIndicies(0),varCard(0),isFromFile(false), moveUpLevel(uplevel) {
+		type(type_), id(id_), attributes(attrib), model(NULL), setDim(0), setCard(0), varIndicies(0),varCard(0), moveUpLevel(uplevel) {
 
 	this->indexing = dynamic_cast<SyntaxNodeIx*>(indexing_);
 	if (indexing)
