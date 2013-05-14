@@ -1475,9 +1475,9 @@ yyreduce:
 				
 				string id((yyvsp[(2) - (5)].string));
 				ModelComp* setComp = AmplModel::root->findModelComp(id,TSET);
-				Set* setValue = new Set(setComp->getSetDim(),setComp->id);
+				Set* setValue = new Set(setComp->setDim,setComp->id);
 				setValue->fillSetValues((yyvsp[(4) - (5)].string));
-				setComp->setSetCard(setValue->card);
+				setComp->setCard = setValue->card;
 				rootContext->addCompValueMap(setComp,setValue);
 				setComp->isFromFile = true;
         	}

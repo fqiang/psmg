@@ -464,7 +464,7 @@ int SyntaxNode::calculateVarDim() {
 	else if (this->opCode == IDREF) {
 		SyntaxNodeIDREF* nodeIdRef = static_cast<SyntaxNodeIDREF*>(this);
 		assert(nodeIdRef->ref->type == TSET);
-		dim = nodeIdRef->ref->getSetDim();
+		dim = nodeIdRef->ref->setDim;
 	}
 	else {
 		LOG("opCode["<<this->opCode<<"] was not yet implemented --- calculateVarDim");
@@ -491,7 +491,7 @@ int SyntaxNode::calculateSetDim() {
 	}
 	else if (this->opCode == IDREF) { //SyntaxNodeIDREF
 		SyntaxNodeIDREF* nodeIdRef = static_cast<SyntaxNodeIDREF*>(this);
-		dim = nodeIdRef->ref->getSetDim();
+		dim = nodeIdRef->ref->setDim;
 	}
 	else if (this->opCode == ID) { //IDNode
 		dim = 1;
@@ -891,30 +891,6 @@ double SyntaxNode::evalTerm(hash_map<string, string>& dummyValueMap, hash_map<st
 	return rval;
 }
 
-//void SyntaxNode::foreachSetValue(vector<ModelComp*> comps, vector<string>& dummyVars, Set* aSet, ModelContext* rowContext, vector<double>& jcobs, ModelContext* colContext) {
-//	vector<string>::iterator it_setval = aSet->setValues_data_order.begin();
-//	for(;it_setval != aSet->setValues_data_order.end();it_setval++) {
-//		SetValue* sval = *it_setval;
-//		assert(sval->valueList.size() == comps.size() && comps.size() == dummyVars.size());
-//		vector<string>::iterator it_sval = sval->valueList.begin();
-//		vector<ModelComp*>::iterator it_comp = comps.begin();
-//		vector<string>::iterator it_dummyVar = dummyVars.begin();
-//		for(;it_comp != comps.end();it_comp++, it_dummyVar++, it_sval++) {
-//			rowContext->addDummySetValueMapTemp((*it_dummyVar), *it_comp, *it_sval);
-//		}
-//
-//		vector<double> currJcobs(jcobs.size(), 0);
-//		this->values[1]->evalDiff(rowContext, colContext, currJcobs);
-//		assert(currJcobs.size() == jcobs.size());
-//		this->plusVector(jcobs, currJcobs, jcobs);
-//
-//		it_dummyVar = dummyVars.begin();
-//		for(;it_dummyVar != dummyVars.end();it_dummyVar++) {
-//			rowContext->removeDummySetValueMapTemp(*it_dummyVar);
-//		}
-//	}
-//}
-
 void SyntaxNode::findSyntaxNodeChild(SyntaxNode** node, int op) {
 	if (this->opCode == op) {
 		*node = this;
@@ -1036,7 +1012,7 @@ void SyntaxNode::handleSum(ModelContext* rowContext, vector<double>& jcobs, Mode
 
 void SyntaxNode::getVarKey(string& varKey, SyntaxNodeIDREF* refn, ModelContext* rowContext) {
 	ModelComp* comp = refn->ref;
-	int numIndicies = comp->getNumVarIndicies();
+	int numIndicies = comp->varIndicies;
 	string last_key = "";
 	LOG("num indicies for var["<<comp->id<<"] is "<<numIndicies);
 	for(int i = 0;i < refn->values.size();i++) {
@@ -1164,7 +1140,7 @@ void SyntaxNode::evalDiff(ModelContext* rowContext, ModelContext* colContext, ve
 		}
 	}
 	else if (this->opCode == 42) //42 is times -- handles only linear case
-			{
+	{
 		assert(this->values.size() == 2);
 		vector<double> leftJcobs(jcobs.size(), 0);
 		vector<double> rightJcobs(jcobs.size(), 0);
