@@ -538,6 +538,8 @@ void AmplModel::clearCalculateCurrLevelSetModelComp(ModelContext* context)
 		ModelComp *comp = *i;
 		if(comp->type==TSET && comp->isFromFile == false)
 		{
+			LOG("this["<<this->name<<"]");
+//			assert(this->parent == NULL);
 			LOG("removeCompValueMap   SET comp["<<comp->id<<"] -- "<<comp);
 			context->removeCurrLevelCompValueMap(comp);
 			LOG("end removeCompValueMap   -- ["<<comp->id<<"] -- "<<comp);
