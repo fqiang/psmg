@@ -179,7 +179,7 @@ int main(int argc, char **argv)
 #endif
 
 	TIMER_START("SML_EM2_GENERATION");
-	ExpandedModelAbstract *em2 = Sml::instance()->generate_em2();
+	ExpandedModel2 *em2 = Sml::instance()->generate_em2();
 	TIMER_STOP("SML_EM2_GENERATION");
 	LOG_SYS_MEM("AfterEM2Generation");
 

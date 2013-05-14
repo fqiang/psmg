@@ -105,7 +105,7 @@ void Sml::process_model_file()
 	assert(errcode ==0);
 }
 
-ExpandedModelAbstract* Sml::generate_em2()
+ExpandedModel2* Sml::generate_em2()
 {
 	LOG("============== ExpandedModel2 Generation =============================");
 	//build up root ModelContext
@@ -113,7 +113,7 @@ ExpandedModelAbstract* Sml::generate_em2()
 	LOG_SYS_MEM("BeforeNewModelContext");
 	ModelContext* rootContext = new ModelContext(NULL);
 	LOG_SYS_MEM("AfterNewModelContext");
-	ExpandedModelAbstract* emRoot = AmplModel::root->createExpandedModel2(rootContext,NULL);
+	ExpandedModel2* emRoot = AmplModel::root->createExpandedModel2(rootContext,NULL);
 	LOG("============== END ExpandedModel2 Generation =============================");
 
 	return emRoot;

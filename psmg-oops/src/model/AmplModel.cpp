@@ -89,7 +89,7 @@ AmplModel::~AmplModel()
 /* ---------------------------------------------------------------------------
 AmplModel::createExpandedModel2
 ---------------------------------------------------------------------------- */
-ExpandedModelAbstract* AmplModel::createExpandedModel2(ModelContext* context,ExpandedModelAbstract* parent)
+ExpandedModel2* AmplModel::createExpandedModel2(ModelContext* context,ExpandedModel2* parent)
 {
 	LOG("createExpandedModel2- Model["<<this->name<<"]");
 
@@ -110,8 +110,7 @@ ExpandedModelAbstract* AmplModel::createExpandedModel2(ModelContext* context,Exp
 	//then calculate the set and parameters
 	//this->calculateCurrLevelModelComp(context);
 	//set dim is calculated in step 1.
-	ExpandedModelAbstract *em = new ExpandedModel2(this,parent,context);
-	ExpandedModel2* em2 = static_cast<ExpandedModel2*>(em);
+	ExpandedModel2 *em2 = new ExpandedModel2(this,parent,context);
 	this->calculateCurrLevelSetModelComp(context);
 
 	for(list<ModelComp*>::iterator it = comps.begin();it!=comps.end();it++)
@@ -168,10 +167,9 @@ ExpandedModelAbstract* AmplModel::createExpandedModel2(ModelContext* context,Exp
 						ModelComp* comp = it2->second;
 						AmplModel* submod = mc->other;
 						childContext->addDummySetValueMap(dummy,comp,*it);
-						ExpandedModelAbstract* subem = submod->createExpandedModel2(childContext,em2);
-						ExpandedModel2* subem2 = static_cast<ExpandedModel2*>(subem);
+						ExpandedModel2* subem2 = submod->createExpandedModel2(childContext,em2);
 						assert(childContext->em==subem2);
-						em2->children.push_back(subem);
+						em2->children.push_back(subem2);
 						LOG("child expandedModel2 ["<<subem2->getName());
 					}
 				}
@@ -181,7 +179,7 @@ ExpandedModelAbstract* AmplModel::createExpandedModel2(ModelContext* context,Exp
 				LOG("Model's indexing over is NULL");
 				ModelContext* childContext = new ModelContext(context);
 				AmplModel* submod = mc->other;
-				ExpandedModelAbstract* subem2 = submod->createExpandedModel2(childContext,em2);
+				ExpandedModel2* subem2 = submod->createExpandedModel2(childContext,em2);
 				em2->children.push_back(subem2);
 				LOG("child expandedModel2 ["<<subem2->getName()<<"]");
 				//assert(childContext == NULL);

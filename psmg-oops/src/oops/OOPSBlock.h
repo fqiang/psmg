@@ -15,7 +15,7 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#include "../context/ExpandedModelAbstract.h"
+#include "../context/ExpandedModel2.h"
 
 /** @class OOPSBlock
  *  OOPSBlock is an object that directly corresponds to a node in the
@@ -32,8 +32,8 @@
  */
 class OOPSBlock {
  public:
-  ExpandedModelAbstract *emrow;    //!< Expanded Model giving row information
-  ExpandedModelAbstract *emcol;    //!< Expanded Model giving col information
+  ExpandedModel2 *emrow;    //!< Expanded Model giving row information
+  ExpandedModel2 *emcol;    //!< Expanded Model giving col information
   //  NlFile *nlfile;       //!< The NlFile correspoding to the ExpandedModelInterface
   int ncon;             //!< number of rows in this block
   int nvar;             //!< number of columns in this block
@@ -43,5 +43,5 @@ class OOPSBlock {
    *  @param rowmod       The model giving the row information
    *  @param colmod       The model giving the column information
    */
-  OOPSBlock(ExpandedModelAbstract *rowmod, ExpandedModelAbstract *colmod);
+  OOPSBlock(ExpandedModel2 *rowmod, ExpandedModel2 *colmod);
 };

@@ -21,7 +21,7 @@
 using namespace std;
 
 class ModelComp;
-class ExpandedModelAbstract;
+class ExpandedModel2;
 
 class ModelContext {
 
@@ -49,7 +49,7 @@ public:
 
 //	string modelDummyValKey;
 //	bool isModelDummyValKeyCalculated;
-	ExpandedModelAbstract* em;
+	ExpandedModel2* em;
 	int moveUpLevel;
 	bool isCompsCalculated;
 

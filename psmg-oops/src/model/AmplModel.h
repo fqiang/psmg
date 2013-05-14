@@ -136,7 +136,7 @@ class AmplModel{
   void calculateCurrLevelSetModelComp(ModelContext* context);
   void clearCalculateCurrLevelSetModelComp(ModelContext* context);
   void calculateCurrLevelParamModelComp(ModelContext* context);
-  ExpandedModelAbstract* createExpandedModel2(ModelContext* context,ExpandedModelAbstract* parent);
+  ExpandedModel2* createExpandedModel2(ModelContext* context,ExpandedModel2* parent);
   void reassignModelIndexDependencies();
   bool isCompsUpdated;
   //bool isStochastic;  -- this is not needed as hack in getModelDummyValAsKey(int&) method

@@ -44,8 +44,8 @@
 using namespace std;
 
 // C++ static variables defined in an *. file need to be declared here as well
-static Algebra *createA(ExpandedModelAbstract *em);
-static Algebra *createQ(ExpandedModelAbstract *em);
+static Algebra *createA(ExpandedModel2 *em);
+static Algebra *createQ(ExpandedModel2 *em);
 
 FILE *globlog = NULL;
 FILE *printout = stdout;
@@ -54,9 +54,9 @@ void FillRhsVector(Vector *vb);
 void FillObjVector(Vector *vc);
 void FillUpBndVector(Vector *vu);
 void FillLowBndVector(Vector *vl);
-void SML_OOPS_upload_sol(ExpandedModelAbstract *em, Vector *vx, Vector *vy,Vector *vz);
+void SML_OOPS_upload_sol(ExpandedModel2 *em, Vector *vx, Vector *vy,Vector *vz);
 
-void SML_OOPS_driver(ExpandedModelAbstract *root)
+void SML_OOPS_driver(ExpandedModel2 *root)
 {
 	Algebra *AlgAug;
 	Vector *vb, *vc, *vu, *vl;
@@ -131,14 +131,14 @@ void SML_OOPS_driver(ExpandedModelAbstract *root)
 Here comes the generation with all subroutines
 =========================================================================== */
 
-static Algebra* createBottom(ExpandedModelAbstract *diag,
-                             ExpandedModelAbstract *offdiag);
-static Algebra* createRhs(ExpandedModelAbstract *diag,
-                          ExpandedModelAbstract *offdiag);
-//static Algebra* createBottomQ(ExpandedModelAbstract *diag,
-//                              ExpandedModelAbstract *offdiag);
-//static Algebra* createRhsQ(ExpandedModelAbstract *diag,
-//                           ExpandedModelAbstract *offdiag);
+static Algebra* createBottom(ExpandedModel2 *diag,
+                             ExpandedModel2 *offdiag);
+static Algebra* createRhs(ExpandedModel2 *diag,
+                          ExpandedModel2 *offdiag);
+//static Algebra* createBottomQ(ExpandedModel2 *diag,
+//                              ExpandedModel2 *offdiag);
+//static Algebra* createRhsQ(ExpandedModel2 *diag,
+//                           ExpandedModel2 *offdiag);
 static void SMLCallBack(CallBackInterfaceType *cbi);
 static void SMLCallBackQ(CallBackInterfaceType *cbi);
 
@@ -146,7 +146,7 @@ static void SMLCallBackQ(CallBackInterfaceType *cbi);
 createA
 --------------------------------------------------------------------------- */
 /* This routine sets up the matrix A from the ExpandedModelInterface tree */
-Algebra* createA(ExpandedModelAbstract *em)
+Algebra* createA(ExpandedModel2 *em)
 {
 	LOG("createA for em->getName ["<<em->getName()<<"]");
 	Algebra *Alg;
@@ -250,7 +250,7 @@ Algebra* createA(ExpandedModelAbstract *em)
 }
 
 
-Algebra* createBottom(ExpandedModelAbstract *diag, ExpandedModelAbstract *nondiag)
+Algebra* createBottom(ExpandedModel2 *diag, ExpandedModel2 *nondiag)
 {
 	LOG("createBottom for diag["<<diag->getName()<<"] nondiag["<<nondiag->getName()<<"]");
 	Algebra *Alg;
@@ -328,7 +328,7 @@ Algebra* createBottom(ExpandedModelAbstract *diag, ExpandedModelAbstract *nondia
 	return Alg;
 }
 
-Algebra* createRhs(ExpandedModelAbstract *diag, ExpandedModelAbstract *nondiag)
+Algebra* createRhs(ExpandedModel2 *diag, ExpandedModel2 *nondiag)
 {
 	LOG("createRhs for diag["<<diag->getName()<<"] nondiag["<<nondiag->getName()<<"]");
 	Algebra *Alg;
@@ -411,7 +411,7 @@ createQ
 --------------------------------------------------------------------------- */
 /* This routine sets up the matrix Q from the ExpandedModelInterface tree */
 Algebra *
-createQ(ExpandedModelAbstract *em)
+createQ(ExpandedModel2 *em)
 {
   Algebra *Alg;
 
@@ -594,7 +594,7 @@ SMLCallBackQ(CallBackInterfaceType *cbi)
 	 - the variable list for the nondiagonal part
 	 */
 	LOG("SMLCalBackQ - called");
-	ExpandedModelAbstract *em = (ExpandedModelAbstract*) cbi->id;
+	ExpandedModel2 *em = (ExpandedModel2*) cbi->id;
 	cbi->nz = 0;
 	if (cbi->row_nbs)
 	{
@@ -621,7 +621,7 @@ FillRhsVector(Vector *vb)
 
   Algebra *A = (Algebra*)T->nodeOfAlg; // the diagonal node that spawned this tree
   OOPSBlock *obl = (OOPSBlock*)A->id; // and its id structure
-  ExpandedModelAbstract *emrow = obl->emrow;
+  ExpandedModel2 *emrow = obl->emrow;
 
   // FIXME: should the id structure include information on the ExpandedModelInterface
   //        as well? That way we could do some more sanity checks
@@ -688,7 +688,7 @@ FillUpBndVector(Vector *vu)
   OOPSBlock *obl = (OOPSBlock*)A->id;        // and its id structure
   assert(obl->emrow==obl->emcol); // this should be a diagonal block
   //NlFile *nlf = obl->emrow->nlfile;
-  ExpandedModelAbstract *emrow = obl->emrow;
+  ExpandedModel2 *emrow = obl->emrow;
 
   assert(obl->nvar==T->end-T->begin);
   //nlf->getColUpBoundsAMPL(obl->nvar, obl->lvar, test);
@@ -707,7 +707,7 @@ FillLowBndVector(Vector *vl)
   Algebra *A = (Algebra *)T->nodeOfAlg; // the diagonal node that spawned this tree
   OOPSBlock *obl = (OOPSBlock*)A->id;        // and its id structure
   assert(obl->emrow==obl->emcol); // this should be a diagonal block
-  ExpandedModelAbstract *emrow = obl->emrow;
+  ExpandedModel2 *emrow = obl->emrow;
 
 
   assert(obl->nvar==T->end-T->begin);
@@ -728,7 +728,7 @@ FillLowBndVector(Vector *vl)
 SML_OOPS_upload_sol
 ---------------------------------------------------------------------------- */
 void
-SML_OOPS_upload_sol(ExpandedModelAbstract *em,
+SML_OOPS_upload_sol(ExpandedModel2 *em,
 		    Vector *vx, Vector *vy, Vector *vz)
 {
 	Tree *Tx = vx->node,*Ty = vy->node;
@@ -769,7 +769,7 @@ SML_OOPS_upload_sol(ExpandedModelAbstract *em,
 
 		for (int i=0;i<nchd;i++)
 		{
-			ExpandedModelAbstract *model = em->children[i];
+			ExpandedModel2 *model = em->children[i];
 			SML_OOPS_upload_sol(model,
 				  SubVector(vx, i), SubVector(vy, i), SubVector(vz,i));
 		}
