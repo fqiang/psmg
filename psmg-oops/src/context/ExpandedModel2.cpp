@@ -7,9 +7,11 @@
 
 #include "ExpandedModel2.h"
 #include "../model/SyntaxNodeIx.h"
+#include "../model/SyntaxNodeIDREF.h"
 #include "../model/IDNode.h"
 #include "../util/global_util_functions.h"
 #include "../metric/Statistics.h"
+#include "../parser/sml.tab.h"
 #include <cassert>
 #include <iomanip>
 #include <list>
@@ -78,12 +80,16 @@ void ExpandedModel2::addLocalCon(ModelComp* conComp)
 	}
 	else
 	{
-		assert(conComp->indexing->sets_mc.size()==1);
-		ModelComp* setComp = conComp->indexing->sets_mc[0];
+		assert(conComp->indexing->opCode == LBRACE);
+		assert(conComp->indexing->values.size() == 1); //only one dimensional
+		assert(conComp->indexing->values[0]->values[1]->opCode==IDREF);
+		assert(conComp->indexing->values[0]->values[0]->opCode==ID);
+
+		ModelComp* setComp = static_cast<SyntaxNodeIDREF*>(conComp->indexing->values[0]->values[1])->ref;
 		assert(setComp->setDim==1);
-		LOG("dummy ["<<*conComp->indexing->getListDummyVars().front()<<"]");
+		LOG("dummy ["<<static_cast<IDNode*>(conComp->indexing->values[0]->values[0])->id()<<"]");
 		Set* set =static_cast<Set*>(context->getCompValue(setComp));
-		assert(set->dim == 1);
+		assert(set->dim == setComp->setDim);
 		this->numLocalCons+=set->getCard();
 	}
 	LOG("addLocalCon -- numLocalCons["<<this->numLocalCons<<"]");
