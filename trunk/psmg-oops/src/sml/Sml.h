@@ -17,7 +17,7 @@
 #ifndef SML_H
 #define SML_H
 
-#include "../context/ExpandedModelAbstract.h"
+#include "../context/ExpandedModel2.h"
 #include "../model/AmplModel.h"
 #include <string>
 #include <iostream>
@@ -34,8 +34,7 @@ public:
 	static void print_copy_right(ostream &out);
 
 	void process_model_file();
-	ExpandedModelAbstract* generate_em();
-	ExpandedModelAbstract* generate_em2();
+	ExpandedModel2* generate_em2();
 
 
 	vector<string> scriptNameList;

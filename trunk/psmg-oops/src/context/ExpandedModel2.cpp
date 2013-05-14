@@ -17,7 +17,7 @@
 using namespace std;
 using namespace __gnu_cxx;
 
-ExpandedModel2::ExpandedModel2(AmplModel* _mod,ExpandedModelAbstract* _parent,ModelContext* _context)
+ExpandedModel2::ExpandedModel2(AmplModel* _mod,ExpandedModel2* _parent,ModelContext* _context)
 : model(_mod),context(_context),numLocalVars(0),numLocalCons(0),atRank(0),localVarFilled(0),
   jcobReady(false),rhsReady(false),objComp(NULL),name(_mod->name)
 {
@@ -115,9 +115,9 @@ void ExpandedModel2::levelTraversal(vector<ExpandedModel2*>& em2List,int level)
 	}
 	else
 	{
-		for(vector<ExpandedModelAbstract*>::iterator it=this->children.begin();it!=this->children.end();it++)
+		for(vector<ExpandedModel2*>::iterator it=this->children.begin();it!=this->children.end();it++)
 		{
-			ExpandedModel2* childEm2 = static_cast<ExpandedModel2*>(*it);
+			ExpandedModel2* childEm2 = (*it);
 			childEm2->levelTraversal(em2List,level-1);
 		}
 	}
@@ -188,7 +188,7 @@ ExpandedModel::getNzJacobianOfIntersection
  *
  *  @return The number of nonzeros in the given part of the Jacobian.
  */
-int ExpandedModel2::getNzJacobianOfIntersection(ExpandedModelAbstract *emcol_)
+int ExpandedModel2::getNzJacobianOfIntersection(ExpandedModel2 *emcol_)
 {
 	LOG_SYS_MEM("beforeGetNz");
 	LOG("enter getNzJacobianOfIntersection called -- this["<<this->name<<"] emcol["<<emcol_->getName()<<"]");
@@ -390,7 +390,7 @@ ExpandedModel::getJacobianOfIntersection
  *  nz=number nonzeros). The number of nonzeros in this section of the
  *  Jacobian can be obtained from a call to getNzJacobianOfIntersection().
  */
-void ExpandedModel2::getJacobianOfIntersection(ExpandedModelAbstract *emcol_, int *colbeg,
+void ExpandedModel2::getJacobianOfIntersection(ExpandedModel2 *emcol_, int *colbeg,
 					 int *collen, int *rownbs, double *el)
 {
 	LOG_SYS_MEM("beforeGetJac");
@@ -723,7 +723,7 @@ void ExpandedModel2::outputSolution(ostream &out,int indent)
 		it_conName++;
 	}
 
-	for(vector<ExpandedModelAbstract*>::iterator i=children.begin();i!=children.end();i++)
+	for(vector<ExpandedModel2*>::iterator i=children.begin();i!=children.end();i++)
 	{
 		(*i)->outputSolution(out, indent+2);
 	}
@@ -781,9 +781,9 @@ void ExpandedModel2::calculateMemoryUsage(unsigned long& size_str,unsigned long&
 	size_str += sizeof(double)*rhss.size();
 	LOG_MEM(" --- holder usage ["<<size_str-pre<<"]");
 
-	for(vector<ExpandedModelAbstract*>::iterator it=children.begin();it!=children.end();it++)
+	for(vector<ExpandedModel2*>::iterator it=children.begin();it!=children.end();it++)
 	{
-		size_str += sizeof(ExpandedModelAbstract*);
+		size_str += sizeof(ExpandedModel2*);
 		(*it)->calculateMemoryUsage(size_str,size_data);
 	}
 }

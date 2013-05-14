@@ -30,7 +30,7 @@ using namespace std;
 /* ----------------------------------------------------------------------------
 OOPSBlock::OOPSBlock(ExpandedModelInterface*, list<string>*)
 ---------------------------------------------------------------------------- */
-OOPSBlock::OOPSBlock(ExpandedModelAbstract *rowmod, ExpandedModelAbstract *colmod)
+OOPSBlock::OOPSBlock(ExpandedModel2 *rowmod, ExpandedModel2 *colmod)
 {
   /* We need to:
       - take the list of variable names from colmod (colmod->listOfVarNames)
