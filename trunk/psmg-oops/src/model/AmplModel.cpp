@@ -493,7 +493,7 @@ void AmplModel::updateCurrLevelModelComp()
 		if((*i)->type==TSET)
 		{
 			(*i)->setSetDim();
-			LOG("updateModelComp for set - id["<<(*i)->id<<"] dim["<<(*i)->getSetDim()<<"] -- "<<*i);
+			LOG("updateModelComp for set - id["<<(*i)->id<<"] dim["<<(*i)->setDim<<"] -- "<<*i);
 		}
 		else if((*i)->type==TPARAM)
 		{

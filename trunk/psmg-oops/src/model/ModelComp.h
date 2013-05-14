@@ -146,7 +146,7 @@ class ModelComp{
   int setDim; //belong to set
   int setCard; //belong to set
   bool isFromFile;
-  int numVarIndicies; //belong to TVar
+  int varIndicies; //belong to TVar
   int varCard;
 
   vector<string> paramIndiciesDummy; //belong to param  dummay->Set*
@@ -154,11 +154,6 @@ class ModelComp{
   hash_map<string,ModelComp*> paramIndiciesMap;
 
   void setSetDim();
-  int getSetDim();
-  void setSetCard(int);
-  int getSetCard();
-  void setNumVarIndicies(int num); //belong to Tvar
-  int getNumVarIndicies();        //belong to Tvar
   void calculateSetModelComp(ModelContext* context);
 
   void setParamIndicies();

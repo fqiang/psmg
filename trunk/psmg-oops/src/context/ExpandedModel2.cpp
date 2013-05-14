@@ -80,7 +80,7 @@ void ExpandedModel2::addLocalCon(ModelComp* conComp)
 	{
 		assert(conComp->indexing->sets_mc.size()==1);
 		ModelComp* setComp = conComp->indexing->sets_mc[0];
-		assert(setComp->getSetDim()==1);
+		assert(setComp->setDim==1);
 		LOG("dummy ["<<*conComp->indexing->getListDummyVars().front()<<"]");
 		Set* set =static_cast<Set*>(context->getCompValue(setComp));
 		assert(set->dim == 1);

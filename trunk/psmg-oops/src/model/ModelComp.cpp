@@ -81,7 +81,7 @@ const string ModelComp::compTypes[] = { "var", "subject to", "param", "set", "mi
  *                     IDs should have been replaced by IDREFs 
  */
 ModelComp::ModelComp(const string& id_, compType type_, SyntaxNode *indexing_, SyntaxNode *attrib, int uplevel) :
-		type(type_), id(id_), attributes(attrib), model(NULL), setDim(0), setCard(0), numVarIndicies(0),varCard(0),isFromFile(false), moveUpLevel(uplevel) {
+		type(type_), id(id_), attributes(attrib), model(NULL), setDim(0), setCard(0), varIndicies(0),varCard(0),isFromFile(false), moveUpLevel(uplevel) {
 
 	this->indexing = dynamic_cast<SyntaxNodeIx*>(indexing_);
 	if (indexing)
@@ -446,30 +446,25 @@ void ModelComp::setSetDim() {
 	}
 }
 
-int ModelComp::getSetDim() {
-	assert(this->type==TSET);
-	return setDim;
-}
-
-void ModelComp::setSetCard(int card) {
-	assert(this->type==TSET);
-	setCard = card;
-}
-
-int ModelComp::getSetCard() {
-	assert(this->type==TSET);
-	return setCard;
-}
-
-void ModelComp::setNumVarIndicies(int num) {
-	assert(this->type==TVAR);
-	this->numVarIndicies = num;
-}
-
-int ModelComp::getNumVarIndicies() {
-	assert(this->type==TVAR);
-	return numVarIndicies;
-}
+//void ModelComp::setSetCard(int card) {
+//	assert(this->type==TSET);
+//	setCard = card;
+//}
+//
+//int ModelComp::getSetCard() {
+//	assert(this->type==TSET);
+//	return setCard;
+//}
+//
+//void ModelComp::setNumVarIndicies(int num) {
+//	assert(this->type==TVAR);
+//	this->numVarIndicies = num;
+//}
+//
+//int ModelComp::getNumVarIndicies() {
+//	assert(this->type==TVAR);
+//	return numVarIndicies;
+//}
 
 // param related operations
 void ModelComp::setParamIndicies() {
@@ -551,19 +546,19 @@ void ModelComp::calculateLocalVar(ModelContext* context) {
 	LOG( "calculateLocalVar -- in model["<<this->model->name<<"] modelcomp["<<this->id<<"]");
 	assert(this->type==TVAR);
 	this->varCard = 1;
-	this->numVarIndicies = 0;
+	this->varIndicies = 0;
 	vector<string> ind;
 	if (context != NULL) {
 		context->fillDummyValue(ind);
 	}
-	numVarIndicies = ind.size();
+	varIndicies = ind.size();
 	if (this->indexing == NULL) {
 		//do nothing.. card = 1,numIndicies = num of model's indices
 	}
 	else if (this->indexing->sets_mc.size() > 0) {
 		for(vector<ModelComp*>::iterator it = this->indexing->sets_mc.begin();it != this->indexing->sets_mc.end();it++) {
 			varCard = (*it)->setCard * varCard;
-			numVarIndicies = numVarIndicies + (*it)->setDim;
+			varIndicies = varIndicies + (*it)->setDim;
 		}
 	}
 	LOG( "calculateLocalVar -- in model["<<this->model->name<<"] modelcomp["<<this->id<<"]");
