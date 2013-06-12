@@ -26,6 +26,7 @@
 #include "./sml/GlobalVariables.h"
 #include "./metric/Statistics.h"
 #include "./context/ExpandedModel2.h"
+#include "./model/AmplModel.h"
 #include "oops/parutil.h"
 
 using namespace std;
@@ -166,7 +167,6 @@ int main(int argc, char **argv)
 	TIMER_START("SML_PARSE_MODEL");
 	Sml::instance()->process_model_file();
 	TIMER_STOP("SML_PARSE_MODEL");
-	LOG_SYS_MEM("AfterParseModel");
 
 	if(GlobalVariables::logParseModel) {
 		AmplModel::root->dump("logModel.dat");
@@ -178,42 +178,43 @@ int main(int argc, char **argv)
 	cout<<"["<<GlobalVariables::rank<<"/"<<GlobalVariables::size<<"]-Flat AmplModel Memory Usage Size ["<<mem_size_flat<<"] bytes"<<endl;
 #endif
 
+	TIMER_START("ANALYSIS_CONSTRAINTS");
+	Sml::instance()->analyse_constraints();
+	TIMER_STOP("ANALYSIS_CONSTRAINTS");
+
 	TIMER_START("SML_EM2_GENERATION");
-	ExpandedModel2 *em2 = Sml::instance()->generate_em2();
+	Sml::instance()->generate_em2();
 	TIMER_STOP("SML_EM2_GENERATION");
-	LOG_SYS_MEM("AfterEM2Generation");
 
 #ifdef MEM
 	unsigned long mem_size_em2 = 0;
 	unsigned long mem_size_ctx = 0;
-	em2->calculateMemoryUsage(mem_size_em2,mem_size_ctx);
+	ExpandedModel2::root->calculateMemoryUsage(mem_size_em2,mem_size_ctx);
 	cout<<"["<<GlobalVariables::rank<<"/"<<GlobalVariables::size<<"]-Structure Memory Usage Size Before Solve ["<<mem_size_em2<<"] bytes"<<endl;
 	cout<<"["<<GlobalVariables::rank<<"/"<<GlobalVariables::size<<"]-Data Memory Usage Size Before Solve ["<<mem_size_ctx<<"] bytes"<<endl;
 #endif
 
 
 
-	if(!em2)
-		return 1;
+	assert(ExpandedModel2::root != NULL);
 	TIMER_START("SML_OOPS_DRIVER");
-	SML_OOPS_driver(em2);
+	SML_OOPS_driver(ExpandedModel2::root);
 	TIMER_STOP("SML_OOPS_DRIVER");
 
 #ifdef MEM
 	mem_size_em2=0;
 	mem_size_ctx=0;
-	em2->calculateMemoryUsage(mem_size_em2,mem_size_ctx);
+	ExpandedModel2::root->calculateMemoryUsage(mem_size_em2,mem_size_ctx);
 	cout<<"["<<GlobalVariables::rank<<"/"<<GlobalVariables::size<<"]-Structure Memory Usage Size After Solve ["<<mem_size_em2<<"] bytes"<<endl;
 	cout<<"["<<GlobalVariables::rank<<"/"<<GlobalVariables::size<<"]-Data Memory Usage Size After Solve ["<<mem_size_ctx<<"] bytes"<<endl;
 #endif
 
-	LOG_SYS_MEM("AfterSMLOOPSDriver");
 
 //	Feng -- please read comments in sml-oops.cpp
 //				for uploadsolution function which is not yet designed
 //	em2->outputSolution(cout,0);
 
-	delete em2;
+	delete ExpandedModel2::root;
 	delete AmplModel::root;
 
 	Sml::deleteInstance();

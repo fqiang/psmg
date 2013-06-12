@@ -110,7 +110,6 @@ void SML_OOPS_driver(ExpandedModel2 *root)
 
 	PDProblem Prob(AlgAug, vb, vc, vl, vu, vx, vy, vz);
 	TIMER_STOP("OOPS_PROBLEM_SETUP");
-	LOG_SYS_MEM("AfterOOPSProblemSetup");
 
 	if(GlobalVariables::solve)
 	{

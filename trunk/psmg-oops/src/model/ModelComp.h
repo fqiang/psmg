@@ -20,10 +20,17 @@
 
 #include "../context/CompDescr.h"
 #include "../context/ModelContext.h"
+#include "../context/EMBlock.h"
 #include <list>
 #include <string>
 #include <vector>
-#include <map>
+#include <set>
+#include <ext/hash_map>
+#include "autodiff.h"
+
+using namespace std;
+using namespace __gnu_cxx;
+using namespace AutoDiff;
 
 class AmplModel;
 class StochModel;
@@ -115,7 +122,7 @@ class ModelComp{
   void setUpDependencies();
 
   /** Detailed debugging output */
-  void dump(std::ostream& fout) const;
+  void dump(std::ostream& fout,int) const;
 
   /** Recalculate dependency list and re-resolve IDREF nodes */
   void reassignDependencies();
@@ -143,25 +150,38 @@ class ModelComp{
                                            const int level) { throw; }
 
   //Feng
+
+
+
+  //for TSET
   int setDim; //belong to set
   int setCard; //belong to set
-  int varIndicies; //belong to TVar
-  int varCard; //belong to TVar
+  void setSetDim();
+  void calculateSetModelComp(ModelContext* context);
+  //end TSET
 
+  //for TPARAM
   vector<string> paramIndiciesDummy; //belong to param  dummay->Set*
   vector<ModelComp*> paramIndiciesComp;
   hash_map<string,ModelComp*> paramIndiciesMap;
-
-  void setSetDim();
-  void calculateSetModelComp(ModelContext* context);
-
   void setParamIndicies();
   int getNumParamIndicies();
   void calculateParamModelComp(ModelContext* context);
+  //end TPARAM
 
+  //for TVAR
+  int varDim; //belong to TVar
+  int varCard; //belong to TVar
   void fillLocalVar(ExpandedModel2* em2);
   void calculateLocalVar(ModelContext* context);
   void fillLocalVarRecurive(ModelContext* context,Var* aVar,vector<ModelComp*>::iterator it,ostringstream& oss);
+  //end TVAR
+
+  //for TCON
+  hash_map<int,set<int> > varDeps; //belong to TCON -- map separability of variable declared in level -> set of levels
+  void analyseVarDepLevels();
+  Node* constructAutoDiffCons(ModelContext* ctx, EMBlock* emb,ExpandedModel2* emcol);
+  //end TCON
 
   string& getHashKey();
   void calculateMemoryUsage(unsigned long& size);

@@ -63,7 +63,8 @@ AmplModel::AmplModel(const string& _name, AmplModel *par) :
   isCompsUpdated(false)
 {
 
-  LOG("AmplModel -- create - name["<<name<<"] ");
+	assert(par==NULL);
+	LOG("AmplModel -- create - name["<<name<<"] ");
 
 }
 
@@ -86,32 +87,67 @@ AmplModel::~AmplModel()
 
 }
 
+void AmplModel::settingUpLevels(int lev)
+{
+	LOG("setting model["<<this->name<<"] level["<<lev<<"]");
+	this->level = lev;
+	list<ModelComp*>::const_iterator it=this->comps.begin();
+
+	for(;it!=this->comps.end();it++)
+	{
+		LOG(" model comp["<<(*it)->id<<"]");
+		if((*it)->type==TMODEL)
+		{
+			(*it)->other->settingUpLevels(lev+1);
+			LOG(" -- at level ["<<lev<<"]");
+		}
+	}
+}
+
+void AmplModel::analyseConstraints()
+{
+	for(list<ModelComp*>::iterator it = comps.begin();it!=comps.end();it++)
+	{
+		ModelComp *mc = *it;
+		if(mc->type==TCON || mc->type==TMAX || mc->type == TMIN)
+		{
+			mc->analyseVarDepLevels();
+		}
+		else if (mc->type == TMODEL)
+		{//submodel at mc->other
+			mc->other->analyseConstraints();
+		}
+	}
+}
+
 /* ---------------------------------------------------------------------------
 AmplModel::createExpandedModel2
 ---------------------------------------------------------------------------- */
-ExpandedModel2* AmplModel::createExpandedModel2(ModelContext* context,ExpandedModel2* parent)
+ExpandedModel2* AmplModel::createExpandedModel2(ModelContext* currCtx,ExpandedModel2* parent)
 {
-	LOG("createExpandedModel2- Model["<<this->name<<"]");
-
-	//step 1; must update comps
-	if(!this->isCompsUpdated)
+	LOG("createExpandedModel2- Model["<<this->name<<"] -- level["<<this->level<<"]");
+	ExpandedModel2 *currEm2 = NULL;
+	if(parent==NULL){
+		//for root node
+		assert(currCtx == NULL);
+		assert(this == AmplModel::root);
+		currCtx = new ModelContext(NULL);
+		AmplModel::root->updateCurrLevelModelComp();
+		assert(AmplModel::root->isCompsUpdated == true);
+		parse_data(currCtx);
+		AmplModel::root->calculateCurrLevelModelComp(currCtx);
+		ExpandedModel2::root = new ExpandedModel2(AmplModel::root,NULL,currCtx);
+		currEm2 = ExpandedModel2::root;
+	}
+	else
 	{
 		this->updateCurrLevelModelComp();
-		this->isCompsUpdated = true;
+		assert(currCtx->isCompsCalculated == false);
+		this->calculateCurrLevelSetModelComp(currCtx);
+		assert(currCtx->isCompsCalculated == true);
+		currEm2 = new ExpandedModel2(this,parent,currCtx);
 	}
-	//for root model loading datas from file
-	if(parent == NULL)
-	{
-		LOG("**** parsing data file [" << GlobalVariables::datafilename <<"]");
-		parse_data(context);
-		context->isCompsCalculated = true; //root context model comps value is set by loading data from file
-		LOG("**** parsing data file End ");
-	}
-	//then calculate the set and parameters
-	//this->calculateCurrLevelModelComp(context);
-	//set dim is calculated in step 1.
-	ExpandedModel2 *em2 = new ExpandedModel2(this,parent,context);
-	this->calculateCurrLevelSetModelComp(context);
+
 
 	for(list<ModelComp*>::iterator it = comps.begin();it!=comps.end();it++)
 	{
@@ -119,19 +155,19 @@ ExpandedModel2* AmplModel::createExpandedModel2(ModelContext* context,ExpandedMo
 		if (mc->type == TVAR)
 		{
 			LOG("   model-name ["<<name<<"] Comp["<<mc->id<<"] is TVAR type");
-			mc->calculateLocalVar(context);
-			em2->addLocalVar(mc);
+			mc->calculateLocalVar(currCtx);
+			currEm2->addLocalVar(mc);
 			LOG("   local var:"<<endl<<mc->id);
 		}
 		else if(mc->type==TCON)
 		{
 			LOG("   model-name ["<<name<<"] Comp["<<mc->id<<"] is TCON type");
-			em2->addLocalCon(mc);
+			currEm2->addLocalCon(mc);
 		}
 		else if(mc->type==TMIN || mc->type==TMAX)
 		{
 			LOG("   model-name ["<<name<<"] Comp["<<mc->id<<"] is TMIN or TMAX type");
-			em2->objComp = mc;
+			currEm2->objComp = mc;
 		}
 		else if (mc->type == TMODEL)
 		{
@@ -146,7 +182,7 @@ ExpandedModel2* AmplModel::createExpandedModel2(ModelContext* context,ExpandedMo
 
 				ModelComp* setComp = static_cast<SyntaxNodeIDREF*>(mc->indexing->values[0]->values[1])->ref;
 				string dummy = static_cast<IDNode*>(mc->indexing->values[0]->values[0])->id();
-				Set* set = static_cast<Set*>(context->getCompValue(setComp));
+				Set* set = static_cast<Set*>(currCtx->getCompValue(setComp));
 				assert(set->dim == 1); //only support one dimensional set for block index set for now!
 				LOG("Name["<<name<<"]'s Comp["<<mc->id<<"] card["<<set->card<<"]");
 
@@ -154,23 +190,23 @@ ExpandedModel2* AmplModel::createExpandedModel2(ModelContext* context,ExpandedMo
 				LOG("creating child  ExpandedModel2 over the set:"<<set->toString());
 				for(it=set->setValues_data_order.begin();it!=set->setValues_data_order.end();it++)
 				{
-					ModelContext* childContext = new ModelContext(context);
+					ModelContext* childContext = new ModelContext(currCtx);
 					LOG("creating child["<<mc->id<<"] for ["<<this->name<<"] "<<dummy<<"=["<<dummy<<"]");
 					AmplModel* submod = mc->other;
 					childContext->addDummySetValueMap(dummy,setComp,*it);
-					ExpandedModel2* subem2 = submod->createExpandedModel2(childContext,em2);
+					ExpandedModel2* subem2 = submod->createExpandedModel2(childContext,currEm2);
 					assert(childContext->em==subem2);
-					em2->children.push_back(subem2);
+					currEm2->children.push_back(subem2);
 					LOG("child expandedModel2 ["<<subem2->getName());
 				}
 			}
 			else
 			{
 				LOG("Model's indexing over is NULL");
-				ModelContext* childContext = new ModelContext(context);
+				ModelContext* childContext = new ModelContext(currCtx);
 				AmplModel* submod = mc->other;
-				ExpandedModel2* subem2 = submod->createExpandedModel2(childContext,em2);
-				em2->children.push_back(subem2);
+				ExpandedModel2* subem2 = submod->createExpandedModel2(childContext,currEm2);
+				currEm2->children.push_back(subem2);
 				LOG("child expandedModel2 ["<<subem2->getName()<<"]");
 				//assert(childContext == NULL);
 			}
@@ -180,9 +216,13 @@ ExpandedModel2* AmplModel::createExpandedModel2(ModelContext* context,ExpandedMo
 			LOG("Name["<<name<<"]'s Comp["<<mc->id<<"] is OTHER type");
 		}
 	}
-	this->clearNoneRootSetModelComp(context);
+
+	//only keep the root level set comps because will need to be stored on all processes.
+	if(parent!=NULL){
+		this->clearSetModelComp(currCtx);
+	}
 	LOG("End createExpandedModel2 - model["<<this->name<<"]");
-	return em2;
+	return currEm2;
 }
 
 
@@ -218,11 +258,15 @@ AmplModel::dump(ostream& fout) const {
   fout << "AM: Nb objectives : " <<  n_objs << "\n";
   fout << "AM: Nb variables  : " <<  n_vars << "\n";
   fout << "AM: Nb constraints: " <<  n_cons << "\n";
-  fout << "AM: Nb objectives : " <<  n_submodels << "\n";
   fout << "AM: List components:\n";
   list<ModelComp*>::const_iterator p;
-  for (p = comps.begin(); p != comps.end(); ++p)
-    (*p)->dump(fout);
+
+  int counter=0;
+  for (p = comps.begin(); p != comps.end(); ++p,++counter)
+  {
+	  (*p)->dump(fout,counter);
+  }
+
 
   if (n_submodels>0)
     fout << "AM: now list the submodels:\n";
@@ -287,9 +331,7 @@ AmplModel::removeComp()
 void
 AmplModel::addComp(ModelComp *comp)
 {
-	LOG("-- In addComp  -- [current:"<<this->name<<"] type[" << comp->type<<"]");
-  AmplModel *subm;
-  //ModelComp *lastinmodel = model->last;
+	LOG("-- In addComp  -- this model:["<<this->name<<"] level["<<level<<"] add type[" << comp->type<<"]");
   switch(comp->type)
   {
     case TVAR:
@@ -308,11 +350,11 @@ AmplModel::addComp(ModelComp *comp)
     case TMAX:
       n_objs++;
       break;
-    case TMODEL:  //feng a bad design style. subm is only used to setup the parant.
-    			  //	the parent should be set while creating.
+    case TMODEL:
       n_submodels++;
-      subm = comp->other;
-      subm->parent = this;
+      comp->other->parent = this;
+      comp->other->level = this->level + 1;
+
       break;
     default:
       cerr << "addComp: type " << comp->type << "unrecognised\n";
@@ -476,25 +518,35 @@ ModelComp* AmplModel::findModelComp(string id,compType forType)
 
 void AmplModel::updateCurrLevelModelComp()
 {
-	for(list<ModelComp*>::iterator i=comps.begin();i!=comps.end();i++)
+	if(!this->isCompsUpdated)
 	{
-		if((*i)->type==TSET)
+
+		for(list<ModelComp*>::iterator i=comps.begin();i!=comps.end();i++)
 		{
-			(*i)->setSetDim();
-			LOG("updateModelComp for set - id["<<(*i)->id<<"] dim["<<(*i)->setDim<<"] -- "<<*i);
+			if((*i)->type==TSET)
+			{
+				(*i)->setSetDim();
+				LOG("updateModelComp for set - id["<<(*i)->id<<"] dim["<<(*i)->setDim<<"] -- "<<*i);
+			}
+			else if((*i)->type==TPARAM)
+			{
+				(*i)->setParamIndicies();
+				LOG("updateModelComp for param - id["<<(*i)->id<<"] numParamIndicies["<<(*i)->getNumParamIndicies()<<"] -- "<<*i);
+			}
 		}
-		else if((*i)->type==TPARAM)
-		{
-			(*i)->setParamIndicies();
-			LOG("updateModelComp for param - id["<<(*i)->id<<"] numParamIndicies["<<(*i)->getNumParamIndicies()<<"] -- "<<*i);
-		}
+		this->isCompsUpdated = true;
 	}
 }
 
 void AmplModel::calculateCurrLevelModelComp(ModelContext* context)
 {
-	this->calculateCurrLevelSetModelComp(context);
-	this->calculateCurrLevelParamModelComp(context);
+	assert(this->isCompsUpdated == true);
+	if(!context->isCompsCalculated);
+	{
+		this->calculateCurrLevelSetModelComp(context);
+		this->calculateCurrLevelParamModelComp(context);
+	}
+	assert(context->isCompsCalculated == true);
 }
 
 void AmplModel::calculateModelCompRecursive(ModelContext* context)
@@ -508,26 +560,31 @@ void AmplModel::calculateModelCompRecursive(ModelContext* context)
 
 void AmplModel::calculateCurrLevelSetModelComp(ModelContext* context)
 {
-	for(list<ModelComp*>::iterator i=comps.begin();i!=comps.end();i++)
+	if(!context->isCompsCalculated)
 	{
-		ModelComp *comp = *i;
-		if(comp->type==TSET && context->getCompValue(comp) == NULL)
+		for(list<ModelComp*>::iterator i=comps.begin();i!=comps.end();i++)
 		{
-			LOG("calculateSetModelComp   SET comp["<<comp->id<<"] -- "<<comp);
-			comp->calculateSetModelComp(context);
-			LOG("end calculateSetModelComp   -- ["<<comp->id<<"] -- "<<comp);
-			assert(context->getCompValue(comp)!=NULL);
+			ModelComp *comp = *i;
+			if(comp->type==TSET && context->getCompValue(comp) == NULL)
+			{
+				LOG("calculateSetModelComp   SET comp["<<comp->id<<"] -- "<<comp);
+				comp->calculateSetModelComp(context);
+				LOG("end calculateSetModelComp   -- ["<<comp->id<<"] -- "<<comp);
+				assert(context->getCompValue(comp)!=NULL);
+			}
 		}
+		context->isCompsCalculated = true;
 	}
 }
 
-void AmplModel::clearNoneRootSetModelComp(ModelContext* context)
+void AmplModel::clearSetModelComp(ModelContext* context)
 {
+	assert(context->isCompsCalculated == true);
 	for(list<ModelComp*>::iterator i=comps.begin();i!=comps.end();i++)
 	{
 		ModelComp *comp = *i;
 		//keep all the set values for root node
-		if(comp->type==TSET && this->parent != NULL)
+		if(comp->type==TSET)
 		{
 			LOG("this["<<this->name<<"]");
 			LOG("removeCompValueMap   SET comp["<<comp->id<<"] -- "<<comp);
@@ -536,6 +593,7 @@ void AmplModel::clearNoneRootSetModelComp(ModelContext* context)
 			assert(context->getCompValue(comp)==NULL);
 		}
 	}
+	context->isCompsCalculated = false;
 }
 
 void AmplModel::calculateCurrLevelParamModelComp(ModelContext* context)

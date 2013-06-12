@@ -4,6 +4,7 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../src/context/EMBlock.cpp \
 ../src/context/ExpandedModel2.cpp \
 ../src/context/IndexSet.cpp \
 ../src/context/ModelContext.cpp \
@@ -12,6 +13,7 @@ CPP_SRCS += \
 ../src/context/Var.cpp 
 
 OBJS += \
+./src/context/EMBlock.o \
 ./src/context/ExpandedModel2.o \
 ./src/context/IndexSet.o \
 ./src/context/ModelContext.o \
@@ -20,6 +22,7 @@ OBJS += \
 ./src/context/Var.o 
 
 CPP_DEPS += \
+./src/context/EMBlock.d \
 ./src/context/ExpandedModel2.d \
 ./src/context/IndexSet.d \
 ./src/context/ModelContext.d \
@@ -32,7 +35,7 @@ CPP_DEPS += \
 src/context/%.o: ../src/context/%.cpp
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
-	mpic++ -DDEBUG -I/usr/include/mpi -I/home/s0965328/workspace/oops/include -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	mpic++ -DDEBUG -I/usr/include/mpi -I/home/s0965328/workspace/autodiff/autodiff_library/include -I/home/s0965328/workspace/oops/include -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

@@ -7,6 +7,7 @@
 
 #include "ModelContext.h"
 #include "ExpandedModel2.h"
+#include "../model/ModelComp.h"
 #include "assert.h"
 #include "../util/global_util_functions.h"
 #include "Set.h"
@@ -66,36 +67,30 @@ void ModelContext::recursiveMarkContextUsed()
 
 void ModelContext::addDummySetValueMap(string& dummyVar,ModelComp* comp,string value)
 {
-	LOG_SYS_MEM("BeforeaddDummySetValueMap");
 	LOG("add model dummy ["<<dummyVar<<"] value["<<value<<"]");
 	pair<__gnu_cxx::hash_map<string,string>::iterator,bool> ret1;
 	pair<__gnu_cxx::hash_map<string,ModelComp*>::iterator,bool> ret2;
 	ret1 = this->dummyValueMap.insert(pair<string,string>(dummyVar,value));
 	ret2 = this->dummySetMap.insert(pair<string,ModelComp*>(dummyVar,comp));
 	assert(ret1.second && ret2.second);
-	LOG_SYS_MEM("AfteraddDummySetValueMap");
 }
 
 void ModelContext::addDummySetValueMapCons(string& dummyVar,ModelComp* comp,string value)
 {
-	LOG_SYS_MEM("BeforeAddDummySetValueMapCons");
 	pair<__gnu_cxx::hash_map<string,string>::iterator,bool> ret1;
 	pair<__gnu_cxx::hash_map<string,ModelComp*>::iterator,bool> ret2;
 	ret1 = this->dummyValueMapCons.insert(pair<string,string>(dummyVar,value));
 	ret2 = this->dummySetMapCons.insert(pair<string,ModelComp*>(dummyVar,comp));
 	assert(ret1.second && ret2.second);
-	LOG_SYS_MEM("AfterAddDummySetValueMapCons");
 }
 
 void ModelContext::addDummySetValueMapTemp(string& dummyVar,ModelComp* comp,string value)
 {
-	LOG_SYS_MEM("BeforeaddDummySetValueMapTemp");
 	pair<__gnu_cxx::hash_map<string,string>::iterator,bool> ret1;
 	pair<__gnu_cxx::hash_map<string,ModelComp*>::iterator,bool> ret2;
 	ret1 = this->dummyValueMapTemp.insert(pair<string,string>(dummyVar,value));
 	ret2 = this->dummySetMapTemp.insert(pair<string,ModelComp*>(dummyVar,comp));
 	assert(ret1.second && ret2.second );
-	LOG_SYS_MEM("AfteraddDummySetValueMapTemp");
 }
 
 void ModelContext::removeDummySetValueMapCons(string& dummyVar)
@@ -121,22 +116,25 @@ string ModelContext::getModelDummyValAsKey(int& num)
 	ExpandedModel2* em2=static_cast<ExpandedModel2*>(this->em);
 	if(it==this->cacheModelDummyVarKey.end())
 	{
-		if(parent!=NULL){
-			rval = this->parent->getModelDummyValAsKey(num);
-		}
 		__gnu_cxx::hash_map<string,string>::iterator it2 = this->dummyValueMap.begin();
 		for(;it2!=this->dummyValueMap.end()&&num>0;it2++)
 		{
 			rval += it2->second;
-			num--;
+			--num;
+		}
+
+		if(parent!=NULL && num!=0){
+			rval = this->parent->getModelDummyValAsKey(num) + rval;
 		}
 
 		this->cacheModelDummyVarKey.insert(pair<int,string>(numKey,rval));
 		LOG("insert key["<<numKey<<"] for value - rval["<<rval<<"]");
+		assert(num==0);
 	}
 	else
 	{
-		num = num>this->dummyValueMap.size()?num-this->dummyValueMap.size():0;
+		assert(num==numKey);
+		num = 0;
 		LOG("find getModelDummyValAsKey in cache - ["<<numKey<<"] - rval["<<rval<<"]");
 	}
 	LOG("end getModelDummyValAsKey - int - contextId["<<this->getContextId()<<"] - num["<<num<<"] numKey["<<numKey<<"]- rval["<<rval<<"]");
@@ -200,20 +198,7 @@ string& ModelContext::getDummyValue(string& dummyVar)
 	}
 	else if(rval.empty() && this->parent == NULL)
 	{
-		//hacks - to do properly require add stage dummy variables in the dummayValueMap, Q. but which level? - A. probably the root level.
-		bool isStage = true;
-		for(int i=0;i<dummyVar.length();i++)
-		{
-			isStage = isStage && isdigit(dummyVar[i]);
-			if(!isStage)
-				break;
-		}
-		if(isStage)
-		{
-			return dummyVar;
-		}
 		LOG("****WARNING*****  root node context reached - but not found - dummyVar["<<dummyVar<<"]  *empty string* returned");
-		//assert(false);
 	}
 	return rval;
 }
@@ -286,12 +271,10 @@ CompDescr* ModelContext::getCompValue(ModelComp* comp)
 }
 void ModelContext::addCompValueMap(ModelComp* comp,CompDescr* value)
 {
-	LOG_SYS_MEM("BeforeaddCompValueMap");
 	pair<__gnu_cxx::hash_map<string,CompDescr*>::iterator,bool> ret;
 	LOG("addCompValueMap - contextID["<<this->getContextId()<<"]comp["<<comp->id<<"] key["<<comp->getHashKey()<<"]");
 	ret = this->compValueMap.insert(pair<string,CompDescr*>(comp->getHashKey(),value));
 	assert(ret.second);
-	LOG_SYS_MEM("AfteraddCompValueMap");
 }
 
 void ModelContext::removeCurrLevelCompValueMap(ModelComp* comp)

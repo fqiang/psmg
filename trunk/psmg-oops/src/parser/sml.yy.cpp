@@ -1115,7 +1115,7 @@ YY_RULE_SETUP
 case 5:
 YY_RULE_SETUP
 #line 73 "sml.yy.lpp"
-myreturn(INFINITY);
+myreturn(INFINITE);
 	YY_BREAK
 /* comments */
 case 6:

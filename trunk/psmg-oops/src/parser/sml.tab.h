@@ -40,7 +40,7 @@
      ID = 258,
      INT_VAL = 259,
      FLOAT_VAL = 260,
-     INFINITY = 261,
+     INFINITE = 261,
      COEFF = 262,
      COVER = 263,
      OBJ = 264,
@@ -169,7 +169,7 @@
 #define ID 258
 #define INT_VAL 259
 #define FLOAT_VAL 260
-#define INFINITY 261
+#define INFINITE 261
 #define COEFF 262
 #define COVER 263
 #define OBJ 264

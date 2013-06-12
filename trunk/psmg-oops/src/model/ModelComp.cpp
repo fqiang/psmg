@@ -81,7 +81,7 @@ const string ModelComp::compTypes[] = { "var", "subject to", "param", "set", "mi
  *                     IDs should have been replaced by IDREFs 
  */
 ModelComp::ModelComp(const string& id_, compType type_, SyntaxNode *indexing_, SyntaxNode *attrib, int uplevel) :
-		type(type_), id(id_), attributes(attrib), model(NULL), setDim(0), setCard(0), varIndicies(0),varCard(0), moveUpLevel(uplevel) {
+		type(type_), id(id_), attributes(attrib), model(NULL), setDim(0), setCard(0), varDim(0),varCard(0), moveUpLevel(uplevel) {
 
 	this->indexing = dynamic_cast<SyntaxNodeIx*>(indexing_);
 	if (indexing)
@@ -161,8 +161,8 @@ ModelComp::ModelComp(const string& id_)
  ModelComp::dump(ostream &fout)
  ---------------------------------------------------------------------------- */
 /** Print a detailed description of this model component and all its fields */
-void ModelComp::dump(ostream& fout) const {
-	fout << "MC: ----------------------------------------------------------\n";
+void ModelComp::dump(ostream& fout,int counter) const {
+	fout << "MC:  ("<<counter<<"------------------------------------------------------\n";
 	fout << "MC: ModelComp: " << id << " (" << (void *) this << ")\n";
 	fout << "    type: " << ModelComp::nameTypes[type] << "\n";
 	if (attributes) {
@@ -546,19 +546,19 @@ void ModelComp::calculateLocalVar(ModelContext* context) {
 	LOG( "calculateLocalVar -- in model["<<this->model->name<<"] modelcomp["<<this->id<<"]");
 	assert(this->type==TVAR);
 	this->varCard = 1;
-	this->varIndicies = 0;
+	this->varDim = 0;
 	vector<string> ind;
 	if (context != NULL) {
 		context->fillDummyValue(ind);
 	}
-	varIndicies = ind.size();
+	varDim = ind.size();
 	if (this->indexing == NULL) {
 		//do nothing.. card = 1,numIndicies = num of model's indices
 	}
 	else if (this->indexing->sets_mc.size() > 0) {
 		for(vector<ModelComp*>::iterator it = this->indexing->sets_mc.begin();it != this->indexing->sets_mc.end();it++) {
 			varCard = (*it)->setCard * varCard;
-			varIndicies = varIndicies + (*it)->setDim;
+			varDim = varDim + (*it)->setDim;
 		}
 	}
 	LOG( "calculateLocalVar -- in model["<<this->model->name<<"] modelcomp["<<this->id<<"]");
@@ -646,6 +646,38 @@ void ModelComp::fillLocalVar(ExpandedModel2* em2)
 	em2->localVars.push_back(aVar);
 
 	LOG( "fillLocalVar -- in model["<<this->model->name<<"] modelcomp["<<this->id<<"] aVar["<<aVar->name<<"] card["<<aVar->card<<"] numIndicies["<<aVar->numIndicies<<"]");
+}
+
+void ModelComp::analyseVarDepLevels()
+{
+	assert(this->type == TCON || this->type == TMAX || this->type==TMIN);
+	LOG("ModelComp::analyseConstraint -- attr["<<this->attributes->print()<<"] declared level["<<this->model->level<<"]");
+	set<int> levels;
+	this->attributes->calcVarDepLevels(levels);
+
+
+	for(set<int>::iterator it=levels.begin();it!=levels.end();it++)
+	{
+		int level = *it;
+		set<int> deps;
+		this->attributes->calcSeparability(level,deps);
+		this->varDeps.insert(pair<int,set<int> >(level,deps));
+
+		LOG("Variable Declare Level: "<<level);
+		for(set<int>::iterator it2=deps.begin();it2!=deps.end();it2++)
+		{
+			LOG("	   Depend Level: "<<*it2);
+		}
+
+	}
+}
+
+Node* ModelComp::constructAutoDiffCons(ModelContext* ctx, EMBlock* emb,ExpandedModel2* emcol)
+{
+	assert(this->type == TCON);
+	LOG("constructAutoDiffCons - modelcomp["<<this->id<<"] ctx["<<ctx->getContextId()<<"]");
+	Node* node = this->attributes->constructAutoDiffNode(ctx,emb,emcol);
+	return node;
 }
 
 void ModelComp::calculateMemoryUsage(unsigned long& size) {
