@@ -12,7 +12,6 @@
 #include "Var.h"
 #include "Set.h"
 #include "IndexSet.h"
-#include "../model/ModelComp.h"
 #include <ext/hash_map>
 #include <string>
 #include <vector>

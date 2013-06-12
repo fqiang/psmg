@@ -20,6 +20,7 @@
 #include <fstream>
 #include <string>
 #include "OOPSBlock.h"
+#include "../context/ExpandedModel2.h"
 #include "../sml/GlobalVariables.h"
 #include "../util/global_util_functions.h"
 

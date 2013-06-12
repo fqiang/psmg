@@ -34,6 +34,8 @@
 
 using namespace std;
 
+vector<string> StochModel::stagenames;
+
 static void splitIn(SyntaxNode *expr, IDNode **dummy, SyntaxNode **set)
 {
 	if (expr->getOpCode() == IN)
@@ -55,7 +57,7 @@ static void splitIn(SyntaxNode *expr, IDNode **dummy, SyntaxNode **set)
 /** Constructor */
 StochModel::StochModel(SyntaxNode *onStages, SyntaxNode *onNodes,
 		SyntaxNode *onAncs, SyntaxNode *onProb, AmplModel *prnt) :
-		AmplModel(""), is_symbolic_stages(false)
+		AmplModel("",NULL), is_symbolic_stages(false)
 {
 	LOG("create StochModel -- onStages["<<onStages<<"] noNodes["<<onNodes<<"] onAncs["<<onAncs<<"] onProb["<<onProb<<"]");
 	/* Split up possible indexing expressions for params */
@@ -106,7 +108,6 @@ void StochModel::expandStages_NO_AMPL()
 	ModelComp* stageComp = ref.front();
 
 	AmplModel::root->updateCurrLevelModelComp();
-	AmplModel::root->isCompsUpdated = true;
 	ModelContext* rootCtx = new ModelContext(NULL);
 	parse_data(rootCtx);
 	AmplModel::root->calculateCurrLevelModelComp(rootCtx);
@@ -117,8 +118,8 @@ void StochModel::expandStages_NO_AMPL()
 	for(;it!=aSet->setValues_data_order.end();it++)
 	{
 		assert(aSet->dim==1);
-		stagenames.push_back((*it));
-		LOG("stagename -  ["<<*it<<"]");
+		StochModel::stagenames.push_back((*it));
+		LOG("add stagename -  ["<<*it<<"]");
 	}
 	delete rootCtx;
 	LOG("end expandStages_NO_AMPL --- ");
@@ -207,13 +208,11 @@ void StochModel::expandStagesOfComp_NO_AMPL()
  */
 AmplModel* StochModel::expandToFlatModel()
 {
+	LOG(" enter expandToFlatModel:\n");
+
 	AmplModel *model_above = NULL;
 	AmplModel *am;
 	int stgcnt;
-
-	LOG("---------------------------------------------------------------\n");
-	LOG(" StochModel::expandToFlatModel:\n");
-	LOG("---------------------------------------------------------------\n");
 
 	/* expand the stages set for all the StochModelComp entities in this model */
 	expandStagesOfComp_NO_AMPL();
@@ -222,14 +221,14 @@ AmplModel* StochModel::expandToFlatModel()
 	 defined, or whose stageset includes the current stage */
 
 	// loop over all stages and create an AmplModel for every stage
-	stgcnt = stagenames.size() - 1;
-	for (vector<string>::reverse_iterator st = stagenames.rbegin();st != stagenames.rend(); st++, stgcnt--)
+	stgcnt = StochModel::stagenames.size() - 1;
+	for (vector<string>::reverse_iterator st = StochModel::stagenames.rbegin();st != StochModel::stagenames.rend(); st++, stgcnt--)
 	{ // loops backwards through list
-		LOG("Creating amplModel for stage-count["<<stgcnt<<"]: stageName["<<*st<<"]");
-
 		// set name and global name for this ampl model
 		string amname = (stgcnt == 0) ? name + *st : *st;
-		am = new AmplModel(amname);
+
+		am = new AmplModel(amname,NULL);
+		LOG("Creating amplModel for stage-count["<<stgcnt<<"]: stageName["<<*st<<"]  amname["<<amname<<"] level["<<am->level<<"] -- level is wrong !!");
 
 		// loop over all components of the StochModel
 		for (list<ModelComp*>::iterator p = comps.begin(); p != comps.end();p++)
@@ -441,9 +440,9 @@ AmplModel* StochModel::expandToFlatModel()
 		}
 	} // end loop over stages
 
-	LOG("setting up parent -- ampleModel["<<am->name<<"]'s parent -->["<<parent->name<<"]");
 	am->parent = parent;
 	am->node = node;
+	LOG("setting up parent -- ampleModel["<<am->name<<"]'s parent -->["<<parent->name<<"]");
 	LOG("setting up root ModelComp -- ampleModel["<<am->name<<"]'s modelComp -->["<<node->id<<"] indexing["<<node->indexing->print()<<"]");
 
 	LOG("-----------------------------------------------------------\n");
@@ -477,6 +476,7 @@ AmplModel* StochModel::expandToFlatModel()
 		LOG("-----------------------------------------------------------\n");
 	}
 
+	LOG(" exit expandToFlatModel:\n");
 	return am;
 }
 
@@ -506,11 +506,11 @@ void StochModel::transcribeComponents(AmplModel *current, int lev)
 	LOG("start  transcribeComponents -- in current["<<current->name<<"]"<<" lev["<<lev<<"]");
 	if (is_symbolic_stages)
 	{
-		StageNodeNode::stage = "\"" + stagenames.at(lev) + "\"";
+		StageNodeNode::stage = "\"" + StochModel::stagenames.at(lev) + "\"";
 	}
 	else
 	{
-		StageNodeNode::stage = stagenames.at(lev);
+		StageNodeNode::stage = StochModel::stagenames.at(lev);
 	}
 
 	if (lev == 0)

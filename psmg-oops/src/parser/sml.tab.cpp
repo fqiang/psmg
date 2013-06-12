@@ -157,7 +157,7 @@
      ID = 258,
      INT_VAL = 259,
      FLOAT_VAL = 260,
-     INFINITY = 261,
+     INFINITE = 261,
      COEFF = 262,
      COVER = 263,
      OBJ = 264,
@@ -286,7 +286,7 @@
 #define ID 258
 #define INT_VAL 259
 #define FLOAT_VAL 260
-#define INFINITY 261
+#define INFINITE 261
 #define COEFF 262
 #define COVER 263
 #define OBJ 264
@@ -834,7 +834,7 @@ static const yytype_uint16 yyrline[] =
    First, the terminals, then, starting at YYNTOKENS, nonterminals.  */
 static const char *const yytname[] =
 {
-  "$end", "error", "$undefined", "ID", "INT_VAL", "FLOAT_VAL", "INFINITY",
+  "$end", "error", "$undefined", "ID", "INT_VAL", "FLOAT_VAL", "INFINITE",
   "COEFF", "COVER", "OBJ", "DEFAULT", "FROM", "TO", "TO_COME", "MODELTYPE",
   "DOTDOT", "NET_IN", "NET_OUT", "DIMEN", "ORDERED", "CIRCULAR",
   "REVERSED", "SYMBOLIC", "ARC", "INTEGER", "BINARY", "CHECK", "CLOSE",
@@ -3459,7 +3459,7 @@ yyreduce:
 /* Line 1806 of yacc.c  */
 #line 876 "sml.tab.ypp"
     { 
-            (yyval.opPtr) = new SyntaxNode(INFINITY);
+            (yyval.opPtr) = new SyntaxNode(INFINITE);
          }
     break;
 
@@ -3722,7 +3722,7 @@ int yywrap(void) {
 begin_model
 ---------------------------------------------------------------------------- */
 void begin_model(char *name, SyntaxNode *indexing) {
-  AmplModel *new_mod = new AmplModel(name);
+  AmplModel *new_mod = new AmplModel(name,NULL);
   ModelComp *newmc;
   
   LOG("Start Model: " << name << " "<<indexing);
@@ -3824,6 +3824,7 @@ void end_smodel(char *name){
   is_stoch_model = false;
   
   assert(AmplModel::root == current_model);
+  AmplModel::root->settingUpLevels(0);
   //AmplModel::root->isStochastic = true;
 }
 
@@ -3868,7 +3869,7 @@ int parse_model()
 	int errcode = 0;
 	yyin = fopen(GlobalVariables::modelfilename.c_str(),"r");
 	assert(errcode==0);
-   	AmplModel::root = new AmplModel("root");
+   	AmplModel::root = new AmplModel("root",NULL);
    	current_model = AmplModel::root;
    	is_stoch_model = false;
    	is_deterministic_glo = false;

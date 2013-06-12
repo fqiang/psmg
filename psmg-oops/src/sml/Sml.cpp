@@ -18,7 +18,6 @@
 #include "../sml/Sml.h"
 //#include "../sml/backend.h"
 #include "../model/AmplModel.h"
-#include "../context/ExpandedModel2.h"
 #include "../context/ModelContext.h"
 #include "../util/global_util_functions.h"
 #include "../sml/GlobalVariables.h"
@@ -105,16 +104,17 @@ void Sml::process_model_file()
 	assert(errcode ==0);
 }
 
-ExpandedModel2* Sml::generate_em2()
+void Sml::generate_em2()
 {
 	LOG("============== ExpandedModel2 Generation =============================");
-	//build up root ModelContext
-	//and process for each submodels
-	LOG_SYS_MEM("BeforeNewModelContext");
-	ModelContext* rootContext = new ModelContext(NULL);
-	LOG_SYS_MEM("AfterNewModelContext");
-	ExpandedModel2* emRoot = AmplModel::root->createExpandedModel2(rootContext,NULL);
+	//step 1: create expandedmodel recursively
+	AmplModel::root->createExpandedModel2(NULL,NULL);
 	LOG("============== END ExpandedModel2 Generation =============================");
+}
 
-	return emRoot;
+void Sml::analyse_constraints()
+{
+	LOG("============== analyse_constraints =============================");
+	AmplModel::root->analyseConstraints();
+	LOG("============== END analyse_constraints =============================");
 }

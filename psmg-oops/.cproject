@@ -27,6 +27,7 @@
 								<option id="gnu.cpp.compiler.exe.debug.option.debugging.level.704175475" name="Debug Level" superClass="gnu.cpp.compiler.exe.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.1290521049" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="/usr/include/mpi"/>
+									<listOptionValue builtIn="false" value="/home/s0965328/workspace/autodiff/autodiff_library/include"/>
 									<listOptionValue builtIn="false" value="/home/s0965328/workspace/oops/include"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.812162509" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
@@ -47,6 +48,7 @@
 							<tool command="mpic++" id="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.425835934" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug">
 								<option id="gnu.cpp.link.option.libs.94339336" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="paroops"/>
+									<listOptionValue builtIn="false" value="autodiff_library"/>
 									<listOptionValue builtIn="false" value="lapack"/>
 									<listOptionValue builtIn="false" value="metis"/>
 									<listOptionValue builtIn="false" value="gfortran"/>
@@ -55,6 +57,7 @@
 								</option>
 								<option id="gnu.cpp.link.option.paths.2146280542" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="/home/s0965328/workspace/oops/lib/parallel"/>
+									<listOptionValue builtIn="false" value="/home/s0965328/workspace/autodiff/autodiff_library/Debug"/>
 									<listOptionValue builtIn="false" value="/home/s0965328/research/metis-4.0.3"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.839213534" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
@@ -100,7 +103,7 @@
 									<listOptionValue builtIn="false" value="/usr/include/mpi"/>
 									<listOptionValue builtIn="false" value="/home/s0965328/workspace/oops/include"/>
 								</option>
-								<option id="gnu.cpp.compiler.option.preprocessor.def.216697268" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols"/>
+								<option id="gnu.cpp.compiler.option.preprocessor.def.216697268" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.405175459" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool command="mpicc" id="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.1823474744" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.debug">
@@ -116,6 +119,7 @@
 							<tool command="mpic++" id="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.954044157" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug">
 								<option id="gnu.cpp.link.option.libs.1973277782" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="paroops"/>
+									<listOptionValue builtIn="false" value="autodiff_library"/>
 									<listOptionValue builtIn="false" value="lapack"/>
 									<listOptionValue builtIn="false" value="metis"/>
 									<listOptionValue builtIn="false" value="gfortran"/>
@@ -124,6 +128,7 @@
 								</option>
 								<option id="gnu.cpp.link.option.paths.991754944" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="/home/s0965328/workspace/oops/lib/parallel"/>
+									<listOptionValue builtIn="false" value="/home/s0965328/workspace/autodiff/autodiff_library/Debug"/>
 									<listOptionValue builtIn="false" value="/home/s0965328/research/metis-4.0.3"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.489411667" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
@@ -171,4 +176,5 @@
 			<resource resourceType="PROJECT" workspacePath="/psmg-oops"/>
 		</configuration>
 	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 </cproject>

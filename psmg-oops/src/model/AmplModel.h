@@ -82,7 +82,7 @@ class AmplModel{
 
   // -------------------------- methods ----------------------------------
   /** Constructor */
-  AmplModel(const std::string& orig_name, AmplModel *par = NULL);
+  AmplModel(const std::string& orig_name, AmplModel *par);
   
   /** Destructor */
   virtual ~AmplModel();
@@ -134,13 +134,15 @@ class AmplModel{
   void calculateCurrLevelModelComp(ModelContext* context);
   void calculateModelCompRecursive(ModelContext* context);
   void calculateCurrLevelSetModelComp(ModelContext* context);
-  void clearNoneRootSetModelComp(ModelContext* context);
+  void clearSetModelComp(ModelContext* context);
   void calculateCurrLevelParamModelComp(ModelContext* context);
   ExpandedModel2* createExpandedModel2(ModelContext* context,ExpandedModel2* parent);
   void reassignModelIndexDependencies();
   bool isCompsUpdated;
   //bool isStochastic;  -- this is not needed as hack in getModelDummyValAsKey(int&) method
+  void settingUpLevels(int);
 
+  void analyseConstraints();
   void calculateMemoryUsage(unsigned long& size);
   //Feng end
 

@@ -93,11 +93,11 @@
 #define TIMER_RESET ((void)0)
 #endif
 
-#if SYS_MEMORY_USAGE_ENABLED
-#define LOG_SYS_MEM(arg) print_mem_usage(arg)
-#else
-#define LOG_SYS_MEM(arg) ((void)0)
-#endif
+//#if SYS_MEMORY_USAGE_ENABLED
+//#define LOG_SYS_MEM(arg) print_mem_usage(arg)
+//#else
+//#define LOG_SYS_MEM(arg) ((void)0)
+//#endif
 
 #if MEMORY_LOG_ENABLED
 #define LOG_MEM(arg) (std::cout<<"LOG_MEM==>["<<GlobalVariables::rank<<"/"<<GlobalVariables::size<<"]-"<<arg<<std::endl)

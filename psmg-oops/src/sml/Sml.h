@@ -17,8 +17,6 @@
 #ifndef SML_H
 #define SML_H
 
-#include "../context/ExpandedModel2.h"
-#include "../model/AmplModel.h"
 #include <string>
 #include <iostream>
 #include <vector>
@@ -34,7 +32,8 @@ public:
 	static void print_copy_right(ostream &out);
 
 	void process_model_file();
-	ExpandedModel2* generate_em2();
+	void generate_em2();
+	void analyse_constraints();
 
 
 	vector<string> scriptNameList;

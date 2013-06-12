@@ -15,8 +15,9 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#include "../context/ExpandedModel2.h"
+//#include "../context/ExpandedModel2.h"
 
+class ExpandedModel2;
 /** @class OOPSBlock
  *  OOPSBlock is an object that directly corresponds to a node in the
  *  OOPS Algebra Tree. 

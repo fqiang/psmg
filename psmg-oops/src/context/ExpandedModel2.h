@@ -9,18 +9,20 @@
 #define EXPANDEDMODEL2_H_
 
 #include "ModelContext.h"
-#include "../model/AmplModel.h"
-#include "ExpandedModel2.h"
+#include "autodiff.h"
 #include <ext/hash_map>
-#include <map>
 #include <set>
 
 using namespace std;
 using namespace __gnu_cxx;
+using namespace AutoDiff;
 
+class EMBlock;
 class ExpandedModel2
 {
 public:
+	static ExpandedModel2 *root;
+
 	vector<ExpandedModel2*> children;
 	ExpandedModel2 *parent;
 
@@ -28,8 +30,10 @@ public:
 	ModelContext* context;
 	vector<ModelComp*> localVarComps;
 	vector<Var*> localVars; //key is ModelComp*
+	vector<Node*> autodiff_vars;
 	vector<ModelComp*>  localCons;
 	ModelComp* objComp;
+	hash_map<ExpandedModel2*,EMBlock* > emBlocksMap;
 
 	unsigned int numLocalCons;
 	unsigned int numLocalVars;
@@ -99,6 +103,11 @@ public:
 	const list<string>& getLocalVarNames() const;
 	//! Returns the names of local constraints
 	const list<string>& getLocalConNames() const;
+
+
+	void calcReqLevelsVariableforBlock(ExpandedModel2 *emcol_,set<int>& reqLevels);
+	void constructEMBlock(ExpandedModel2 * emcol);
+	void initRecursive(int level, vector<ExpandedModel2*>& em2s);
 
 	void calculateMemoryUsage(unsigned long& size_str,unsigned long& size_data);
 

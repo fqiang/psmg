@@ -18,9 +18,6 @@
 #include "Param.h"
 #include "../parser/data.tab.h"
 #include "../sml/GlobalVariables.h"
-#include "../model/ModelComp.h"
-#include "../model/SyntaxNode.h"
-#include "../model/SyntaxNodeIx.h"
 #include "../util/global_util_functions.h"
 #include <string>
 #include <cassert>

@@ -22,7 +22,7 @@ class Var {
 public:
 	string name;
 	int  card;
-	int numIndicies;
+	int numIndicies;  //number of indicies for this var declaration
 	double ub;
 	double lb;
 	vector<string> indicies;

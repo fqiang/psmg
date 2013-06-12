@@ -5,6 +5,7 @@
  *      Author: s0965328
  */
 
+#include <queue>
 #include "SyntaxNode.h"
 #include "SyntaxNodeIx.h"
 #include "SyntaxNodeIDREF.h"
@@ -17,6 +18,7 @@
 #include "../context/Param.h"
 #include "../util/DummyVariableGenerator.h"
 #include "../context/ExpandedModel2.h"
+#include "../st_model/StochModel.h"
 
 //int SyntaxNode::use_global_names=0;
 AmplModel *SyntaxNode::default_model = NULL;
@@ -891,14 +893,16 @@ double SyntaxNode::evalTerm(hash_map<string, string>& dummyValueMap, hash_map<st
 	return rval;
 }
 
-void SyntaxNode::findSyntaxNodeChild(SyntaxNode** node, int op) {
-	if (this->opCode == op) {
-		*node = this;
-		return;
+SyntaxNode* SyntaxNode::findSyntaxNodeChild(SyntaxNode* node, int op) {
+	SyntaxNode* rval = NULL;
+	if (node->opCode == op) {
+		rval = node;
 	}
-	if (this->values[0] != NULL) {
-		this->values[0]->findSyntaxNodeChild(node, op);
+	else if (node->values[0] != NULL) {
+		rval = SyntaxNode::findSyntaxNodeChild(node->values[0], op);
 	}
+	assert(rval!=NULL);
+	return rval;
 }
 
 bool SyntaxNode::isDepend(vector<ModelComp*> varComps) {
@@ -948,11 +952,10 @@ void SyntaxNode::handleSum(ModelContext* rowContext, vector<double>& jcobs, Mode
 	ExpandedModel2* rowEm2 = static_cast<ExpandedModel2*>(rowContext->em);
 	ExpandedModel2* colEm2 = static_cast<ExpandedModel2*>(colContext->em);
 
-	SyntaxNode* cons_sum_node = NULL;
-	this->findSyntaxNodeChild(&cons_sum_node, IN);
+	SyntaxNode* cons_sum_node = SyntaxNode::findSyntaxNodeChild(this, IN);
 	SyntaxNode* col_index_node = NULL;
 	if (colEm2->model->node != NULL && colEm2->model->node->indexing != NULL) {
-		colEm2->model->node->indexing->findSyntaxNodeChild(&col_index_node, IN);
+		col_index_node = SyntaxNode::findSyntaxNodeChild(colEm2->model->node->indexing, IN);
 	}
 
 	SyntaxNodeIDREF* consSumRef = static_cast<SyntaxNodeIDREF*>(cons_sum_node->values[1]);
@@ -1010,11 +1013,42 @@ void SyntaxNode::handleSum(ModelContext* rowContext, vector<double>& jcobs, Mode
 	}
 }
 
-void SyntaxNode::getVarKey(string& varKey, SyntaxNodeIDREF* refn, ModelContext* rowContext) {
+bool SyntaxNode::isContainsInEm2(string& varKey, ExpandedModel2* em)
+{
+	vector<Var*>::iterator it_var = em->localVars.begin();
+	for(;it_var!=em->localVars.end();it_var++)
+	{
+		vector<string>::iterator it_ind = (*it_var)->indicies.begin();
+		for(;it_ind!=(*it_var)->indicies.end();it_ind++)
+		{
+			if(varKey.compare(*it_ind)== 0 )
+			{
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+void SyntaxNode::getIndiciesKey(string& varKey, SyntaxNodeIDREF* refn, ModelContext* rowContext)
+{
 	ModelComp* comp = refn->ref;
-	int numIndicies = comp->varIndicies;
+	assert(comp->type==TPARAM || comp->type==TVAR);
+	int numIndicies = -1;
+	if(comp->type==TPARAM)
+	{
+		numIndicies = comp->getNumParamIndicies();
+		LOG("num indicies for param["<<comp->id<<"] is "<<numIndicies);
+	}
+	else
+	{
+		numIndicies = comp->varDim;
+		LOG("num indicies for var["<<comp->id<<"] is "<<numIndicies);
+	}
+	assert(numIndicies!=-1);
+
+	//step 1 : eg. var[a,b] -- fill a,b first
 	string last_key = "";
-	LOG("num indicies for var["<<comp->id<<"] is "<<numIndicies);
 	for(int i = 0;i < refn->values.size();i++) {
 		//hack!
 		IDNode* ind;
@@ -1033,9 +1067,38 @@ void SyntaxNode::getVarKey(string& varKey, SyntaxNodeIDREF* refn, ModelContext* 
 			last_key += dummyval;
 			numIndicies--;
 		}
-	}
-	varKey = rowContext->getModelDummyValAsKey(numIndicies) + last_key;
+		else
+		{//hack! special case for stage node -- already replace with index value for dummy
+			bool stage = false;
+			vector<string>::iterator it=StochModel::stagenames.begin();
+			for(;it!=StochModel::stagenames.end();it++)
+			{
+				if((*it).compare(dummy)==0)
+				{
+					last_key += dummy;
+					numIndicies--;
+					stage = true;
+					LOG("find stage node ["<<dummy<<"]");
+					break;
+				}
+			}
+			if(!stage){
+				LOG("can't find stage node ["<<dummy<<"] -- checking for error in model or data file");
+				assert(false);
+			}
+		}
 
+
+	}
+	//step 2:: if there still more indicies left over to fill.
+	if(numIndicies!=0)
+	{
+		varKey = rowContext->getModelDummyValAsKey(numIndicies) + last_key;
+	}
+	else
+	{
+		varKey = last_key;
+	}
 }
 
 void SyntaxNode::evalDiff(ModelContext* rowContext, ModelContext* colContext, vector<double>& jcobs) {
@@ -1100,7 +1163,7 @@ void SyntaxNode::evalDiff(ModelContext* rowContext, ModelContext* colContext, ve
 				if (varComp == comp) {
 					if (!currVarKeyReady) {
 						LOG("["<<varComp->id<<"] matches - now calculate varKey");
-						this->getVarKey(currVarKey, refn, rowContext);
+						SyntaxNode::getIndiciesKey(currVarKey, refn, rowContext);
 						currVarKeyReady = true;
 						LOG("current variable key - var_key["<<currVarKey<<"]");
 					}
@@ -1812,6 +1875,506 @@ void SyntaxNode::calculateBaseValueVector(unsigned long& size) {
 		(*it)->calculateMemoryUsage(size);
 	}
 }
+
+/*
+ * for deciding the constraints separability based on varaibles defined in different
+ * ampl model level
+ */
+void SyntaxNode::calcVarDepLevels(set<int>& levels)
+{
+//	LOG("calcConsVarDependicies - "<<this->print());
+	if(this->opCode == IDREF)
+	{
+		SyntaxNodeIDREF* refn = static_cast<SyntaxNodeIDREF*>(this);
+		ModelComp* comp = refn->ref;
+		if(comp->type == TVAR)
+		{
+			LOG("id["<<comp->id<<"] model["<<comp->model->name<<"] level["<<comp->model->level<<"]");
+			if(levels.find(comp->model->level) == levels.end())
+			{//not found
+				levels.insert(comp->model->level);
+			}
+		}
+	}
+	else
+	{
+		vector<SyntaxNode*>::iterator it = this->values.begin();
+		for(;it!=this->values.end();it++)
+		{
+			(*it)->calcVarDepLevels(levels);
+		}
+	}
+}
+
+void SyntaxNode::calcSeparability(int level, set<int>& deps)
+{
+	//LOG("calcSeparability - "<<this->print());
+	if(this->opCode == '+' || this->opCode == '-')
+	{
+		if(this->values[0]->containsVarDefInLevel(level))
+		{
+			this->values[0]->calcSeparability(level,deps);
+		}
+		if(this->values[1]->containsVarDefInLevel(level))
+		{
+			this->values[1]->calcSeparability(level,deps);
+		}
+	}
+	else if(this->opCode == '*' || this->opCode == '/')
+	{
+		bool left = this->values[0]->containsVarDefInLevel(level);
+		bool right = this->values[1]->containsVarDefInLevel(level);
+		if(left && right)
+		{
+			this->values[1]->calcVarDepLevels(deps);
+			this->values[0]->calcVarDepLevels(deps);
+		}
+		else if(left)
+		{
+			this->values[1]->calcVarDepLevels(deps);
+			this->values[0]->calcSeparability(level,deps);
+		}
+		else if(right)
+		{
+			this->values[0]->calcVarDepLevels(deps);
+			this->values[1]->calcSeparability(level,deps);
+		}
+		else
+		{
+			assert(false);
+			//one of them must constain level variable used.
+		}
+	}
+	else if(this->opCode == IDREF)
+	{
+		SyntaxNodeIDREF* refn = static_cast<SyntaxNodeIDREF*>(this);
+		ModelComp* comp = refn->ref;
+		if(comp->type == TVAR)
+		{
+			//LOG("id["<<comp->id<<"] model["<<comp->model->name<<"] level["<<comp->model->level<<"]");
+			if(deps.find(comp->model->level) == deps.end())
+			{//not found
+				deps.insert(comp->model->level);
+			}
+		}
+	}
+	else if(this->opCode == SUM)
+	{
+		this->values[1]->calcSeparability(level,deps);
+	}
+	else if(this->opCode == ASSIGN)
+	{
+		this->values[0]->calcSeparability(level,deps);
+	}
+	else if(this->opCode == -99)
+	{//value node do nothing!
+
+	}
+	else if (this->opCode == 0)
+	{
+		this->values[0]->calcSeparability(level,deps);
+	}
+	else if(this->opCode == LBRACKET)
+	{
+		this->values[0]->calcSeparability(level,deps);
+	}
+	else if(this->opCode == COMMA)
+	{
+		this->values[0]->calcSeparability(level,deps);
+	}
+	else
+	{
+		LOG(" -- calcSeparability -- opCode["<<opCode<<"] is not implmeneted yet!");
+		assert(false);
+	}
+}
+
+bool SyntaxNode::containsVarDefInLevel(int level)
+{
+	if(this->opCode == IDREF)
+	{
+		SyntaxNodeIDREF* refn = static_cast<SyntaxNodeIDREF*>(this);
+		ModelComp* comp = refn->ref;
+		if(comp->type == TVAR)
+		{
+			return comp->model->level == level;
+		}
+	}
+
+	bool rval = false;
+	vector<SyntaxNode*>::iterator it = this->values.begin();
+	for(;it!=this->values.end();it++)
+	{
+		rval = (*it)->containsVarDefInLevel(level);
+		if(rval)
+		{
+			return true;
+		}
+	}
+	return rval;
+}
+
+Node* SyntaxNode::constructAutoDiffNode(ModelContext* ctx, EMBlock* emb, ExpandedModel2* emcol)
+{
+	Node* node = NULL;
+	if(this->opCode == SUM)
+	{
+		//one-dim sum index only
+		ModelComp* compSum = static_cast<SyntaxNodeIDREF*>(SyntaxNode::findSyntaxNodeChild(this,IN)->values[1])->ref;
+		ModelComp* compCol = emcol->model->node->indexing==NULL?NULL:static_cast<SyntaxNodeIDREF*>(emcol->model->node->indexing->values[0]->values[1])->ref;
+		if(compCol!=NULL && compSum == compCol)
+		{
+			LOG("Sum same as Col over ["<<compCol->id<<"] Sum over["<<compSum->id<<"]");
+			string dummyVar = static_cast<IDNode*>(SyntaxNode::findSyntaxNodeChild(this,IN)->values[0])->id();
+			assert(dummyVar.compare((emcol->context->dummySetMap.begin())->first)==0);
+			assert(compCol == (emcol->context->dummySetMap.begin())->second );
+			ctx->addDummySetValueMapTemp(dummyVar, compCol , (emcol->context->dummyValueMap.begin())->second);
+			node = this->values[1]->constructAutoDiffNode(ctx, emb, emcol);
+			ctx->removeDummySetValueMapTemp(dummyVar);
+		}
+		else
+		{
+			if(compCol!=NULL)
+			{
+				LOG("Sum -- Col over ["<<compCol->id<<"] Sum over["<<compSum->id<<"]");
+			}
+			else
+			{
+				LOG("Sum -- emcol["<<emcol->name<<"] has indexing --  Sum over["<<compSum->id<<"]");
+			}
+			IndexSet* iset = NULL;
+			ostringstream oss(ostringstream::out);
+			oss //<< rowContext->getModelDummyValAsKey() //don't need this one since context is hirechical structured! -Feng
+			<< ctx->getConsDummyValAsKey() << (void*) ((this->values[0])) << emcol->context;
+			string hashKey = oss.str();
+			ctx->getCalcSumSet(hashKey, &iset);
+			assert(iset!=NULL);
+			//build auto diff tree
+			queue<Node*> nodes;
+			vector< vector<string> >::iterator it_setval = iset->setIndicies.begin();
+			for(;it_setval != iset->setIndicies.end() ;it_setval++)
+			{
+				vector<string> sval = *it_setval;
+				assert(iset->comps.size()== sval.size() && iset->comps.size() == iset->dummyVarNames.size());
+				vector<ModelComp*>::iterator it_comp = iset->comps.begin();
+				vector<string>::iterator it_dummyVar = iset->dummyVarNames.begin();
+				vector<string>::iterator it_sval = sval.begin();
+				for(;it_comp != iset->comps.end();it_comp++, it_dummyVar++,it_sval++) {
+					ctx->addDummySetValueMapTemp((*it_dummyVar), *it_comp, *it_sval);
+				}
+
+				Node* n = this->values[1]->constructAutoDiffNode(ctx, emb, emcol);
+				if(n!=NULL)
+				{
+					nodes.push(n);
+					LOG(" -- push one ! ");
+				}
+				it_dummyVar = iset->dummyVarNames.begin();
+				for(;it_dummyVar != iset->dummyVarNames.end();it_dummyVar++) {
+					ctx->removeDummySetValueMapTemp(*it_dummyVar);
+				}
+			}
+
+			while(nodes.size()!=1)
+			{
+				LOG("sum over ["<<nodes.size()<<"] elements");
+				Node* n1 = nodes.front();
+				nodes.pop();
+				Node* n2 = nodes.front();
+				nodes.pop();
+				Node* n = create_binary_op_node(PLUS,n1,n2);
+				nodes.push(n);
+			}
+			node = nodes.front();
+			assert(nodes.size()==1);
+		}
+	}
+	else if(this->opCode == '+')
+	{
+		assert(this->values.size()==2);
+		bool left = this->values[0]->isContainVariablesInEm2(ctx,emcol);
+		bool right= this->values[1]->isContainVariablesInEm2(ctx,emcol);
+		if(left && right)
+		{
+			Node* n1 = this->values[0]->constructAutoDiffNode(ctx,emb,emcol);
+			Node* n2 = this->values[1]->constructAutoDiffNode(ctx,emb,emcol);
+			node = create_binary_op_node(PLUS,n1,n2);
+		}
+		else if(left)
+		{
+			node = this->values[0]->constructAutoDiffNode(ctx,emb,emcol);
+		}
+		else if(right)
+		{
+			node = this->values[1]->constructAutoDiffNode(ctx,emb,emcol);
+		}
+	}
+	else if(this->opCode == '-')
+	{
+		assert(this->values.size()==2);
+		bool left = this->values[0]->isContainVariablesInEm2(ctx,emcol);
+		bool right= this->values[1]->isContainVariablesInEm2(ctx,emcol);
+		if(left && right)
+		{
+			Node* n1 = this->values[0]->constructAutoDiffNode(ctx,emb,emcol);
+			Node* n2 = this->values[1]->constructAutoDiffNode(ctx,emb,emcol);
+			node = create_binary_op_node(MINUS,n1,n2);
+		}
+		else if(left)
+		{
+			node = this->values[0]->constructAutoDiffNode(ctx,emb,emcol);
+		}
+		else if(right)
+		{
+			node = this->values[1]->constructAutoDiffNode(ctx,emb,emcol);
+		}
+	}
+	else if(this->opCode == '*')
+	{
+		assert(this->values.size()==2);
+		bool left = this->values[0]->isContainVariablesInEm2(ctx,emcol);
+		bool right= this->values[1]->isContainVariablesInEm2(ctx,emcol);
+		if(left && right)
+		{
+			Node* n1 = this->values[0]->constructAutoDiffNode(ctx,emb);
+			Node* n2 = this->values[1]->constructAutoDiffNode(ctx,emb);
+			node = create_binary_op_node(TIMES,n1,n2);
+		}
+		else if(left)
+		{
+			Node* n1 = this->values[0]->constructAutoDiffNode(ctx,emb,emcol);
+			Node* n2 = this->values[1]->constructAutoDiffNode(ctx,emb);
+			node = create_binary_op_node(TIMES,n1,n2);
+		}
+		else if(right)
+		{
+			Node* n1 = this->values[1]->constructAutoDiffNode(ctx,emb,emcol);
+			Node* n2 = this->values[0]->constructAutoDiffNode(ctx,emb);
+			node = create_binary_op_node(TIMES,n1,n2);
+		}
+	}
+	else if(this->opCode == '/')
+	{
+		assert(this->values.size()==2);
+		bool left = this->values[0]->isContainVariablesInEm2(ctx,emcol);
+		bool right= this->values[1]->isContainVariablesInEm2(ctx,emcol);
+		if(left && right)
+		{
+			Node* n1 = this->values[0]->constructAutoDiffNode(ctx,emb);
+			Node* n2 = this->values[1]->constructAutoDiffNode(ctx,emb);
+			node = create_binary_op_node(DIVID,n1,n2);
+		}
+		else if(left)
+		{
+			Node* n1 = this->values[0]->constructAutoDiffNode(ctx,emb,emcol);
+			Node* n2 = this->values[1]->constructAutoDiffNode(ctx,emb);
+			node = create_binary_op_node(DIVID,n1,n2);
+		}
+		else if(right)
+		{
+			Node* n1 = this->values[1]->constructAutoDiffNode(ctx,emb,emcol);
+			Node* n2 = this->values[0]->constructAutoDiffNode(ctx,emb);
+			node = create_binary_op_node(DIVID,n1,n2);
+		}
+	}
+	else if(this->opCode == IDREF)
+	{
+		node = this->constructAutoDiffNode(ctx,emb);
+	}
+	else if(this->opCode == ASSIGN)
+	{
+		assert(this->values.size()==2);
+		node = this->values[0]->constructAutoDiffNode(ctx,emb,emcol);
+	}
+	else if(this->opCode == 0)
+	{
+		assert(this->values.size()==1);
+		node = this->values[0]->constructAutoDiffNode(ctx,emb,emcol);
+	}
+	else if(this->opCode == LBRACKET)
+	{
+		assert(this->values.size()==1);
+		node = this->values[0]->constructAutoDiffNode(ctx,emb,emcol);
+	}
+	else if(this->opCode == COMMA)
+	{
+		assert(this->values.size()==1);
+		node = this->values[0]->constructAutoDiffNode(ctx,emb,emcol);
+	}
+	else
+	{
+		LOG(" -- constructAutoDiffNode -- opCode["<<opCode<<"] is not implmeneted yet!");
+		assert(false);
+	}
+	return node;
+}
+
+Node* SyntaxNode::constructAutoDiffNode(ModelContext* ctx, EMBlock* emb)
+{//build the auto diff node tree (no check of separability)
+	Node* node = NULL;
+	if(this->opCode == IDREF)
+	{
+		SyntaxNodeIDREF* refn = static_cast<SyntaxNodeIDREF*>(this);
+		ModelComp* comp = refn->ref;
+		if(comp->type == TVAR)
+		{
+			string varKey="";
+			SyntaxNode::getIndiciesKey(varKey,refn,ctx);
+			varKey = comp->id +"_" + varKey;
+			node = emb->variables[emb->varToIndMap.find(varKey)->second];
+		}
+		else
+		{
+			assert(comp->type == TPARAM);
+			SyntaxNodeIDREF* refn = static_cast<SyntaxNodeIDREF*>(this);
+			Param* theParam = static_cast<Param*>(ctx->getCompValue(comp));
+			string key;
+			SyntaxNode::getIndiciesKey(key,refn,ctx);
+			node = create_param_node(theParam->findParamValue(key));
+		}
+		assert(node != NULL);
+	}
+	else if(this->opCode == 0)
+	{
+		assert(this->values.size()==1);
+		node = this->values[0]->constructAutoDiffNode(ctx,emb);
+	}
+	else if(this->opCode == LBRACKET)
+	{
+		assert(this->values.size()==1);
+		node = this->values[0]->constructAutoDiffNode(ctx,emb);
+	}
+	else if(this->opCode == COMMA)
+	{
+		assert(this->values.size()==1);
+		node = this->values[0]->constructAutoDiffNode(ctx,emb);
+	}
+	else if(this->opCode == '+')
+	{
+		assert(this->values.size()==2);
+		Node* n1 = this->values[0]->constructAutoDiffNode(ctx,emb);
+		Node* n2 = this->values[1]->constructAutoDiffNode(ctx,emb);
+		node = create_binary_op_node(PLUS,n1,n2);
+	}
+	else if(this->opCode == '-')
+	{
+		assert(this->values.size()==2);
+		Node* n1 = this->values[0]->constructAutoDiffNode(ctx,emb);
+		Node* n2 = this->values[1]->constructAutoDiffNode(ctx,emb);
+		node = create_binary_op_node(MINUS,n1,n2);
+	}
+	else if(this->opCode == -99)
+	{
+		ValueNode* valn = static_cast<ValueNode*>(this);
+		double start = valn->value;
+		node = create_param_node(start);
+	}
+	else
+	{
+		LOG(" -- constructAutoDiffNode - no check sep -- opCode["<<opCode<<"] is not implmeneted yet!");
+		assert(false);
+	}
+	return node;
+}
+
+
+bool SyntaxNode::isContainVariablesInEm2(ModelContext* ctx,ExpandedModel2* emcol)
+{
+	bool rval = false;
+	if(this->opCode == SUM)
+	{
+		IndexSet* iset = NULL;
+		ostringstream oss(ostringstream::out);
+		oss //<< rowContext->getModelDummyValAsKey() //don't need this one since context is hirechical structured! -Feng
+		<< ctx->getConsDummyValAsKey() << (void*) ((this->values[0])) << emcol->context;
+		string hashKey = oss.str();
+		if (!ctx->getCalcSumSet(hashKey, &iset))
+		{
+			iset = new IndexSet("TEMP_SUM");
+			this->values[0]->calcSumSetComp(ctx, &iset);
+			LOG("sum { dummyVar } over "<<iset->toString());
+			LOG("-- Add Temp Set - hashKey["<<hashKey<<"] overSet "<<iset->toString());
+			ctx->addCalcSumSet(hashKey, iset);
+		}
+
+		vector< vector<string> >::iterator it_setval = iset->setIndicies.begin();
+		for(;it_setval != iset->setIndicies.end() && rval == false ;it_setval++) {
+			vector<string> sval = *it_setval;
+			assert(iset->comps.size()== sval.size() && iset->comps.size() == iset->dummyVarNames.size());
+			vector<ModelComp*>::iterator it_comp = iset->comps.begin();
+			vector<string>::iterator it_dummyVar = iset->dummyVarNames.begin();
+			vector<string>::iterator it_sval = sval.begin();
+			for(;it_comp != iset->comps.end();it_comp++, it_dummyVar++,it_sval++) {
+				ctx->addDummySetValueMapTemp((*it_dummyVar), *it_comp, *it_sval);
+			}
+
+			rval = this->values[1]->isContainVariablesInEm2(ctx, emcol);
+
+			it_dummyVar = iset->dummyVarNames.begin();
+			for(;it_dummyVar != iset->dummyVarNames.end();it_dummyVar++) {
+				ctx->removeDummySetValueMapTemp(*it_dummyVar);
+			}
+		}
+	}
+	else if(this->opCode == IDREF)
+	{
+		SyntaxNodeIDREF* refn = static_cast<SyntaxNodeIDREF*>(this);
+		ModelComp* comp = refn->ref;
+		if(comp->type == TVAR)
+		{
+			string varKey="";
+			SyntaxNode::getIndiciesKey(varKey,refn,ctx);
+			rval = SyntaxNode::isContainsInEm2(varKey,emcol);
+		}
+	}
+	else{
+
+		vector<SyntaxNode*>::iterator it = this->values.begin();
+		for(;it!=this->values.end() && rval == false;it++)
+		{
+			rval = (*it)->isContainVariablesInEm2(ctx,emcol);
+		}
+	}
+	return rval;
+}
+
+OPCODE SyntaxNode::opCodeTranslateToAutoDiffOp(int opCode) {
+	OPCODE code;
+	switch (opCode)
+	{
+		case '+':
+			code = AutoDiff::PLUS;
+			break;
+		case '-':
+			code = AutoDiff::MINUS;
+			break;
+		case '*':
+			code = AutoDiff::TIMES;
+			break;
+		case '/':
+			code = DIVID;
+			break;
+//		case <this sin operator>:
+//			code = AutoDiff::SIN;
+//			break;
+//			TIMES, DIVID, SIN, SQRT, POW
+//		case <this sqrt operator>:
+//			code = AutoDiff::SQRT;
+//			break;
+//		case <this pow operator>:
+//			code = AutoDiff::POW;
+//			break;
+		default:
+			LOG("opCode ["<<opCode<<"] haven't map translate yet!");
+			assert(false);
+			break;
+	}
+	return code;
+}
+
+/*
+ * end of constraints separability calculation
+ */
 
 /* --------------------------------------------------------------------------
  SyntaxNode::print()

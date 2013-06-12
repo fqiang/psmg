@@ -57,8 +57,8 @@ class StochModel: public AmplModel{
   //! The dummy variable for the STAGES set
   IDNode *stagedummy;
 
-  //! Explicit set of STAGES
-  std::vector <std::string> stagenames;
+//  //! Explicit set of STAGES
+//  std::vector <std::string> stagenames;
 
   //! Whether stage names are symbolic or numeric
   bool is_symbolic_stages;
@@ -76,6 +76,8 @@ class StochModel: public AmplModel{
   SyntaxNode *prob;
 
  public:
+
+  static vector <string> stagenames; //only for stochastic sml model file used only!
   // -------------------------- methods ----------------------------------
   //! Constructor 
   StochModel(SyntaxNode *onStages, SyntaxNode *onNodes, SyntaxNode *onAncs, 

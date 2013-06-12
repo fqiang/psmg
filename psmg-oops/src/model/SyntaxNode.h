@@ -34,6 +34,7 @@
  */
 
 #include <vector>
+#include <set>
 #include <string>
 #include <sstream>
 #include <cassert>
@@ -41,9 +42,11 @@
 #include <iostream>
 
 #include "AmplModel.h"
+#include "autodiff.h"
 #include "../context/Set.h"
 
 using namespace std;
+using namespace AutoDiff;
 
 class SyntaxNode {
 
@@ -86,7 +89,7 @@ public:
 	 *  name of the entity. If there are two arguments the second argument is
 	 *  an (int*) stating the ancestor information as set by ancestor(1).ID in
 	 *  stochastic programming */
-	std::vector<SyntaxNode*> values;
+	vector<SyntaxNode*> values;
 
 public:
 
@@ -197,6 +200,13 @@ public:
 	Set* evalSet(ModelContext* context);
 	string printVector(vector<double>&v);
 
+	void calcVarDepLevels(set<int>& levels);
+	void calcSeparability(int level, set<int>& deps);
+	bool containsVarDefInLevel(int level);
+	Node* constructAutoDiffNode(ModelContext* ctx, EMBlock* emb, ExpandedModel2* emcol);
+	Node* constructAutoDiffNode(ModelContext* ctx, EMBlock* emb);
+	bool isContainVariablesInEm2(ModelContext* ctx,ExpandedModel2* emcol);
+
 	void calculateBaseValueVector(unsigned long& size);
 	virtual void calculateMemoryUsage(unsigned long& size);
 	//end Feng
@@ -208,12 +218,13 @@ public:
 	static string print_SyntaxNodesymb(const SyntaxNode *node);
 
 private:
-	void findSyntaxNodeChild(SyntaxNode** node,int op);
+	static SyntaxNode* findSyntaxNodeChild(SyntaxNode* node, int op);
 	bool isDepend(vector<ModelComp*> varComps);
 	void handleSum(ModelContext* rowContext, vector<double>& jcobs, ModelContext* colContext);
 	void foreachSetValue(vector<ModelComp*> comps, vector<string>& dummyVars, Set* aSet, ModelContext* rowContext, vector<double>& jcobs, ModelContext* colContext);
-	void getVarKey(string& varKey, SyntaxNodeIDREF* refn, ModelContext* rowContext);
-
+	static void getIndiciesKey(string& varKey, SyntaxNodeIDREF* refn, ModelContext* rowContext);
+	static bool isContainsInEm2(string& varKey, ExpandedModel2* em);
+	OPCODE opCodeTranslateToAutoDiffOp(int opCode);
 };
 
 
