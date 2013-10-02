@@ -162,28 +162,9 @@ Algebra* createA(ExpandedModel2 *em)
 				 em->getNLocalCons());
 			exit(1);
 		}
-
-#ifdef PSML
-//		if(GlobalVariables::rank==em->getAtRank())
-//		{
-//			LOG("createA --NoChild-- calbackfunction for ["<<em->getName()<<"] - on Rank ["<<GlobalVariables::rank<<"]" );
-//			Alg = NewAlgebraSparse(em->getNLocalCons(), em->getNLocalVars(),
-//				   (em->getName()+":"+em->getName()).c_str(),
-//				   (CallBackFunction)SMLCallBack, obl);
-//		}
-//		else
-//		{
-			LOG("createA --NoChild-- callbackvoid for ["<<em->getName()<<"] - on Rank ["<<GlobalVariables::rank<<"]" );
-			Alg = NewAlgebraSparse(em->getNLocalCons(), em->getNLocalVars(),
-				   (em->getName()+":"+em->getName()).c_str(),
-				   (CallBackFunction)SMLCallBack, obl);
-//		}
-#else
 		Alg = NewAlgebraSparse(em->getNLocalCons(), em->getNLocalVars(),
 									   (em->getName()+":"+em->getName()).c_str(),
 									   (CallBackFunction)SMLCallBack, obl);
-#endif
-
 	}
 	else
 	{
@@ -219,27 +200,9 @@ Algebra* createA(ExpandedModel2 *em)
 		// I suspect we can just copy in the code from the leaf node case above
 
 		OOPSBlock *obl = new OOPSBlock(em, em);
-
-#ifdef PSML
-//		if(em->getAtRank() == GlobalVariables::rank )
-//		{
-//			LOG("createA --Child-- calbackfunction for ["<<em->getName()<<"] - on Rank ["<<GlobalVariables::rank<<"]" );
-//			D[nblk] = NewAlgebraSparse(em->getNLocalCons(), em->getNLocalVars(),
-//						(em->getName() + ":" + em->getName()).c_str(),
-//						(CallBackFunction) SMLCallBack, obl);
-//		}
-//		else
-//		{
-			LOG("createA --Child-- calbackvoid for ["<<em->getName()<<"] - on Rank ["<<GlobalVariables::rank<<"]" );
-			D[nblk] = NewAlgebraSparse(em->getNLocalCons(), em->getNLocalVars(),
-						(em->getName() + ":" + em->getName()).c_str(),
-						(CallBackFunction)SMLCallBack, obl);
-//		}
-#else
 		D[nblk] = NewAlgebraSparse(em->getNLocalCons(), em->getNLocalVars(),
 					(em->getName() + ":" + em->getName()).c_str(),
 					(CallBackFunction) SMLCallBack, obl);
-#endif
 
 		Alg = NewAlgebraDblBordDiag(nblk, B, R, D,
 									(em->getName()+":"+em->getName()).c_str());
@@ -261,27 +224,9 @@ Algebra* createBottom(ExpandedModel2 *diag, ExpandedModel2 *nondiag)
 	{
 		LOG("createBottom leaf node ");
 		OOPSBlock *obl = new OOPSBlock(diag, nondiag);
-
-#ifdef PSML
-//		if(GlobalVariables::rank== nondiag->getAtRank())
-//		{
-//			LOG("createBottom --NoChild-- calbackfunction for ["<<nondiag->getName()<<"] - on Rank ["<<GlobalVariables::rank<<"]" );
-//			Alg = NewAlgebraSparse(diag->getNLocalCons(), nondiag->getNLocalVars(),
-//				   (diag->getName()+":"+nondiag->getName()).c_str(),
-//				   (CallBackFunction)SMLCallBack, obl);
-//		}
-//		else
-//		{
-			LOG("createBottom --NoChild-- callbackvoid for ["<<nondiag->getName()<<"] - on Rank ["<<GlobalVariables::rank<<"]" );
-			Alg = NewAlgebraSparse(diag->getNLocalCons(), nondiag->getNLocalVars(),
-							   (diag->getName()+":"+nondiag->getName()).c_str(),
-							   (CallBackFunction)SMLCallBack, obl);
-//		}
-#else
 		Alg = NewAlgebraSparse(diag->getNLocalCons(), nondiag->getNLocalVars(),
 				   (diag->getName()+":"+nondiag->getName()).c_str(),
 				   (CallBackFunction)SMLCallBack, obl);
-#endif
 	}
 	else
 	{
@@ -301,26 +246,9 @@ Algebra* createBottom(ExpandedModel2 *diag, ExpandedModel2 *nondiag)
 
 		OOPSBlock *obl = new OOPSBlock(diag, nondiag);
 
-#ifdef PSML
-//		if(nondiag->getAtRank() == GlobalVariables::rank)
-//		{
-//			LOG("createBottom --Child-- callbackfunction for ["<<nondiag->getName()<<"] - on Rank ["<<GlobalVariables::rank<<"]" );
-//			B[nblk] = NewAlgebraSparse(diag->getNLocalCons(),nondiag->getNLocalVars(),
-//					   (diag->getName()+":"+nondiag->getName()).c_str(),
-//					   (CallBackFunction)SMLCallBack, obl);
-//		}
-//		else
-//		{
-			LOG("createBottom --Child-- callbackvoid for ["<<nondiag->getName()<<"] - on Rank ["<<GlobalVariables::rank<<"]" );
-			B[nblk] = NewAlgebraSparse(diag->getNLocalCons(),nondiag->getNLocalVars(),
-					   (diag->getName()+":"+nondiag->getName()).c_str(),
-					   (CallBackFunction)SMLCallBack, obl);
-//		}
-#else
 		B[nblk] = NewAlgebraSparse(diag->getNLocalCons(),nondiag->getNLocalVars(),
 				   (diag->getName()+":"+nondiag->getName()).c_str(),
 				   (CallBackFunction)SMLCallBack, obl);
-#endif
 		Alg = NewAlgebraBlockDense(1, nblk+1, B,
 						  (diag->getName()+":"+nondiag->getName()).c_str());
 	}
@@ -339,27 +267,9 @@ Algebra* createRhs(ExpandedModel2 *diag, ExpandedModel2 *nondiag)
 	{
 		LOG("createRhs leaf node ");
 		OOPSBlock *obl = new OOPSBlock(nondiag, diag);
-
-#ifdef PSML
-//		if(GlobalVariables::rank== nondiag->getAtRank())
-//		{
-//			LOG("create calbackfunction for ["<<nondiag->getName()<<"] - on Rank ["<<GlobalVariables::rank<<"]" );
-//			Alg = NewAlgebraSparse(nondiag->getNLocalCons(), diag->getNLocalVars(),
-//				   (nondiag->getName()+":"+diag->getName()).c_str(),
-//				   (CallBackFunction)SMLCallBack, obl);
-//		}
-//		else
-//		{
-			LOG("create callbackvoid for ["<<nondiag->getName()<<"] - on Rank ["<<GlobalVariables::rank<<"]" );
-			Alg = NewAlgebraSparse(nondiag->getNLocalCons(), diag->getNLocalVars(),
-				   (nondiag->getName()+":"+diag->getName()).c_str(),
-				   (CallBackFunction)SMLCallBack, obl);
-//		}
-#else
 		Alg = NewAlgebraSparse(nondiag->getNLocalCons(), diag->getNLocalVars(),
 			   (nondiag->getName()+":"+diag->getName()).c_str(),
 			   (CallBackFunction)SMLCallBack, obl);
-#endif
 
 	}
 	else
@@ -377,27 +287,9 @@ Algebra* createRhs(ExpandedModel2 *diag, ExpandedModel2 *nondiag)
 		// defined in diag
 		OOPSBlock *obl = new OOPSBlock(nondiag, diag);
 
-
-#ifdef PSML
-//		if(GlobalVariables::rank== nondiag->getAtRank())
-//		{
-//			LOG("create callbackfunction for ["<<nondiag->getName()<<"] - on Rank ["<<GlobalVariables::rank<<"]" );
-//			B[nblk] = NewAlgebraSparse(nondiag->getNLocalCons(),diag->getNLocalVars(),
-//						(nondiag->getName()+":"+diag->getName()).c_str(),
-//						(CallBackFunction)SMLCallBack, obl);
-//		}
-//		else
-//		{
-			LOG("create callbackvoid for ["<<nondiag->getName()<<"] - on Rank ["<<GlobalVariables::rank<<"]" );
-			B[nblk] = NewAlgebraSparse(nondiag->getNLocalCons(),diag->getNLocalVars(),
-						(nondiag->getName()+":"+diag->getName()).c_str(),
-						(CallBackFunction)SMLCallBack, obl);
-//		}
-#else
 		B[nblk] = NewAlgebraSparse(nondiag->getNLocalCons(),diag->getNLocalVars(),
 							   (nondiag->getName()+":"+diag->getName()).c_str(),
 								   (CallBackFunction)SMLCallBack, obl);
-#endif
 		Alg = NewAlgebraBlockDense(nblk+1, 1, B,
 						   (nondiag->getName()+":"+diag->getName()).c_str());
 	}
@@ -476,24 +368,10 @@ createQ(ExpandedModel2 *em)
       // I suspect we can just copy in the code from the leaf node case above 
 
 
-#ifdef PSML
-//      if(em2->atRank == GlobalVariables::rank)
-//      {
-//    	  D[nblk] = NewAlgebraSparse(em->getNLocalVars(), em->getNLocalVars(),
-//					("Q"+em->getName()+":"+em->getName()).c_str(),
-//					   (CallBackFunction)SMLCallBackQ, em);
-//      }
-//      else
-//      {
-    	  D[nblk] = NewAlgebraSparse(em->getNLocalVars(), em->getNLocalVars(),
-					("Q"+em->getName()+":"+em->getName()).c_str(),
-					   (CallBackFunction)SMLCallBackQ, em);
-//      }
-#else
       D[nblk] = NewAlgebraSparse(em->getNLocalVars(), em->getNLocalVars(), 
                               ("Q"+em->getName()+":"+em->getName()).c_str(),
                                  (CallBackFunction)SMLCallBackQ, em);
-#endif
+
       Alg = NewAlgebraBlockDiag(nblk+1, D, 
                         ("Q"+em->getName()+":"+em->getName()).c_str()); 
   }
@@ -607,39 +485,7 @@ SMLCallBackQ(CallBackInterfaceType *cbi)
 
 }
 
-/* ---------------------------------------------------------------------------
-CallBackFunction: FillRhsVector
----------------------------------------------------------------------------- */
-void
-FillRhsVector(Vector *vb)
-{
-  Tree *T = vb->node;
-  DenseVector *dense = GetDenseVectorFromVector(vb);
 
-  double *checkub = new double[dense->dim];
-
-  Algebra *A = (Algebra*)T->nodeOfAlg; // the diagonal node that spawned this tree
-  OOPSBlock *obl = (OOPSBlock*)A->id; // and its id structure
-  ExpandedModel2 *emrow = obl->emrow;
-
-  // FIXME: should the id structure include information on the ExpandedModelInterface
-  //        as well? That way we could do some more sanity checks
-
-  emrow->getRowBounds(dense->elts, checkub);
-
-  // check that lower and upper constraint bounds are the same due to the 
-  // OOPS restriction
-  for(int i=0;i<dense->dim; i++){
-    if (fabs(dense->elts[i]-checkub[i])>1e-6){
-      cerr << "At the moment OOPS only supports equality constraints!\n";
-      cerr << "Bounds for c/s " << i << " in " << emrow->getName() << ": " <<
-             dense->elts[i] << " " <<  checkub[i] << endl;
-      exit(1);
-    }
-  }
-      
-  delete [] checkub;
-}
 
 /* ---------------------------------------------------------------------------
 CallBackFunction: FillObjVector
@@ -652,25 +498,10 @@ FillObjVector(Vector *vc)
 
   Algebra *A = (Algebra*)T->nodeOfAlg; // the diagonal node that spawned this tree
   OOPSBlock *obl = (OOPSBlock*)A->id;        // and its id structure
-  //NodeId *id = (NodeId*)A->id;        // and its id structure
 
   assert(obl->nvar==T->end-T->begin);
 
-  //double *test = new double[obl->nvar];
-  //for(int i=0;i<obl->nvar;i++) test[i] = 0.;
-
-  //obl->emrow->nlfile->getObjAMPL(obl->nvar, obl->lvar, test);
-  //for (int i=0;i<obl->nvar;i++) printf("SO:%d %d\n",i,obl->lvar[i]);
   obl->emrow->getObjGradient(dense->elts);
-  
-  //for(int i=0;i<obl->nvar;i++){
-  //  if (test[i]!=dense->elts[i]) {
-  //    printf("OOPS!: %g vs %g\n",test[i], dense->elts[i]);
-  //    exit(1);
-  //  }
-  //}
-
-  //delete [] test;
 }
 
 /* ---------------------------------------------------------------------------
@@ -692,6 +523,40 @@ FillUpBndVector(Vector *vu)
   assert(obl->nvar==T->end-T->begin);
   //nlf->getColUpBoundsAMPL(obl->nvar, obl->lvar, test);
   emrow->getColUpBounds(dense->elts);
+}
+
+/* ---------------------------------------------------------------------------
+CallBackFunction: FillRhsVector
+---------------------------------------------------------------------------- */
+void
+FillRhsVector(Vector *vb)
+{
+  Tree *T = vb->node;
+  DenseVector *dense = GetDenseVectorFromVector(vb);
+
+  double *checkub = new double[dense->dim];
+
+  Algebra *A = (Algebra*)T->nodeOfAlg; // the diagonal node that spawned this tree
+  OOPSBlock *obl = (OOPSBlock*)A->id; // and its id structure
+  ExpandedModel2 *emrow = obl->emrow;
+
+  // FIXME: should the id structure include information on the ExpandedModelInterface
+  //        as well? That way we could do some more sanity checks
+
+  emrow->getRowBounds(dense->elts, checkub);
+
+  // check that lower and upper constraint bounds are the same due to the
+  // OOPS restriction
+  for(int i=0;i<dense->dim; i++){
+    if (fabs(dense->elts[i]-checkub[i])>1e-6){
+      cerr << "At the moment OOPS only supports equality constraints!\n";
+      cerr << "Bounds for c/s " << i << " in " << emrow->getName() << ": " <<
+             dense->elts[i] << " " <<  checkub[i] << endl;
+      exit(1);
+    }
+  }
+
+  delete [] checkub;
 }
 
 /* ---------------------------------------------------------------------------

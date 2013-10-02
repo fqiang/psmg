@@ -200,11 +200,11 @@ public:
 	Set* evalSet(ModelContext* context);
 	string printVector(vector<double>&v);
 
-	void calcVarDepLevels(set<int>& levels);
+	void calcVarDefinedLevels(set<int>& levels);
 	void calcSeparability(int level, set<int>& deps);
 	bool containsVarDefInLevel(int level);
-	Node* constructAutoDiffNode(ModelContext* ctx, EMBlock* emb, ExpandedModel2* emcol);
-	Node* constructAutoDiffNode(ModelContext* ctx, EMBlock* emb);
+	Node* constructAutoDiffNode(ModelContext* ctx, Block* emb, ExpandedModel2* emcol);
+	Node* constructAutoDiffNode(ModelContext* ctx, Block* emb);
 	bool isContainVariablesInEm2(ModelContext* ctx,ExpandedModel2* emcol);
 
 	void calculateBaseValueVector(unsigned long& size);

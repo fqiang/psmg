@@ -21,6 +21,7 @@
 #include "../context/CompDescr.h"
 #include "../context/ModelContext.h"
 #include "../context/EMBlock.h"
+#include "../context/CBlock.h"
 #include <list>
 #include <string>
 #include <vector>
@@ -78,7 +79,7 @@ class ModelComp{
   SyntaxNodeIx *indexing;
 
   /** The model this component belongs to */
-  AmplModel *model; //parent
+  AmplModel *model; //owner of this comp
 
   /** A pointer to an AmplModel structure for components of type MODEL
    *  @attention Better implemented as a subclass of ModelComp. */
@@ -179,8 +180,8 @@ class ModelComp{
 
   //for TCON
   hash_map<int,set<int> > varDeps; //belong to TCON -- map separability of variable declared in level -> set of levels
-  void analyseVarDepLevels();
-  Node* constructAutoDiffCons(ModelContext* ctx, EMBlock* emb,ExpandedModel2* emcol);
+  void analyseVarDepLevelsInCons();
+  Node* constructAutoDiffCons(ModelContext* ctx, Block* emb,ExpandedModel2* emcol);
   //end TCON
 
   string& getHashKey();

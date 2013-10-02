@@ -19,28 +19,25 @@ Var::Var(string name_, int card_, int numInd_, double ub_, double lb_)
 
 Var::~Var() {
 	this->indicies.clear();
-	this->values.clear();
 }
 
-void Var::addVarValue(ostringstream& oss,double val)
+void Var::addVarValue(ostringstream& oss)
 {
 //	assert(this->numIndicies == val->numIndicies);
-	LOG("addVarValue -- Var["<<this->name<<"] val["<<val<<"] oss["<<oss.str()<<"]");
+	LOG("addVarValue -- Var["<<this->name<<"] oss["<<oss.str()<<"]");
 	this->indicies.push_back(oss.str());
-	this->values.push_back(val);
 }
 
-void Var::addVarValue(vector<string>& ind, double val)
+void Var::addVarValue(vector<string>& ind)
 {
-	LOG("addVarValue -- Var["<<this->name<<"]"<<"val:"<<val<<"]");
+	LOG("addVarValue -- Var["<<this->name<<"]");
 	ostringstream oss(ostringstream::out);
 	for(vector<string>::iterator it=ind.begin();it!=ind.end();++it)
 	{
 		oss<<*it;
+		LOG(" ---- "<<oss);
 	}
 	this->indicies.push_back(oss.str());
-	this->values.push_back(val);
-
 }
 
 int Var::getCard()

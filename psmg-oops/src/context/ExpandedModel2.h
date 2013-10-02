@@ -8,56 +8,77 @@
 #ifndef EXPANDEDMODEL2_H_
 #define EXPANDEDMODEL2_H_
 
-#include "ModelContext.h"
-#include "autodiff.h"
 #include <ext/hash_map>
 #include <set>
+#include "ModelContext.h"
+#include "autodiff.h"
+#include "ColSparseMatrix.h"
 
 using namespace std;
 using namespace __gnu_cxx;
 using namespace AutoDiff;
 
 class EMBlock;
+class CBlock;
+class Block;
+
 class ExpandedModel2
 {
 public:
 	static ExpandedModel2 *root;
 
-	vector<ExpandedModel2*> children;
+	AmplModel* model;   //the prototype model
+	ModelContext* ctx;  //data is hold
+
 	ExpandedModel2 *parent;
 
-	AmplModel* model;
-	ModelContext* context;
-	vector<ModelComp*> localVarComps;
-	vector<Var*> localVars; //key is ModelComp*
-	vector<Node*> autodiff_vars;
-	vector<ModelComp*>  localCons;
-	ModelComp* objComp;
-	hash_map<ExpandedModel2*,EMBlock* > emBlocksMap;
-
-	unsigned int numLocalCons;
 	unsigned int numLocalVars;
+	unsigned int numLocalCons;
+	bool localVarFilled;
+	bool jcobReady;
+	bool rhsReady;
+	ModelComp* objComp;
 	string name;
 
-	//solutions
+	vector<ExpandedModel2*> children;
+
+	__gnu_cxx::hash_map<string,ModelComp*> dummySetMap;
+	__gnu_cxx::hash_map<string,string> dummyValueMap;
+
+	//for local variables
+	vector<ModelComp*> localVarComps;  //quick access for variables
+	vector<Var*> localVars;
+
+	//for local constraints and objective
+	vector<ModelComp*>  localConComps;
+
+	//emBlock
+	hash_map<ExpandedModel2*,EMBlock* > emBlocksMap;
+	hash_map<ExpandedModel2*,CBlock* >	cBlockMap;
+
+
+	//primary and dual variables
 	vector<double> pvar, dvar;
 	vector<double> prow, drow;
 
 
 	//holders
+	//col index -> row indices list
 	hash_map<int,vector<int> > rowIndicies;
+	//col index -> values list (non zero)
 	hash_map<int,vector<double> > values;
 	vector<double> rhss;
-	bool jcobReady;
-	bool rhsReady;
 
-	int atRank;
-	bool localVarFilled;
+	vector<Node*> variables;
+	hash_map<string,Node*> varToIndMap; //var name into index in variables vector<Node*>
 
 	//end stat
 
-	ExpandedModel2(AmplModel* model,ExpandedModel2* parent,ModelContext* context);
+	ExpandedModel2(AmplModel* _mod,ModelContext* _context, string dummyVar, ModelComp* comp, string value);
 	virtual ~ExpandedModel2();
+
+	void addChildren(ExpandedModel2* em2);
+	void clearAllContextTreeKeepRoot();
 
 	//! Returns the unique name of this block.
 	string getName() const;
@@ -75,6 +96,7 @@ public:
 	void getJacobianOfIntersection(ExpandedModel2 *emcol, int *colbeg,int *collen, int *rownbs, double *el);
 	//! Returns the objective gradient for the local model w.r.t. local vars
 	void getObjGradient(double *elts);
+	void getObjGradient(ExpandedModel2* emcol, CBlock* cb, double* elts);
 	//! Returns the vector of upper bounds for the local variables in this model
 	void getColUpBounds(double *elts);
 	//! Returns the vector of lower bounds for the local variables in this model
@@ -96,7 +118,6 @@ public:
 	void levelTraversal(vector<ExpandedModel2*>& em2List,int level);
 	void fillLocalVar();
 	ModelContext* recursiveInitContext();
-	bool isParent(ExpandedModel2* em2);
 
 	//not used
 	//! Returns the names of local variables
@@ -106,8 +127,15 @@ public:
 
 
 	void calcReqLevelsVariableforBlock(ExpandedModel2 *emcol_,set<int>& reqLevels);
-	void constructEMBlock(ExpandedModel2 * emcol);
+	EMBlock* constructEMBlock(ExpandedModel2 * emcol);
 	void initRecursive(int level, vector<ExpandedModel2*>& em2s);
+	void initAutoDiffVariables(Block* emb);
+
+	void convertToColSparseMatrix(ColSparseMatrix* sm);
+
+	//for objective function declared in this expanded model
+	CBlock* getCBlock(ExpandedModel2* emcol);
+	CBlock* constructCBlock(ExpandedModel2* emcol);
 
 	void calculateMemoryUsage(unsigned long& size_str,unsigned long& size_data);
 

@@ -12,8 +12,6 @@
 #include "../util/global_util_functions.h"
 #include "../metric/Statistics.h"
 #include "../parser/sml.tab.h"
-#include "EMBlock.h"
-#include "autodiff.h"
 #include <cassert>
 #include <iomanip>
 #include <list>
@@ -25,20 +23,38 @@ using namespace AutoDiff;
 
 ExpandedModel2* ExpandedModel2::root = NULL; //initialize root to NULL
 
-ExpandedModel2::ExpandedModel2(AmplModel* _mod,ExpandedModel2* _parent,ModelContext* _context)
-: model(_mod),context(_context),numLocalVars(0),numLocalCons(0),atRank(0),localVarFilled(0),
-  jcobReady(false),rhsReady(false),objComp(NULL),name(_mod->name)
+ExpandedModel2::ExpandedModel2(AmplModel* mod,ModelContext* context, string dummyVar, ModelComp* comp, string value)
+: model(mod),ctx(context),parent(NULL),numLocalVars(0),numLocalCons(0), localVarFilled(false),
+  jcobReady(false),rhsReady(false),objComp(NULL),name(mod->name)
 {
-	parent = _parent;
-	context->em = this;
-	this->updateName();
+	if(comp!=NULL)
+	{
+		pair<__gnu_cxx::hash_map<string,string>::iterator,bool> ret1;
+		pair<__gnu_cxx::hash_map<string,ModelComp*>::iterator,bool> ret2;
+		ret1 = this->dummyValueMap.insert(pair<string,string>(dummyVar,value));
+		ret2 = this->dummySetMap.insert(pair<string,ModelComp*>(dummyVar,comp));
+		assert(ret1.second && ret2.second);
+	}
+
+	this->name = model->name;
+	__gnu_cxx::hash_map<string,string>::iterator it = this->dummyValueMap.begin();
+	while(it!=this->dummyValueMap.end())
+	{
+		this->name += "_"+it->second;
+		it++;
+	}
+
+	ctx->em2 = this;
+
 	LOG("ExpandedModel2 constructor for name["<<this->name<<"]");
 }
 
 ExpandedModel2::~ExpandedModel2() {
 	LOG("ExpandedModel2 destructor called !!!");
 	LOG("delete context recurisivly!");
-	delete context;
+	delete ctx;
+	dummySetMap.clear();
+	dummyValueMap.clear();
 	for(int i=0;i<this->children.size();i++)
 	{
 		delete children.at(i);
@@ -51,7 +67,7 @@ ExpandedModel2::~ExpandedModel2() {
 		delete *(it);
 	}
 	localVars.clear();
-	localCons.clear();
+	localConComps.clear();
 	pvar.clear();
 	dvar.clear();
 	prow.clear();
@@ -59,18 +75,27 @@ ExpandedModel2::~ExpandedModel2() {
 	rowIndicies.clear();
 	values.clear();
 	rhss.clear();
+
 }
 
-void ExpandedModel2::updateName()
+void ExpandedModel2::addChildren(ExpandedModel2* em2)
 {
-	this->name = model->name;
-	__gnu_cxx::hash_map<string,string>::iterator it = this->context->dummyValueMap.begin();
-	while(it!=this->context->dummyValueMap.end())
+	this->children.push_back(em2);
+	em2->parent = this;
+}
+
+void ExpandedModel2::clearAllContextTreeKeepRoot()
+{
+	if(this!=ExpandedModel2::root)
 	{
-		this->name += "_"+it->second;
-		it++;
+		delete this->ctx;
+		this->ctx = NULL;
 	}
-	LOG("ExpandedModel2 - updateName -  name["<<this->name<<"]");
+
+	for(vector<ExpandedModel2*>::iterator it=this->children.begin();it!=this->children.end();it++)
+	{
+		(*it)->clearAllContextTreeKeepRoot();
+	}
 }
 
 string ExpandedModel2::getName() const
@@ -80,7 +105,7 @@ string ExpandedModel2::getName() const
 
 void ExpandedModel2::addLocalCon(ModelComp* conComp)
 {
-	this->localCons.push_back(conComp);
+	this->localConComps.push_back(conComp);
 	if(conComp->indexing==NULL){
 		this->numLocalCons++;
 	}
@@ -94,7 +119,7 @@ void ExpandedModel2::addLocalCon(ModelComp* conComp)
 		ModelComp* setComp = static_cast<SyntaxNodeIDREF*>(conComp->indexing->values[0]->values[1])->ref;
 		assert(setComp->setDim==1);
 		LOG("dummy ["<<static_cast<IDNode*>(conComp->indexing->values[0]->values[0])->id()<<"]");
-		Set* set =static_cast<Set*>(context->getCompValue(setComp));
+		Set* set =static_cast<Set*>(ctx->getCompValue(setComp));
 		assert(set->dim == setComp->setDim);
 		this->numLocalCons+=set->getCard();
 	}
@@ -138,71 +163,40 @@ void ExpandedModel2::levelTraversal(vector<ExpandedModel2*>& em2List,int level)
 void ExpandedModel2::fillLocalVar()
 {
 	LOG("start fillLocalVar -- expand model["<<this->name<<"]");
-	assert(this->context->isCompsCalculated == true);
-	if(!this->localVarFilled)
+	assert(this->ctx->isCompsCalculated == true);
+	vector<ModelComp*>::iterator it_varComp =this->localVarComps.begin();
+	for(;it_varComp!=this->localVarComps.end();it_varComp++)
 	{
-		vector<ModelComp*>::iterator it_varComp =this->localVarComps.begin();
-		for(;it_varComp!=this->localVarComps.end();it_varComp++)
-		{
-			(*it_varComp)->fillLocalVar(this);
-		}
-
-		for(vector<Var*>::iterator it=this->localVars.begin();it!=this->localVars.end();it++)
-		{
-			vector<string>::iterator it3 = (*it)->indicies.begin();
-			for(;it3!=(*it)->indicies.end();it3++)
-			{
-				Node* v =  create_var_node(numeric_limits<int>::quiet_NaN()); //
-				autodiff_vars.push_back(v);
-			}
-		}
-
-		this->localVarFilled = true;
+		(*it_varComp)->fillLocalVar(this);
 	}
+	this->localVarFilled = true;
 	LOG("end fillLocalVar -- ");
 }
 
 ModelContext* ExpandedModel2::recursiveInitContext()
 {
-	if(this->context!=NULL)
+	ExpandedModel2* parentEm2 = this->parent;
+	ModelContext* parentCtx = parentEm2->ctx;
+
+	if(parentCtx==NULL)
 	{
-		//do nothing! - already root context
-		LOG("ExpandedModel2 - recursiveInitContext  name["<<this->name<<"]");
-		LOG("ExpandedModel2 - recursiveInitContext - contextId["<<this->context->getContextId()<<"]");
+		parentCtx = parentEm2->recursiveInitContext();
 	}
-	else if(this->context == NULL)
-	{
-		ExpandedModel2* parent_em2 = static_cast<ExpandedModel2*>(this->parent);
-		ModelContext* parent_ctx = parent_em2->recursiveInitContext();
-		this->context = new ModelContext(parent_ctx);
-		this->context->em = this;
-		LOG("ExpandedModel2 - recursiveInitContext - just create contextId["<<this->context->getContextId()<<"]");
-	}
-	return this->context;
+	this->ctx = new ModelContext(parentCtx);
+	this->ctx->em2 = this;
+	LOG("recursiveInitContext for ["<<this->name<<"] - contextId["<<this->ctx->getContextId()<<"]");
+
+	return this->ctx;
 }
 
-bool ExpandedModel2::isParent(ExpandedModel2* em2)
+void ExpandedModel2::calcReqLevelsVariableforBlock(ExpandedModel2 *emcol,set<int>& reqLevels)
 {
-	ExpandedModel2* emParent = static_cast<ExpandedModel2*>(em2->parent);
-	if(this==emParent)
-	{
-		return true;
-	}
-	if(em2->parent == NULL)
-	{
-		return false;
-	}
-	return isParent(emParent);
-}
-
-void ExpandedModel2::calcReqLevelsVariableforBlock(ExpandedModel2 *emcol_,set<int>& reqLevels)
-{
-	vector<ModelComp*>::iterator it = this->localCons.begin();
-	for(;it!=this->localCons.end();it++)
+	vector<ModelComp*>::iterator it = this->localConComps.begin();
+	for(;it!=this->localConComps.end();it++)
 	{
 		ModelComp* con = *it;
 		assert(con->type == TCON);
-		hash_map<int,set<int> >::iterator itVarLevels = con->varDeps.find(emcol_->model->level);
+		hash_map<int,set<int> >::iterator itVarLevels = con->varDeps.find(emcol->model->level);
 		if(itVarLevels!=con->varDeps.end())
 		{
 			set<int> levels = itVarLevels->second;
@@ -217,16 +211,16 @@ void ExpandedModel2::calcReqLevelsVariableforBlock(ExpandedModel2 *emcol_,set<in
 		}
 	}
 
-	LOG(this->name<<"["<<this->model->level<<"] X "<<emcol_->name<<"["<<emcol_->model->level<<"]");
+	LOG(this->name<<"["<<this->model->level<<"] X "<<emcol->name<<"["<<emcol->model->level<<"]");
 	for(set<int>::iterator it=reqLevels.begin();it!=reqLevels.end();it++)
 	{
 		LOG("   "<<*it);
 	}
 }
 
-void ExpandedModel2::constructEMBlock(ExpandedModel2 * emcol)
+EMBlock* ExpandedModel2::constructEMBlock(ExpandedModel2 * emcol)
 {
-	LOG("enter constructEMBlock -- ["<<this->context->getContextId()<<"] X ["<<emcol->context->getContextId()<<"]");
+	LOG("enter constructEMBlock -- ["<<this->ctx->getContextId()<<"] X ["<<emcol->ctx->getContextId()<<"]");
 
 	set<int> reqLevels;
 	this->calcReqLevelsVariableforBlock(emcol,reqLevels);
@@ -252,36 +246,19 @@ void ExpandedModel2::constructEMBlock(ExpandedModel2 * emcol)
 		emcol->initRecursive(level,emb->em2s);
 	}
 
-	int index = 0;
 	for(vector<ExpandedModel2*>::iterator it=emb->em2s.begin();it!=emb->em2s.end();it++)
 	{
-		vector<Node*>::iterator it2 = (*it)->autodiff_vars.begin();
-		for(;it2!=(*it)->autodiff_vars.end();it2++)
-		{
-			emb->variables.push_back(*it2);
-		}
-
-		vector<Var*>::iterator it3 = (*it)->localVars.begin();
-		for(;it3!=(*it)->localVars.end();it3++)
-		{
-			vector<string>::iterator it4 = (*it3)->indicies.begin();
-			for(;it4!=(*it3)->indicies.end();it4++)
-			{
-				string key = (*it3)->name+"_"+(*it4);
-				LOG("add key["<<key<<" ---> "<<index);
-				emb->varToIndMap.insert(pair<string, int >(key,index));
-				index++;
-			}
-		}
+		ExpandedModel2* em = *it;
+		em->initAutoDiffVariables(emb);
+		assert(em->varToIndMap.size()==em->variables.size());
 	}
-	assert(emb->varToIndMap.size()==emb->variables.size());
-	LOG("total var in this EMBlock - ["<<emb->variables.size()<<"]");
+	LOG("total var in this EMBlock - ["<<emb->totalVars<<"]");
 	//now build constraints for this EMBlock
-	vector<ModelComp*>::iterator it=this->localCons.begin();
-	for(;it!=this->localCons.end();it++)
+	vector<ModelComp*>::iterator it=this->localConComps.begin();
+	for(;it!=this->localConComps.end();it++)
 	{
 		ModelComp* con = *it;
-		this->context->moveUpLevel=con->moveUpLevel;
+		this->ctx->moveUpLevel=con->moveUpLevel;
 		if(con->indexing!=NULL)
 		{
 			//assume only one-dim index for constraints declaration
@@ -295,48 +272,93 @@ void ExpandedModel2::constructEMBlock(ExpandedModel2 * emcol)
 			IDNode* idn = static_cast<IDNode*>(con->indexing->values[0]->values[0]);
 			ModelComp* setComp = refn->ref;
 			string dummyVar = idn->id();
-			Set* aSet = static_cast<Set*>(this->context->getCompValue(setComp));
+			Set* aSet = static_cast<Set*>(this->ctx->getCompValue(setComp));
 			vector<string>::iterator it1 = aSet->setValues_data_order.begin();
 			LOG("creating constraints node over Set - "<<aSet->toString());
 			for(;it1!=aSet->setValues_data_order.end();it1++)
 			{
 				string dummyVal = (*it1);
 				LOG("constraint dummy["<<dummyVar<<" --> "<<dummyVal<<"]");
-				this->context->addDummySetValueMapCons(dummyVar,setComp,dummyVal);
-				Node* node =con->constructAutoDiffCons(this->context,emb,emcol);
+				this->ctx->addDummySetValueMapCons(dummyVar,setComp,dummyVal);
+				Node* node =con->constructAutoDiffCons(this->ctx,emb,emcol);
 				LOG(" add constraints -- ["<<con->id<<"] -- "<<con->attributes->print());
 				if(node==NULL)
 				{
 					LOG("      NULL ----------------");
 				}
 				emb->constraints.push_back(node);
-				this->context->removeDummySetValueMapCons(dummyVar);
+
+				//constraint name and rhs value
+				if(this->rhsReady == false)
+				{
+					double rhs = con->attributes->evalRhs(this->ctx);
+					rhss.push_back(rhs);
+					string conName = "";
+					conName = this->name+"_"+con->id+"["+dummyVal+"]";
+					this->ctx->localConNames.push_back(conName);
+					LOG("Create constraint name["<<conName<<"]- with RHS=["<<rhs<<"]");
+				}
+				//remove dummy set value
+				this->ctx->removeDummySetValueMapCons(dummyVar);
 			}
 		}
 		else
 		{//no indexing constraint declaration
 			LOG("handling constraints  -- "<<con->id<<" -- "<<con->attributes->print());
-			Node* node = con->constructAutoDiffCons(this->context,emb,emcol);
+			Node* node = con->constructAutoDiffCons(this->ctx,emb,emcol);
 			LOG(" add constraints -- ["<<con->id<<"]");
 			if(node==NULL)
 			{
 				LOG("      NULL ----------------");
 			}
 			emb->constraints.push_back(node);
+
+			//constraint name and rhs value
+			if(this->rhsReady == false)
+			{
+				double rhs = con->attributes->evalRhs(this->ctx);
+				rhss.push_back(rhs);
+				string conName = "";
+				conName = this->name+"_"+con->id;
+				this->ctx->localConNames.push_back(conName);
+				LOG("Create NOINDEXING constraint name["<<conName<<"]- with RHS=["<<rhs<<"]");
+			}
 		}
 	}
+	this->rhsReady = true;
 	LOG("total constraints in this EMBlock - ["<<emb->constraints.size()<<"]");
 
 	this->emBlocksMap.insert(pair<ExpandedModel2*,EMBlock*>(emcol,emb));
-	LOG("exit constructEMBlock --- ["<<this->context->getContextId()<<"] X ["<<emcol->context->getContextId()<<"]  ---  var["<<emb->variables.size()<<"] X cons["<<emb->constraints.size()<<"]");
+	LOG("exit constructEMBlock --- ["<<this->ctx->getContextId()<<"] X ["<<emcol->ctx->getContextId()<<"]  ---  var["<<emb->totalVars<<"] X cons["<<emb->constraints.size()<<"]");
+	return emb;
+}
+
+void ExpandedModel2::initAutoDiffVariables(Block* emb)
+{
+	if(this->variables.size() == 0)
+	{
+		for(vector<Var*>::iterator it=this->localVars.begin();it!=this->localVars.end();it++)
+		{
+			vector<string>::iterator it2 = (*it)->indicies.begin();
+			for(;it2!=(*it)->indicies.end();it2++)
+			{
+				Node* v =  create_var_node(numeric_limits<int>::quiet_NaN());
+				this->variables.push_back(v);
+				string key = (*it)->name+"_"+(*it2);
+				LOG("create auto diff var ["<<key<<"] --->             to ["<<this->name<<"]");
+				this->varToIndMap.insert(pair<string, Node* >(key,v));
+			}
+		}
+	}
+	emb->totalVars += this->variables.size();
+	assert(this->variables.size()==this->numLocalVars);
 }
 
 void ExpandedModel2::initRecursive(int level, vector<ExpandedModel2*>& em2s)
 {
 	if(level > 0)
 	{
-		for(vector<ExpandedModel2*>::iterator it = this->children.begin()
-				;it!=this->children.end();it++)
+		for(vector<ExpandedModel2*>::iterator it = this->children.begin();it!=this->children.end();it++)
 		{
 			(*it)->initRecursive(level-1, em2s);
 		}
@@ -348,8 +370,17 @@ void ExpandedModel2::initRecursive(int level, vector<ExpandedModel2*>& em2s)
 	else
 	{
 		LOG("copy this em["<<this->name<<"] to list");
-		this->model->calculateModelCompRecursive(this->context);
-		this->fillLocalVar();
+		if(this->ctx->isCompsCalculated==false)
+		{
+			this->model->calculateModelCompRecursive(this->ctx);
+		}
+		assert(this->ctx->isCompsCalculated==true);
+
+		if(this->localVarFilled == false)
+		{
+			this->fillLocalVar();
+		}
+		assert(this->localVarFilled == true);
 		em2s.push_back(this);
 	}
 }
@@ -375,179 +406,151 @@ int ExpandedModel2::getNzJacobianOfIntersection(ExpandedModel2 *emcol)
 	LOG("enter getNzJacobianOfIntersection called -- this["<<this->name<<"] emcol["<<emcol->getName()<<"]");
 	assert(jcobReady==false);
 
-	if(this->emBlocksMap.find(emcol)==this->emBlocksMap.end()){
-		this->constructEMBlock(emcol);
+	if(emcol->ctx == NULL)
+	{
+		emcol->recursiveInitContext();
+		assert(emcol->ctx!=NULL);
+	}
+	if(this->ctx == NULL)
+	{
+		this->recursiveInitContext();
+		assert(this->ctx != NULL);
 	}
 
-
-
-	ExpandedModel2* emrow = static_cast<ExpandedModel2*>(this);
-	emrow->context->recursiveMarkContextUsed();
-	emcol->context->recursiveMarkContextUsed();
-	if(!emcol->context->isCompsCalculated)
-	{
-		emcol->model->calculateModelCompRecursive(emcol->context);
-		emcol->context->isCompsCalculated = true;
+	EMBlock* emb = NULL;
+	hash_map<ExpandedModel2*,EMBlock*>::iterator it=this->emBlocksMap.find(emcol);
+	if(it==this->emBlocksMap.end()){
+		emb = this->constructEMBlock(emcol);
 	}
-	if(!this->context->isCompsCalculated)
+	else
 	{
-		this->model->calculateModelCompRecursive(this->context);
-		this->context->isCompsCalculated = true;
+		emb = (*it).second;
 	}
-	emcol->fillLocalVar();
+	assert(emb!=NULL);
+	LOG("EMBlock  num_var["<<emb->totalVars<<"] X num_cons["<<emb->constraints.size()<<"]");
 
+	assert(emcol->ctx->isCompsCalculated == true);
+	assert(this->ctx->isCompsCalculated == true);
 
-	int rval = 0;
-	int row = 0;
-	vector<ModelComp*>::iterator it3 = this->localCons.begin();
-	for(;it3!=this->localCons.end();it3++)
+	//1. ordering variables and assigning id
+	emb->settingVariablesId();
+	//2. reverse gradient method
+	LOG("Gradient evaulation .... for .. this["<<this->name<<"] X emcol["<<emcol->getName()<<"]");
+	int nz = 0;
+	int row_index = 0;
+	vector<Node*>::iterator con_it = emb->constraints.begin();
+	for(;con_it!=emb->constraints.end();con_it++)
 	{
-		ModelComp* conComp = (*it3);
-		LOG("handling constraint ["<<conComp->id<<"]");
 
-		this->context->moveUpLevel=conComp->moveUpLevel;
-		if(conComp->indexing)
+		Node* con = (*con_it);
+		LOG("con"<<row_index <<"----------------");
+		if(con != NULL)
 		{
-			ModelComp* setComp = conComp->indexing->sets_mc[0];
-			assert(conComp->indexing->getDummyVarExpr(0)->opCode==258); //ID=258
-			string dummyVar = static_cast<IDNode*>(conComp->indexing->getDummyVarExpr(0))->id();
-			Set* aSet = static_cast<Set*>(this->context->getCompValue(setComp));
-			vector<string>::iterator it4 = aSet->setValues_data_order.begin();
-			LOG("constraints over Set - "<<aSet->toString());
-			for(;it4!=aSet->setValues_data_order.end();it4++)
+			int level = 0;
+			con->inorder_visit(level);
+			//reset adjoint for each variables
+			emb->resetAdj();
+			grad_reverse(con);
+			emb->outputVariables();
+
+			vector<Node*>::iterator var = emcol->variables.begin();
+			int i = 0;
+			for(;var!=emcol->variables.end();var++,i++)
 			{
-				string dummyVal = (*it4);
-				LOG("constraint dummy["<<dummyVar<<" --> "<<dummyVal<<"]");
-				this->context->addDummySetValueMapCons(dummyVar,setComp,dummyVal);
-
-				//vector operation version start
-				vector<double> jcobs(emcol->numLocalVars,0.0); //vector operation
-				conComp->attributes->evalDiff(this->context,emcol->context,jcobs);
-				vector<Var*>::iterator it_var = emcol->localVars.begin();
-				vector<string>::iterator it_varList = (*it_var)->indicies.begin();
-
-				vector<double>::iterator it_jcobs = jcobs.begin();
-				assert(jcobs.size()==emcol->numLocalVars);
-				for(int col=0;it_jcobs!=jcobs.end();it_jcobs++,col++)
+				VNode* v = static_cast<VNode*>(*var);
+				if(!isnan(v->adj) && v->adj!=0)
 				{
-					if((*it_jcobs)!=0)
-					{
-						rowIndicies[col].push_back(row);
-						values[col].push_back(*it_jcobs);
-						LOG("filling nonz -- ["<<col<<","<<row<<"]="<<*it_jcobs);
-						rval++;
-					}
-					if(emcol->context->varNameReady == false)
-					{
-						string& varKey = (*it_varList);
-						string varName = emcol->name+"_"+(*it_var)->name+"["+varKey+"]";
-						emcol->context->localVarNames.push_back(varName);
-
-						//increment.
-						it_varList++;
-						if(it_varList==(*it_var)->indicies.end())
-						{
-							it_var++;
-							it_varList=it_var==emcol->localVars.end()?it_varList:(*it_var)->indicies.begin();
-						}
-					}
+					this->rowIndicies[i].push_back(row_index);
+					this->values[i].push_back(v->adj);
+					LOG("col["<<i<<"] row["<<row_index<<"] grad["<<v->adj<<"]");
+					nz++;
 				}
-				assert(((emcol->context->varNameReady==false && (it_var==emcol->localVars.end()))
-					||(emcol->context->varNameReady==true && (it_var==emcol->localVars.begin()))));
-				emcol->context->varNameReady = true;
-				//vector operation version end
-
-				//for each constraints
-				//1. evaluate the right hand side
-				//2. calculate a constraint name
-				if(rhsReady == false)
-				{
-					double rhs = conComp->attributes->evalRhs(this->context);
-					LOG("indexing contraints rhss = ["<<rhs<<"]");
-					rhss.push_back(rhs);
-				}
-				if(this->context->conNameReady == false)
-				{
-					string conName = "";
-					conName = this->name+"_"+conComp->id+"["+dummyVal+"]";
-					this->context->localConNames.push_back(conName);
-				}
-
-				this->context->removeDummySetValueMapCons(dummyVar);
-				row++;
 			}
 		}
 		else
 		{
-			//start vector version of autodiff
-			vector<double> jcobs(emcol->numLocalVars,0.0); //vector operation
-			assert(jcobs.size()==emcol->numLocalVars);
-			conComp->attributes->evalDiff(this->context,emcol->context,jcobs);
-			vector<Var*>::iterator it_var = emcol->localVars.begin();
-			vector<string>::iterator it_varList = (*it_var)->indicies.begin();
-			vector<double>::iterator it_jcobs = jcobs.begin();
-			assert(jcobs.size()==emcol->numLocalVars);
-			for(int i=0;it_jcobs!=jcobs.end();it_jcobs++,i++)
-			{
-				if((*it_jcobs)!=0)
-				{
-					rowIndicies[i].push_back(row);
-					values[i].push_back(*it_jcobs);
-					LOG("filling nonz - ["<<i<<","<<row<<"]="<<*it_jcobs);
-					rval++;
-				}
-				if(emcol->context->varNameReady == false)
-				{
-					//string varKey = it_vmap->second->getVarKey();
-					string& varKey = (*it_varList);
-					string varName = emcol->name+"_"+(*it_var)->name+"["+varKey+"]";
-					emcol->context->localVarNames.push_back(varName);
-
-					//increment.
-					it_varList++;
-					if(it_varList==(*it_var)->indicies.end())
-					{
-						it_var++;
-						it_varList=it_var==emcol->localVars.end()?it_varList:(*it_var)->indicies.begin();
-					}
-				}
-			}
-			assert(((emcol->context->varNameReady==false && (it_var==emcol->localVars.end()))
-					||(emcol->context->varNameReady==true && (it_var==emcol->localVars.begin()))));
-			emcol->context->varNameReady = true;
-			//end vector version of autodiff
-
-			//for each constraints
-			//1. evaluate the right hand side
-			//2. calculate a constraint name
-			if(rhsReady == false)
-			{
-				double rhs = conComp->attributes->evalRhs(this->context);
-				LOG("no indexing constraint - rhss = ["<<rhs<<"]");
-				rhss.push_back(rhs);
-			}
-			if(this->context->conNameReady == false)
-			{
-				string conName = "";
-				conName = this->name+"_"+conComp->id;
-				this->context->localConNames.push_back(conName);
-			}
-			row++;
+			LOG("con"<<row_index <<" is NULL -------");
 		}
+		row_index++;
 	}
-	assert(row == this->numLocalCons);
+	assert(row_index==this->numLocalCons);
 
-	LOG("end getNzJacobianOfIntersection -- this["<<this->name<<"] emcol["<<emcol->getName()<<"]  - rval["<<rval<<"]");
-	jcobReady = true;
-	rhsReady = true;
-	this->context->conNameReady = true;
-
-
+	this->jcobReady = true;
+	LOG("end getNzJacobianOfIntersection -- this["<<this->name<<"] emcol["<<emcol->getName()<<"]  - Num of Nonzero["<<nz<<"]");
 	Statistics::numGetNzJacCall++;
 
-	return rval;
+	return nz;
 }
 
+void ExpandedModel2::convertToColSparseMatrix(ColSparseMatrix* sm)
+{
+	assert(jcobReady == true);
+	assert(values.size()==rowIndicies.size());
+	hash_map<int,vector<double> >::iterator colVal_it = values.begin();
+	hash_map<int,vector<int> >::iterator colRowIndex_it = rowIndicies.begin();
+
+	int currCol = 0;
+	int preCol = -1;
+	int valueIndex = 0;
+	for(;colVal_it!=values.end();colVal_it++,colRowIndex_it++)
+	{
+		currCol =  (*colVal_it).first;
+		vector<double> col_values = (*colVal_it).second;
+		vector<int> row_indicies = (*colRowIndex_it).second;
+		assert(col_values.size()==row_indicies.size());
+
+		if(preCol == -1)
+		{
+			for(int i=0;i<=currCol;i++)
+			{
+				sm->colstarts[i] = valueIndex;
+				LOG("col_starts["<<i<<"] = "<<valueIndex);
+			}
+		}
+		else
+		{
+			for(int i=preCol+1;i<=currCol;i++)
+			{
+				sm->colstarts[i] = valueIndex;
+				LOG("col_starts["<<i<<"] = "<<valueIndex);
+			}
+		}
+
+		vector<double>::iterator col_val_it = col_values.begin();
+		vector<int>::iterator row_indicies_it = row_indicies.begin();
+		for(;col_val_it!=col_values.end();col_val_it++,row_indicies_it++)
+		{
+			sm->values[valueIndex] = *col_val_it;
+			sm->rownos[valueIndex] = *row_indicies_it;
+			LOG(valueIndex<<"col["<<currCol<<"] row["<<sm->rownos[valueIndex]<<"] = "<<sm->values[valueIndex]);
+
+			valueIndex++;
+		}
+
+		if(sm->collen != NULL)
+		{
+			for(int i=preCol+1;i<=currCol;i++)
+			{
+				if(i==currCol)
+				{
+					sm->collen[i] = col_values.size();
+				}
+				else
+				{
+					sm->collen[i] =0;
+				}
+				LOG("                           collen["<<i<<"] --- "<<sm->collen[i]);
+			}
+		}
+		preCol = currCol;
+	}
+
+	LOG("------ "<< valueIndex<< "-----------");
+
+	rowIndicies.clear();
+	values.clear();
+	jcobReady = false;
+}
 
 /* ----------------------------------------------------------------------------
 ExpandedModel::getJacobianOfIntersection
@@ -585,96 +588,15 @@ void ExpandedModel2::getJacobianOfIntersection(ExpandedModel2 *emcol_, int *colb
 	ExpandedModel2 *emcol = static_cast< ExpandedModel2* > (emcol_);
 	LOG("block demension - row: "<<this->numLocalCons<<"  col: "<<emcol->numLocalVars);
 
-	int nextCol = 0;
-	int currCol = 0;
-	int totalValue = 0;
 
-	hash_map<int,vector<double> >::iterator colVal_it = values.begin();
-	hash_map<int,vector<int> >::iterator colRowIndex_it = rowIndicies.begin();
-	assert(values.size()==rowIndicies.size());
+	ColSparseMatrix sm;
+	sm.collen = collen;
+	sm.rownos = rownbs;
+	sm.values = el;
+	sm.colstarts = colbeg;
 
-	LOG("values size : "<<values.size());
-	LOG("rowIndicies size : "<<rowIndicies.size());
-	for(;colVal_it!=values.end();colVal_it++,colRowIndex_it++)
-	{
+	convertToColSparseMatrix(&sm);
 
-		nextCol = colVal_it->first;
-		for(int i=currCol;i<nextCol;i++)
-		{
-			collen[i] = 0;
-			colbeg[i] = totalValue;
-			LOG("I collen["<<i<<"]=0");
-			LOG("I colbeg["<<i<<"]="<<totalValue);
-		}
-		collen[nextCol] = colVal_it->second.size();
-		colbeg[nextCol] = totalValue;
-		LOG("R collen["<<nextCol<<"]="<<colVal_it->second.size());
-		LOG("R colbeg["<<nextCol<<"]="<<totalValue);
-		vector<double> colValues = colVal_it->second;
-		vector<int> rowIndx = colRowIndex_it->second;
-		vector<double>::iterator it3 = colValues.begin();
-		vector<int>::iterator it4 = rowIndx.begin();
-		for (; it3 != colValues.end(); it3++, it4++)
-		{
-			el[totalValue] = *it3;
-			rownbs[totalValue] = *it4;
-			LOG("el["<<totalValue<<"]="<<*it3);
-			LOG("rownbs["<<totalValue<<"]="<<*it4);
-			totalValue++;
-		}
-		assert( it3==colValues.end() );
-		assert( it4==rowIndx.end() );
-		currCol = nextCol+1;
-	}
-
-	for(nextCol=currCol;nextCol<emcol->numLocalVars;nextCol++)
-	{
-		collen[nextCol] = 0;
-		colbeg[nextCol] = totalValue;
-		LOG("P collen["<<nextCol<<"]=0");
-		LOG("P colbeg["<<nextCol<<"]="<<totalValue);
-	}
-	assert(nextCol==emcol->numLocalVars);
-	colbeg[nextCol] = totalValue;
-	LOG("E colbeg["<<nextCol<<"]="<<totalValue);
-
-	LOG("currCol: "<<nextCol);
-	LOG("totalValue: "<<totalValue);
-
-	assert(totalValue == colbeg[emcol->numLocalVars-1] + collen[emcol->numLocalVars-1]);
-
-	rowIndicies.clear();
-	values.clear();
-	jcobReady = false;
-
-
-	//checking up code begin
-//	ostringstream oss;
-//	for(int n=0;n<emcol->numLocalVars;n++)
-//	{
-//		oss<<collen[n]<<",";
-//	}
-//	LOG("checking... collen["<<oss.str());
-//	oss.str("");
-//	for(int n=0;n<=emcol->numLocalVars;n++)
-//	{
-//		oss << colbeg[n] << ",";
-//	}
-//	LOG("checking... colbeg["<<oss.str());
-//	oss.str("");
-//	for(int nz=0;nz<totalValue;nz++)
-//	{
-//		oss <<rownbs[nz] <<",";
-//	}
-//	LOG("checking... rownbs["<<oss.str());
-//	oss.str("");
-//	for(int nz=0;nz<totalValue;nz++)
-//	{
-//		oss <<el[nz] <<",";
-//	}
-//	LOG("checking... el["<<oss.str());
-//	oss.str("");
-	//checking up code done
 	Statistics::numGetJacCall++;
 	LOG("end getJacobianOfIntersection");
 }
@@ -698,7 +620,7 @@ void ExpandedModel2::getObjGradient(double *elts)
 		LOG("objComp is defined: name["<<this->objComp->id<<"] type["<<objComp->type<<"]");
 
 		vector<double> jcobs(this->numLocalVars,0.0);
-		this->objComp->attributes->evalDiff(context,context,jcobs);
+		this->objComp->attributes->evalDiff(ctx,ctx,jcobs);
 		assert(jcobs.size()==this->numLocalVars);
 		vector<double>::iterator it_jcobs = jcobs.begin();
 		for(int i=0;it_jcobs!=jcobs.end();i++,it_jcobs++)
@@ -706,31 +628,106 @@ void ExpandedModel2::getObjGradient(double *elts)
 			elts[i] = sign*(*it_jcobs);
 			LOG("elts["<<i<<"]="<<elts[i]);
 		}
-
-//		int i = 0;
-//		vector<Var*>::iterator it = this->localVars.begin();
-//		vector<ModelComp*>::iterator it_1 = this->localVarComps.begin();
-//		while(it!=this->localVars.end())
-//		{
-//			Var* aVar = *it;
-//			hash_map<string,VarValue*>::iterator it2=aVar->varMap.begin();
-//			while(it2!=aVar->varMap.end())
-//			{
-//				string varKey= it2->second->getVarKey();
-//				ModelComp* varComp = *it_1;
-//				elts[i] = sign*this->objComp->attributes->evalDiff(context,context,varComp,varKey);
-//				LOG("elts["<<i<<"]="<<elts[i]);
-//				i++;
-//				it2++;
-//			}
-//			it++;
-//			it_1++;
-//		}
-//		assert(i==this->numLocalVars);
 	}
 	LOG("end getObjGradient - ");
 }
 
+CBlock* ExpandedModel2::getCBlock(ExpandedModel2* emcol)
+{
+	CBlock* cb = NULL;
+	hash_map<ExpandedModel2*, CBlock*>::iterator it = this->cBlockMap.find(emcol);
+	if(it==this->cBlockMap.end())
+	{//construct cBlock object
+		cb = constructCBlock(emcol);
+	}
+	else
+	{
+		cb = (*it).second;
+	}
+	return cb;
+}
+
+CBlock* ExpandedModel2::constructCBlock(ExpandedModel2* emcol)
+{
+	LOG("enter constructCBlock -- ["<<this->ctx->getContextId()<<"] X ["<<emcol->ctx->getContextId()<<"]");
+
+	if(this->objComp == NULL)
+	{//case 1: the objective is not defined in this expanded model
+		return NULL;
+	}
+
+	assert(this->objComp != NULL);
+	hash_map<int,set<int> >::iterator itVarLevels = this->objComp->varDeps.find(emcol->model->level);
+	if(itVarLevels == this->objComp->varDeps.end())
+	{//case 2: no variables declared in emcol are used in objective
+		return NULL;
+	}
+
+	set<int> levels = (*itVarLevels).second;
+	assert(levels.size() != 0); //if emcol is in the objective the dependent level at least be emcol itself.
+
+	CBlock* cb = new CBlock();
+	int colLevel = emcol->model->level;
+	for(set<int>::iterator it=levels.begin();it!=levels.end();it++)
+	{
+		int currLevel = *it;
+		int level = currLevel - colLevel;
+		LOG("get relative level["<<level<<"] to list");
+		emcol->initRecursive(level,cb->em2s);
+	}
+	for(vector<ExpandedModel2*>::iterator it=cb->em2s.begin();it!=cb->em2s.end();it++)
+	{
+		ExpandedModel2* em = *it;
+		em->initAutoDiffVariables(cb);
+		assert(em->varToIndMap.size()==em->variables.size());
+	}
+	LOG("total var in this CBlock - ["<<cb->totalVars<<"]");
+
+	LOG("handling objective  -- "<<this->objComp->id<<" -- "<<this->objComp->attributes->print());
+	Node* node = this->objComp->constructAutoDiffCons(this->ctx,cb,emcol);
+
+	if(node==NULL)
+	{
+		LOG("      NULL ----------------");
+		assert(false); //for objective either the emcol doesn't
+	}
+	cb->objective = node;
+
+	LOG("exit constructCBlock --variable in CBlock ["<<cb->totalVars<<"] ["<<this->ctx->getContextId()<<"] X ["<<emcol->ctx->getContextId()<<"]");
+	return cb;
+}
+
+void ExpandedModel2::getObjGradient(ExpandedModel2* emcol, CBlock* cb, double* elts)
+{
+	LOG("enter getObjGradient - this["<<this->name<<"] x emcol["<<emcol->name<<"] variables in CBlock["<<cb->totalVars<<"]");
+
+	if(cb==NULL)
+	{
+		for(int i=0;i<emcol->numLocalVars;i++) elts[i] = 0;
+	}
+	else
+	{
+		assert(this->objComp != NULL);
+		cb->settingVariablesId();
+		cb->resetAdj();
+		int level = 0;
+		cb->objective->inorder_visit(level);
+		grad_reverse(cb->objective);
+		cb->outputVariables();
+
+		vector<Node*>::iterator var = emcol->variables.begin();
+		for(int i=0;var!=emcol->variables.end();var++,i++)
+		{
+			VNode* v = static_cast<VNode*>(*var);
+			if(!isnan(v->adj) && v->adj!=0)
+			{
+				LOG("var_id["<<v->id<<"] var_value["<<v->val<<"] grad["<<v->adj<<"]");
+				elts[i] = 0;
+			}
+			assert(i<emcol->variables.size());
+		}
+	}
+}
 /* -------------------------------------------------------------------------
 ExpandedModel::getColUpBounds
 -------------------------------------------------------------------------- */
@@ -796,7 +793,7 @@ ExpandedModel::getRowBounds
  */
 void ExpandedModel2::getRowBounds(double *lower, double *upper)
 {
-	LOG("["<<this->getName()<<"]");
+	LOG("getRowBounds -- ["<<this->getName()<<"]");
 	assert(rhsReady == true);
 	assert(rhss.size() == this->numLocalCons);
 	vector<double>::iterator it = this->rhss.begin();
@@ -874,8 +871,8 @@ ExpandedModel::outputSolution
 void ExpandedModel2::outputSolution(ostream &out,int indent)
 {
 	LOG("outputSolution --- ["<<this->getName()<<"] numOfChildren["<<this->children.size()<<"]");
-	assert(this->context->localConNames.size() == this->numLocalCons);
-	assert(this->context->localVarNames.size() == this->numLocalVars);
+	assert(this->ctx->localConNames.size() == this->numLocalCons);
+	assert(this->ctx->localVarNames.size() == this->numLocalVars);
 
 	string ind(indent, ' ');
 	vector<double>::iterator it_pvar=pvar.begin();
@@ -883,10 +880,10 @@ void ExpandedModel2::outputSolution(ostream &out,int indent)
 	vector<double>::iterator it_prow=prow.begin();
 	vector<double>::iterator it_drow=drow.begin();
 
-	list<string>::iterator it_varName =this->context->localVarNames.begin();
-	list<string>::iterator it_conName =this->context->localConNames.begin();
+	list<string>::iterator it_varName =this->ctx->localVarNames.begin();
+	list<string>::iterator it_conName =this->ctx->localConNames.begin();
 
-	while(it_varName!=this->context->localVarNames.end())
+	while(it_varName!=this->ctx->localVarNames.end())
 	{
 		out<<ind<<left<<setw(20)<<*it_varName<<" Value= "<<setw(15)<<*it_pvar;
 		out<<" Reduced cost= "<<*it_dvar;
@@ -897,7 +894,7 @@ void ExpandedModel2::outputSolution(ostream &out,int indent)
 		it_varName++;
 	}
 
-	while(it_conName!=this->context->localConNames.end())
+	while(it_conName!=this->ctx->localConNames.end())
 	{
 		out<<ind<<left<<setw(20)<<*it_conName<<" Slack= "<<setw(15)<<*it_prow;
 		out<<" Dual= "<<*it_drow;
@@ -916,22 +913,21 @@ void ExpandedModel2::outputSolution(ostream &out,int indent)
 
 const list<string>& ExpandedModel2::getLocalVarNames() const
 {
-	return this->context->localVarNames;
+	return this->ctx->localVarNames;
 }
 
 const list<string>& ExpandedModel2::getLocalConNames()const
 {
-	return this->context->localConNames;
+	return this->ctx->localConNames;
 }
 
 void ExpandedModel2::calculateMemoryUsage(unsigned long& size_str,unsigned long& size_data)
 {
 	LOG_MEM("ExpandedModel2::calculateMemoryUsage  -- name["<<name<<"]");
 	unsigned long pre = size_data;
-	if(context!=NULL && context->isUsed==true)
+	if(ctx!=NULL)
 	{
-		context->calculateMemoryUsage(size_data);
-		context->isUsed = false;
+		ctx->calculateMemoryUsage(size_data);
 		//cout<<"  "<<context->getContextId()<<endl;
 		LOG_MEM(" --- context memory usage ["<<size_data-pre<<"]");
 		for(vector<Var*>::iterator it=localVars.begin();it!=localVars.end();it++)
@@ -940,7 +936,19 @@ void ExpandedModel2::calculateMemoryUsage(unsigned long& size_str,unsigned long&
 			(*it)->calculateMemoryUsage(size_data);
 		}
 		size_data += sizeof(ModelComp*)*localVarComps.size();
-		size_data += sizeof(ModelComp*)*localCons.size();
+		size_data += sizeof(ModelComp*)*localConComps.size();
+	}
+
+	for(hash_map<string,ModelComp*>::iterator it=dummySetMap.begin();it!=dummySetMap.end();it++)
+	{
+		size_str += sizeof(pair<string,ModelComp*>);
+		size_str += (*it).first.size() + 1;
+	}
+	for(hash_map<string,string>::iterator it=dummyValueMap.begin();it!=dummyValueMap.end();it++)
+	{
+		size_str += sizeof(pair<string,string>);
+		size_str += (*it).first.size() + 1;
+		size_str += (*it).second.size()+ 1;
 	}
 
 	size_str += sizeof(ExpandedModel2);

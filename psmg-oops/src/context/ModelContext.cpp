@@ -20,60 +20,48 @@ using namespace std;
 
 static string CONTEXT_ID_NOT_INIT="NOT_INITIALIZED";
 
-ModelContext::ModelContext(ModelContext* _parent): parent(_parent),
-		//modelDummyValKey(""),isModelDummyValKeyCalculated(false),
-		moveUpLevel(0),isCompsCalculated(false),em(NULL),
-		varNameReady(false),conNameReady(false),isUsed(true)
+ModelContext::ModelContext(ModelContext* par):
+		parent(par),em2(NULL),moveUpLevel(0),isCompsCalculated(false),
+		varNameReady(false),conNameReady(false)
 {
-	LOG("ModelContext - constr - parent_ctx["<<parent<<"]");
+	LOG("ModelContext - constructor - ");
 	//assert(_parent!=NULL);
 }
 
-ModelContext::~ModelContext() {
+ModelContext::~ModelContext()
+{
+	LOG("Delete ModelContext["<<em2->name<<"]");
 	for(__gnu_cxx::hash_map<string,CompDescr*>::iterator it=compValueMap.begin();it!=compValueMap.end();it++)
 	{
 		delete it->second;
 	}
-
+	compValueMap.clear();
 	dummySetMapCons.clear();
 	dummyValueMapCons.clear();
 	dummySetMapTemp.clear();
 	dummyValueMapTemp.clear();
 	cacheModelDummyVarKey.clear();
+
+	for(__gnu_cxx::hash_map<string,IndexSet*>::iterator it=tempISetMap.begin();it!=tempISetMap.end();it++)
+	{
+		delete it->second;
+	}
 	tempISetMap.clear();
-//	tempSetModelCompMap.clear();
-//	for(__gnu_cxx::hash_map<string,Set*>::iterator it=tempSetSetMap.begin();it!=tempSetSetMap.end();it++)
-//	{
-//		delete it->second;
-//	} -- segfault because 1. copy set 2. complete set from compDescr.  -- Feng
-//	tempSetDummyVarMap.clear();
-//	tempSetSetMap.clear();
+
 	localConNames.clear();
 	localVarNames.clear();
-	dummySetMap.clear();
-	dummyValueMap.clear();
+
 }
 
-void ModelContext::recursiveMarkContextUsed()
-{
-	if(!isUsed){
-		this->isUsed = true;
-		if(parent!=NULL)
-		{
-			parent->recursiveMarkContextUsed();
-		}
-	}
-}
-
-void ModelContext::addDummySetValueMap(string& dummyVar,ModelComp* comp,string value)
-{
-	LOG("add model dummy ["<<dummyVar<<"] value["<<value<<"]");
-	pair<__gnu_cxx::hash_map<string,string>::iterator,bool> ret1;
-	pair<__gnu_cxx::hash_map<string,ModelComp*>::iterator,bool> ret2;
-	ret1 = this->dummyValueMap.insert(pair<string,string>(dummyVar,value));
-	ret2 = this->dummySetMap.insert(pair<string,ModelComp*>(dummyVar,comp));
-	assert(ret1.second && ret2.second);
-}
+//void ModelContext::addDummySetValueMap(string& dummyVar,ModelComp* comp,string value)
+//{
+//	LOG("add model dummy ["<<dummyVar<<"] value["<<value<<"]");
+//	pair<__gnu_cxx::hash_map<string,string>::iterator,bool> ret1;
+//	pair<__gnu_cxx::hash_map<string,ModelComp*>::iterator,bool> ret2;
+//	ret1 = this->dummyValueMap.insert(pair<string,string>(dummyVar,value));
+//	ret2 = this->dummySetMap.insert(pair<string,ModelComp*>(dummyVar,comp));
+//	assert(ret1.second && ret2.second);
+//}
 
 void ModelContext::addDummySetValueMapCons(string& dummyVar,ModelComp* comp,string value)
 {
@@ -113,11 +101,10 @@ string ModelContext::getModelDummyValAsKey(int& num)
 	string rval="";
 	__gnu_cxx::hash_map<int,string>::iterator it = this->cacheModelDummyVarKey.find(numKey);
 	rval = it==this->cacheModelDummyVarKey.end()?"":it->second;
-	ExpandedModel2* em2=static_cast<ExpandedModel2*>(this->em);
 	if(it==this->cacheModelDummyVarKey.end())
 	{
-		__gnu_cxx::hash_map<string,string>::iterator it2 = this->dummyValueMap.begin();
-		for(;it2!=this->dummyValueMap.end()&&num>0;it2++)
+		__gnu_cxx::hash_map<string,string>::iterator it2 = this->em2->dummyValueMap.begin();
+		for(;it2!=this->em2->dummyValueMap.end()&&num>0;it2++)
 		{
 			rval += it2->second;
 			--num;
@@ -176,9 +163,8 @@ string ModelContext::getDummyValueTemp(string& dummyVar)
 
 string& ModelContext::getDummyValue(string& dummyVar)
 {
-	ExpandedModel2* em2=static_cast<ExpandedModel2*>(this->em);
-	__gnu_cxx::hash_map<string,string>::iterator it1 = this->dummyValueMap.find(dummyVar);
-	string rval = it1==this->dummyValueMap.end()? "":it1->second;
+	__gnu_cxx::hash_map<string,string>::iterator it1 = this->em2->dummyValueMap.find(dummyVar);
+	string rval = it1==this->em2->dummyValueMap.end()? "":it1->second;
 
 	if(rval.empty())
 	{
@@ -204,9 +190,8 @@ string& ModelContext::getDummyValue(string& dummyVar)
 }
 ModelComp* ModelContext::getDummySet(string& dummyVar)
 {
-	ExpandedModel2* em2=static_cast<ExpandedModel2*>(this->em);
-	__gnu_cxx::hash_map<string,ModelComp*>::iterator it1 = this->dummySetMap.find(dummyVar);
-	ModelComp* rval = it1==this->dummySetMap.end()? NULL:it1->second;
+	__gnu_cxx::hash_map<string,ModelComp*>::iterator it1 = this->em2->dummySetMap.find(dummyVar);
+	ModelComp* rval = it1==this->em2->dummySetMap.end()? NULL:it1->second;
 
 	if(rval==NULL){
 		__gnu_cxx::hash_map<string,ModelComp*>::iterator it2 = this->dummySetMapCons.find(dummyVar);
@@ -222,18 +207,17 @@ ModelComp* ModelContext::getDummySet(string& dummyVar)
 
 string ModelContext::getContextId()
 {
-	return this->em==NULL? CONTEXT_ID_NOT_INIT:static_cast<ExpandedModel2*>(em)->name;
+	return this->em2==NULL? CONTEXT_ID_NOT_INIT:em2->name;
 }
 
 void ModelContext::fillDummyValue(vector<string>& index)
 {
-	ExpandedModel2* em2=static_cast<ExpandedModel2*>(this->em);
 	if(this->parent!=NULL)
 	{
 		this->parent->fillDummyValue(index);
 	}
 	__gnu_cxx::hash_map<string,string>::iterator it;
-	for(it=this->dummyValueMap.begin();it!=this->dummyValueMap.end();it++)
+	for(it=this->em2->dummyValueMap.begin();it!=this->em2->dummyValueMap.end();it++)
 	{
 		index.push_back(it->second);
 	}
@@ -242,13 +226,12 @@ void ModelContext::fillDummyValue(vector<string>& index)
 
 void ModelContext::fillDummyValue(ostringstream& oss)
 {
-	ExpandedModel2* em2=static_cast<ExpandedModel2*>(this->em);
 	if(this->parent!=NULL)
 	{
 		this->parent->fillDummyValue(oss);
 	}
 	__gnu_cxx::hash_map<string,string>::iterator it;
-	for(it=this->dummyValueMap.begin();it!=this->dummyValueMap.end();it++)
+	for(it=this->em2->dummyValueMap.begin();it!=this->em2->dummyValueMap.end();it++)
 	{
 		oss<<it->second;
 	}
@@ -285,33 +268,6 @@ void ModelContext::removeCurrLevelCompValueMap(ModelComp* comp)
 	this->compValueMap.erase(it);
 }
 
-//bool ModelContext::getCalcTempSet(string& hashKey,vector<ModelComp*>& comps,Set** aSet,vector<string>& dummyVars)
-//{
-//	bool rval = false;
-//	LOG("look for hashKey["<<hashKey<<"] ");
-//	__gnu_cxx::hash_map<string,vector<ModelComp*> >::iterator it_mcs = this->tempSetModelCompMap.find(hashKey);
-//	__gnu_cxx::hash_map<string,Set* >::iterator it_set = this->tempSetSetMap.find(hashKey);
-//	__gnu_cxx::hash_map<string,vector<string> >::iterator it_vars = this->tempSetDummyVarMap.find(hashKey);
-//	assert(it_set==this->tempSetSetMap.end()||(it_set->second->dim == it_mcs->second.size() && it_set->second->dim == it_vars->second.size()));
-//	if(it_mcs!=this->tempSetModelCompMap.end())
-//	{
-//		assert(it_vars!=this->tempSetDummyVarMap.end());
-//		comps = it_mcs->second;
-//		*aSet = it_set->second;
-//		dummyVars = it_vars->second;
-//		LOG("found TempSet for hashKey["<<hashKey<<"]");
-//
-//		vector<string>::iterator it_dummyVars = dummyVars.begin();
-//		for(vector<ModelComp*>::iterator it_comps=comps.begin();it_comps!=comps.end();it_comps++,it_dummyVars++)
-//		{
-//			LOG("comp["<<(*it_comps)->id<<"] dummy["<<(*it_dummyVars)<<"]"<<(*aSet)->toString());
-//		}
-//		rval = true;
-//	}
-//
-//	return rval;
-//}
-
 bool ModelContext::getCalcSumSet(string& hashKey,IndexSet** iset)
 {
 	bool rval = false;
@@ -335,41 +291,9 @@ void ModelContext::addCalcSumSet(string& hashKey,IndexSet* iset)
 	this->tempISetMap[hashKey] = iset;
 }
 
-//void ModelContext::addCalcTempSet(string& hashKey,vector<ModelComp*>& comps,Set* aSet,vector<string>& dummyVars)
-//{
-//	LOG_SYS_MEM("BeforeaddCalcTempSet");
-//	LOG("add for hashKey["<<hashKey<<"] over set{");
-//
-//	vector<string>::iterator it_dummyVars = dummyVars.begin();
-//	for(vector<ModelComp*>::iterator it_comps=comps.begin();it_comps!=comps.end();it_comps++,it_dummyVars++)
-//	{
-//		LOG("comp["<<(*it_comps)->id<<"] dummy["<<(*it_dummyVars)<<"]"<<(aSet)->toString());
-//	}
-//
-//	__gnu_cxx::hash_map<string,vector<ModelComp*> >::iterator it_mcs = this->tempSetModelCompMap.find(hashKey);
-//	assert(it_mcs==this->tempSetModelCompMap.end()); //must not already exist
-//
-//	this->tempSetModelCompMap[hashKey] = comps;
-//	this->tempSetSetMap[hashKey] = aSet;
-//	this->tempSetDummyVarMap[hashKey] = dummyVars;
-//	LOG_SYS_MEM("AfteraddCalcTempSet");
-//}
-
 void ModelContext::calculateMemoryUsage(unsigned long& size)
 {
 	size += sizeof(ModelContext);
-
-	for(hash_map<string,ModelComp*>::iterator it=dummySetMap.begin();it!=dummySetMap.end();it++)
-	{
-		size += sizeof(pair<string,ModelComp*>);
-		size += (*it).first.size() + 1;
-	}
-	for(hash_map<string,string>::iterator it=dummyValueMap.begin();it!=dummyValueMap.end();it++)
-	{
-		size += sizeof(pair<string,string>);
-		size += (*it).first.size() + 1;
-		size += (*it).second.size()+ 1;
-	}
 
 	for(hash_map<string,CompDescr*>::iterator it=compValueMap.begin();it!=compValueMap.end();it++)
 	{
@@ -404,29 +328,6 @@ void ModelContext::calculateMemoryUsage(unsigned long& size)
 		size += sizeof(pair<int,string>);
 		size += (*it).second.size() + 1;
 	}
-//	for(hash_map<string,vector<ModelComp*> >::iterator it=tempSetModelCompMap.begin();it!=tempSetModelCompMap.end();it++)
-//	{
-//		size += sizeof(pair<string,vector<ModelComp*> >);
-//		size += (*it).first.size() + 1;
-//		size += (*it).second.size()*sizeof(ModelComp*);
-//	}
-//	for(hash_map<string,Set*>::iterator it=tempSetSetMap.begin();it!=tempSetSetMap.end();it++)
-//	{
-//		size += sizeof(pair<string,Set*>);
-//		size += (*it).first.size()+1;
-//		(*it).second->calculateMemoryUsage(size);
-//	}
-//	for(hash_map<string,vector<string> >::iterator it=tempSetDummyVarMap.begin();it!=tempSetDummyVarMap.end();it++)
-//	{
-//		size += sizeof(pair<string,vector<string> >);
-//		size += (*it).first.size() + 1;
-//		for(vector<string>::iterator it2 = (*it).second.begin();it2!=(*it).second.end();it2++)
-//		{
-//			size += sizeof(string);
-//			size += (*it2).size() + 1;
-//		}
-//
-//	}
 
 	for(hash_map<string,IndexSet*>::iterator it = tempISetMap.begin();it!=tempISetMap.end();it++)
 	{

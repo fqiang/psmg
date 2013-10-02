@@ -406,7 +406,7 @@ void ModelComp::reassignDependencies() {
 
 		//check that this ModelComp belongs to this model
 		bool found = false;
-		for(list<ModelComp*>::iterator q = am->comps.begin();q != am->comps.end();q++) {
+		for(vector<ModelComp*>::iterator q = am->all_comps.begin();q != am->all_comps.end();q++) {
 			if ((*q)->id == mc->id) {
 				found = true;
 				if ((*q) != mc) {
@@ -567,7 +567,7 @@ void ModelComp::calculateLocalVar(ModelContext* context) {
 void ModelComp::fillLocalVarRecurive(ModelContext* context,Var* aVar,vector<ModelComp*>::iterator it, ostringstream& oss){
 	if(it==this->indexing->sets_mc.end())
 	{
-		aVar->addVarValue(oss,D_NaN);
+		aVar->addVarValue(oss);
 	}
 	else
 	{
@@ -586,7 +586,7 @@ void ModelComp::fillLocalVarRecurive(ModelContext* context,Var* aVar,vector<Mode
 void ModelComp::fillLocalVar(ExpandedModel2* em2)
 {
 	assert(this->type==TVAR);
-	ModelContext* context = em2->context;
+	ModelContext* context = em2->ctx;
 	int card = 1;
 	int numIndices = 0;
 	vector<string> ind;
@@ -630,7 +630,7 @@ void ModelComp::fillLocalVar(ExpandedModel2* em2)
 		LOG("this["<<this->id<<"] has no indexing over");
 		ostringstream oss(ostringstream::out);
 		context->fillDummyValue(oss);
-		aVar->addVarValue(oss,D_NaN);
+		aVar->addVarValue(oss);
 	}
 	else if (this->indexing->sets_mc.size() > 0) {
 		LOG("Indexing -- ["<<this->indexing->print()<<"]");
@@ -648,12 +648,12 @@ void ModelComp::fillLocalVar(ExpandedModel2* em2)
 	LOG( "fillLocalVar -- in model["<<this->model->name<<"] modelcomp["<<this->id<<"] aVar["<<aVar->name<<"] card["<<aVar->card<<"] numIndicies["<<aVar->numIndicies<<"]");
 }
 
-void ModelComp::analyseVarDepLevels()
+void ModelComp::analyseVarDepLevelsInCons()
 {
 	assert(this->type == TCON || this->type == TMAX || this->type==TMIN);
 	LOG("ModelComp::analyseConstraint -- attr["<<this->attributes->print()<<"] declared level["<<this->model->level<<"]");
 	set<int> levels;
-	this->attributes->calcVarDepLevels(levels);
+	this->attributes->calcVarDefinedLevels(levels);
 
 
 	for(set<int>::iterator it=levels.begin();it!=levels.end();it++)
@@ -672,7 +672,7 @@ void ModelComp::analyseVarDepLevels()
 	}
 }
 
-Node* ModelComp::constructAutoDiffCons(ModelContext* ctx, EMBlock* emb,ExpandedModel2* emcol)
+Node* ModelComp::constructAutoDiffCons(ModelContext* ctx, Block* emb,ExpandedModel2* emcol)
 {
 	assert(this->type == TCON);
 	LOG("constructAutoDiffCons - modelcomp["<<this->id<<"] ctx["<<ctx->getContextId()<<"]");

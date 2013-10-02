@@ -14,7 +14,8 @@ IndexSet::IndexSet(string name_) : name(name_) {
 }
 
 IndexSet::~IndexSet() {
-	// TODO Auto-generated destructor stub
+	dummyVarNames.clear();
+	setIndicies.clear();
 }
 
 void IndexSet::addSet(Set* aSet)

@@ -31,9 +31,10 @@ public:
 	static std::string smlVersion();
 	static void print_copy_right(ostream &out);
 
-	void process_model_file();
-	void generate_em2();
-	void analyse_constraints();
+	void processModelfile();
+	void generateExpandedModel();
+	void resetContextTree();
+	void analyseConstraints();
 
 
 	vector<string> scriptNameList;

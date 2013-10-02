@@ -26,11 +26,9 @@ class ModelContext {
 
 public:
 	ModelContext* parent;
-	bool isUsed;
-
-	//! use for block index, at this time only work for one dummy varaible for block
-	__gnu_cxx::hash_map<string,ModelComp*> dummySetMap;
-	__gnu_cxx::hash_map<string,string> dummyValueMap;
+	ExpandedModel2* em2;
+	int moveUpLevel;
+	bool isCompsCalculated;
 
 	//! data storage for this expanded model tree node. key is ModelComp*
 	__gnu_cxx::hash_map<string,CompDescr*> compValueMap;
@@ -46,23 +44,15 @@ public:
 
 	__gnu_cxx::hash_map<string,IndexSet*> tempISetMap;
 
-//	string modelDummyValKey;
-//	bool isModelDummyValKeyCalculated;
-	ExpandedModel2* em;
-	int moveUpLevel;
-	bool isCompsCalculated;
 
 	list<string> localConNames;
 	list<string> localVarNames;
 	bool conNameReady;
 	bool varNameReady;
 
-	ModelContext(ModelContext* _parent);
-	//ModelContext(bool isStochMode); this is not need for now - as hack in getModelDummyValAsKey(int&) method
-	//bool isStochasticMode;
+	ModelContext(ModelContext* par);
 	virtual ~ModelContext();
 
-	void recursiveMarkContextUsed();
 	void addDummySetValueMapCons(string& dummyVar,ModelComp* comp,string val);
 	void addDummySetValueMapTemp(string& dummyVar,ModelComp* comp,string val);
 	void removeDummySetValueMapCons(string& dummyVar);
