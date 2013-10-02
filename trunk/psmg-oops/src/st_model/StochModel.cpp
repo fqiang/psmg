@@ -34,7 +34,7 @@
 
 using namespace std;
 
-vector<string> StochModel::stagenames;
+vector<string> StochModel::STAGE_LIST;
 
 static void splitIn(SyntaxNode *expr, IDNode **dummy, SyntaxNode **set)
 {
@@ -107,7 +107,19 @@ void StochModel::expandStages_NO_AMPL()
 	assert(ref.size()==1);
 	ModelComp* stageComp = ref.front();
 
-	AmplModel::root->updateCurrLevelModelComp();
+	for(vector<ModelComp*>::iterator i=set_comps.begin();i!=set_comps.end();i++)
+	{
+		assert((*i)->type==TSET);
+		(*i)->setSetDim();
+		LOG("updateModelComp for set - id["<<(*i)->id<<"] dim["<<(*i)->setDim<<"] -- "<<*i);
+	}
+	for(vector<ModelComp*>::iterator i=param_comps.begin();i!=param_comps.end();i++)
+	{
+		assert((*i)->type==TPARAM);
+		(*i)->setParamIndicies();
+		LOG("updateModelComp for param - id["<<(*i)->id<<"] numParamIndicies["<<(*i)->getNumParamIndicies()<<"] -- "<<*i);
+	}
+
 	ModelContext* rootCtx = new ModelContext(NULL);
 	parse_data(rootCtx);
 	AmplModel::root->calculateCurrLevelModelComp(rootCtx);
@@ -118,10 +130,11 @@ void StochModel::expandStages_NO_AMPL()
 	for(;it!=aSet->setValues_data_order.end();it++)
 	{
 		assert(aSet->dim==1);
-		StochModel::stagenames.push_back((*it));
+		StochModel::STAGE_LIST.push_back((*it));
 		LOG("add stagename -  ["<<*it<<"]");
 	}
 	delete rootCtx;
+	rootCtx = NULL;
 	LOG("end expandStages_NO_AMPL --- ");
 }
 
@@ -150,8 +163,8 @@ void StochModel::expandStagesOfComp_NO_AMPL()
 	parse_data(rootCtx);
 	AmplModel::root->calculateCurrLevelModelComp(rootCtx);
 	////////////////////////////////////////////////load data
-	list<ModelComp*>::iterator p;
-	for (p = comps.begin(); p != comps.end(); ++p)
+	vector<ModelComp*>::iterator p;
+	for (p = all_comps.begin(); p != all_comps.end(); ++p)
 	{
 		ModelComp *smc = *p;
 		LOG("smc["<<smc->id<<"]");
@@ -221,25 +234,26 @@ AmplModel* StochModel::expandToFlatModel()
 	 defined, or whose stageset includes the current stage */
 
 	// loop over all stages and create an AmplModel for every stage
-	stgcnt = StochModel::stagenames.size() - 1;
-	for (vector<string>::reverse_iterator st = StochModel::stagenames.rbegin();st != StochModel::stagenames.rend(); st++, stgcnt--)
+	stgcnt = StochModel::STAGE_LIST.size() - 1;
+	for (vector<string>::reverse_iterator st = StochModel::STAGE_LIST.rbegin();st != StochModel::STAGE_LIST.rend(); st++, stgcnt--)
 	{ // loops backwards through list
 		// set name and global name for this ampl model
-		string amname = (stgcnt == 0) ? name + *st : *st;
+		string stageName = *st;
+		string modelName = (stgcnt == 0) ? name + stageName : stageName;
 
-		am = new AmplModel(amname,NULL);
-		LOG("Creating amplModel for stage-count["<<stgcnt<<"]: stageName["<<*st<<"]  amname["<<amname<<"] level["<<am->level<<"] -- level is wrong !!");
+		am = new AmplModel(modelName,NULL);
+		LOG("Creating amplModel for stage-count["<<stgcnt<<"]: stageName["<<stageName<<"]  amname["<<modelName<<"] level["<<am->level<<"] -- level is wrong !!");
 
 		// loop over all components of the StochModel
-		for (list<ModelComp*>::iterator p = comps.begin(); p != comps.end();p++)
+		for (vector<ModelComp*>::iterator p = all_comps.begin(); p != all_comps.end();p++)
 		{
-			ModelComp *smc = *p;
+			ModelComp *comp = *p;
 
 			/** @bug Submodel components within sblock's is not supported yet
 			 This is not implemented when creating a nested AmplModel tree
 			 out of the StochModel.
 			 */
-			if (smc->type == TMODEL)
+			if (comp->type == TMODEL)
 			{
 				cerr<< "Not quite sure what to do for submodels within Stochastic Blocks" << endl;
 				exit(1);
@@ -247,13 +261,12 @@ AmplModel* StochModel::expandToFlatModel()
 
 			// check if this component should be included in the current stage
 			bool inc=true;
-			if (smc->getStageSetNode())
+			if (comp->getStageSetNode())
 			{
 				inc = false;
-				const vector<string>& smcstagenames = smc->getStageNames();
-				for (vector<string>::const_iterator q = smcstagenames.begin();q != smcstagenames.end(); ++q)
+				for (vector<string>::const_iterator q = comp->getStageNames().begin();q != comp->getStageNames().end(); ++q)
 				{
-					if (*st == *q)
+					if (stageName.compare(*q)==0)
 					{
 						inc = true;
 						break;
@@ -277,8 +290,8 @@ AmplModel* StochModel::expandToFlatModel()
 
 				// need to clone so that pointers to ->model, ->next are setup
 				// correctly
-				LOG("modelComp["<<smc->id<<"] is in amplModel["<<am->name<<"]");
-				ModelComp* comp = smc->clone();
+				LOG("modelComp["<<comp->id<<"] is in amplModel["<<am->name<<"]");
+				ModelComp* comp = comp->clone();
 				//comp = smc->transcribeToModelComp(am);
 
 				am->addComp(comp);
@@ -288,7 +301,7 @@ AmplModel* StochModel::expandToFlatModel()
 			}
 			else
 			{
-				LOG("modelComp["<<smc->id<<"] is not in amplModel["<<am->name<<"]");
+				LOG("modelComp["<<comp->id<<"] is not in amplModel["<<am->name<<"]");
 			}
 
 		} // end loop over model components
@@ -506,11 +519,11 @@ void StochModel::transcribeComponents(AmplModel *current, int lev)
 	LOG("start  transcribeComponents -- in current["<<current->name<<"]"<<" lev["<<lev<<"]");
 	if (is_symbolic_stages)
 	{
-		StageNodeNode::stage = "\"" + StochModel::stagenames.at(lev) + "\"";
+		StageNodeNode::stage = "\"" + StochModel::STAGE_LIST.at(lev) + "\"";
 	}
 	else
 	{
-		StageNodeNode::stage = StochModel::stagenames.at(lev);
+		StageNodeNode::stage = StochModel::STAGE_LIST.at(lev);
 	}
 
 	if (lev == 0)
@@ -525,9 +538,9 @@ void StochModel::transcribeComponents(AmplModel *current, int lev)
 	}
 	LOG("stage["<<StageNodeNode::stage<<"] node["<<StageNodeNode::node<<"]");
 
-	list<ModelComp*> newcomps;
+	vector<ModelComp*> newcomps;
 	// loop through all the entities in this model
-	for (list<ModelComp*>::iterator p = current->comps.begin();p != current->comps.end(); p++)
+	for (vector<ModelComp*>::iterator p = current->all_comps.begin();p != current->all_comps.end(); p++)
 	{
 		ModelComp *mc = *p;
 		if (mc->type == TMODEL)
@@ -560,7 +573,7 @@ void StochModel::transcribeComponents(AmplModel *current, int lev)
 			}
 		}
 	}
-	current->comps = newcomps;
+	current->all_comps = newcomps;
 	LOG("end _transcribeComponents -- lev["<<lev<<"] current["<<current->name<<"]");
 }
 

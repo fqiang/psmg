@@ -20,7 +20,7 @@
 
 #include "ModelComp.h"
 #include "changeitem.h"
-#include <list>
+#include <vector>
 #include <string>
 
 class ExpandedModel;
@@ -52,6 +52,17 @@ extern void parse_data(ModelContext* rootContext);
 class AmplModel{
  public:
 
+
+  /** The root model of the AmplModel tree */
+  static AmplModel *root;
+  /** The parent if this is a submodel of another model */
+  AmplModel *parent;
+
+
+  /** The ModelComp node corresponding to this model (defined if this is not
+   *  root) */
+  ModelComp *node;
+
   /** Name of the block defining this (sub)model */
   string name;
 
@@ -64,23 +75,25 @@ class AmplModel{
   int n_total;     //!< total number of declarations
   int level;       //!< level of this model on the flat model tree (root=0)
 
-  /** The ModelComp node corresponding to this model (defined if this is not
-   *  root) */
-  ModelComp *node; 
+
 
   /** The list of components of this model */
-  std::list<ModelComp*> comps;
+  vector<ModelComp*> all_comps;
+  vector<ModelComp*> set_comps;
+  vector<ModelComp*> param_comps;
+  vector<ModelComp*> var_comps;
+  vector<ModelComp*> con_comps;
+  vector<ModelComp*> subm_comps;
+  ModelComp* obj_comp;
 
-  /** The parent if this is a submodel of another model */
-  AmplModel *parent;
+
 
   /** List of changes that should be applied to the models */
   static std::list<changeitem> changes;
 
-  /** The root model of the AmplModel tree */
-  static AmplModel *root;
 
   // -------------------------- methods ----------------------------------
+  void deleteModelCompVector(vector<ModelComp*> comps);
   /** Constructor */
   AmplModel(const std::string& orig_name, AmplModel *par);
   
@@ -130,16 +143,10 @@ class AmplModel{
 
   //find the ModelComp to fill the CompDescr.
   ModelComp* findModelComp(string id,compType type);
-  void updateCurrLevelModelComp();
   void calculateCurrLevelModelComp(ModelContext* context);
   void calculateModelCompRecursive(ModelContext* context);
-  void calculateCurrLevelSetModelComp(ModelContext* context);
-  void clearSetModelComp(ModelContext* context);
-  void calculateCurrLevelParamModelComp(ModelContext* context);
-  ExpandedModel2* createExpandedModel2(ModelContext* context,ExpandedModel2* parent);
+  ExpandedModel2* createExpandedModel2(string dummyVar,ModelComp* comp,string value,ModelContext* parent);
   void reassignModelIndexDependencies();
-  bool isCompsUpdated;
-  //bool isStochastic;  -- this is not needed as hack in getModelDummyValAsKey(int&) method
   void settingUpLevels(int);
 
   void analyseConstraints();

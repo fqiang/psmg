@@ -31,8 +31,8 @@ public:
 	Var(string name_,int card_, int numInd_, double ub_, double lb_);
 	virtual ~Var();
 
-	void addVarValue(ostringstream& oss,double val);
-	void addVarValue(vector<string>& ind,double val);
+	void addVarValue(ostringstream& oss);
+	void addVarValue(vector<string>& ind);
 	int getCard();
 	string toString();
 	void calculateMemoryUsage(unsigned long& size);

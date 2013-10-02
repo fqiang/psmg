@@ -96,7 +96,7 @@ int Sml::sml_gen_pre_checks()
    	return 0;
 }
 
-void Sml::process_model_file()
+void Sml::processModelfile()
 {
 	int errcode = Sml::sml_gen_pre_checks();
 	assert(errcode ==0);
@@ -104,15 +104,22 @@ void Sml::process_model_file()
 	assert(errcode ==0);
 }
 
-void Sml::generate_em2()
+void Sml::generateExpandedModel()
 {
 	LOG("============== ExpandedModel2 Generation =============================");
 	//step 1: create expandedmodel recursively
-	AmplModel::root->createExpandedModel2(NULL,NULL);
+	ExpandedModel2::root = AmplModel::root->createExpandedModel2("",NULL,"",NULL);
 	LOG("============== END ExpandedModel2 Generation =============================");
 }
 
-void Sml::analyse_constraints()
+void Sml::resetContextTree()
+{
+	LOG("============== resetContextTree =============================");
+	ExpandedModel2::root->clearAllContextTreeKeepRoot();
+	LOG("============== END resetContextTree =============================");
+}
+
+void Sml::analyseConstraints()
 {
 	LOG("============== analyse_constraints =============================");
 	AmplModel::root->analyseConstraints();

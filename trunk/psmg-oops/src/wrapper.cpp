@@ -165,7 +165,7 @@ int main(int argc, char **argv)
 	assert (GlobalVariables::degreeParallel >= 1);
 	Sml::print_copy_right(cout);
 	TIMER_START("SML_PARSE_MODEL");
-	Sml::instance()->process_model_file();
+	Sml::instance()->processModelfile();
 	TIMER_STOP("SML_PARSE_MODEL");
 
 	if(GlobalVariables::logParseModel) {
@@ -179,11 +179,13 @@ int main(int argc, char **argv)
 #endif
 
 	TIMER_START("ANALYSIS_CONSTRAINTS");
-	Sml::instance()->analyse_constraints();
+	Sml::instance()->analyseConstraints();
 	TIMER_STOP("ANALYSIS_CONSTRAINTS");
 
 	TIMER_START("SML_EM2_GENERATION");
-	Sml::instance()->generate_em2();
+	Sml::instance()->generateExpandedModel();
+	Sml::instance()->resetContextTree();
+	assert(ExpandedModel2::root->ctx != NULL);
 	TIMER_STOP("SML_EM2_GENERATION");
 
 #ifdef MEM

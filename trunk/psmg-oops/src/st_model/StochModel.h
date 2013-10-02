@@ -77,7 +77,7 @@ class StochModel: public AmplModel{
 
  public:
 
-  static vector <string> stagenames; //only for stochastic sml model file used only!
+  static vector <string> STAGE_LIST; //only for stochastic sml model file used only!
   // -------------------------- methods ----------------------------------
   //! Constructor 
   StochModel(SyntaxNode *onStages, SyntaxNode *onNodes, SyntaxNode *onAncs, 

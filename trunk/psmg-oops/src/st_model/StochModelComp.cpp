@@ -44,9 +44,10 @@ StochModelComp::StochModelComp(const string& id_): ModelComp(id_) {
 StochModelComp::StochModelComp(const string& id_, compType type_,
                                SyntaxNode *indexing_, SyntaxNode *attrib,
                                StochModel *stoch):
-  ModelComp(id_, type_, indexing_, attrib),
-  stochmodel(stoch) {
-
+  ModelComp(id_, type_, indexing_, attrib),stochmodel(stoch)
+{
+	LOG("create StochModelComp - "<<id<<" type["<<type_<<"] index["<<indexing_->print()<<"] attrib["
+			<<attrib->print()<<" stochmodel"<<stoch);
 }
 
 /** Multiply the current expression by the conditional probability terms.
@@ -202,7 +203,7 @@ StochModelComp::transcribeToModelComp(AmplModel *current_model,
 
 			// search for this entity in the current model
 			bool fnd = false;
-			for (list<ModelComp*>::iterator q = model->comps.begin();q != model->comps.end(); q++)
+			for (vector<ModelComp*>::iterator q = model->all_comps.begin();q != model->all_comps.end(); q++)
 			{
 				ModelComp *amc = *q;
 				// all we can do is judge by name
