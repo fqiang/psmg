@@ -12,11 +12,6 @@ ValueNode::ValueNode(double new_value) : SyntaxNode(-99), value(new_value)
 	LOG("ValueNode constructor --- opCode [-99] value["<<new_value<<"]");
 }
 
-ValueNode::ValueNode(long new_value) : SyntaxNode(-99), value((double)new_value)
-{
-	LOG("ValueNode constructor --- opCode [-99] value["<<new_value<<"]");
-}
-
 ValueNode::~ValueNode()
 {
 

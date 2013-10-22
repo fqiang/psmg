@@ -151,9 +151,6 @@ class ModelComp{
                                            const int level) { throw; }
 
   //Feng
-
-
-
   //for TSET
   int setDim; //belong to set
   int setCard; //belong to set

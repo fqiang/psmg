@@ -651,7 +651,7 @@ void ModelComp::fillLocalVar(ExpandedModel2* em2)
 void ModelComp::analyseVarDepLevelsInCons()
 {
 	assert(this->type == TCON || this->type == TMAX || this->type==TMIN);
-	LOG("ModelComp::analyseConstraint -- attr["<<this->attributes->print()<<"] declared level["<<this->model->level<<"]");
+	LOG("ModelComp::analyseConstraint --id["<<id<< "] attr["<<this->attributes->print()<<"] declared level["<<this->model->level<<"] ["<<this<<"]");
 	set<int> levels;
 	this->attributes->calcVarDefinedLevels(levels);
 
