@@ -30,7 +30,14 @@ ModelContext::ModelContext(ModelContext* par):
 
 ModelContext::~ModelContext()
 {
-	LOG("Delete ModelContext["<<em2->name<<"]");
+	if(!em2){
+		LOG("Delete ModelContext[NULL]");
+	}
+	else
+	{
+		LOG("Delete ModelContext["<<em2->name<<"]");
+	}
+
 	for(__gnu_cxx::hash_map<string,CompDescr*>::iterator it=compValueMap.begin();it!=compValueMap.end();it++)
 	{
 		delete it->second;

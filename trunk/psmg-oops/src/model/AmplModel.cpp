@@ -58,6 +58,7 @@ AmplModel::AmplModel(const string& _name, AmplModel *par) :
   n_submodels(0),
   n_total(0),
   level(0),
+  obj_comp(NULL),
   node(NULL),
   parent(par)
 {
@@ -103,7 +104,7 @@ void AmplModel::settingUpLevels(int lev)
 	this->level = lev;
 	vector<ModelComp*>::const_iterator it=this->subm_comps.begin();
 
-	for(;it!=this->all_comps.end();it++)
+	for(;it!=this->subm_comps.end();it++)
 	{
 		LOG("submodel comp["<<(*it)->id<<"]");
 		assert((*it)->type==TMODEL);
@@ -317,101 +318,148 @@ AmplModel::dump(ostream& fout) const {
   }
 }
 
+bool AmplModel::isCompInThisModel(ModelComp* comp)
+{
+	bool found = false;
+	for(vector<ModelComp*>::iterator p = all_comps.begin();p!=all_comps.end();p++)
+	{
+		if ((*p)->id.compare(comp->id)==0)
+		{
+			all_comps.erase(p); // this invalidates the iterator => break from loop
+			found = true;
+			break;
+		}
+	}
+	return found;
+}
+
 /* --------------------------------------------------------------------------
 AmplModel::removeComp()
 ---------------------------------------------------------------------------- */
-void
-AmplModel::removeComp(const ModelComp *comp) {
-  // FIXME: check of comp is indeed on the list
-  
-  bool found = false;
-  for(vector<ModelComp*>::iterator p = all_comps.begin();p!=all_comps.end();p++)
-  {
-    if ((*p)->id == comp->id)
-    {
-    	all_comps.erase(p); // this invalidates the iterator => break from loop
-    	found = true;
-    	break;
-    }
-  }
-  if (!found){
-    cerr << "ERROR: Attempting to remove component " << comp->id
+void AmplModel::removeComp(ModelComp *comp)
+{
+	LOG("enter removeComp - name["<<this->name<<"] comp["<<comp->id<<"]");
+	if (!this->isCompInThisModel(comp))
+	{
+		cerr << "ERROR: Attempting to remove component " << comp->id
          << " from model " << name << ":\nComponent is not in model.\n";
-    exit(1);
-  }
-  n_total--;
-  switch(comp->type){
-    case TVAR: 
-      n_vars--;
-      break;
-    case TCON: 
-      n_cons--;
-      break;
-    case TPARAM: 
-      n_params--;
-      break;
-    case TSET: 
-      n_sets--;
-      break;
-    case TMIN: 
-    case TMAX: 
-      n_objs--;
-      break;
-    case TMODEL: 
-      n_submodels--;
-      break;
-    default:
-      cerr << "removeComp: type " << comp->type << "unrecognised\n";
-      exit(1);
-  }
+		exit(1);
+	}
+	AmplModel::removeComp(all_comps,comp);
+	n_total--;
+
+	switch(comp->type){
+	case TVAR:
+		AmplModel::removeComp(var_comps,comp);
+		n_vars--;
+		break;
+	case TCON:
+		AmplModel::removeComp(con_comps,comp);
+		n_cons--;
+		break;
+	case TPARAM:
+		AmplModel::removeComp(param_comps,comp);
+		n_params--;
+	  	break;
+	case TSET:
+		AmplModel::removeComp(set_comps,comp);
+		n_sets--;
+		break;
+	case TMIN:
+	case TMAX:
+		obj_comp = NULL;
+		n_objs--;
+		break;
+	case TMODEL:
+		AmplModel::removeComp(subm_comps,comp);
+		n_submodels--;
+		break;
+	default:
+	  cerr << "removeComp: type " << comp->type << "unrecognised\n";
+	  exit(1);
+	}
 }
+
+void AmplModel::removeComp(vector<ModelComp*> comps, ModelComp* comp)
+{
+	for(vector<ModelComp*>::iterator it=comps.begin();it!=comps.end();it++)
+	{
+		if((*it)->id.compare(comp->id))
+		{
+			comps.erase(it);
+			break;
+		}
+	}
+}
+
 /* --------------------------------------------------------------------------
 AmplModel::removeComp()
 ---------------------------------------------------------------------------- */
 void
 AmplModel::addComp(ModelComp *comp)
 {
-	LOG("-- In addComp  -- this model:["<<this->name<<"] level["<<level<<"] add type[" << comp->type<<"]");
-  switch(comp->type)
-  {
-    case TVAR:
-      n_vars++;
-      var_comps.push_back(comp);
-      break;
-    case TCON:
-      n_cons++;
-      con_comps.push_back(comp);
-      break;
-    case TSET:
-      n_sets++;
-      set_comps.push_back(comp);
-      break;
-    case TPARAM:
-      n_params++;
-      param_comps.push_back(comp);
-      break;
-    case TMIN:
-    case TMAX:
-      obj_comp = comp;
-      n_objs++;
-      assert(n_objs==1);
-      break;
-    case TMODEL:
-      n_submodels++;
-      comp->other->parent = this;
-      comp->other->level = this->level + 1;
-      subm_comps.push_back(comp);
-      break;
-    default:
-      cerr << "addComp: type " << comp->type << "unrecognised\n";
-      exit(1);
-    }
-  n_total++;
-  comp->model = this;  //set parent AmplModel
-  all_comps.push_back(comp);
+	LOG("-- In addComp  -- this model:["<<this->name<<"] level["<<level<<"] add type[" << comp->type<<"] ["<<comp<<"]");
+	switch (comp->type)
+	{
+		case TVAR:
+			n_vars++;
+			var_comps.push_back(comp);
+			break;
+		case TCON:
+			n_cons++;
+			con_comps.push_back(comp);
+			break;
+		case TSET:
+			n_sets++;
+			set_comps.push_back(comp);
+			break;
+		case TPARAM:
+			n_params++;
+			param_comps.push_back(comp);
+			break;
+		case TMIN:
+		case TMAX:
+			obj_comp = comp;
+			n_objs++;
+			assert(n_objs == 1);
+			break;
+		case TMODEL:
+			n_submodels++;
+			comp->other->parent = this;
+			comp->other->level = this->level + 1;
+			subm_comps.push_back(comp);
+			break;
+		default:
+			cerr << "addComp: type " << comp->type << "unrecognised\n";
+			exit(1);
+	}
+	n_total++;
+	comp->model = this;  //set parent AmplModel
+	all_comps.push_back(comp);
 
-  comp->setUpDependencies();
-  LOG("-- End AddComp [current:"<<this->name<<"]  n_total["<<n_total<<"]");
+	comp->setUpDependencies();
+	LOG("-- End AddComp [current:"<<this->name<<"]  n_total["<<n_total<<"]");
+}
+
+
+void AmplModel::removeAllComps()
+{
+	n_vars = 0;
+	n_cons = 0;
+	n_objs = 0;
+	n_sets = 0;
+	n_params = 0;
+	n_submodels = 0;
+	n_total = 0;
+
+	var_comps.clear();
+	con_comps.clear();
+	set_comps.clear();
+	param_comps.clear();
+	subm_comps.clear();
+	obj_comp = NULL;
+	all_comps.clear();
+
 }
 
 /* --------------------------------------------------------------------------

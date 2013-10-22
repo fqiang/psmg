@@ -22,7 +22,6 @@ class ValueNode : public SyntaxNode
 
   public:
    ValueNode(double new_value);
-   ValueNode(long new_value);
    virtual ~ValueNode();
    std::string getValue() const;
 

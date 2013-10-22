@@ -80,12 +80,10 @@ class StochModel: public AmplModel{
   static vector <string> STAGE_LIST; //only for stochastic sml model file used only!
   // -------------------------- methods ----------------------------------
   //! Constructor 
-  StochModel(SyntaxNode *onStages, SyntaxNode *onNodes, SyntaxNode *onAncs, 
-	     SyntaxNode *onProb, AmplModel *parent);
+  StochModel(SyntaxNode *onStages, SyntaxNode *onNodes, SyntaxNode *onAncs,SyntaxNode *onProb, AmplModel *parent);
 
   //! Expand the StochModel to a nested set of flat models
   AmplModel *expandToFlatModel();
-
 
   //! Expand on AmplModel::addComp to setup stochmodel of component too
   void addComp(ModelComp *comp);
@@ -95,12 +93,14 @@ class StochModel: public AmplModel{
 
   SyntaxNodeIDREF* createIdrefNode(IDNode *ref);
 
+  static void splitIn(SyntaxNode* expr, IDNode **dummy, SyntaxNode **set);
+
  private:
   //! Expand the STAGES set into the actual elements to be stored in stagenames
-  void expandStages_NO_AMPL();
+  void expandStages();
 
   //! Expand the STAGES set of all StochModelComps in this model
-  void expandStagesOfComp_NO_AMPL();
+  void expandStagesOfComp();
 
   //! Recursive helper function for expandToFlatModel
   void transcribeComponents(AmplModel *current, int level);

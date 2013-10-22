@@ -2669,7 +2669,7 @@ yyreduce:
 /* Line 1806 of yacc.c  */
 #line 530 "sml.tab.ypp"
     {
-                  (yyval.opPtr) = new SyntaxNode(DIMEN, new ValueNode(*(yyvsp[(2) - (2)].ival)));
+                  (yyval.opPtr) = new SyntaxNode(DIMEN, new ValueNode((double)*(yyvsp[(2) - (2)].ival)));
                }
     break;
 
@@ -3431,7 +3431,7 @@ yyreduce:
 /* Line 1806 of yacc.c  */
 #line 866 "sml.tab.ypp"
     {
-            (yyval.opPtr)=new ValueNode(*(yyvsp[(1) - (1)].ival));
+            (yyval.opPtr)=new ValueNode((double)*(yyvsp[(1) - (1)].ival));
          }
     break;
 
@@ -3754,7 +3754,7 @@ void begin_smodel(char *name, SyntaxNode *indexing, SyntaxNode *stochsets) {
       exit(1);
    }
 
-   LOG_SM("Start Stochastic Model: " << name);
+   LOG_SM("Start Stochastic Model: ["<<name<<"] current_model["<<current_model->name<<"]");
 
    ListNode::iterator i = stochsetsl->begin();
    SyntaxNode *nodes = *i;

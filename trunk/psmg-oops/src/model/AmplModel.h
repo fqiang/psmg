@@ -118,7 +118,9 @@ class AmplModel{
   virtual void addComp(ModelComp *comp);
 
   /** Remove a model component from the model */
-  void removeComp(const ModelComp *comp);
+  void removeComp(ModelComp *comp);
+  static void removeComp(vector<ModelComp*> comps, ModelComp* comp);
+  void removeAllComps();
 
   /** Recursively recalculate dependency list and re-resolve IDREF nodes */
   void reassignDependencies();
@@ -135,6 +137,8 @@ class AmplModel{
   static void applyChanges(); //< apply the model changes stored in Q
 
   virtual SyntaxNodeIDREF* createIdrefNode(IDNode *ref);
+
+  bool isCompInThisModel(ModelComp* comp);
 
   // Virtual methods implemented only for stochastic models
   virtual AmplModel* expandToFlatModel() { throw; }

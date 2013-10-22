@@ -29,6 +29,7 @@ src/st_model \
 src/sml \
 src/parser \
 src/oops \
+src/new_model \
 src/model \
 src/metric \
 src/context \

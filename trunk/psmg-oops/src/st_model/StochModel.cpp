@@ -36,21 +36,6 @@ using namespace std;
 
 vector<string> StochModel::STAGE_LIST;
 
-static void splitIn(SyntaxNode *expr, IDNode **dummy, SyntaxNode **set)
-{
-	if (expr->getOpCode() == IN)
-	{
-		SyntaxNode::iterator i = expr->begin();
-		*dummy = static_cast<IDNode *>(*i);
-		*set = *(++i);
-	}
-	else
-	{
-		*dummy = NULL;
-		*set = expr;
-	}
-}
-
 /* ---------------------------------------------------------------------------
  StochModel::StochModel()
  ---------------------------------------------------------------------------- */
@@ -59,30 +44,26 @@ StochModel::StochModel(SyntaxNode *onStages, SyntaxNode *onNodes,
 		SyntaxNode *onAncs, SyntaxNode *onProb, AmplModel *prnt) :
 		AmplModel("",NULL), is_symbolic_stages(false)
 {
-	LOG("create StochModel -- onStages["<<onStages<<"] noNodes["<<onNodes<<"] onAncs["<<onAncs<<"] onProb["<<onProb<<"]");
+	LOG("create StochModel -- onStages["<<onStages<<"] noNodes["<<onNodes<<"] onAncs["<<onAncs<<"] onProb["<<onProb<<"] prnt["<<prnt->name<<"]");
 	/* Split up possible indexing expressions for params */
-	splitIn(onStages, &stagedummy, &stageset);
-	splitIn(onNodes, &nodedummy, &nodeset);
+	StochModel::splitIn(onStages, &stagedummy, &stageset);
+	StochModel::splitIn(onNodes, &nodedummy, &nodeset);
 	IDNode *baddummy;
-	splitIn(onAncs, &baddummy, &anc);
+	StochModel::splitIn(onAncs, &baddummy, &anc);
 	if (baddummy)
 	{
 		cerr << "Dummy index '" << baddummy << "' on set " << anc
 				<< " not allowed" << endl;
 		exit(1);
 	}
-	splitIn(onProb, &baddummy, &prob);
+	StochModel::splitIn(onProb, &baddummy, &prob);
 	if (baddummy)
 	{
 		cerr << "Dummy index '" << baddummy << "' on set " << anc
 				<< " not allowed" << endl;
 		exit(1);
 	}
-
-	/* Do this later? -> parent not set up yet*/
-	/* No: do this here, should set up a nested list of normal AMPL models */
 	parent = prnt;
-	expandStages_NO_AMPL();
 	LOG("end create StochModel -- ");
 }
 
@@ -99,26 +80,13 @@ extern void parse_data(ModelContext* rootContext);
  *  StochModel::stagenames list.
  */
 
-void StochModel::expandStages_NO_AMPL()
+void StochModel::expandStages()
 {
-	LOG("start expandStages_NO_AMPL -- ");
+	LOG("enter expandStages -- ");
 	list<ModelComp*> ref;
 	stageset->findIDREF(ref);
 	assert(ref.size()==1);
 	ModelComp* stageComp = ref.front();
-
-	for(vector<ModelComp*>::iterator i=set_comps.begin();i!=set_comps.end();i++)
-	{
-		assert((*i)->type==TSET);
-		(*i)->setSetDim();
-		LOG("updateModelComp for set - id["<<(*i)->id<<"] dim["<<(*i)->setDim<<"] -- "<<*i);
-	}
-	for(vector<ModelComp*>::iterator i=param_comps.begin();i!=param_comps.end();i++)
-	{
-		assert((*i)->type==TPARAM);
-		(*i)->setParamIndicies();
-		LOG("updateModelComp for param - id["<<(*i)->id<<"] numParamIndicies["<<(*i)->getNumParamIndicies()<<"] -- "<<*i);
-	}
 
 	ModelContext* rootCtx = new ModelContext(NULL);
 	parse_data(rootCtx);
@@ -135,7 +103,7 @@ void StochModel::expandStages_NO_AMPL()
 	}
 	delete rootCtx;
 	rootCtx = NULL;
-	LOG("end expandStages_NO_AMPL --- ");
+	LOG("end expandStages --- ");
 }
 
 
@@ -144,18 +112,14 @@ void StochModel::expandStages_NO_AMPL()
  ---------------------------------------------------------------------------- */
 /** Expand the STAGES sets of all StochModelComps in this model.
  *
- *  An AMPL model file and corresponding script file is created that
- *  when executed writes the components of the set to disk. This routine
- *  also reads in that file and stores the set members in the
- *  StochModel::stagenames list.
  *
  *  This is a StochModel method rather than a StochModelComp method in
  *  order to gather all expansions into a single call to AMPL.
  */
 
-void StochModel::expandStagesOfComp_NO_AMPL()
+void StochModel::expandStagesOfComp()
 {
-	LOG("starting expandStageOfComp_NO_AMPL -- ["<<this->name<<"]");
+	LOG("starting expandStageOfComp -- ["<<this->name<<"]");
 	////////////////////////////////////////////////load data
 	LOG("loading data again for stage set");
 	//AmplModel::root->updateCurrLevelModelComp(); -- already updated in StochModel constructor
@@ -183,7 +147,7 @@ void StochModel::expandStagesOfComp_NO_AMPL()
 		}
 	}
 	delete rootCtx;
-	LOG("end expandStageOfComp_NO_AMPL -- ");
+	LOG("end expandStageOfComp -- ");
 }
 
 
@@ -221,14 +185,46 @@ void StochModel::expandStagesOfComp_NO_AMPL()
  */
 AmplModel* StochModel::expandToFlatModel()
 {
-	LOG(" enter expandToFlatModel:\n");
+	LOG("-----------  enter expandToFlatModel: -- ["<<this->name<<"]");
+
+	//----------------------------------------------------------------------------------------------------------------------
+	//update setdim param dim before loading the data
+	for(vector<ModelComp*>::iterator i=AmplModel::root->set_comps.begin();i!=AmplModel::root->set_comps.end();i++)
+	{
+		assert((*i)->type==TSET);
+		(*i)->setSetDim();
+		LOG("updateModelComp for set - id["<<(*i)->id<<"] dim["<<(*i)->setDim<<"] -- "<<*i);
+	}
+	for(vector<ModelComp*>::iterator i=AmplModel::root->param_comps.begin();i!=AmplModel::root->param_comps.end();i++)
+	{
+		assert((*i)->type==TPARAM);
+		(*i)->setParamIndicies();
+		LOG("updateModelComp for param - id["<<(*i)->id<<"] numParamIndicies["<<(*i)->getNumParamIndicies()<<"] -- "<<*i);
+	}
+	expandStages();
+	/* expand the stages set for all the StochModelComp entities in this model */
+	expandStagesOfComp();
+
+	//once data loaded and decarded , reset all comp data and dim card = 0
+	for(vector<ModelComp*>::iterator i=AmplModel::root->set_comps.begin();i!=AmplModel::root->set_comps.end();i++)
+	{
+		(*i)->setCard = 0;
+		(*i)->setDim = 0;
+		LOG("updateModelComp for set - id["<<(*i)->id<<"] dim["<<(*i)->setDim<<"] -- "<<*i);
+	}
+	for(vector<ModelComp*>::iterator i=AmplModel::root->param_comps.begin();i!=AmplModel::root->param_comps.end();i++)
+	{
+		assert((*i)->type==TPARAM);
+		(*i)->paramIndiciesComp.clear();
+		(*i)->paramIndiciesDummy.clear();
+		(*i)->paramIndiciesMap.clear();
+		LOG("updateModelComp for param - id["<<(*i)->id<<"] numParamIndicies["<<(*i)->getNumParamIndicies()<<"] -- "<<*i);
+	}
+	//----------------------------------------------------------------------------------------------------------------------
 
 	AmplModel *model_above = NULL;
 	AmplModel *am;
 	int stgcnt;
-
-	/* expand the stages set for all the StochModelComp entities in this model */
-	expandStagesOfComp_NO_AMPL();
 	/* Now create a FlatModel (AmplModel) for each element of the overall
 	 stages set and put in it all entities that either have no stageset
 	 defined, or whose stageset includes the current stage */
@@ -236,8 +232,7 @@ AmplModel* StochModel::expandToFlatModel()
 	// loop over all stages and create an AmplModel for every stage
 	stgcnt = StochModel::STAGE_LIST.size() - 1;
 	for (vector<string>::reverse_iterator st = StochModel::STAGE_LIST.rbegin();st != StochModel::STAGE_LIST.rend(); st++, stgcnt--)
-	{ // loops backwards through list
-		// set name and global name for this ampl model
+	{
 		string stageName = *st;
 		string modelName = (stgcnt == 0) ? name + stageName : stageName;
 
@@ -248,13 +243,8 @@ AmplModel* StochModel::expandToFlatModel()
 		for (vector<ModelComp*>::iterator p = all_comps.begin(); p != all_comps.end();p++)
 		{
 			ModelComp *comp = *p;
-
-			/** @bug Submodel components within sblock's is not supported yet
-			 This is not implemented when creating a nested AmplModel tree
-			 out of the StochModel.
-			 */
 			if (comp->type == TMODEL)
-			{
+			{//the case for submodel inside a stochastic block
 				cerr<< "Not quite sure what to do for submodels within Stochastic Blocks" << endl;
 				exit(1);
 			}
@@ -264,9 +254,9 @@ AmplModel* StochModel::expandToFlatModel()
 			if (comp->getStageSetNode())
 			{
 				inc = false;
-				for (vector<string>::const_iterator q = comp->getStageNames().begin();q != comp->getStageNames().end(); ++q)
+				for (vector<string>::const_iterator sname = comp->getStageNames().begin();sname != comp->getStageNames().end(); ++sname)
 				{
-					if (stageName.compare(*q)==0)
+					if (stageName.compare(*sname)==0)
 					{
 						inc = true;
 						break;
@@ -291,10 +281,10 @@ AmplModel* StochModel::expandToFlatModel()
 				// need to clone so that pointers to ->model, ->next are setup
 				// correctly
 				LOG("modelComp["<<comp->id<<"] is in amplModel["<<am->name<<"]");
-				ModelComp* comp = comp->clone();
+				ModelComp* copied = comp->clone();
 				//comp = smc->transcribeToModelComp(am);
 
-				am->addComp(comp);
+				am->addComp(copied);
 				// this will change comp->model. If the original pointer to StochModel
 				// needs to be retained, that should be stored in a stochmodel
 				// entry in StochModelComp?
@@ -573,7 +563,12 @@ void StochModel::transcribeComponents(AmplModel *current, int lev)
 			}
 		}
 	}
-	current->all_comps = newcomps;
+
+	current->removeAllComps();
+	for(vector<ModelComp*>::iterator it=newcomps.begin();it!=newcomps.end();it++)
+	{
+		current->addComp(*it);
+	}
 	LOG("end _transcribeComponents -- lev["<<lev<<"] current["<<current->name<<"]");
 }
 
@@ -591,3 +586,18 @@ SyntaxNodeIDREF* StochModel::createIdrefNode(IDNode *ref)
 	return AmplModel::createIdrefNode(ref);
 }
 
+
+void StochModel::splitIn(SyntaxNode* expr, IDNode **dummy, SyntaxNode **set)
+{
+	if (expr->getOpCode() == IN)
+	{
+		SyntaxNode::iterator i = expr->begin();
+		*dummy = static_cast<IDNode *>(*i);
+		*set = *(++i);
+	}
+	else
+	{
+		*dummy = NULL;
+		*set = expr;
+	}
+}
