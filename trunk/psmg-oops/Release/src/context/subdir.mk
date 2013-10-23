@@ -4,6 +4,8 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../src/context/Block.cpp \
+../src/context/CBlock.cpp \
 ../src/context/EMBlock.cpp \
 ../src/context/ExpandedModel2.cpp \
 ../src/context/IndexSet.cpp \
@@ -13,6 +15,8 @@ CPP_SRCS += \
 ../src/context/Var.cpp 
 
 OBJS += \
+./src/context/Block.o \
+./src/context/CBlock.o \
 ./src/context/EMBlock.o \
 ./src/context/ExpandedModel2.o \
 ./src/context/IndexSet.o \
@@ -22,6 +26,8 @@ OBJS += \
 ./src/context/Var.o 
 
 CPP_DEPS += \
+./src/context/Block.d \
+./src/context/CBlock.d \
 ./src/context/EMBlock.d \
 ./src/context/ExpandedModel2.d \
 ./src/context/IndexSet.d \

@@ -35,7 +35,7 @@ class OOPSBlock {
  public:
   ExpandedModel2 *emrow;    //!< Expanded Model giving row information
   ExpandedModel2 *emcol;    //!< Expanded Model giving col information
-  //  NlFile *nlfile;       //!< The NlFile correspoding to the ExpandedModelInterface
+
   int ncon;             //!< number of rows in this block
   int nvar;             //!< number of columns in this block
   //  int *lvar;            //!< list of indices into the NlFile (-1 if not decl)

@@ -13,7 +13,6 @@ RM := rm -rf
 -include src/sml/subdir.mk
 -include src/parser/subdir.mk
 -include src/oops/subdir.mk
--include src/new_model/subdir.mk
 -include src/model/subdir.mk
 -include src/metric/subdir.mk
 -include src/context/subdir.mk

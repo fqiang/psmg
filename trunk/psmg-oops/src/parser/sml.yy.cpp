@@ -768,10 +768,11 @@ char *yytext;
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 #line 19 "sml.yy.lpp"
-	#include "../model/SyntaxNode.h"
-	#include "../model/SyntaxNodeIx.h"
-	#include "../parser/sml.tab.h"
-   	#include <errno.h>
+	#include "../model/SyntaxNode.h"*/
+	#include "../model/SyntaxNodeIx.h"*/
+	#include "sml.tab.h"
+   	/*#include "parser.h"*/
+	#include <errno.h>
    	#include <string.h>
 //	#define myreturn(id) printf("%s\n",#id)
 	#define myreturn(id) return(id)
@@ -780,7 +781,7 @@ char *yytext;
 /* TODO:
    strings
    */
-#line 784 "../src/parser/sml.yy.cpp"
+#line 785 "../src/parser/sml.yy.cpp"
 
 #define INITIAL 0
 #define accept_model_type 1
@@ -968,10 +969,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 38 "sml.yy.lpp"
+#line 39 "sml.yy.lpp"
 
 
-#line 975 "../src/parser/sml.yy.cpp"
+#line 976 "../src/parser/sml.yy.cpp"
 
 	if ( !(yy_init) )
 		{
@@ -1066,7 +1067,7 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 40 "sml.yy.lpp"
+#line 41 "sml.yy.lpp"
 {
                 long *dummy = new long;
                 *dummy = strtol(yytext, NULL, 10);
@@ -1081,13 +1082,13 @@ YY_RULE_SETUP
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 51 "sml.yy.lpp"
+#line 52 "sml.yy.lpp"
 myreturn(DOTDOT);
 	YY_BREAK
 /* Tokens with values */
 case 3:
 YY_RULE_SETUP
-#line 53 "sml.yy.lpp"
+#line 54 "sml.yy.lpp"
 {
             long *dummy = new long;
             *dummy = strtol(yytext, NULL, 10);
@@ -1100,7 +1101,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 62 "sml.yy.lpp"
+#line 63 "sml.yy.lpp"
 {
             double *dummy = new double;
             *dummy = strtod(yytext, NULL);
@@ -1114,241 +1115,241 @@ YY_RULE_SETUP
 /* Another type of value */
 case 5:
 YY_RULE_SETUP
-#line 73 "sml.yy.lpp"
+#line 74 "sml.yy.lpp"
 myreturn(INFINITE);
 	YY_BREAK
 /* comments */
 case 6:
 YY_RULE_SETUP
-#line 76 "sml.yy.lpp"
+#line 77 "sml.yy.lpp"
 //printf("\n-->%s\n",yytext); /* nothing */
 	YY_BREAK
 /* whitespace */
 case 7:
 /* rule 7 can match eol */
 YY_RULE_SETUP
-#line 78 "sml.yy.lpp"
+#line 79 "sml.yy.lpp"
 /* nothing */ 
 	YY_BREAK
 /* unknown */
 case 8:
 YY_RULE_SETUP
-#line 81 "sml.yy.lpp"
+#line 82 "sml.yy.lpp"
 myreturn(COEFF);
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 82 "sml.yy.lpp"
+#line 83 "sml.yy.lpp"
 myreturn(COVER);
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 83 "sml.yy.lpp"
+#line 84 "sml.yy.lpp"
 myreturn(OBJ);
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 84 "sml.yy.lpp"
+#line 85 "sml.yy.lpp"
 myreturn(DEFAULT);
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 85 "sml.yy.lpp"
+#line 86 "sml.yy.lpp"
 myreturn(FROM);
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 86 "sml.yy.lpp"
+#line 87 "sml.yy.lpp"
 myreturn(TO);
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 87 "sml.yy.lpp"
+#line 88 "sml.yy.lpp"
 myreturn(TO_COME);
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 88 "sml.yy.lpp"
+#line 89 "sml.yy.lpp"
 myreturn(NET_IN);
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 89 "sml.yy.lpp"
+#line 90 "sml.yy.lpp"
 myreturn(NET_OUT);
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 90 "sml.yy.lpp"
+#line 91 "sml.yy.lpp"
 myreturn(DIMEN);
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 91 "sml.yy.lpp"
+#line 92 "sml.yy.lpp"
 myreturn(USING);
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 93 "sml.yy.lpp"
+#line 94 "sml.yy.lpp"
 myreturn(ORDERED);
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 94 "sml.yy.lpp"
+#line 95 "sml.yy.lpp"
 myreturn(CIRCULAR);
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 95 "sml.yy.lpp"
+#line 96 "sml.yy.lpp"
 myreturn(REVERSED);
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 96 "sml.yy.lpp"
+#line 97 "sml.yy.lpp"
 myreturn(SYMBOLIC);
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 97 "sml.yy.lpp"
+#line 98 "sml.yy.lpp"
 myreturn(ARC);
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 98 "sml.yy.lpp"
+#line 99 "sml.yy.lpp"
 myreturn(DETERMINISTIC);
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 99 "sml.yy.lpp"
+#line 100 "sml.yy.lpp"
 myreturn(STOCHASTIC);
 	YY_BREAK
 /*random         myreturn(RANDOM); */
 /*public         myreturn(PUBLIC); */
 case 26:
 YY_RULE_SETUP
-#line 103 "sml.yy.lpp"
+#line 104 "sml.yy.lpp"
 myreturn(SETOF);
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 104 "sml.yy.lpp"
+#line 105 "sml.yy.lpp"
 myreturn(BY);
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 105 "sml.yy.lpp"
+#line 106 "sml.yy.lpp"
 myreturn(LESS);
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 106 "sml.yy.lpp"
+#line 107 "sml.yy.lpp"
 myreturn(MOD);
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 107 "sml.yy.lpp"
+#line 108 "sml.yy.lpp"
 myreturn(DIV);
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 108 "sml.yy.lpp"
+#line 109 "sml.yy.lpp"
 myreturn(MIN); /*care function too*/
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 109 "sml.yy.lpp"
+#line 110 "sml.yy.lpp"
 myreturn(MAX); /*care fn too*/
 	YY_BREAK
 /* Types */
 case 33:
 YY_RULE_SETUP
-#line 112 "sml.yy.lpp"
+#line 113 "sml.yy.lpp"
 myreturn(INTEGER);
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 113 "sml.yy.lpp"
+#line 114 "sml.yy.lpp"
 myreturn(BINARY);
 	YY_BREAK
 /* Imperative commands */
 case 35:
 YY_RULE_SETUP
-#line 116 "sml.yy.lpp"
+#line 117 "sml.yy.lpp"
 myreturn(CHECK);
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 117 "sml.yy.lpp"
+#line 118 "sml.yy.lpp"
 myreturn(CLOSE);
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 118 "sml.yy.lpp"
+#line 119 "sml.yy.lpp"
 myreturn(DISPLAY);
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 119 "sml.yy.lpp"
+#line 120 "sml.yy.lpp"
 myreturn(DROP);
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 120 "sml.yy.lpp"
+#line 121 "sml.yy.lpp"
 myreturn(INCLUDE);
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 121 "sml.yy.lpp"
+#line 122 "sml.yy.lpp"
 myreturn(PRINT);
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 122 "sml.yy.lpp"
+#line 123 "sml.yy.lpp"
 myreturn(PRINTF);
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 123 "sml.yy.lpp"
+#line 124 "sml.yy.lpp"
 myreturn(QUIT);
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 124 "sml.yy.lpp"
+#line 125 "sml.yy.lpp"
 myreturn(RESET);
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 125 "sml.yy.lpp"
+#line 126 "sml.yy.lpp"
 myreturn(RESTORE);
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 126 "sml.yy.lpp"
+#line 127 "sml.yy.lpp"
 myreturn(SOLVE);
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 127 "sml.yy.lpp"
+#line 128 "sml.yy.lpp"
 myreturn(UPDATE);
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 128 "sml.yy.lpp"
+#line 129 "sml.yy.lpp"
 myreturn(WRITE);
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 129 "sml.yy.lpp"
+#line 130 "sml.yy.lpp"
 myreturn(SHELL);
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 130 "sml.yy.lpp"
+#line 131 "sml.yy.lpp"
 myreturn(BLOCK);
 	YY_BREAK
 /*sblock         myreturn(SBLOCK);*/
 case 50:
 YY_RULE_SETUP
-#line 132 "sml.yy.lpp"
+#line 133 "sml.yy.lpp"
 {
                  BEGIN(accept_model_type);
                  myreturn(MODEL);
@@ -1356,7 +1357,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 136 "sml.yy.lpp"
+#line 137 "sml.yy.lpp"
 {
                  BEGIN(0);
                  myreturn(MODELTYPE);
@@ -1365,103 +1366,103 @@ YY_RULE_SETUP
 /*begin          myreturn(BEG);*/
 case 52:
 YY_RULE_SETUP
-#line 141 "sml.yy.lpp"
+#line 142 "sml.yy.lpp"
 myreturn(DATA);
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 142 "sml.yy.lpp"
+#line 143 "sml.yy.lpp"
 myreturn(OPTION);
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
-#line 143 "sml.yy.lpp"
+#line 144 "sml.yy.lpp"
 myreturn(LET);
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 144 "sml.yy.lpp"
+#line 145 "sml.yy.lpp"
 myreturn(SOLUTION);
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 145 "sml.yy.lpp"
+#line 146 "sml.yy.lpp"
 myreturn(FIX);
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 146 "sml.yy.lpp"
+#line 147 "sml.yy.lpp"
 myreturn(UNFIX);
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 147 "sml.yy.lpp"
+#line 148 "sml.yy.lpp"
 myreturn(END);
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 148 "sml.yy.lpp"
+#line 149 "sml.yy.lpp"
 myreturn(FUNCTION);
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
-#line 149 "sml.yy.lpp"
+#line 150 "sml.yy.lpp"
 myreturn(PIPE);
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
-#line 150 "sml.yy.lpp"
+#line 151 "sml.yy.lpp"
 myreturn(FORMAT);
 	YY_BREAK
 /* Conditionals */
 case 62:
 YY_RULE_SETUP
-#line 153 "sml.yy.lpp"
+#line 154 "sml.yy.lpp"
 myreturn(IF);
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
-#line 154 "sml.yy.lpp"
+#line 155 "sml.yy.lpp"
 myreturn(THEN);
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 155 "sml.yy.lpp"
+#line 156 "sml.yy.lpp"
 myreturn(ELSE);
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
-#line 156 "sml.yy.lpp"
+#line 157 "sml.yy.lpp"
 myreturn(AND);
 	YY_BREAK
 case 66:
 YY_RULE_SETUP
-#line 157 "sml.yy.lpp"
+#line 158 "sml.yy.lpp"
 myreturn(OR);
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
-#line 158 "sml.yy.lpp"
+#line 159 "sml.yy.lpp"
 myreturn(EXISTS);
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
-#line 159 "sml.yy.lpp"
+#line 160 "sml.yy.lpp"
 myreturn(FORALL);
 	YY_BREAK
 case 69:
 YY_RULE_SETUP
-#line 160 "sml.yy.lpp"
+#line 161 "sml.yy.lpp"
 myreturn(NOT);
 	YY_BREAK
 case 70:
 YY_RULE_SETUP
-#line 161 "sml.yy.lpp"
+#line 162 "sml.yy.lpp"
 myreturn(WITHIN);
 	YY_BREAK
 case 71:
 YY_RULE_SETUP
-#line 162 "sml.yy.lpp"
+#line 163 "sml.yy.lpp"
 myreturn(STAGES);
 	YY_BREAK
 /*stage          myreturn(STAGE);*/
@@ -1469,316 +1470,316 @@ myreturn(STAGES);
 /* looping */
 case 72:
 YY_RULE_SETUP
-#line 167 "sml.yy.lpp"
+#line 168 "sml.yy.lpp"
 myreturn(WHILE);
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
-#line 168 "sml.yy.lpp"
+#line 169 "sml.yy.lpp"
 myreturn(REPEAT);
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
-#line 169 "sml.yy.lpp"
+#line 170 "sml.yy.lpp"
 myreturn(FOR);
 	YY_BREAK
 /* Set -> Scalar fns */
 case 75:
 YY_RULE_SETUP
-#line 172 "sml.yy.lpp"
+#line 173 "sml.yy.lpp"
 myreturn(CARD);
 	YY_BREAK
 case 76:
 YY_RULE_SETUP
-#line 173 "sml.yy.lpp"
+#line 174 "sml.yy.lpp"
 myreturn(NEXT);
 	YY_BREAK
 case 77:
 YY_RULE_SETUP
-#line 174 "sml.yy.lpp"
+#line 175 "sml.yy.lpp"
 myreturn(NEXTW);
 	YY_BREAK
 case 78:
 YY_RULE_SETUP
-#line 175 "sml.yy.lpp"
+#line 176 "sml.yy.lpp"
 myreturn(PREV);
 	YY_BREAK
 case 79:
 YY_RULE_SETUP
-#line 176 "sml.yy.lpp"
+#line 177 "sml.yy.lpp"
 myreturn(PREVW);
 	YY_BREAK
 case 80:
 YY_RULE_SETUP
-#line 177 "sml.yy.lpp"
+#line 178 "sml.yy.lpp"
 myreturn(FIRST);
 	YY_BREAK
 case 81:
 YY_RULE_SETUP
-#line 178 "sml.yy.lpp"
+#line 179 "sml.yy.lpp"
 myreturn(LAST);
 	YY_BREAK
 case 82:
 YY_RULE_SETUP
-#line 179 "sml.yy.lpp"
+#line 180 "sml.yy.lpp"
 myreturn(MEMBER);
 	YY_BREAK
 case 83:
 YY_RULE_SETUP
-#line 180 "sml.yy.lpp"
+#line 181 "sml.yy.lpp"
 myreturn(ORD);
 	YY_BREAK
 case 84:
 YY_RULE_SETUP
-#line 181 "sml.yy.lpp"
+#line 182 "sml.yy.lpp"
 myreturn(ORD_ZERO);
 	YY_BREAK
 /* declarative */
 case 85:
 YY_RULE_SETUP
-#line 184 "sml.yy.lpp"
+#line 185 "sml.yy.lpp"
 myreturn(VAR);
 	YY_BREAK
 case 86:
 YY_RULE_SETUP
-#line 185 "sml.yy.lpp"
+#line 186 "sml.yy.lpp"
 myreturn(PARAM);
 	YY_BREAK
 case 87:
 YY_RULE_SETUP
-#line 186 "sml.yy.lpp"
+#line 187 "sml.yy.lpp"
 myreturn(SET);
 	YY_BREAK
 case 88:
 YY_RULE_SETUP
-#line 187 "sml.yy.lpp"
+#line 188 "sml.yy.lpp"
 myreturn(MAXIMIZE);
 	YY_BREAK
 case 89:
 YY_RULE_SETUP
-#line 188 "sml.yy.lpp"
+#line 189 "sml.yy.lpp"
 myreturn(MINIMIZE);
 	YY_BREAK
 case 90:
 YY_RULE_SETUP
-#line 189 "sml.yy.lpp"
+#line 190 "sml.yy.lpp"
 myreturn(OBJECTIVE);
 	YY_BREAK
 case 91:
 YY_RULE_SETUP
-#line 190 "sml.yy.lpp"
+#line 191 "sml.yy.lpp"
 myreturn(SUBJECTTO);
 	YY_BREAK
 case 92:
 YY_RULE_SETUP
-#line 191 "sml.yy.lpp"
+#line 192 "sml.yy.lpp"
 myreturn(SUBJECTTO);
 	YY_BREAK
 /* iterative sum */
 case 93:
 YY_RULE_SETUP
-#line 194 "sml.yy.lpp"
+#line 195 "sml.yy.lpp"
 myreturn(SUM);
 	YY_BREAK
 case 94:
 YY_RULE_SETUP
-#line 195 "sml.yy.lpp"
+#line 196 "sml.yy.lpp"
 myreturn(PROD);
 	YY_BREAK
 case 95:
 YY_RULE_SETUP
-#line 196 "sml.yy.lpp"
+#line 197 "sml.yy.lpp"
 myreturn(IN);
 	YY_BREAK
 /* operators */
 case 96:
 YY_RULE_SETUP
-#line 199 "sml.yy.lpp"
+#line 200 "sml.yy.lpp"
 myreturn(DEFINED);
 	YY_BREAK
 case 97:
 YY_RULE_SETUP
-#line 200 "sml.yy.lpp"
+#line 201 "sml.yy.lpp"
 myreturn('+');
 	YY_BREAK
 case 98:
 YY_RULE_SETUP
-#line 201 "sml.yy.lpp"
+#line 202 "sml.yy.lpp"
 myreturn('-');
 	YY_BREAK
 case 99:
 YY_RULE_SETUP
-#line 202 "sml.yy.lpp"
+#line 203 "sml.yy.lpp"
 myreturn('*');
 	YY_BREAK
 case 100:
 YY_RULE_SETUP
-#line 203 "sml.yy.lpp"
+#line 204 "sml.yy.lpp"
 myreturn('/');
 	YY_BREAK
 case 101:
 YY_RULE_SETUP
-#line 204 "sml.yy.lpp"
+#line 205 "sml.yy.lpp"
 myreturn(POWER);
 	YY_BREAK
 case 102:
 YY_RULE_SETUP
-#line 205 "sml.yy.lpp"
+#line 206 "sml.yy.lpp"
 myreturn(POWER);
 	YY_BREAK
 case 103:
 YY_RULE_SETUP
-#line 206 "sml.yy.lpp"
+#line 207 "sml.yy.lpp"
 myreturn(LOGICAL_OR);
 	YY_BREAK
 case 104:
 YY_RULE_SETUP
-#line 207 "sml.yy.lpp"
+#line 208 "sml.yy.lpp"
 myreturn(LOGICAL_AND);
 	YY_BREAK
 case 105:
 YY_RULE_SETUP
-#line 208 "sml.yy.lpp"
+#line 209 "sml.yy.lpp"
 myreturn('!');
 	YY_BREAK
 case 106:
 YY_RULE_SETUP
-#line 209 "sml.yy.lpp"
+#line 210 "sml.yy.lpp"
 myreturn(NE);
 	YY_BREAK
 case 107:
 YY_RULE_SETUP
-#line 210 "sml.yy.lpp"
+#line 211 "sml.yy.lpp"
 myreturn(LE);
 	YY_BREAK
 case 108:
 YY_RULE_SETUP
-#line 211 "sml.yy.lpp"
+#line 212 "sml.yy.lpp"
 myreturn(GE);
 	YY_BREAK
 case 109:
 YY_RULE_SETUP
-#line 212 "sml.yy.lpp"
+#line 213 "sml.yy.lpp"
 myreturn(EQ);
 	YY_BREAK
 case 110:
 YY_RULE_SETUP
-#line 213 "sml.yy.lpp"
+#line 214 "sml.yy.lpp"
 myreturn(LT);
 	YY_BREAK
 case 111:
 YY_RULE_SETUP
-#line 214 "sml.yy.lpp"
+#line 215 "sml.yy.lpp"
 myreturn(GT);
 	YY_BREAK
 case 112:
 YY_RULE_SETUP
-#line 215 "sml.yy.lpp"
+#line 216 "sml.yy.lpp"
 myreturn(ELLIPSE);
 	YY_BREAK
 case 113:
 YY_RULE_SETUP
-#line 216 "sml.yy.lpp"
+#line 217 "sml.yy.lpp"
 myreturn(ASSIGN);
 	YY_BREAK
 /* set operators */
 case 114:
 YY_RULE_SETUP
-#line 219 "sml.yy.lpp"
+#line 220 "sml.yy.lpp"
 myreturn(UNION);
 	YY_BREAK
 case 115:
 YY_RULE_SETUP
-#line 220 "sml.yy.lpp"
+#line 221 "sml.yy.lpp"
 myreturn(DIFF);
 	YY_BREAK
 case 116:
 YY_RULE_SETUP
-#line 221 "sml.yy.lpp"
+#line 222 "sml.yy.lpp"
 myreturn(CROSS);
 	YY_BREAK
 case 117:
 YY_RULE_SETUP
-#line 222 "sml.yy.lpp"
+#line 223 "sml.yy.lpp"
 myreturn(INTER);
 	YY_BREAK
 case 118:
 YY_RULE_SETUP
-#line 223 "sml.yy.lpp"
+#line 224 "sml.yy.lpp"
 myreturn(SYMDIFF);
 	YY_BREAK
 case 119:
 YY_RULE_SETUP
-#line 224 "sml.yy.lpp"
+#line 225 "sml.yy.lpp"
 myreturn(SUFFIX);
 	YY_BREAK
 /* punctuation */
 case 120:
 YY_RULE_SETUP
-#line 227 "sml.yy.lpp"
+#line 228 "sml.yy.lpp"
 myreturn(LBRACE);
 	YY_BREAK
 case 121:
 YY_RULE_SETUP
-#line 228 "sml.yy.lpp"
+#line 229 "sml.yy.lpp"
 myreturn(RBRACE);
 	YY_BREAK
 case 122:
 YY_RULE_SETUP
-#line 229 "sml.yy.lpp"
+#line 230 "sml.yy.lpp"
 myreturn(DOT);
 	YY_BREAK
 case 123:
 YY_RULE_SETUP
-#line 230 "sml.yy.lpp"
+#line 231 "sml.yy.lpp"
 myreturn(COMMA);
 	YY_BREAK
 case 124:
 YY_RULE_SETUP
-#line 231 "sml.yy.lpp"
+#line 232 "sml.yy.lpp"
 myreturn(SEMICOLON);
 	YY_BREAK
 case 125:
 YY_RULE_SETUP
-#line 232 "sml.yy.lpp"
+#line 233 "sml.yy.lpp"
 myreturn(LSBRACKET);
 	YY_BREAK
 case 126:
 YY_RULE_SETUP
-#line 233 "sml.yy.lpp"
+#line 234 "sml.yy.lpp"
 myreturn(RSBRACKET);
 	YY_BREAK
 case 127:
 YY_RULE_SETUP
-#line 234 "sml.yy.lpp"
+#line 235 "sml.yy.lpp"
 myreturn(LBRACKET);
 	YY_BREAK
 case 128:
 YY_RULE_SETUP
-#line 235 "sml.yy.lpp"
+#line 236 "sml.yy.lpp"
 myreturn(RBRACKET);
 	YY_BREAK
 case 129:
 YY_RULE_SETUP
-#line 236 "sml.yy.lpp"
+#line 237 "sml.yy.lpp"
 myreturn(COLON);
 	YY_BREAK
 /* special stuff */
 case 130:
 YY_RULE_SETUP
-#line 240 "sml.yy.lpp"
+#line 241 "sml.yy.lpp"
 myreturn(EXPECTATION);
 	YY_BREAK
 /*TimeStage   myreturn(TIMESTAGE);*/
 case 131:
 YY_RULE_SETUP
-#line 242 "sml.yy.lpp"
+#line 243 "sml.yy.lpp"
 myreturn(ANCESTOR);
 	YY_BREAK
 /* Else it mut be an identifyer */
 case 132:
 YY_RULE_SETUP
-#line 245 "sml.yy.lpp"
+#line 246 "sml.yy.lpp"
 {
          yylval.string = strdup(yytext);
          BEGIN(0);
@@ -1787,10 +1788,10 @@ YY_RULE_SETUP
 	YY_BREAK
 case 133:
 YY_RULE_SETUP
-#line 250 "sml.yy.lpp"
+#line 251 "sml.yy.lpp"
 ECHO;
 	YY_BREAK
-#line 1794 "../src/parser/sml.yy.cpp"
+#line 1795 "../src/parser/sml.yy.cpp"
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(accept_model_type):
 	yyterminate();
@@ -2801,7 +2802,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 250 "sml.yy.lpp"
+#line 251 "sml.yy.lpp"
 
 
 

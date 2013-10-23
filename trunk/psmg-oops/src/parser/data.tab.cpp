@@ -76,7 +76,7 @@
 /* Line 268 of yacc.c  */
 #line 19 "data.tab.ypp"
 
-   	#include "../util/global_util_functions.h"
+ 	#include "../util/global_util_functions.h"
    	#include "../sml/GlobalVariables.h"
    	#include "../context/Set.h"
 	#include "../context/ModelContext.h"
@@ -500,8 +500,8 @@ static const yytype_int8 yyrhs[] =
 static const yytype_uint16 yyrline[] =
 {
        0,    79,    79,    80,    83,    84,    85,    90,   104,   109,
-     113,   119,   123,   132,   139,   149,   152,   161,   173,   223,
-     227,   237,   241,   251,   254,   257,   262,   267,   270
+     113,   119,   123,   132,   139,   149,   152,   161,   173,   222,
+     225,   234,   237,   246,   249,   252,   257,   262,   265
 };
 #endif
 
@@ -1594,10 +1594,10 @@ yyreduce:
 				string id((yyvsp[(2) - (5)].string));
 				ModelComp* paramComp = AmplModel::root->findModelComp(id,TPARAM);
 				Param* param_ = new Param(paramComp->getNumParamIndicies(),paramComp->id);
-				assert(paramComp->getNumParamIndicies() == 0);
+                assert(paramComp->getNumParamIndicies() == 0);
 				double pvalue = atof((yyvsp[(4) - (5)].string));
 				param_->addParamValue("",pvalue);
-				rootContext->addCompValueMap(paramComp,param_);
+                rootContext->addCompValueMap(paramComp,param_);
 			}
     break;
 
@@ -1632,25 +1632,24 @@ yyreduce:
 				}
 				
 				ostringstream oss(ostringstream::out);
-				int curr_index = 0;
+                int curr_index = 0;
 				tok = strtok((yyvsp[(5) - (6)].string),",");
 				while(tok!=NULL)
 				{
-					//toks.push_back(tok);
 					oss<<tok;
-					++curr_index;
+                    ++curr_index;
 					if(curr_index == numIndicies)
-					{
-						for(vector<Param*>::iterator i=params.begin();i!=params.end();i++)
-						{
-							tok=strtok(NULL,",");
-							double pvalue = atof(tok);
-							(*i)->addParamValue(oss.str(),pvalue);
-						}
-						oss.str("");
-						curr_index = 0;
-					}
-					tok = strtok(NULL,",");
+                    {
+                            for(vector<Param*>::iterator i=params.begin();i!=params.end();i++)
+                            {
+                                    tok=strtok(NULL,",");
+                                    double pvalue = atof(tok);
+                                    (*i)->addParamValue(oss.str(),pvalue);
+                            }
+                            oss.str("");
+                            curr_index = 0;
+                    }
+                    tok = strtok(NULL,",");
 				}
 			}
     break;
@@ -1658,9 +1657,8 @@ yyreduce:
   case 19:
 
 /* Line 1806 of yacc.c  */
-#line 223 "data.tab.ypp"
+#line 222 "data.tab.ypp"
     {
-				YAC_LOG("param_name -- ["<<(yyvsp[(1) - (1)].string)<<"]");
 				(yyval.string) = (yyvsp[(1) - (1)].string);
 			}
     break;
@@ -1668,9 +1666,8 @@ yyreduce:
   case 20:
 
 /* Line 1806 of yacc.c  */
-#line 227 "data.tab.ypp"
+#line 225 "data.tab.ypp"
     {
-				YAC_LOG("param_names param_name -- ["<<(yyvsp[(1) - (2)].string)<<"] ["<<(yyvsp[(2) - (2)].string)<<"]");
 				ostringstream oss(ostringstream::out);
 				oss<<(yyvsp[(1) - (2)].string)<<','<<(yyvsp[(2) - (2)].string);  //each param_name(set_value) is on newline
 				free((yyvsp[(1) - (2)].string));
@@ -1682,9 +1679,8 @@ yyreduce:
   case 21:
 
 /* Line 1806 of yacc.c  */
-#line 237 "data.tab.ypp"
+#line 234 "data.tab.ypp"
     {
-				YAC_LOG("param_specs_item -- ["<<(yyvsp[(1) - (1)].string)<<"]");
 				(yyval.string) = (yyvsp[(1) - (1)].string);
 			}
     break;
@@ -1692,9 +1688,8 @@ yyreduce:
   case 22:
 
 /* Line 1806 of yacc.c  */
-#line 241 "data.tab.ypp"
+#line 237 "data.tab.ypp"
     {
-				YAC_LOG("param_specs param_specs_item -- ["<<(yyvsp[(1) - (2)].string)<<"] ["<<(yyvsp[(2) - (2)].string)<<"]");
 				ostringstream oss(ostringstream::out);
 				oss<<(yyvsp[(1) - (2)].string)<<','<<(yyvsp[(2) - (2)].string);  //each on newline
 				free((yyvsp[(1) - (2)].string));
@@ -1706,7 +1701,7 @@ yyreduce:
   case 23:
 
 /* Line 1806 of yacc.c  */
-#line 251 "data.tab.ypp"
+#line 246 "data.tab.ypp"
     {
 				(yyval.string) = (yyvsp[(1) - (1)].string);
 			}
@@ -1715,7 +1710,7 @@ yyreduce:
   case 24:
 
 /* Line 1806 of yacc.c  */
-#line 254 "data.tab.ypp"
+#line 249 "data.tab.ypp"
     {
 				(yyval.string) = (yyvsp[(1) - (1)].string);
 			}
@@ -1724,7 +1719,7 @@ yyreduce:
   case 25:
 
 /* Line 1806 of yacc.c  */
-#line 257 "data.tab.ypp"
+#line 252 "data.tab.ypp"
     {
 				(yyval.string) = (yyvsp[(1) - (1)].string);
 			}
@@ -1733,7 +1728,7 @@ yyreduce:
   case 26:
 
 /* Line 1806 of yacc.c  */
-#line 262 "data.tab.ypp"
+#line 257 "data.tab.ypp"
     {
 				(yyval.string) = (yyvsp[(1) - (1)].string);
 			}
@@ -1742,7 +1737,7 @@ yyreduce:
   case 27:
 
 /* Line 1806 of yacc.c  */
-#line 267 "data.tab.ypp"
+#line 262 "data.tab.ypp"
     { 
 				(yyval.string) = (yyvsp[(1) - (1)].string);
 			}
@@ -1751,7 +1746,7 @@ yyreduce:
   case 28:
 
 /* Line 1806 of yacc.c  */
-#line 270 "data.tab.ypp"
+#line 265 "data.tab.ypp"
     {
 				(yyval.string) = (yyvsp[(1) - (1)].string);
 			}
@@ -1760,7 +1755,7 @@ yyreduce:
 
 
 /* Line 1806 of yacc.c  */
-#line 1764 "../src/parser/data.tab.cpp"
+#line 1759 "../src/parser/data.tab.cpp"
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1991,7 +1986,7 @@ yyreturn:
 
 
 /* Line 2067 of yacc.c  */
-#line 275 "data.tab.ypp"
+#line 270 "data.tab.ypp"
 
 
 void dataerror(const char *s) {
@@ -2006,10 +2001,10 @@ void parse_data(ModelContext* context) {
 	YAC_LOG("===============================================================");
 	rootContext = context;
   	datain = fopen(GlobalVariables::datafilename.c_str(), "r");
- 	if (datain==NULL){
-   		printf("ERROR: Data file '%s' error:%s \n",GlobalVariables::datafilename.c_str(),strerror(errno));
-   		exit(1);
- 	}
+  	if (datain==NULL){
+    	printf("ERROR: Data file '%s' error:%s \n",GlobalVariables::datafilename.c_str(),strerror(errno));
+    	exit(1);
+  	}
           
   	dataparse();
   	YAC_LOG("===============================================================");
@@ -2020,7 +2015,7 @@ void parse_data(ModelContext* context) {
 
 static void print_token_value (FILE *file, int type, YYSTYPE value)
 {
-	fprintf(file, "%s", value.string);
+	fprintf (file, "%s", value.string);
 }
 
 

@@ -92,15 +92,6 @@ public:
 	vector<SyntaxNode*> values;
 
 public:
-
-	/* FIXME: not sure if these two should be part of the class. They are
-	 global variables that affect the print() method */
-	/** if use_global_names is set then the print() method will print out
-	 *  model component names as global names                               */
-//	static int use_global_names;
-	static AmplModel *default_model;
-
-public:
 	// ------------------------ methods -----------------------------------
 
 	/** Constructor */

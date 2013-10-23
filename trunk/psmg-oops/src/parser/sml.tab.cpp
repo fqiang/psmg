@@ -2669,7 +2669,7 @@ yyreduce:
 /* Line 1806 of yacc.c  */
 #line 530 "sml.tab.ypp"
     {
-                  (yyval.opPtr) = new SyntaxNode(DIMEN, new ValueNode((double)*(yyvsp[(2) - (2)].ival)));
+                  (yyval.opPtr) = new SyntaxNode(DIMEN, new ValueNode(*(yyvsp[(2) - (2)].ival)));
                }
     break;
 
@@ -3431,7 +3431,7 @@ yyreduce:
 /* Line 1806 of yacc.c  */
 #line 866 "sml.tab.ypp"
     {
-            (yyval.opPtr)=new ValueNode((double)*(yyvsp[(1) - (1)].ival));
+            (yyval.opPtr)=new ValueNode(*(yyvsp[(1) - (1)].ival));
          }
     break;
 
@@ -3733,8 +3733,7 @@ void begin_model(char *name, SyntaxNode *indexing) {
 
   new_mod->node = newmc;            /* add pointer-to-node to the model */
   current_model->addComp(newmc);
- 
-  //new_mod->setGlobalName();    
+  
   /* and change current model */
   current_model = new_mod;
 }
@@ -3754,7 +3753,7 @@ void begin_smodel(char *name, SyntaxNode *indexing, SyntaxNode *stochsets) {
       exit(1);
    }
 
-   LOG_SM("Start Stochastic Model: ["<<name<<"] current_model["<<current_model->name<<"]");
+   LOG_SM("Start Stochastic Model: " << name);
 
    ListNode::iterator i = stochsetsl->begin();
    SyntaxNode *nodes = *i;
@@ -3774,7 +3773,6 @@ void begin_smodel(char *name, SyntaxNode *indexing, SyntaxNode *stochsets) {
    new_mod->node = newmc;            /* add pointer-to-node to the model */
    current_model->addComp(newmc);
  
-   //new_mod->setGlobalName();    
    /* and change current model */
    current_model = new_mod;
    is_stoch_model = true;
@@ -3824,7 +3822,6 @@ void end_smodel(char *name){
   is_stoch_model = false;
   
   assert(AmplModel::root == current_model);
-  AmplModel::root->settingUpLevels(0);
   //AmplModel::root->isStochastic = true;
 }
 

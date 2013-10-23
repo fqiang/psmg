@@ -20,9 +20,6 @@
 #include "../context/ExpandedModel2.h"
 #include "../st_model/StochModel.h"
 
-//int SyntaxNode::use_global_names=0;
-AmplModel *SyntaxNode::default_model = NULL;
-
 extern int n_indexing;
 extern SyntaxNodeIx *list_of_indexing[20];
 
