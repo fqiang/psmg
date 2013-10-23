@@ -16,10 +16,9 @@
  */
 %option   yylineno
 %{
-	#include "../model/SyntaxNode.h"*/
-	#include "../model/SyntaxNodeIx.h"*/
+	#include "../model/SyntaxNode.h"
+	#include "../model/SyntaxNodeIx.h"
 	#include "sml.tab.h"
-   	/*#include "parser.h"*/
 	#include <errno.h>
    	#include <string.h>
 //	#define myreturn(id) printf("%s\n",#id)
@@ -29,12 +28,6 @@
 
 DIGIT    [0-9]
 ID       [a-zA-Z][a-zA-Z0-9_]*
-
-%s accept_model_type
-
-/* TODO:
-   strings
-   */
 
 %%
 
@@ -129,15 +122,8 @@ update         myreturn(UPDATE);
 write          myreturn(WRITE);
 shell          myreturn(SHELL);
 block          myreturn(BLOCK);
-   /*sblock         myreturn(SBLOCK);*/
-model          {
-                 BEGIN(accept_model_type);
-                 myreturn(MODEL);
-               }
-<accept_model_type>Network|Dynamic|Stochastic|Maximum {
-                 BEGIN(0);
-                 myreturn(MODELTYPE);
-               }
+model          myreturn(MODEL);
+
    /*begin          myreturn(BEG);*/
 data           myreturn(DATA);
 option         myreturn(OPTION);
@@ -161,8 +147,6 @@ forall         myreturn(FORALL);
 not            myreturn(NOT);
 within         myreturn(WITHIN);
 stages         myreturn(STAGES);
-   /*stage          myreturn(STAGE);*/
-   /*node           myreturn(NODE);*/
 
    /* looping */
 while          myreturn(WHILE);
@@ -245,7 +229,6 @@ ancestor    myreturn(ANCESTOR);
    /* Else it mut be an identifyer */
 {ID}  {
          yylval.string = strdup(yytext);
-         BEGIN(0);
          myreturn(ID);
       }
 %%
