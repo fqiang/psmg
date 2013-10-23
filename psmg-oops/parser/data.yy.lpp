@@ -1,0 +1,95 @@
+/* (c) 2008,2009 Jonathan Hogg and Andreas Grothey, University of Edinburgh
+ *
+ * This file is part of SML.
+ *
+ * SML is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, using version 3 of the License.
+ *
+ * SML is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program. If not, see http://www.gnu.org/licenses/.
+ */
+%option   	yylineno
+%option		noyywrap
+%{
+	#include "data.tab.h"
+	#include <errno.h>
+	#include <string.h>
+	//#define myreturn(id,text) printf("%s %s\n",#id,text)
+	#define myreturn(id,text) return(id)
+%}
+
+/* these here are just macro definitions: ID/DIGIT can be used in the rest
+   of this *.l file as shortcuts. These lines don't do any matching */
+ID      [a-zA-Z][a-zA-Z0-9_]*
+INT  	-?[0-9]+
+FLOAT	-?[0-9]*\.[0-9]+
+
+
+%%
+
+   /* comments */
+#[^\n]*             //printf("\n-->%s\n",yytext); /* nothing */
+  /* whitespace */
+[\n\t ]                /* nothing */
+
+data		myreturn(DATA,yytext);
+set			myreturn(SET,yytext);
+param		myreturn(PARAM,yytext);
+\(tr\)		myreturn(TR,yytext);
+
+
+:= 			myreturn(DEFINE,yytext);
+
+\+       	myreturn(PLUS,yytext);
+-        	myreturn(MINUS,yytext);
+
+"{"			myreturn(LBRACE,yytext);
+"}"        	myreturn(RBRACE,yytext);
+"."        	myreturn(DOT,yytext);
+","        	myreturn(COMMA,yytext);
+";"        	myreturn(SEMICOLON,yytext);
+"\["       	myreturn(LSBRACKET,yytext);
+"\]"       	myreturn(RSBRACKET,yytext);
+"\("       	myreturn(LBRACKET,yytext);
+"\)"       	myreturn(RBRACKET,yytext);
+":"        	myreturn(COLON,yytext);
+
+
+   /* Else it mut be an identifyer */
+{ID}  	{
+	         datalval.string = strdup(yytext);
+	         myreturn(ID,yytext);
+		}
+      
+{INT}	{
+			datalval.string = strdup(yytext);
+			myreturn(INT,yytext);
+		}
+
+{FLOAT}	{
+			datalval.string = strdup(yytext);
+			myreturn(FLOAT,yytext);
+		}
+
+%%
+
+//main(int argc,char** argv)
+//{
+//	++argv, --argc;  /* skip over program name */
+//	if ( argc > 0 )
+//	{
+//		yyin = fopen( argv[0], "r" );
+//	}
+//	else
+//	{
+//		yyin = stdin;
+//	}
+//	
+//	while(yylex());
+//}
