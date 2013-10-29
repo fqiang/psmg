@@ -83,14 +83,14 @@ statements: /* empty */
 statement:  set_def
 			| param_def
 			| DATA SEMICOLON {
-				YAC_LOG("data rule matched");
+				YAC_DATA_LOG("data rule matched");
 			}
          	;
 
 set_def:	SET set_name DEFINE member SEMICOLON {
-				YAC_LOG("set define start - FOR === ["<<$2<<"]");
-				YAC_LOG("   ===== VALUE ====");
-				YAC_LOG($4);
+				YAC_DATA_LOG("set define start - FOR === ["<<$2<<"]");
+				YAC_DATA_LOG("   ===== VALUE ====");
+				YAC_DATA_LOG($4);
 				
 				string id($2);
 				ModelComp* setComp = AmplModel::root->findModelComp(id,TSET);
@@ -107,17 +107,17 @@ set_name:	ID {
 			;
 
 member:		  member_items {
-				//YAC_LOG("member_items["<<$1<<"]"); 
+				//YAC_DATA_LOG("member_items["<<$1<<"]"); 
 				$$ = $1; 
 			}
 			| member_pairs { 
-				//YAC_LOG("member_pairs["<<$1<<"]");
+				//YAC_DATA_LOG("member_pairs["<<$1<<"]");
 				$$ = $1;
 			}
 			;
 
 member_items: set_value {
-				//YAC_LOG("last set value ["<<$1<<"]");
+				//YAC_DATA_LOG("last set value ["<<$1<<"]");
 				$$ = $1;
 			}
 			| member_items set_value {
@@ -130,14 +130,14 @@ member_items: set_value {
 			;
 
 member_pairs: LBRACKET member_pair RBRACKET {
-				//YAC_LOG("last set value tuple ["<<$2<<"]");
+				//YAC_DATA_LOG("last set value tuple ["<<$2<<"]");
 				ostringstream oss(ostringstream::out);
 				oss<<'('<<$2<<')';
 				free($2);
 				$$ = strdup(oss.str().c_str());
 			}
 			| member_pairs LBRACKET member_pair RBRACKET {
-				//YAC_LOG("a set value tuple ["<<$3<<"]");
+				//YAC_DATA_LOG("a set value tuple ["<<$3<<"]");
 				ostringstream oss(ostringstream::out);
 				oss<<$1<<'('<<$3<<')';
 				free($1);
@@ -159,9 +159,9 @@ member_pair: set_value  {
 			;
 
 param_def:	PARAM param_name DEFINE param_specs SEMICOLON { 
-				YAC_LOG("single param define start -FOR === ["<<$2<<"]");
-				YAC_LOG("   ===== VALUE ====");
-				YAC_LOG($4);
+				YAC_DATA_LOG("single param define start -FOR === ["<<$2<<"]");
+				YAC_DATA_LOG("   ===== VALUE ====");
+				YAC_DATA_LOG($4);
 				string id($2);
 				ModelComp* paramComp = AmplModel::root->findModelComp(id,TPARAM);
 				Param* param_ = new Param(paramComp->getNumParamIndicies(),paramComp->id);
@@ -171,9 +171,9 @@ param_def:	PARAM param_name DEFINE param_specs SEMICOLON {
                 rootContext->addCompValueMap(paramComp,param_);
 			}
 			| PARAM COLON param_names DEFINE param_specs SEMICOLON {
-				YAC_LOG("multiple params define start -FOR === ["<<$3<<"]");
-				YAC_LOG("   ===== VALUE ====");
-				YAC_LOG($5);
+				YAC_DATA_LOG("multiple params define start -FOR === ["<<$3<<"]");
+				YAC_DATA_LOG("   ===== VALUE ====");
+				YAC_DATA_LOG($5);
 				
 				char* tok = strtok($3,",");
 				vector<ModelComp*> paramModels;
@@ -276,9 +276,9 @@ void dataerror(const char *s) {
 
 void parse_data(ModelContext* context) {
        
-	YAC_LOG("===============================================================");
-	YAC_LOG(" Start parsing data file: " << GlobalVariables::datafilename);
-	YAC_LOG("===============================================================");
+	YAC_DATA_LOG("===============================================================");
+	YAC_DATA_LOG(" Start parsing data file: " << GlobalVariables::datafilename);
+	YAC_DATA_LOG("===============================================================");
 	rootContext = context;
   	datain = fopen(GlobalVariables::datafilename.c_str(), "r");
   	if (datain==NULL){
@@ -287,9 +287,9 @@ void parse_data(ModelContext* context) {
   	}
           
   	dataparse();
-  	YAC_LOG("===============================================================");
-  	YAC_LOG(" Finished parsing data file");
-  	YAC_LOG("===============================================================");
+  	YAC_DATA_LOG("===============================================================");
+  	YAC_DATA_LOG(" Finished parsing data file");
+  	YAC_DATA_LOG("===============================================================");
 	fclose(datain);
 }
 
