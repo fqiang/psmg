@@ -20,7 +20,7 @@
 #include <fstream>
 #include <string>
 #include "OOPSBlock.h"
-#include "../context/ExpandedModel2.h"
+#include "../context/ExpandedModel.h"
 #include "../sml/GlobalVariables.h"
 #include "../util/global_util_functions.h"
 
@@ -31,7 +31,7 @@ using namespace std;
 /* ----------------------------------------------------------------------------
 OOPSBlock::OOPSBlock(ExpandedModelInterface*, list<string>*)
 ---------------------------------------------------------------------------- */
-OOPSBlock::OOPSBlock(ExpandedModel2 *rowmod, ExpandedModel2 *colmod)
+OOPSBlock::OOPSBlock(ExpandedModel *rowmod, ExpandedModel *colmod)
 {
   /* We need to:
       - take the list of variable names from colmod (colmod->listOfVarNames)

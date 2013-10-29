@@ -6,7 +6,7 @@
  */
 
 #include "ModelContext.h"
-#include "ExpandedModel2.h"
+#include "ExpandedModel.h"
 #include "../model/ModelComp.h"
 #include "assert.h"
 #include "../util/global_util_functions.h"

@@ -38,7 +38,7 @@ class StochModel;
 class SyntaxNode;
 class SyntaxNodeIx;
 class ModelContext;
-class ExpandedModel2;
+class ExpandedModel;
 
 enum { NOARG = 0,
        WITHARG = 1,
@@ -170,7 +170,7 @@ class ModelComp{
   //for TVAR
   int varDim; //belong to TVar
   int varCard; //belong to TVar
-  void fillLocalVar(ExpandedModel2* em2);
+  void fillLocalVar(ExpandedModel* em2);
   void calculateLocalVar(ModelContext* context);
   void fillLocalVarRecurive(ModelContext* context,Var* aVar,vector<ModelComp*>::iterator it,ostringstream& oss);
   //end TVAR
@@ -178,7 +178,7 @@ class ModelComp{
   //for TCON
   hash_map<int,set<int> > varDeps; //belong to TCON -- map separability of variable declared in level -> set of levels
   void analyseVarDepLevelsInCons();
-  Node* constructAutoDiffCons(ModelContext* ctx, Block* emb,ExpandedModel2* emcol);
+  Node* constructAutoDiffCons(ModelContext* ctx, Block* emb,ExpandedModel* emcol);
   //end TCON
 
   string& getHashKey();

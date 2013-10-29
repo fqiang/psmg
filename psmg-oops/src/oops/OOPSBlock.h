@@ -17,7 +17,7 @@
 
 //#include "../context/ExpandedModel2.h"
 
-class ExpandedModel2;
+class ExpandedModel;
 /** @class OOPSBlock
  *  OOPSBlock is an object that directly corresponds to a node in the
  *  OOPS Algebra Tree. 
@@ -33,8 +33,8 @@ class ExpandedModel2;
  */
 class OOPSBlock {
  public:
-  ExpandedModel2 *emrow;    //!< Expanded Model giving row information
-  ExpandedModel2 *emcol;    //!< Expanded Model giving col information
+  ExpandedModel *emrow;    //!< Expanded Model giving row information
+  ExpandedModel *emcol;    //!< Expanded Model giving col information
 
   int ncon;             //!< number of rows in this block
   int nvar;             //!< number of columns in this block
@@ -44,5 +44,5 @@ class OOPSBlock {
    *  @param rowmod       The model giving the row information
    *  @param colmod       The model giving the column information
    */
-  OOPSBlock(ExpandedModel2 *rowmod, ExpandedModel2 *colmod);
+  OOPSBlock(ExpandedModel *rowmod, ExpandedModel *colmod);
 };

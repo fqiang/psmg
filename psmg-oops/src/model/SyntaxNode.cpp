@@ -17,7 +17,7 @@
 #include "../util/global_util_functions.h"
 #include "../context/Param.h"
 #include "../util/DummyVariableGenerator.h"
-#include "../context/ExpandedModel2.h"
+#include "../context/ExpandedModel.h"
 #include "../st_model/StochModel.h"
 
 extern int n_indexing;
@@ -946,8 +946,8 @@ void SyntaxNode::handleSum(ModelContext* rowContext, vector<double>& jcobs, Mode
 //	}
 //	foreachSetValue(comps, dummyVars, aSet, rowContext, jcobs, colContext);
 
-	ExpandedModel2* rowEm2 = rowContext->em2;
-	ExpandedModel2* colEm2 = colContext->em2;
+	ExpandedModel* rowEm2 = rowContext->em2;
+	ExpandedModel* colEm2 = colContext->em2;
 
 	SyntaxNode* cons_sum_node = SyntaxNode::findSyntaxNodeChild(this, IN);
 	SyntaxNode* col_index_node = NULL;
@@ -1010,7 +1010,7 @@ void SyntaxNode::handleSum(ModelContext* rowContext, vector<double>& jcobs, Mode
 	}
 }
 
-bool SyntaxNode::isContainsInEm2(string& varKey, ExpandedModel2* em)
+bool SyntaxNode::isContainsInEm2(string& varKey, ExpandedModel* em)
 {
 	vector<Var*>::iterator it_var = em->localVars.begin();
 	for(;it_var!=em->localVars.end();it_var++)
@@ -1147,7 +1147,7 @@ void SyntaxNode::evalDiff(ModelContext* rowContext, ModelContext* colContext, ve
 			LOG("got a parameter type rval = 0");
 		}
 		else if (comp->type == TVAR) {
-			ExpandedModel2* em2 = colContext->em2;
+			ExpandedModel* em2 = colContext->em2;
 			vector<Var*>::iterator it_var = em2->localVars.begin();
 			vector<ModelComp*>::iterator it_mc = em2->localVarComps.begin();
 			vector<double>::iterator it_jcobs = jcobs.begin();
@@ -1356,18 +1356,18 @@ void SyntaxNode::calcSumSetComp(ModelContext* context, IndexSet** iset) {
 		LOG(this->print());
 		assert(this->values.size() <= 3 && this->values.size() != 0);
 
-		ExpandedModel2* em2 = context->em2;
+		ExpandedModel* em2 = context->em2;
 		for(vector<SyntaxNode*>::iterator it = this->values.begin();it != this->values.end();it++) {
 			LOG("COMMA List -- handling ["<<(*it)->print()<<"]");
 			(*it)->calculateCompsDummyNames(context, (*iset));
 		}
 		assert((*iset)->comps.size() == this->values.size() && (*iset)->comps.size() == (*iset)->dummyVarNames.size());
 
-		vector<ExpandedModel2*> em2LevelList;
+		vector<ExpandedModel*> em2LevelList;
 		em2->levelTraversal(em2LevelList, context->moveUpLevel);
 
 		(*iset)->name = "TMP_UP" + context->moveUpLevel;
-		for(vector<ExpandedModel2*>::iterator em2LevelIt = em2LevelList.begin();em2LevelIt != em2LevelList.end();em2LevelIt++) {
+		for(vector<ExpandedModel*>::iterator em2LevelIt = em2LevelList.begin();em2LevelIt != em2LevelList.end();em2LevelIt++) {
 			this->calculateSet((*em2LevelIt)->ctx,*iset);
 		}
 	}
@@ -2011,7 +2011,7 @@ bool SyntaxNode::containsVarDefInLevel(int level)
 	return rval;
 }
 
-Node* SyntaxNode::constructAutoDiffNode(ModelContext* ctx, Block* emb, ExpandedModel2* emcol)
+Node* SyntaxNode::constructAutoDiffNode(ModelContext* ctx, Block* emb, ExpandedModel* emcol)
 {
 	Node* node = NULL;
 	if(this->opCode == SUM)
@@ -2275,7 +2275,7 @@ Node* SyntaxNode::constructAutoDiffNode(ModelContext* ctx, Block* emb)
 }
 
 
-bool SyntaxNode::isContainVariablesInEm2(ModelContext* ctx,ExpandedModel2* emcol)
+bool SyntaxNode::isContainVariablesInEm2(ModelContext* ctx,ExpandedModel* emcol)
 {
 	bool rval = false;
 	if(this->opCode == SUM)

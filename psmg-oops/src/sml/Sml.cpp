@@ -108,14 +108,14 @@ void Sml::generateExpandedModel()
 {
 	LOG("============== ExpandedModel2 Generation =============================");
 	//step 1: create expandedmodel recursively
-	ExpandedModel2::root = AmplModel::root->createExpandedModel2("",NULL,"",NULL);
+	ExpandedModel::root = AmplModel::root->createExpandedModel("",NULL,"",NULL);
 	LOG("============== END ExpandedModel2 Generation =============================");
 }
 
 void Sml::resetContextTree()
 {
 	LOG("============== resetContextTree =============================");
-	ExpandedModel2::root->clearAllContextTreeKeepRoot();
+	ExpandedModel::root->clearAllContextTreeKeepRoot();
 	LOG("============== END resetContextTree =============================");
 }
 

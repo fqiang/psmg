@@ -194,9 +194,9 @@ public:
 	void calcVarDefinedLevels(set<int>& levels);
 	void calcSeparability(int level, set<int>& deps);
 	bool containsVarDefInLevel(int level);
-	Node* constructAutoDiffNode(ModelContext* ctx, Block* emb, ExpandedModel2* emcol);
+	Node* constructAutoDiffNode(ModelContext* ctx, Block* emb, ExpandedModel* emcol);
 	Node* constructAutoDiffNode(ModelContext* ctx, Block* emb);
-	bool isContainVariablesInEm2(ModelContext* ctx,ExpandedModel2* emcol);
+	bool isContainVariablesInEm2(ModelContext* ctx,ExpandedModel* emcol);
 
 	void calculateBaseValueVector(unsigned long& size);
 	virtual void calculateMemoryUsage(unsigned long& size);
@@ -214,7 +214,7 @@ private:
 	void handleSum(ModelContext* rowContext, vector<double>& jcobs, ModelContext* colContext);
 	void foreachSetValue(vector<ModelComp*> comps, vector<string>& dummyVars, Set* aSet, ModelContext* rowContext, vector<double>& jcobs, ModelContext* colContext);
 	static void getIndiciesKey(string& varKey, SyntaxNodeIDREF* refn, ModelContext* rowContext);
-	static bool isContainsInEm2(string& varKey, ExpandedModel2* em);
+	static bool isContainsInEm2(string& varKey, ExpandedModel* em);
 	OPCODE opCodeTranslateToAutoDiffOp(int opCode);
 };
 

@@ -25,7 +25,7 @@
 #include "./util/global_util_functions.h"
 #include "./sml/GlobalVariables.h"
 #include "./metric/Statistics.h"
-#include "./context/ExpandedModel2.h"
+#include "./context/ExpandedModel.h"
 #include "./model/AmplModel.h"
 #include "oops/parutil.h"
 
@@ -83,10 +83,6 @@ int analyseOptions(int argc, char **argv) {
 		else if(strncmp(argv[i], "--with-ampl=",12)==0)
 		{
 			GlobalVariables::amplcommand = (argv[i] + 12);
-		}
-		else if(strcmp(argv[i],"-p")==0)
-		{
-			GlobalVariables::degreeParallel = atoi(argv[++i]);
 		}
 		else if(strcmp(argv[i],"-m")==0)
 		{
@@ -162,7 +158,6 @@ int main(int argc, char **argv)
 
 	LOG("Running PSMG with OOPS");
 	LOG("Process started on host["<<GlobalVariables::hostname<<"]");
-	assert (GlobalVariables::degreeParallel >= 1);
 	Sml::print_copy_right(cout);
 	TIMER_START("SML_PARSE_MODEL");
 	Sml::instance()->processModelfile();
@@ -185,28 +180,28 @@ int main(int argc, char **argv)
 	TIMER_START("SML_EM2_GENERATION");
 	Sml::instance()->generateExpandedModel();
 	Sml::instance()->resetContextTree();
-	assert(ExpandedModel2::root->ctx != NULL);
+	assert(ExpandedModel::root->ctx != NULL);
 	TIMER_STOP("SML_EM2_GENERATION");
 
 #ifdef MEM
 	unsigned long mem_size_em2 = 0;
 	unsigned long mem_size_ctx = 0;
-	ExpandedModel2::root->calculateMemoryUsage(mem_size_em2,mem_size_ctx);
+	ExpandedModel::root->calculateMemoryUsage(mem_size_em2,mem_size_ctx);
 	cout<<"["<<GlobalVariables::rank<<"/"<<GlobalVariables::size<<"]-Structure Memory Usage Size Before Solve ["<<mem_size_em2<<"] bytes"<<endl;
 	cout<<"["<<GlobalVariables::rank<<"/"<<GlobalVariables::size<<"]-Data Memory Usage Size Before Solve ["<<mem_size_ctx<<"] bytes"<<endl;
 #endif
 
 
 
-	assert(ExpandedModel2::root != NULL);
+	assert(ExpandedModel::root != NULL);
 	TIMER_START("SML_OOPS_DRIVER");
-	SML_OOPS_driver(ExpandedModel2::root);
+	SML_OOPS_driver(ExpandedModel::root);
 	TIMER_STOP("SML_OOPS_DRIVER");
 
 #ifdef MEM
 	mem_size_em2=0;
 	mem_size_ctx=0;
-	ExpandedModel2::root->calculateMemoryUsage(mem_size_em2,mem_size_ctx);
+	ExpandedModel::root->calculateMemoryUsage(mem_size_em2,mem_size_ctx);
 	cout<<"["<<GlobalVariables::rank<<"/"<<GlobalVariables::size<<"]-Structure Memory Usage Size After Solve ["<<mem_size_em2<<"] bytes"<<endl;
 	cout<<"["<<GlobalVariables::rank<<"/"<<GlobalVariables::size<<"]-Data Memory Usage Size After Solve ["<<mem_size_ctx<<"] bytes"<<endl;
 #endif
@@ -216,7 +211,7 @@ int main(int argc, char **argv)
 //				for uploadsolution function which is not yet designed
 //	em2->outputSolution(cout,0);
 
-	delete ExpandedModel2::root;
+	delete ExpandedModel::root;
 	delete AmplModel::root;
 
 	Sml::deleteInstance();

@@ -25,7 +25,7 @@
 #include "SyntaxNodeIDREF.h"
 #include "changeitem.h"
 #include "../parser/sml.tab.h"
-#include "../context/ExpandedModel2.h"
+#include "../context/ExpandedModel.h"
 #include "../sml/GlobalVariables.h"
 #include "../util/global_util_functions.h"
 #include <cassert>
@@ -134,11 +134,11 @@ void AmplModel::analyseConstraints()
 }
 
 /* ---------------------------------------------------------------------------
-AmplModel::createExpandedModel2
+AmplModel::createExpandedModel
 ---------------------------------------------------------------------------- */
-ExpandedModel2* AmplModel::createExpandedModel2(string dummyVar,ModelComp* comp,string value,ModelContext* parent)
+ExpandedModel* AmplModel::createExpandedModel(string dummyVar,ModelComp* comp,string value,ModelContext* parent)
 {
-	LOG("createExpandedModel2- Model["<<this->name<<"] -- level["<<this->level<<"]");
+	LOG("createExpandedModel- Model["<<this->name<<"] -- level["<<this->level<<"]");
 
 	for(vector<ModelComp*>::iterator i=set_comps.begin();i!=set_comps.end();i++)
 	{
@@ -154,15 +154,15 @@ ExpandedModel2* AmplModel::createExpandedModel2(string dummyVar,ModelComp* comp,
 	}
 
 	ModelContext* currCtx = new ModelContext(parent);
-	ExpandedModel2 *currEm2 = NULL;
+	ExpandedModel *currEm2 = NULL;
 	if(this==AmplModel::root){
 		//for root node
-		currEm2 = new ExpandedModel2(AmplModel::root,currCtx,"",NULL,"");
+		currEm2 = new ExpandedModel(AmplModel::root,currCtx,"",NULL,"");
 		parse_data(currCtx);
 	}
 	else
 	{
-		currEm2 = new ExpandedModel2(this,currCtx,dummyVar,comp,value);
+		currEm2 = new ExpandedModel(this,currCtx,dummyVar,comp,value);
 	}
 
 
@@ -239,12 +239,12 @@ ExpandedModel2* AmplModel::createExpandedModel2(string dummyVar,ModelComp* comp,
 			LOG("Name["<<name<<"]'s Comp["<<mc->id<<"] card["<<set->card<<"]");
 
 			vector<string>::iterator it;
-			LOG("creating child  ExpandedModel2 over the set:"<<set->toString());
+			LOG("creating child  ExpandedModel over the set:"<<set->toString());
 			for(it=set->setValues_data_order.begin();it!=set->setValues_data_order.end();it++)
 			{
 				LOG("creating sub-em2 ["<<mc->id<<"] for - set["<<setComp->id<<"] ["<<this->name<<"] "<<dummy<<"=["<<*it<<"]");
 				AmplModel* submod = mc->other;
-				ExpandedModel2* subem2 = submod->createExpandedModel2(dummy,setComp,*it,currCtx);
+				ExpandedModel* subem2 = submod->createExpandedModel(dummy,setComp,*it,currCtx);
 				currEm2->addChildren(subem2);
 				LOG("add child em2 ["<<subem2->getName()<<"] for - ["<<currEm2->getName()<<"]");
 			}
@@ -253,14 +253,14 @@ ExpandedModel2* AmplModel::createExpandedModel2(string dummyVar,ModelComp* comp,
 		{
 			LOG("Model's indexing over is NULL");
 			AmplModel* submod = mc->other;
-			ExpandedModel2* subem2 = submod->createExpandedModel2("",NULL,"",currCtx);
+			ExpandedModel* subem2 = submod->createExpandedModel("",NULL,"",currCtx);
 			currEm2->addChildren(subem2);
 			LOG("child expandedModel2 ["<<subem2->getName()<<"]");
 			//assert(childContext == NULL);
 		}
 	}
 
-	LOG("End createExpandedModel2 - model["<<this->name<<"]");
+	LOG("End createExpandedModel - model["<<this->name<<"]");
 	return currEm2;
 }
 
