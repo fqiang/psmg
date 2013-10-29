@@ -20,13 +20,13 @@
 using namespace std;
 
 class ModelComp;
-class ExpandedModel2;
+class ExpandedModel;
 
 class ModelContext {
 
 public:
 	ModelContext* parent;
-	ExpandedModel2* em2;
+	ExpandedModel* em2;
 	int moveUpLevel;
 	bool isCompsCalculated;
 

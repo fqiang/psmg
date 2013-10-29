@@ -23,7 +23,7 @@
 
 class ModelComp;
 class AmplModel;
-class ExpandedModel2;
+class ExpandedModel;
 class Var;
 void print_mem_usage(string name);
 
@@ -47,9 +47,9 @@ namespace __gnu_cxx
 		}
 	};
 
-	template<> struct hash< ::ExpandedModel2* >
+	template<> struct hash< ::ExpandedModel* >
 	{
-		size_t operator()( const ExpandedModel2* x) const
+		size_t operator()( const ExpandedModel* x) const
 		{
 			size_t h = (intptr_t)(x);
 			LOG("hashkey - "<<h);

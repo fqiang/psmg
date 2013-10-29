@@ -24,7 +24,6 @@
 #include <string>
 
 class ExpandedModel;
-class ExpandedModel2;
 class IDNode;
 class SyntaxNode;
 class SyntaxNodeIx;
@@ -149,7 +148,7 @@ class AmplModel{
   ModelComp* findModelComp(string id,compType type);
   void calculateCurrLevelModelComp(ModelContext* context);
   void calculateModelCompRecursive(ModelContext* context);
-  ExpandedModel2* createExpandedModel2(string dummyVar,ModelComp* comp,string value,ModelContext* parent);
+  ExpandedModel* createExpandedModel(string dummyVar,ModelComp* comp,string value,ModelContext* parent);
   void reassignModelIndexDependencies();
   void settingUpLevels(int);
 

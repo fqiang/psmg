@@ -1460,7 +1460,7 @@ yyreduce:
 /* Line 1806 of yacc.c  */
 #line 85 "data.tab.ypp"
     {
-				YAC_LOG("data rule matched");
+				YAC_DATA_LOG("data rule matched");
 			}
     break;
 
@@ -1469,9 +1469,9 @@ yyreduce:
 /* Line 1806 of yacc.c  */
 #line 90 "data.tab.ypp"
     {
-				YAC_LOG("set define start - FOR === ["<<(yyvsp[(2) - (5)].string)<<"]");
-				YAC_LOG("   ===== VALUE ====");
-				YAC_LOG((yyvsp[(4) - (5)].string));
+				YAC_DATA_LOG("set define start - FOR === ["<<(yyvsp[(2) - (5)].string)<<"]");
+				YAC_DATA_LOG("   ===== VALUE ====");
+				YAC_DATA_LOG((yyvsp[(4) - (5)].string));
 				
 				string id((yyvsp[(2) - (5)].string));
 				ModelComp* setComp = AmplModel::root->findModelComp(id,TSET);
@@ -1496,7 +1496,7 @@ yyreduce:
 /* Line 1806 of yacc.c  */
 #line 109 "data.tab.ypp"
     {
-				//YAC_LOG("member_items["<<$1<<"]"); 
+				//YAC_DATA_LOG("member_items["<<$1<<"]"); 
 				(yyval.string) = (yyvsp[(1) - (1)].string); 
 			}
     break;
@@ -1506,7 +1506,7 @@ yyreduce:
 /* Line 1806 of yacc.c  */
 #line 113 "data.tab.ypp"
     { 
-				//YAC_LOG("member_pairs["<<$1<<"]");
+				//YAC_DATA_LOG("member_pairs["<<$1<<"]");
 				(yyval.string) = (yyvsp[(1) - (1)].string);
 			}
     break;
@@ -1516,7 +1516,7 @@ yyreduce:
 /* Line 1806 of yacc.c  */
 #line 119 "data.tab.ypp"
     {
-				//YAC_LOG("last set value ["<<$1<<"]");
+				//YAC_DATA_LOG("last set value ["<<$1<<"]");
 				(yyval.string) = (yyvsp[(1) - (1)].string);
 			}
     break;
@@ -1539,7 +1539,7 @@ yyreduce:
 /* Line 1806 of yacc.c  */
 #line 132 "data.tab.ypp"
     {
-				//YAC_LOG("last set value tuple ["<<$2<<"]");
+				//YAC_DATA_LOG("last set value tuple ["<<$2<<"]");
 				ostringstream oss(ostringstream::out);
 				oss<<'('<<(yyvsp[(2) - (3)].string)<<')';
 				free((yyvsp[(2) - (3)].string));
@@ -1552,7 +1552,7 @@ yyreduce:
 /* Line 1806 of yacc.c  */
 #line 139 "data.tab.ypp"
     {
-				//YAC_LOG("a set value tuple ["<<$3<<"]");
+				//YAC_DATA_LOG("a set value tuple ["<<$3<<"]");
 				ostringstream oss(ostringstream::out);
 				oss<<(yyvsp[(1) - (4)].string)<<'('<<(yyvsp[(3) - (4)].string)<<')';
 				free((yyvsp[(1) - (4)].string));
@@ -1588,9 +1588,9 @@ yyreduce:
 /* Line 1806 of yacc.c  */
 #line 161 "data.tab.ypp"
     { 
-				YAC_LOG("single param define start -FOR === ["<<(yyvsp[(2) - (5)].string)<<"]");
-				YAC_LOG("   ===== VALUE ====");
-				YAC_LOG((yyvsp[(4) - (5)].string));
+				YAC_DATA_LOG("single param define start -FOR === ["<<(yyvsp[(2) - (5)].string)<<"]");
+				YAC_DATA_LOG("   ===== VALUE ====");
+				YAC_DATA_LOG((yyvsp[(4) - (5)].string));
 				string id((yyvsp[(2) - (5)].string));
 				ModelComp* paramComp = AmplModel::root->findModelComp(id,TPARAM);
 				Param* param_ = new Param(paramComp->getNumParamIndicies(),paramComp->id);
@@ -1606,9 +1606,9 @@ yyreduce:
 /* Line 1806 of yacc.c  */
 #line 173 "data.tab.ypp"
     {
-				YAC_LOG("multiple params define start -FOR === ["<<(yyvsp[(3) - (6)].string)<<"]");
-				YAC_LOG("   ===== VALUE ====");
-				YAC_LOG((yyvsp[(5) - (6)].string));
+				YAC_DATA_LOG("multiple params define start -FOR === ["<<(yyvsp[(3) - (6)].string)<<"]");
+				YAC_DATA_LOG("   ===== VALUE ====");
+				YAC_DATA_LOG((yyvsp[(5) - (6)].string));
 				
 				char* tok = strtok((yyvsp[(3) - (6)].string),",");
 				vector<ModelComp*> paramModels;
@@ -1996,9 +1996,9 @@ void dataerror(const char *s) {
 
 void parse_data(ModelContext* context) {
        
-	YAC_LOG("===============================================================");
-	YAC_LOG(" Start parsing data file: " << GlobalVariables::datafilename);
-	YAC_LOG("===============================================================");
+	YAC_DATA_LOG("===============================================================");
+	YAC_DATA_LOG(" Start parsing data file: " << GlobalVariables::datafilename);
+	YAC_DATA_LOG("===============================================================");
 	rootContext = context;
   	datain = fopen(GlobalVariables::datafilename.c_str(), "r");
   	if (datain==NULL){
@@ -2007,9 +2007,9 @@ void parse_data(ModelContext* context) {
   	}
           
   	dataparse();
-  	YAC_LOG("===============================================================");
-  	YAC_LOG(" Finished parsing data file");
-  	YAC_LOG("===============================================================");
+  	YAC_DATA_LOG("===============================================================");
+  	YAC_DATA_LOG(" Finished parsing data file");
+  	YAC_DATA_LOG("===============================================================");
 	fclose(datain);
 }
 

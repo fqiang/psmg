@@ -24,7 +24,7 @@
 #include "../util/global_util_functions.h"
 #include "../context/Param.h"
 #include "../parser/sml.tab.h"
-#include "../context/ExpandedModel2.h"
+#include "../context/ExpandedModel.h"
 #include "ValueNode.h"
 #include <cassert>
 #include <cstdlib>
@@ -583,7 +583,7 @@ void ModelComp::fillLocalVarRecurive(ModelContext* context,Var* aVar,vector<Mode
 	}
 }
 
-void ModelComp::fillLocalVar(ExpandedModel2* em2)
+void ModelComp::fillLocalVar(ExpandedModel* em2)
 {
 	assert(this->type==TVAR);
 	ModelContext* context = em2->ctx;
@@ -672,7 +672,7 @@ void ModelComp::analyseVarDepLevelsInCons()
 	}
 }
 
-Node* ModelComp::constructAutoDiffCons(ModelContext* ctx, Block* emb,ExpandedModel2* emcol)
+Node* ModelComp::constructAutoDiffCons(ModelContext* ctx, Block* emb,ExpandedModel* emcol)
 {
 	assert(this->type == TCON);
 	LOG("constructAutoDiffCons - modelcomp["<<this->id<<"] ctx["<<ctx->getContextId()<<"]");
