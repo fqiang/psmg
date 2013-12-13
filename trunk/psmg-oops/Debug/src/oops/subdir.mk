@@ -4,16 +4,13 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
-../src/oops/OOPSBlock.cpp \
-../src/oops/sml-oops.cpp 
+../src/oops/psmg-oops.cpp 
 
 OBJS += \
-./src/oops/OOPSBlock.o \
-./src/oops/sml-oops.o 
+./src/oops/psmg-oops.o 
 
 CPP_DEPS += \
-./src/oops/OOPSBlock.d \
-./src/oops/sml-oops.d 
+./src/oops/psmg-oops.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

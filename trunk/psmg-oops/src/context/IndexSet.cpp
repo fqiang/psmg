@@ -66,15 +66,22 @@ void IndexSet::calculateMemoryUsage(unsigned long& size)
 		vector< vector<string> >::const_iterator it1 = setIndicies.begin();
 		vector<string>::const_iterator it2 = dummyVarNames.begin();
 		vector<ModelComp*>::const_iterator it3 = comps.begin();
+		assert(dummyVarNames.size()==comps.size());
 
-		for(;it1!=setIndicies.end();it1++,it2++,it3++)
+		for(;it2!=dummyVarNames.end();it2++,it3++)
 		{
 			size += (*it2).size() + 1;
 			size += sizeof(ModelComp*);
+		}
+
+		for(;it1!=setIndicies.end();it1++)
+		{
+			assert((*it1).size()==comps.size());
+			size += sizeof(vector<string>);
 			vector<string>::const_iterator ind = (*it1).begin();
 			for(;ind!=(*it1).end();ind++)
 			{
-				size += (*it1).size() + 1;
+				size += (*ind).size() + 1;
 			}
 		}
 }

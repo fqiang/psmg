@@ -11,8 +11,10 @@
 #include "../util/global_util_functions.h"
 #include "Var.h"
 #include "Set.h"
+#include "autodiff.h"
 #include "IndexSet.h"
 #include <ext/hash_map>
+#include <tr1/unordered_map>
 #include <string>
 #include <vector>
 #include <list>
@@ -28,13 +30,20 @@ public:
 	ModelContext* parent;
 	ExpandedModel* em2;
 	int moveUpLevel;
+
+	//! When isCompsCalculated is true, then it can be assumed that the ancestor
+	//! level's model components are calculated this is because the local component
+	//! value might depend on the parent level's components.
 	bool isCompsCalculated;
+
+	//true if the local variables are computed and filled in the localVars.
+	bool isLocalVarFilled;
 
 	//! data storage for this expanded model tree node. key is ModelComp*
 	__gnu_cxx::hash_map<string,CompDescr*> compValueMap;
 
-	__gnu_cxx::hash_map<string,ModelComp*> dummySetMapCons;
-	__gnu_cxx::hash_map<string,string> dummyValueMapCons;
+//	__gnu_cxx::hash_map<string,ModelComp*> dummySetMapCons;
+//	__gnu_cxx::hash_map<string,string> dummyValueMapCons;
 
 	__gnu_cxx::hash_map<string,ModelComp*> dummySetMapTemp;
 	__gnu_cxx::hash_map<string,string> dummyValueMapTemp;
@@ -44,11 +53,9 @@ public:
 
 	__gnu_cxx::hash_map<string,IndexSet*> tempISetMap;
 
-
-	list<string> localConNames;
-	list<string> localVarNames;
-	bool conNameReady;
-	bool varNameReady;
+	//for local variables
+	vector<Var*> localVars;
+	std::tr1::unordered_map<string,AutoDiff::Node*> variables;
 
 	ModelContext(ModelContext* par);
 	virtual ~ModelContext();
@@ -57,7 +64,7 @@ public:
 	void addDummySetValueMapTemp(string& dummyVar,ModelComp* comp,string val);
 	void removeDummySetValueMapCons(string& dummyVar);
 	void removeDummySetValueMapTemp(string& dummyVar);
-	string& getDummyValue(string& dummyVar);
+	string getDummyValue(string& dummyVar);
 	string getDummyValueCons(string& dummyVar);
 	string getDummyValueTemp(string& dummyVar);
 	ModelComp* getDummySet(string& dummyVar);

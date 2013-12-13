@@ -37,17 +37,15 @@ using namespace std;
 
 static bool prtSM = false;
 
-StochModelComp::StochModelComp(const string& id_): ModelComp(id_) {
+StochModelComp::StochModelComp(string _id): ModelComp(_id) {
 
 }
 
-StochModelComp::StochModelComp(const string& id_, compType type_,
-                               SyntaxNode *indexing_, SyntaxNode *attrib,
-                               StochModel *stoch):
-  ModelComp(id_, type_, indexing_, attrib),stochmodel(stoch)
+StochModelComp::StochModelComp(string _id, compType _type,SyntaxNodeIx *_indexing, SyntaxNode *_attribute,StochModel *_stoch)
+	:ModelComp(_id, _type, _indexing, _attribute),stochmodel(_stoch)
 {
-	LOG("create StochModelComp - "<<id<<" type["<<type_<<"] index["<<indexing_->print()<<"] attrib["
-			<<attrib->print()<<" stochmodel"<<stoch);
+	LOG("create StochModelComp - "<<_id<<" type["<<_type<<"] index["
+			<<_indexing->print()<<"] attrib["<<_attribute->print()<<" stochmodel"<<_stoch);
 }
 
 /** Multiply the current expression by the conditional probability terms.
@@ -405,7 +403,7 @@ StochModelComp::transcribeToModelComp(AmplModel *current_model,
 /* ---------------------------------------------------------------------------
 StochModelComp::clone()
 ---------------------------------------------------------------------------- */
-StochModelComp* StochModelComp::clone() const
+StochModelComp* StochModelComp::clone()
 {
   // can we call clone for the ModelComp? 
   //  => I guess no, since this would create a ModelComp object and not a

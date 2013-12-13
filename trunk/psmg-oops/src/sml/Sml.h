@@ -20,6 +20,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include "../context/ExpandedModel.h"
 
 using namespace std;
 
@@ -28,22 +29,22 @@ class Sml
 public:
 	static Sml* instance();
 	static void deleteInstance();
-	static std::string smlVersion();
-	static void print_copy_right(ostream &out);
+
+	void writeHelp(ostream& out);
+	int analyseOptions(int argc, char **argv);
 
 	void processModelfile();
 	void generateExpandedModel();
 	void resetContextTree();
-	void analyseConstraints();
-
-
-	vector<string> scriptNameList;
+	void formulateConstraints();
+	void printEMStructure(string filename);
+	void testRecursiveCreateEMB0(ExpandedModel* root,ExpandedModel* other);
+	void testRecursiveCreateEMB1(ExpandedModel* root);
 
 private:
 	Sml();
 	~Sml();
 	static Sml* _sml;
-	static int sml_gen_pre_checks();
 
 };
 #endif

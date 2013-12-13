@@ -54,6 +54,7 @@ class AmplModel{
 
   /** The root model of the AmplModel tree */
   static AmplModel *root;
+  static int MAX_LEVEL;
   /** The parent if this is a submodel of another model */
   AmplModel *parent;
 
@@ -108,10 +109,6 @@ class AmplModel{
   /** Recursively write out all tagged model components in this model and 
       submodels to file */
   void writeTaggedComponents(std::ostream& fout);
-                                
-  /** Recursively create an ExpandedModel tree from the flat AmplModel */
-  ExpandedModel* createExpandedModel(const std::string& smodelname,
-                                     const std::string& sinstanceStub);
 
   /** Add a model component to the model */
   virtual void addComp(ModelComp *comp);
@@ -128,7 +125,7 @@ class AmplModel{
   void print() const;
 
   /** Recursive detailed debugging output */
-  void dump(const char *filename) const;
+  void logModel(const char *filename) const;
 
   /** Recursive detailed debugging output */
   void dump(std::ostream& fout) const;
@@ -146,13 +143,14 @@ class AmplModel{
 
   //find the ModelComp to fill the CompDescr.
   ModelComp* findModelComp(string id,compType type);
-  void calculateCurrLevelModelComp(ModelContext* context);
+  void calculateModelComp(ModelContext* context);
   void calculateModelCompRecursive(ModelContext* context);
   ExpandedModel* createExpandedModel(string dummyVar,ModelComp* comp,string value,ModelContext* parent);
   void reassignModelIndexDependencies();
   void settingUpLevels(int);
 
-  void analyseConstraints();
+  void formulateConstraints();
+  void fillLocalVar(ModelContext* context);
   void calculateMemoryUsage(unsigned long& size);
   //Feng end
 

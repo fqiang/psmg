@@ -131,38 +131,37 @@
      EQ = 349,
      LT = 350,
      GT = 351,
-     UNION = 352,
-     DIFF = 353,
-     CROSS = 354,
-     INTER = 355,
-     SYMDIFF = 356,
-     LBRACE = 357,
-     RBRACE = 358,
-     COMMA = 359,
-     SEMICOLON = 360,
-     LSBRACKET = 361,
-     RSBRACKET = 362,
-     COLON = 363,
-     LBRACKET = 364,
-     RBRACKET = 365,
-     DEFINED = 366,
-     LOGICAL_OR = 367,
-     LOGICAL_AND = 368,
-     ELLIPSE = 369,
-     DOT = 370,
-     SUFFIX = 371,
-     BLOCK = 372,
-     IDREF = 373,
-     IDREFM = 374,
-     STAGE = 375,
-     NODE = 376,
-     USING = 377,
-     DETERMINISTIC = 378,
-     EXPECTATION = 379,
-     STOCHASTIC = 380,
-     STAGES = 381,
-     ANCESTOR = 382,
-     ASSIGN = 383
+     SIN = 352,
+     COS = 353,
+     UNION = 354,
+     DIFF = 355,
+     CROSS = 356,
+     INTER = 357,
+     SYMDIFF = 358,
+     LBRACE = 359,
+     RBRACE = 360,
+     COMMA = 361,
+     SEMICOLON = 362,
+     LSBRACKET = 363,
+     RSBRACKET = 364,
+     COLON = 365,
+     LBRACKET = 366,
+     RBRACKET = 367,
+     DEFINED = 368,
+     DOT = 369,
+     SUFFIX = 370,
+     BLOCK = 371,
+     IDREF = 372,
+     IDREFM = 373,
+     STAGE = 374,
+     NODE = 375,
+     USING = 376,
+     DETERMINISTIC = 377,
+     EXPECTATION = 378,
+     STOCHASTIC = 379,
+     STAGES = 380,
+     ANCESTOR = 381,
+     ASSIGN = 382
    };
 #endif
 /* Tokens.  */
@@ -260,38 +259,37 @@
 #define EQ 349
 #define LT 350
 #define GT 351
-#define UNION 352
-#define DIFF 353
-#define CROSS 354
-#define INTER 355
-#define SYMDIFF 356
-#define LBRACE 357
-#define RBRACE 358
-#define COMMA 359
-#define SEMICOLON 360
-#define LSBRACKET 361
-#define RSBRACKET 362
-#define COLON 363
-#define LBRACKET 364
-#define RBRACKET 365
-#define DEFINED 366
-#define LOGICAL_OR 367
-#define LOGICAL_AND 368
-#define ELLIPSE 369
-#define DOT 370
-#define SUFFIX 371
-#define BLOCK 372
-#define IDREF 373
-#define IDREFM 374
-#define STAGE 375
-#define NODE 376
-#define USING 377
-#define DETERMINISTIC 378
-#define EXPECTATION 379
-#define STOCHASTIC 380
-#define STAGES 381
-#define ANCESTOR 382
-#define ASSIGN 383
+#define SIN 352
+#define COS 353
+#define UNION 354
+#define DIFF 355
+#define CROSS 356
+#define INTER 357
+#define SYMDIFF 358
+#define LBRACE 359
+#define RBRACE 360
+#define COMMA 361
+#define SEMICOLON 362
+#define LSBRACKET 363
+#define RSBRACKET 364
+#define COLON 365
+#define LBRACKET 366
+#define RBRACKET 367
+#define DEFINED 368
+#define DOT 369
+#define SUFFIX 370
+#define BLOCK 371
+#define IDREF 372
+#define IDREFM 373
+#define STAGE 374
+#define NODE 375
+#define USING 376
+#define DETERMINISTIC 377
+#define EXPECTATION 378
+#define STOCHASTIC 379
+#define STAGES 380
+#define ANCESTOR 381
+#define ASSIGN 382
 
 
 
@@ -313,7 +311,7 @@ typedef union YYSTYPE
 
 
 /* Line 2068 of yacc.c  */
-#line 317 "../src/parser/sml.tab.hpp"
+#line 315 "../src/parser/sml.tab.hpp"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

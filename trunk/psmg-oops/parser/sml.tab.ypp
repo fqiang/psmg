@@ -32,7 +32,7 @@
    #include "../model/SetNode.h"
    #include "../model/SimpleSet.h"
    #include "../model/ListSet.h"
-   #include "../model/CompositeSet.h"
+   //#include "../model/CompositeSet.h"
    #include "../model/IndexingSet.h"
    #include "../model/AmplModel.h"
   
@@ -46,9 +46,9 @@
 
    void add_indexing(SyntaxNodeIx *indexing);
    void rem_indexing(SyntaxNodeIx *indexing);
-   void begin_model(char *name, SyntaxNode *indexing);
+   void begin_model(char *name, SyntaxNodeIx *indexing);
    void end_model(char *name);
-   void begin_smodel(char *name, SyntaxNode *indexing, SyntaxNode *stochsets);
+   void begin_smodel(char *name, SyntaxNodeIx *indexing, SyntaxNode *stochsets);
    void end_smodel(char *name);
 
    extern int yylineno;
@@ -83,15 +83,15 @@
 
 %type <string> cnstr
 %type <opPtr> expr value  equation expr_list 
-%type <opPtr> setattributes setattribute setattributes_opt
-%type <opPtr> stochattr_opt
-%type <opPtr> paramattributes_opt paramattributes paramattribute 
+%type <opPtr> stochattr_opt 
+%type <opPtr> setattributes_opt setattribute /*setattributes*/
+%type <opPtr> paramattributes_opt paramattribute /*paramattributes*/
 %type <opPtr> varattributes_opt varattributes varattribute
 %type <opPtr> setexpr_list lexpr 
-%type <opPtr> setexpression identifier iditem setexpr_item mdim_dummy_start
-%type <opPtr> mdim_dummy start_indexing
-%type <opPtrIx> indexing indexing_opt
-%type <optype> relop reduction_op func ubsetop bsetop
+%type <opPtr> setexpression identifier iditem setexpr_item /*mdim_dummy_start*/
+%type <opPtr> mdim_dummy mdim_dummy_list indexing_condition /*start_indexing*/
+%type <opPtrIx> indexing_opt indexing  
+%type <optype> relop reduction_op func_op ubsetop bsetop blogic_op ulogic_op b_compare_op
 
 %token <string> ID 
 %token <ival> INT_VAL
@@ -103,25 +103,26 @@
 %token UNFIX END FUNCTION PIPE FORMAT SETOF BY LESS MOD DIV MIN MAX IF THEN
 %token ELSE AND OR EXISTS FORALL NOT WITHIN WHILE REPEAT FOR CARD NEXT NEXTW
 %token PREV PREVW FIRST LAST MEMBER ORD ORD_ZERO VAR PARAM SET MAXIMIZE MINIMIZE
-%token OBJECTIVE SUBJECTTO SUM PROD IN POWER NE LE GE EQ LT GT UNION DIFF
+%token OBJECTIVE SUBJECTTO SUM PROD IN POWER NE LE GE EQ LT GT SIN COS UNION DIFF
 %token CROSS INTER SYMDIFF LBRACE RBRACE COMMA SEMICOLON LSBRACKET RSBRACKET
-%token COLON LBRACKET RBRACKET DEFINED LOGICAL_OR LOGICAL_AND ELLIPSE
+%token COLON LBRACKET RBRACKET DEFINED /* LOGICAL_OR LOGICAL_AND  ELLIPSE */
 %token DOT SUFFIX BLOCK IDREF IDREFM STAGE NODE
 /*%token PUBLIC RANDOM SBLOCK BEG TIMESTAGE */
 %token USING DETERMINISTIC EXPECTATION STOCHASTIC STAGES
 %token ANCESTOR
 
-%right ASSIGN
-%left LOGICAL_OR
-%left LOGICAL_AND
+%left OR
+%left AND
 %left EQ NE
 %left LT LE GT GE
 %left '+' '-'
 %left '*' '/'
+%right ASSIGN
+%right DEFINED
 %right SUM
 %right POWER
 %left '!'
-%left ELLIPSE
+%left DOTDOT
 
 %%
 statements: /* empty */
@@ -141,24 +142,20 @@ block:   stochblock
      block name{indexing}:
        statements
      end block;
-
-which means that all the statements within the block are repeated over the
-indexing expression 
 */
 
-blockblock: blockblockbegin LBRACE statements RBRACE {
-          		YAC_MODEL_LOG("blockblock: blockblockbegin LBRACE statements RBRACE --- rule matched!");
-               	end_model(NULL);
-               	rem_indexing(NULL);
+blockblock: BLOCK ID indexing_opt COLON {   
+				YAC_MODEL_LOG("blockblock: BLOCK ID indexing_opt COLON LBRACE statements RBRACE --- rule matched!");
+				add_indexing($3);
+				begin_model((char*)$2,$3);
+			}
+			LBRACE statements RBRACE 
+			{
+               	end_model((char*)$2);
+               	rem_indexing($3);
             }
           ;
-
-blockblockbegin:  BLOCK ID indexing_opt COLON {
-                     add_indexing($3);
-                     begin_model((char*)$2, $3);
-                  }
-               ;
-               
+         
 /* -------------------------------------------------------------------- 
   stochblock
 ------------------------------------------------------------------------- */
@@ -238,10 +235,12 @@ statement:  setdef SEMICOLON
 /*  -------------------------------------------------------------------
  set def statement
  -------------------------------------------------------------------   */
-setdef:  SET ID indexing_opt {
-		YAC_MODEL_LOG("setdef:[SET ID indexing_opt] - ID=["<<$2<<"] indexing_opt=["<<$3<<"]");
+setdef:	SET ID indexing_opt 
+		{
+			YAC_MODEL_LOG("setdef:[SET ID indexing_opt] - ID=["<<$2<<"] indexing_opt=["<<$3<<"]");
             if ($3) add_indexing($3);
-         } stochattr_opt setattributes_opt {
+        } stochattr_opt setattributes_opt 
+        {
             YAC_MODEL_LOG("stochattr_opt=[" << $5<<"]");
             YAC_MODEL_LOG("setattributes_opt=[" <<$6<<"]");
             ModelComp *newmc;
@@ -254,29 +253,80 @@ setdef:  SET ID indexing_opt {
             current_model->addComp(newmc);
             if ($3) rem_indexing($3);
             //$$=$2; 
-         }
+        }
       ;
+      
+setattributes_opt:   /* empty */ {$$=NULL;}
+                 |	setattribute setattributes_opt 
+                 	{
+                 		if($2!=NULL)
+                 		{
+                 			$1->push_back($2);
+                 		}
+                 		$$=$1;
+                 	}
+                 ;
+                 
+
+setattribute:  DIMEN INT_VAL {
+                  $$ = new SyntaxNode(DIMEN, new ValueNode(*$2));
+               }
+            |  WITHIN setexpression {
+                  $$ = new SyntaxNode(WITHIN, $2);
+               }
+            | ASSIGN setexpression {
+            		YAC_MODEL_LOG("match setexpression define rule");
+                  $$ = new OpNode(ASSIGN, $2);
+               }
+            |  DEFAULT setexpression {
+                  $$ = new SyntaxNode(DEFAULT, $2);
+               }
+            |  ORDERED { $$ = new SyntaxNode(ORDERED); }
+            ;      
 
 /*  -------------------------------------------------------------------
  param def statement
  -------------------------------------------------------------------   */
 /* qualifier can be public/random: is this redundant? */
 paramdef:   qualifier PARAM ID indexing_opt {
+				YAC_MODEL_LOG("paramdef: -- indexing_opt -- "<<$4);
                if ($4) add_indexing($4);
             } stochattr_opt paramattributes_opt {
                ModelComp *newmc;
                if (is_stoch_model){
+               	  YAC_MODEL_LOG("paramdef: -- stochInfo --"<<$6);
                   StochModelComp *newmcs = new StochModelComp($3,TPARAM,$4,$7);
                   addStochInfo(newmcs, $6);
                   newmc = newmcs;
                }else{
+               	  YAC_MODEL_LOG("create param comp - id["<<$3<<"]");
                   newmc = new ModelComp($3, TPARAM, $4, $7);
                }
                current_model->addComp(newmc);
                if ($4) rem_indexing($4);
-               //$$=$2; 
             }
         ;
+        
+paramattributes_opt: /* empty */ { $$ = NULL; }
+                   | paramattribute paramattributes_opt
+                   	 {
+                   	 	if($2!=NULL) {
+                   	 		$1->push_back($2);
+                   	 	}
+                   	 	$$=$1;
+                   	 }
+                   	 
+                   ;
+                   
+paramattribute:   BINARY {$$ = new SyntaxNode(BINARY);}
+              |   INTEGER {$$ = new SyntaxNode(INTEGER);}
+              |   SYMBOLIC {$$ = new SyntaxNode(SYMBOLIC);}
+              |   relop expr {$$ = new OpNode($1, $2);}
+              |   IN setexpression {$$ = new OpNode(IN, $2);}
+              |   DEFAULT expr {$$ = new SyntaxNode(DEFAULT, $2);}
+              |   DEFINED expr {$$ = new OpNode(DEFINED, $2);}
+              ;
+              
 
 /*  -------------------------------------------------------------------
  var def statement
@@ -383,82 +433,154 @@ equation:   expr ASSIGN expr { $$ = new OpNode(ASSIGN, $1, $3); }
                $$ = new OpNode(GE, temp, $5); 
             }
         |   expr EQ expr { $$ = new OpNode(EQ, $1, $3); }
-	|   expr NE expr { $$ = new OpNode(NE,$1,$3); }
+		|   expr NE expr { $$ = new OpNode(NE,$1,$3); }
+		| 	lexpr AND lexpr { $$ = new OpNode(AND, $1, $3); }
         ;
 
 
 
-indexing_opt: /* empty */ {$$=NULL;}
-            | indexing {
-               YAC_MODEL_LOG("indexing_opt | indexing  -- rule matched!");
-               $$=$1;
-			}
+indexing_opt: /* empty */ {		$$=NULL;	}
+            | indexing { $$ = $1; }
             ;
 
-start_indexing:   LBRACE setexpr_list {
-					YAC_MODEL_LOG("start_indexing : LBRACE setexpr_list --- rule matched!");
-                     SyntaxNodeIx *tmp =  new SyntaxNodeIx(new SyntaxNode(LBRACE, $2));
-                     add_indexing(tmp);
-                     $$ = $2;
-                  }
-              ;
+indexing: LBRACE setexpr_list 
+		{
+			YAC_MODEL_LOG("indexing -- rule matched!");
+			SyntaxNodeIx* indx = new SyntaxNodeIx(new SyntaxNode(LBRACE, $2));
+			add_indexing(indx);
+			$<opPtrIx>$ = indx;
+		}
+		indexing_condition RBRACE 
+		{	
+        	SyntaxNode *tmp = NULL;
+      		if($4!=NULL)
+           	{
+           		tmp = new SyntaxNode(LBRACE, new SyntaxNode(COLON, $2, $4));
+           	}
+           	else
+           	{
+           		tmp = new SyntaxNode(LBRACE, $2);
+           	}
+           	rem_indexing($<opPtrIx>3);
+           	$$ = new SyntaxNodeIx(tmp);
+           	YAC_MODEL_LOG("indexing -- rule end");
+		}
+		;
 
-indexing:   start_indexing COLON lexpr RBRACE {
-               rem_indexing(NULL);
-               SyntaxNode *tmp = new SyntaxNode(LBRACE, new SyntaxNode(COLON, $1, $3));
-               $$ = new SyntaxNodeIx(tmp);
-            }
-        |   start_indexing RBRACE {
-               rem_indexing(NULL);
-               SyntaxNodeIx *tmp = new SyntaxNodeIx(new SyntaxNode(LBRACE, $1));
-               $$=tmp;
-            }
+indexing_condition: /* empty */ { $$=NULL; }
+				  | COLON lexpr
+				  	{
+				  		$$=$2;
+				  	}
+				  	;
+         
 
-        ;
-
-/* FIXME: ID IN setexpression defines a dummy variable (?)
-   -> have this as a separate construct
-   -> how to deal with dummy variables? */
 setexpr_list:  setexpr_item
-            |  setexpr_list COMMA setexpr_item{
+            |  setexpr_list COMMA setexpr_item
+            {
                   if ($1->getOpCode() == COMMA)
                      $$ = $1->push_back($3);
                   else
                      $$ = new ListNode(COMMA, $1, $3);
-               }
+			}
             ;
 
-setexpr_item : setexpression
-             | ID IN setexpression {
-             	YAC_MODEL_LOG("ID IN setexpression rule matched!");
-                  $$ = new OpNode(IN, new IDNode($1), $3);
+setexpr_item: setexpression
+            | mdim_dummy IN setexpression 
+         	{
+              	$$ = new OpNode(IN, $1, $3);
+           	}
+            ;
+
+mdim_dummy: ID { $$ = new IDNode($1); }
+		  | LBRACKET mdim_dummy_list RBRACKET { $$ = $2;}
+		  ;
+		  
+mdim_dummy_list: ID { $$ = new IDNode($1); }
+			   |mdim_dummy_list COMMA ID
+			   {
+			   		if($1->getOpCode()==COMMA)
+			   		{
+			   			$1->push_back(new IDNode($3));
+			   			$$ = $1;
+			   		}
+			   		else
+			   		{
+			   			$$ = new SyntaxNode(COMMA,$1,new IDNode($3));
+			   		}
+			   }
+			   ;
+			   
+/* this is anything that evaluates to a set */
+setexpression: 
+			 LBRACE setexpression RBRACE {
+					YAC_MODEL_LOG("setexpression: LBRACE setexpression RBRACE -- rule matched");
+					$$= new ListSet($2);
+				}
+			 | expr_list 
+			 {
+				YAC_MODEL_LOG("create ListSet");
+				$$ = new ListSet($1);
+			 }
+			 | identifier {
+	     		YAC_MODEL_LOG("setexpression: identifier -- rule matched");
+	     		$$ = $1;
+             }
+			             
+             | setexpression bsetop setexpression {
+					$$ = new SyntaxNode($2, $1, $3);
                }
-             | mdim_dummy IN setexpression {
-                  $$ = new OpNode(IN, $1, $3);
+             | setexpression ubsetop setexpression {
+                  	$$ = new SyntaxNode($2, $1, $3);
                }
+             | expr DOTDOT expr {
+					$$ = new SimpleSet($1, $3);
+               }
+             | SETOF indexing
+             	{ 
+	         		YAC_MODEL_LOG("setexpression - setof --  "<<$2);
+	         		add_indexing($2);
+	         		$<opPtrIx>$ = $2;
+	         	} identifier {
+	         		$$ = new SyntaxNode(SETOF,$2,$4);
+	         		rem_indexing($<opPtrIx>3);
+	            }
              ;
 
-mdim_dummy: mdim_dummy_start RBRACKET { $$ = new SyntaxNode(LBRACKET, $1); }
-          ;
 
-mdim_dummy_start: LBRACKET ID { 
-					YAC_MODEL_LOG("mdim_dummy_start: LBRACKET ID rule matched!");
-                     $$ = new ListNode(COMMA, new IDNode($2));
-                  }
-                | mdim_dummy_start COMMA ID {
-                     $$ = $1->push_back(new IDNode($3));
-                  }
-                ;
-
-lexpr:   expr {
-		YAC_MODEL_LOG("lexpr: expr rule matched! "<<$1);
+lexpr:  expr IN setexpression {
+			YAC_MODEL_LOG("lexpr: expr IN setexpression - rule matched! "<<$1<<" "<<$3);
+			$$ = new OpNode(IN,$1,$3);
 		}
-     |   LBRACKET lexpr RBRACKET {
-            $$ = new SyntaxNode(LBRACKET, $2); }
-     |   equation
+     |  LBRACKET lexpr RBRACKET {
+            $$ = $2; }
+     |  lexpr blogic_op lexpr 
+     	{
+     		$$ = new SyntaxNode($2,$1,$3);
+     	}
+     |  ulogic_op lexpr
+     	{
+     		$$ = new SyntaxNode($1,$2);
+     	}
+     |  expr b_compare_op expr 
+     	{
+     		$$ = new SyntaxNode($2, $1, $3);
+     	}
      ;
-
-
+     
+b_compare_op: NE { $$ = NE; }
+			| LE { $$ = LE; }
+			| GE { $$ = GE; }
+			| LT { $$ = LT; }
+			| GT { $$ = GT; }
+			| EQ { $$ = EQ; }
+			;
+			
+blogic_op: AND { $$ = AND; }
+		| OR  {  $$ = OR; }
+		;
+ulogic_op: NOT  {  $$ = NOT; }
+		;
 
 
 qualifier:  /* empty */
@@ -468,10 +590,7 @@ qualifier:  /* empty */
 
 /* these are SET definitions */
 
-setattributes_opt:   /* empty */ {$$=NULL;}
-                 | setattributes {$$=$1;}
-                 ;
-
+/*
 setattributes: setattribute {$$=$1;}
              | setattributes setattribute {
                   if ($2==NULL){
@@ -489,114 +608,8 @@ setattributes: setattribute {$$=$1;}
                   }
                }
              ;
+*/
 
-setattribute:  DIMEN INT_VAL {
-                  $$ = new SyntaxNode(DIMEN, new ValueNode(*$2));
-               }
-            |  WITHIN setexpression {
-                  $$ = new SyntaxNode(WITHIN, $2);
-               }
-            | DEFINED setexpression {
-            		YAC_MODEL_LOG("match setexpression define rule");
-                  $$ = new OpNode(DEFINED, $2);
-               }
-            |  DEFAULT setexpression {
-                  $$ = new SyntaxNode(DEFAULT, $2);
-               }
-            |  ORDERED { $$ = new SyntaxNode(ORDERED); }
-            ;
-
-/* this is anything that evaluates to a set */
-setexpression: LBRACE setexpression RBRACE {
-					YAC_MODEL_LOG("setexpression: LBRACE setexpression RBRACE -- rule matched");
-					$$= new ListSet($2);
-				}
-			 | indexing {
-         		YAC_MODEL_LOG("creating indexing set");
-				$$ = new IndexingSet($1);
-             }
-			| expr_list 
-			{
-				YAC_MODEL_LOG("create ListSet");
-				$$ = new ListSet($1);
-			}
-			
-			/*
-			LBRACE expr_list RBRACE  {
-					YAC_MODEL_LOG("create ListSet");
-					$$ = new ListSet($2);
-				}
-			 | LBRACE indexing RBRACE {
-			 		YAC_MODEL_LOG("creating indexing set");
-					$$ = new IndexingSet($2);
-			 	}
-             | LBRACE identifier RBRACE{
-             		YAC_MODEL_LOG("setexpression: LBRACE identifier RBRACE -- rule matched");
-             		$$ = $2;
-         	 } 
-         	 */
-             
-             | identifier {
-             		$$ = $1;
-             		YAC_MODEL_LOG("setexpression: identifier -- rule matched");
-             }
-			             
-             | setexpression bsetop setexpression {
-                  $$ = new CompositeSet($2, $1, $3);
-               }
-             | setexpression ubsetop setexpression {
-                  $$ = new CompositeSet($2, $1, $3);
-               }
-             | ubsetop indexing setexpression {
-                  cerr << "FIXME: ubsetop indexing setexpression\n";
-                  exit(2);
-               }
-             | expr DOTDOT expr {
-                  $$ = new SimpleSet($1, $3);
-               }
-             | SETOF indexing identifier {
-                  cerr << "FIXME: SETOF\n";
-                  exit(2);
-               }
-             //FIXME: | if lexpr then sexpr else sexpr
-             | LBRACKET setexpression RBRACKET {
-                  $$ = $2;
-               }
-             //FIXME: | interval
-             //FIXME: | infinite-set
-             //FIXME: | indexing
-             ;
-
-paramattributes_opt: /* empty */ { $$ = NULL; }
-                   | paramattributes { $$ = $1; }
-                   ;
-
-paramattributes:  paramattribute {
-                     if ($1==NULL) {$$ = NULL;}
-                     else{$$ = new ListNode(COMMA, $1);}
-                  }
-               |  paramattributes COMMA paramattribute {
-                     if ($3==NULL){
-                        $$ = $1;
-                     }else{
-                        if ($1==NULL){
-                           $$ = new ListNode(COMMA, $3);
-                        }else{
-                           $$ = $1->push_back($3);
-                        }
-                     }
-                  }
-               ;
-
-paramattribute:   BINARY {$$ = new SyntaxNode(BINARY);}
-              |   INTEGER {$$ = new SyntaxNode(INTEGER);}
-              |   SYMBOLIC {$$ = new SyntaxNode(SYMBOLIC);}
-              |   relop expr {$$ = new OpNode($1, $2);}
-              |   IN setexpression {$$ = new OpNode(IN, $2);}
-              |   ASSIGN expr {$$ = new OpNode(ASSIGN, $2);}
-              |   DEFAULT expr {$$ = new SyntaxNode(DEFAULT, $2);}
-              |   DEFINED expr {$$ = new OpNode(DEFINED, $2);}
-              ;
 
 stochattr_opt: /* empty */ {$$ = NULL;}
              | DETERMINISTIC {
@@ -666,7 +679,7 @@ ubsetop: UNION    { $$ = UNION; }
 */
 identifier: iditem {
                /* this is a simple identifier in global context */
-               YAC_MODEL_LOG("identifier: iditem rule matched  "<<$1);
+               YAC_MODEL_LOG("identifier: iditem  -- "<<$1);
                $$ = SyntaxNode::find_var_ref_in_context(current_model, $1);
             }
           | identifier DOT iditem {
@@ -720,23 +733,14 @@ identifier: iditem {
 
 
 iditem:  ID {                               /* simple identifier */
-			YAC_MODEL_LOG("iditem : ID rule matched , "<<$1);
+			YAC_MODEL_LOG("iditem : ID -- "<<$1);
             $$=new IDNode($1);
          }
       |  ID LSBRACKET expr_list RSBRACKET { /* subscripted id'fier */
             YAC_MODEL_LOG("ID "<<$1<<" ["<<$3<<"]");
             $$ = new SyntaxNode(LSBRACKET, new IDNode($1), $3);
             //printf("%s\n", print_SyntaxNodesymb($$));
-         }
-      |  ID LBRACKET INT_VAL SEMICOLON expr_list RBRACKET {
-            // This is of the type xh(-1,i) which is xh[i] at a previous stage
-            // the ancestor information is conveyed by an ID SyntaxNode with 
-            // two arguments, where the second argument is the ancestor
-            // $3 is (long int*) => change its sign
-            *$3 = -(*$3);
-            SyntaxNode *nd = new IDNode($1, *$3);
-            $$ = new SyntaxNode(LSBRACKET, nd, $5);
-         }      
+         } 
       |  ANCESTOR LBRACKET INT_VAL RBRACKET DOT iditem {
             // the same as above, just different syntax "ancestor(1).xh[i]"
             // => need to change the ID node in iditem into a binary node
@@ -787,20 +791,11 @@ expr: value { YAC_MODEL_LOG("expr: value rule matched!" <<$1); }
     | expr '*' expr { $$ = new OpNode('*', $1, $3); }
     | expr '/' expr { $$ = new OpNode('/', $1, $3); }
     | expr POWER expr { $$ = new OpNode(POWER, $1, $3); }
-    | expr ELLIPSE expr { $$ = new SyntaxNode(ELLIPSE, $1, $3); }
-    | expr LOGICAL_OR expr { $$ = new SyntaxNode(LOGICAL_OR, $1, $3); }
-    | expr LOGICAL_AND expr { $$ = new SyntaxNode(LOGICAL_AND, $1, $3);
-    							YAC_MODEL_LOG("expr: expr LOGICAL_AND expr -- rule matched ["<<$1<<"]  ["<<$3<<"]"); 
-    }
-    | expr NE expr {
-    	$$ = new SyntaxNode(NE,$1,$3);
-    	YAC_MODEL_LOG("expr: expr NE expr -- rule matched ["<<$1<<"]  ["<<$3<<"]");
-    }
-    | '!' expr { $$ = new SyntaxNode('!', $2); }
+    | expr DOTDOT expr { $$ = new SyntaxNode(DOTDOT, $1, $3); }
     | reduction_op indexing {add_indexing($2);} LBRACKET expr RBRACKET {   /*feng - need a bracket to handle current indexing? eg. sum{}(expr) - sum{}(expr) vs sum{}(expr - sum{}(expr))*/
          /* reduction operator: do we need to keep track of the ID of the
             dummy variable(s)? */
-         $$ = new SyntaxNode((int)$1, $2, $5);
+         $$ = new SyntaxNode($1, $2, $5);
          rem_indexing($2);
       }
     | IF lexpr THEN expr { $$ = new SyntaxNode(IF, $2, $4); }
@@ -811,13 +806,15 @@ expr: value { YAC_MODEL_LOG("expr: value rule matched!" <<$1); }
          //$$ = new SyntaxNode(EXPECTATION, new SyntaxNode(LBRACKET, $3));}
          $$ = new SyntaxNode(EXPECTATION, $3);
       }
-    | func LBRACKET expr_list RBRACKET { /* function definition */
+    | func_op LBRACKET expr_list RBRACKET { /* function definition */
          $$ = new SyntaxNode($1, new SyntaxNode(LBRACKET, $3));
       }
     ;
 
-func :   ORD { $$=ORD; }
-     |   CARD { $$=CARD; }
+func_op : ORD  { $$=ORD;   }
+     | CARD { $$=CARD;  }
+     | SIN  { $$ = SIN; }
+     | COS  { $$ = COS; }
      ;
 
 reduction_op:  SUM { $$=SUM; }
@@ -864,27 +861,27 @@ int yywrap(void) {
 /* ----------------------------------------------------------------------------
 begin_model
 ---------------------------------------------------------------------------- */
-void begin_model(char *name, SyntaxNode *indexing) {
-  AmplModel *new_mod = new AmplModel(name,NULL);
-  ModelComp *newmc;
-  
-
-  /* FIXME: include attrib in definition */
-  newmc = new ModelComp(name, TMODEL, indexing, NULL);
-  newmc->other = new_mod;
-
-  new_mod->node = newmc;            /* add pointer-to-node to the model */
-  current_model->addComp(newmc);
-  
-  /* and change current model */
-  current_model = new_mod;
-  YAC_MODEL_LOG("begin_model  ["<< name <<"] indexing["<<indexing<<"]");
+void begin_model(char *name, SyntaxNodeIx *indexing) 
+{
+	AmplModel *new_mod = new AmplModel(name,current_model);
+	ModelComp *newmc;
+	
+	/* FIXME: include attrib in definition */
+	newmc = new ModelComp(name, TMODEL, indexing, NULL);
+	newmc->other = new_mod;
+	
+	new_mod->node = newmc;            /* add pointer-to-node to the model */
+	current_model->addComp(newmc);
+	  
+	/* and change current model */
+	current_model = new_mod;
+	YAC_MODEL_LOG("begin_model  ["<< name <<"] indexing["<<indexing<<"]");
 }
 
 /* ----------------------------------------------------------------------------
 begin_smodel
 ---------------------------------------------------------------------------- */
-void begin_smodel(char *name, SyntaxNode *indexing, SyntaxNode *stochsets) {
+void begin_smodel(char *name, SyntaxNodeIx *indexing, SyntaxNode *stochsets) {
    StochModel *new_mod;
    ModelComp *newmc;
   
@@ -924,16 +921,17 @@ void begin_smodel(char *name, SyntaxNode *indexing, SyntaxNode *stochsets) {
 /* ----------------------------------------------------------------------------
 end_model
 ---------------------------------------------------------------------------- */
-void end_model(char *name) {
-  // Check end block name matches block name
-  if (name && string(name) != current_model->name) {
-    cerr << "end block '" << name << "' encountered in block '" << 
-      current_model->name << "'" << endl;
-    exit(1);
-  }
-
-  YAC_MODEL_LOG("end_model -- ["<<current_model->name<<"]");
-  current_model = current_model->parent;
+void end_model(char *name) 
+{
+	YAC_MODEL_LOG("end_model -- ["<<current_model->name<<"]");
+	// Check end block name matches block name
+	if (name && string(name) != current_model->name) {
+		cerr << "end block '" << name << "' encountered in block '" << 
+		current_model->name << "'" << endl;
+		exit(1);
+	}
+	current_model = current_model->parent;
+	assert(current_model!=NULL);
 }
 
 /* ----------------------------------------------------------------------------
@@ -980,13 +978,12 @@ void  add_indexing(SyntaxNodeIx *indexing){
 }
 
 void rem_indexing(SyntaxNodeIx *indexing){
-	YAC_MODEL_LOG("rem_indexing -- length[" << n_indexing<<"]" );
+	YAC_MODEL_LOG("rem_indexing -- " << *indexing);
 	if (indexing){
     	assert(indexing==list_of_indexing[n_indexing-1]);
-      	YAC_MODEL_LOG("rem indexing expression to list: " << *indexing );
    	}
 	n_indexing--;
-   	YAC_MODEL_LOG("rem_indexing --  length[" << n_indexing<<"]" );
+   	YAC_MODEL_LOG("rem_indexing --  length now[" << n_indexing<<"]" );
 }
 
 /* ---------------------------------------------------------------------------

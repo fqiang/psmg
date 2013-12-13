@@ -90,7 +90,7 @@ void StochModel::expandStages()
 
 	ModelContext* rootCtx = new ModelContext(NULL);
 	parse_data(rootCtx);
-	AmplModel::root->calculateCurrLevelModelComp(rootCtx);
+	AmplModel::root->calculateModelComp(rootCtx);
 
 	Set* aSet = static_cast<Set*>(rootCtx->getCompValue(stageComp));
 	assert(aSet!=NULL);
@@ -125,7 +125,7 @@ void StochModel::expandStagesOfComp()
 	//AmplModel::root->updateCurrLevelModelComp(); -- already updated in StochModel constructor
 	ModelContext* rootCtx = new ModelContext(NULL);
 	parse_data(rootCtx);
-	AmplModel::root->calculateCurrLevelModelComp(rootCtx);
+	AmplModel::root->calculateModelComp(rootCtx);
 	////////////////////////////////////////////////load data
 	vector<ModelComp*>::iterator p;
 	for (p = all_comps.begin(); p != all_comps.end(); ++p)
@@ -327,7 +327,7 @@ AmplModel* StochModel::expandToFlatModel()
 				 the root node */
 				// set rootset := {this_nd in NODES:Parent[this_nd] == "null"};
 				// on_iinn: this_nd in NODES
-				on_iinN = new OpNode(IN, new IDNode("this_nd"),nodeset->clone());
+				on_iinN = new OpNode(IN, new IDNode("this_nd"), nodeset->clone());
 				// onai: A[this_nd]
 				onai = new SyntaxNode(LSBRACKET, anc->clone(),new ListNode(COMMA, new IDNode("this_nd")));
 				// on2: A[this_nd]=="null"
@@ -335,7 +335,8 @@ AmplModel* StochModel::expandToFlatModel()
 				// on1: :={this_nd in NODES:Parent[this_nd] == "null"};
 				on1 = new OpNode(DEFINED,new SyntaxNode(LBRACE,new SyntaxNode(COLON, on_iinN, on2)));
 				// and add this to the model
-				smctmp = new StochModelComp("rootset", TSET, NULL, on1, this);
+				string compId = "rootset";
+				smctmp = new StochModelComp(compId, TSET, NULL, on1, this);
 				am->addComp(smctmp);
 			}
 			/* EITHER we can set this up as an ID node with name NODES and do a
@@ -407,7 +408,8 @@ AmplModel* StochModel::expandToFlatModel()
 			// so we've got a SyntaxNode to '{i in NODES:A[i] in indS0}'
 
 			/* Add this as a model component defining a set? */
-			StochModelComp *smc = new StochModelComp("ind" + *st, TSET, NULL,on1, this);
+			string compId = "ind" + *st;
+			StochModelComp *smc = new StochModelComp(compId, TSET, NULL,on1, this);
 //			LOG("StochModelComp created -- ["smc->);
 //			smc->print();
 //			LOG("                           ]");

@@ -15,8 +15,8 @@ RM := rm -rf
 -include src/oops/subdir.mk
 -include src/model/subdir.mk
 -include src/metric/subdir.mk
+-include src/interface/subdir.mk
 -include src/context/subdir.mk
--include src/subdir.mk
 -include subdir.mk
 -include objects.mk
 

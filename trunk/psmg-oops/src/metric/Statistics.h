@@ -6,7 +6,7 @@
 
 class Statistics{
  public:
-	static int numGetNzJacCall;
+	static int numGetNZJacCall;
 	static int numGetJacCall;
 };
 
