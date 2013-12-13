@@ -7,7 +7,7 @@ CPP_SRCS += \
 ../src/context/Block.cpp \
 ../src/context/CBlock.cpp \
 ../src/context/EMBlock.cpp \
-../src/context/ExpandedModel2.cpp \
+../src/context/ExpandedModel.cpp \
 ../src/context/IndexSet.cpp \
 ../src/context/ModelContext.cpp \
 ../src/context/Param.cpp \
@@ -18,7 +18,7 @@ OBJS += \
 ./src/context/Block.o \
 ./src/context/CBlock.o \
 ./src/context/EMBlock.o \
-./src/context/ExpandedModel2.o \
+./src/context/ExpandedModel.o \
 ./src/context/IndexSet.o \
 ./src/context/ModelContext.o \
 ./src/context/Param.o \
@@ -29,7 +29,7 @@ CPP_DEPS += \
 ./src/context/Block.d \
 ./src/context/CBlock.d \
 ./src/context/EMBlock.d \
-./src/context/ExpandedModel2.d \
+./src/context/ExpandedModel.d \
 ./src/context/IndexSet.d \
 ./src/context/ModelContext.d \
 ./src/context/Param.d \

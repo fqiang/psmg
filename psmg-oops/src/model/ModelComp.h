@@ -110,11 +110,10 @@ class ModelComp{
  public:
 
   /** Constructor */
-  ModelComp(const std::string& id_, compType type_,
-            SyntaxNode *indexing_, SyntaxNode *attrib,int moveUpLevel=0);
+  ModelComp(string _id, compType _type,SyntaxNodeIx *_indexing, SyntaxNode *_attribute);
 
   /** Default constructor */
-  ModelComp(const std::string& id);
+  ModelComp(string id);
 
   /** Destructor */
   virtual ~ModelComp();
@@ -170,15 +169,17 @@ class ModelComp{
   //for TVAR
   int varDim; //belong to TVar
   int varCard; //belong to TVar
-  void fillLocalVar(ExpandedModel* em2);
+  void fillLocalVar(ModelContext* ctx);
   void calculateLocalVar(ModelContext* context);
   void fillLocalVarRecurive(ModelContext* context,Var* aVar,vector<ModelComp*>::iterator it,ostringstream& oss);
   //end TVAR
 
   //for TCON
-  hash_map<int,set<int> > varDeps; //belong to TCON -- map separability of variable declared in level -> set of levels
-  void analyseVarDepLevelsInCons();
-  Node* constructAutoDiffCons(ModelContext* ctx, Block* emb,ExpandedModel* emcol);
+  hash_map<int,SyntaxNode*> partial;
+  void calculatePartialConstraints();
+//  hash_map<int,set<int> > varDeps; //belong to TCON -- map separability of variable declared in level -> set of levels
+//  void analyseVarDepLevelsInCons();
+//  Node* constructAutoDiffCons(ModelContext* ctx, Block* emb,ExpandedModel* emcol);
   //end TCON
 
   string& getHashKey();

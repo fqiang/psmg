@@ -42,7 +42,7 @@ using namespace __gnu_cxx;
 
 list<changeitem> AmplModel::changes; // initialize to empty list
 AmplModel *AmplModel::root = NULL; //initialize root to NULL
-
+int AmplModel::MAX_LEVEL = 0;
 
 /* ---------------------------------------------------------------------------
 AmplModel::AmplModel()
@@ -62,9 +62,7 @@ AmplModel::AmplModel(const string& _name, AmplModel *par) :
   node(NULL),
   parent(par)
 {
-
-	assert(par==NULL);
-	LOG("AmplModel -- create - name["<<name<<"] ");
+	LOG("AmplModel -- create - name["<<name<<"] -- parent["<<(par==NULL?"NULL":par->name)<<"]");
 }
 
 /** Destructor */
@@ -100,8 +98,9 @@ void AmplModel::deleteModelCompVector(vector<ModelComp*> comps)
 
 void AmplModel::settingUpLevels(int lev)
 {
-	LOG("setting model["<<this->name<<"] level["<<lev<<"]");
+	LOG("settingUpLevels -- model["<<this->name<<"] level["<<lev<<"]");
 	this->level = lev;
+	AmplModel::MAX_LEVEL = AmplModel::MAX_LEVEL<lev?lev:AmplModel::MAX_LEVEL;
 	vector<ModelComp*>::const_iterator it=this->subm_comps.begin();
 
 	for(;it!=this->subm_comps.end();it++)
@@ -112,24 +111,25 @@ void AmplModel::settingUpLevels(int lev)
 	}
 }
 
-void AmplModel::analyseConstraints()
+void AmplModel::formulateConstraints()
 {
+	LOG("formulateConstraints --- model["<<this->name<<"] level["<<level<<"]");
 	for(vector<ModelComp*>::iterator it = con_comps.begin();it!=con_comps.end();it++)
 	{
 		assert((*it)->type==TCON);
-		(*it)->analyseVarDepLevelsInCons();
+		(*it)->calculatePartialConstraints();
 	}
 
 	if(obj_comp!=NULL)
 	{
 		assert(obj_comp->type == TMAX || obj_comp->type == TMIN);
-		obj_comp->analyseVarDepLevelsInCons();
+		obj_comp->calculatePartialConstraints();
 	}
 
 	for(vector<ModelComp*>::iterator it=subm_comps.begin();it!=subm_comps.end();it++)
 	{
 		assert((*it)->type == TMODEL);
-		(*it)->other->analyseConstraints();
+		(*it)->other->formulateConstraints();
 	}
 }
 
@@ -138,7 +138,30 @@ AmplModel::createExpandedModel
 ---------------------------------------------------------------------------- */
 ExpandedModel* AmplModel::createExpandedModel(string dummyVar,ModelComp* comp,string value,ModelContext* parent)
 {
-	LOG("createExpandedModel- Model["<<this->name<<"] -- level["<<this->level<<"]");
+	assert(this==root || this->node != NULL);
+	if(comp!=NULL){
+		assert(comp->type == TSET);
+		LOG("createExpandedModel- Model["<<this->name<<"]--level["<<this->level<<"] -- set["<<comp->id<<"] -- dummy["<<dummyVar<<"="<<value<<"]");
+	}
+	else
+	{
+		LOG("createExpandedModel- Model["<<this->name<<"]--level["<<this->level<<"] -- only one in this level");
+	}
+	ModelContext* currCtx = new ModelContext(parent);
+	ExpandedModel *currEm2 = NULL;
+	if(this==AmplModel::root){
+		//for root node
+		currEm2 = new ExpandedModel(AmplModel::root,currCtx);
+		assert(comp==NULL);
+	}
+	else
+	{
+		currEm2 = new ExpandedModel(this,currCtx);
+		if(comp!=NULL)
+		{
+			currEm2->addModelDummy(dummyVar,comp,value);
+		}
+	}
 
 	for(vector<ModelComp*>::iterator i=set_comps.begin();i!=set_comps.end();i++)
 	{
@@ -153,18 +176,10 @@ ExpandedModel* AmplModel::createExpandedModel(string dummyVar,ModelComp* comp,st
 		LOG("updateModelComp for param - id["<<(*i)->id<<"] numParamIndicies["<<(*i)->getNumParamIndicies()<<"] -- "<<*i);
 	}
 
-	ModelContext* currCtx = new ModelContext(parent);
-	ExpandedModel *currEm2 = NULL;
-	if(this==AmplModel::root){
-		//for root node
-		currEm2 = new ExpandedModel(AmplModel::root,currCtx,"",NULL,"");
+	if(this==AmplModel::root)
+	{
 		parse_data(currCtx);
 	}
-	else
-	{
-		currEm2 = new ExpandedModel(this,currCtx,dummyVar,comp,value);
-	}
-
 
 	//calculating set values
 	for(vector<ModelComp*>::iterator i=set_comps.begin();i!=set_comps.end();i++)
@@ -199,7 +214,6 @@ ExpandedModel* AmplModel::createExpandedModel(string dummyVar,ModelComp* comp,st
 	{
 		ModelComp* mc = *it;
 		assert(mc->type == TVAR);
-		LOG("   model-name ["<<name<<"] Comp["<<mc->id<<"] is TVAR type");
 		mc->calculateLocalVar(currCtx);
 		currEm2->addLocalVar(mc);
 	}
@@ -242,24 +256,22 @@ ExpandedModel* AmplModel::createExpandedModel(string dummyVar,ModelComp* comp,st
 			LOG("creating child  ExpandedModel over the set:"<<set->toString());
 			for(it=set->setValues_data_order.begin();it!=set->setValues_data_order.end();it++)
 			{
-				LOG("creating sub-em2 ["<<mc->id<<"] for - set["<<setComp->id<<"] ["<<this->name<<"] "<<dummy<<"=["<<*it<<"]");
 				AmplModel* submod = mc->other;
+				assert(mc->id.compare(submod->name)==0);
+				LOG("creating child EM - ["<<mc->id<<"] for - set["<<setComp->id<<"] -- dummy["<<dummy<<"="<<*it<<"]");
 				ExpandedModel* subem2 = submod->createExpandedModel(dummy,setComp,*it,currCtx);
 				currEm2->addChildren(subem2);
-				LOG("add child em2 ["<<subem2->getName()<<"] for - ["<<currEm2->getName()<<"]");
 			}
 		}
 		else
 		{
-			LOG("Model's indexing over is NULL");
 			AmplModel* submod = mc->other;
+			assert(mc->id.compare(submod->name)==0);
+			LOG("creating child EM["<<mc->id<<"]  -  only child");
 			ExpandedModel* subem2 = submod->createExpandedModel("",NULL,"",currCtx);
 			currEm2->addChildren(subem2);
-			LOG("child expandedModel2 ["<<subem2->getName()<<"]");
-			//assert(childContext == NULL);
 		}
 	}
-
 	LOG("End createExpandedModel - model["<<this->name<<"]");
 	return currEm2;
 }
@@ -277,7 +289,7 @@ AmplModel::print() const {
 AmplModel::dump(const char *filename)
 ---------------------------------------------------------------------------- */
 void 
-AmplModel::dump(const char *filename) const {
+AmplModel::logModel(const char *filename) const {
   ofstream fout(filename);
   dump(fout);
 }
@@ -426,7 +438,6 @@ AmplModel::addComp(ModelComp *comp)
 		case TMODEL:
 			n_submodels++;
 			comp->other->parent = this;
-			comp->other->level = this->level + 1;
 			subm_comps.push_back(comp);
 			break;
 		default:
@@ -610,9 +621,10 @@ ModelComp* AmplModel::findModelComp(string id,compType forType)
 	return rval;
 }
 
-void AmplModel::calculateCurrLevelModelComp(ModelContext* context)
+void AmplModel::calculateModelComp(ModelContext* context)
 {
-	if(context->isCompsCalculated == false);
+	LOG("calculateModelComp - context["<<context->getContextId()<<"] -- on Model["<<this->name<<"] - "<<context->isCompsCalculated);
+	if(!context->isCompsCalculated)
 	{
 		for(vector<ModelComp*>::iterator i=set_comps.begin();i!=set_comps.end();i++)
 		{
@@ -640,6 +652,7 @@ void AmplModel::calculateCurrLevelModelComp(ModelContext* context)
 		}
 		context->isCompsCalculated = true;
 	}
+	LOG("calculateModelComp - context"<<context->getContextId()<<"] -- on Model["<<this->name<<"] - ["<<context->isCompsCalculated<<"] --DONE");
 	assert(context->isCompsCalculated == true);
 }
 
@@ -649,7 +662,7 @@ void AmplModel::calculateModelCompRecursive(ModelContext* context)
 	{
 		this->parent->calculateModelCompRecursive(context->parent);
 	}
-	this->calculateCurrLevelModelComp(context);
+	this->calculateModelComp(context);
 }
 
 void AmplModel::calculateMemoryUsage(unsigned long& size)
@@ -667,3 +680,44 @@ void AmplModel::calculateMemoryUsage(unsigned long& size)
 		}
 	}
 }
+
+void AmplModel::fillLocalVar(ModelContext* ctx)
+{
+	LOG("fillLocalVar -- EM["<<ctx->em2->name<<"]");
+	assert(ctx->isLocalVarFilled == false);
+	assert(ctx->isCompsCalculated == true);
+	vector<ModelComp*>::iterator it_varComp =this->var_comps.begin();
+	for(;it_varComp!=this->var_comps.end();it_varComp++)
+	{
+		(*it_varComp)->fillLocalVar(ctx);
+	}
+	ctx->isLocalVarFilled = true;
+	LOG("fillLocalVar -- ");
+}
+
+
+/*
+ * calculating variable depended levels for each constraint modelcomp in this amplmodel
+ */
+//void AmplModel::analyseConstraints()
+//{
+//	LOG("analyseConstraints --- model["<<this->name<<"] level["<<level<<"]");
+//	for(vector<ModelComp*>::iterator it = con_comps.begin();it!=con_comps.end();it++)
+//	{
+//		assert((*it)->type==TCON);
+//		(*it)->analyseVarDepLevelsInCons();
+//	}
+//
+//	if(obj_comp!=NULL)
+//	{
+//		assert(obj_comp->type == TMAX || obj_comp->type == TMIN);
+//		obj_comp->analyseVarDepLevelsInCons();
+//	}
+//
+//	for(vector<ModelComp*>::iterator it=subm_comps.begin();it!=subm_comps.end();it++)
+//	{
+//		assert((*it)->type == TMODEL);
+//		(*it)->other->analyseConstraints();
+//	}
+//}
+

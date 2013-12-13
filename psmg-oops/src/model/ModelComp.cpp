@@ -37,33 +37,6 @@ using namespace __gnu_cxx;
 const string ModelComp::nameTypes[] = { "variable", "constraint", "parameter", "set", "objective min", "objective max", "submodel" };
 const string ModelComp::compTypes[] = { "var", "subject to", "param", "set", "minimize", "maximize", "block" };
 
-//extern void modified_write(ostream &fout, ModelComp *comp);
-
-/* This should be an IDREF (or IDREFM) node that needs to be converted
- into its global name
-
- The node is a pointer to a ModelComp structure. Need to work out
- which (if any) blocks it belongs to and pre-pend the name of any block to
- the global name
-
- Also need to work out which dummy variables need to be put on the
- argument list
-
- IN: ModelComp *node          : the model comp of which the name should
- be obtained
- int        witharg        : 1 if argument list should be printed
- SyntaxNode     *opn           : the IDREF node that should be named
- AmplModel *current_model : the model in which this is referenced
-
- arguments opn, current_model are only needed if the argument list should
- be printed as well
-
- opn is the IDREF(M) node of the object that should be named. All the
- subscripts that are used for this in the model description are
- part of the 'opn' node. To get the complete global argument list, these
- subscripts need to be prefixed by the ones corresponding to the
- model from which this object is referenced
- */
 
 /** Construct a model component given its name, id, indexing and attribute
  *  sections.
@@ -80,13 +53,14 @@ const string ModelComp::compTypes[] = { "var", "subject to", "param", "set", "mi
  *         Root node of the attribute expression
  *                     IDs should have been replaced by IDREFs 
  */
-ModelComp::ModelComp(const string& id_, compType type_, SyntaxNode *indexing_, SyntaxNode *attrib, int uplevel) :
-		type(type_), id(id_), attributes(attrib), model(NULL), setDim(0), setCard(0), varDim(0),varCard(0), moveUpLevel(uplevel) {
+ModelComp::ModelComp(string _id, compType _type,SyntaxNodeIx *_indexing, SyntaxNode *_attribute)
+	:type(_type), id(_id), indexing(static_cast<SyntaxNodeIx*>(_indexing)),attributes(_attribute), model(NULL), other(NULL),setDim(0), setCard(0), varDim(0),varCard(0), moveUpLevel(0)
+{
 
-	this->indexing = dynamic_cast<SyntaxNodeIx*>(indexing_);
+	this->indexing = dynamic_cast<SyntaxNodeIx*>(_indexing);
 	if (indexing)
 		(this->indexing)->splitExpression();
-	LOG( "Creating model component : id="<<id<<" indexing="<<this->indexing<<" attribute="<<this->attributes<<" type"<<type);
+	LOG("ModelComp constructor  - id=["<<id<<"] indexing["<<this->indexing<<"] attribute["<<this->attributes<<"] type["<<type<<"]");
 
 	/* now set up the dependency list for the component */
 	setUpDependencies();
@@ -94,8 +68,20 @@ ModelComp::ModelComp(const string& id_, compType type_, SyntaxNode *indexing_, S
 	ostringstream oss;
 	oss << this;
 	this->hashKey = oss.str();
-
 }
+
+/* --------------------------------------------------------------------------
+ ModelComp::ModelComp()
+ ---------------------------------------------------------------------------- */
+/** Default constructor: just sets all fields to -1/NULL/false               */
+ModelComp::ModelComp(string _id)
+	:type(TNOTYPE), id(_id), attributes(NULL), indexing(NULL), model(NULL), other(NULL), setDim(0), setCard(0), varDim(0),varCard(0),moveUpLevel(0)
+{
+	ostringstream oss;
+	oss << this;
+	this->hashKey = oss.str();
+}
+
 
 ModelComp::~ModelComp() {
 	LOG("enter ModelComp destructor called...["<<this->id<<"]");
@@ -143,18 +129,6 @@ void ModelComp::setUpDependencies() {
 		findDependencies(attributes);
 	}
 	LOG("-- end setUpDependencies --dependencies.size="<<dependencies.size());
-}
-
-/* --------------------------------------------------------------------------
- ModelComp::ModelComp()
- ---------------------------------------------------------------------------- */
-/** Default constructor: just sets all fields to -1/NULL/false               */
-ModelComp::ModelComp(const string& id_)
-	:type(TNOTYPE), id(id_), attributes(NULL), indexing(NULL), model(NULL), other(NULL), moveUpLevel(0)
-{
-	ostringstream oss;
-	oss << this;
-	this->hashKey = oss.str();
 }
 
 /* ---------------------------------------------------------------------------
@@ -561,7 +535,7 @@ void ModelComp::calculateLocalVar(ModelContext* context) {
 			varDim = varDim + (*it)->setDim;
 		}
 	}
-	LOG( "calculateLocalVar -- in model["<<this->model->name<<"] modelcomp["<<this->id<<"]");
+	LOG( "calculateLocalVar -- in model["<<this->model->name<<"] modelcomp["<<this->id<<"] -- varCard["<<varCard<<"] varDim["<<varDim<<"]");
 }
 
 void ModelComp::fillLocalVarRecurive(ModelContext* context,Var* aVar,vector<ModelComp*>::iterator it, ostringstream& oss){
@@ -583,15 +557,15 @@ void ModelComp::fillLocalVarRecurive(ModelContext* context,Var* aVar,vector<Mode
 	}
 }
 
-void ModelComp::fillLocalVar(ExpandedModel* em2)
+void ModelComp::fillLocalVar(ModelContext* ctx)
 {
 	assert(this->type==TVAR);
-	ModelContext* context = em2->ctx;
+	LOG("fillLocalVar - model["<<this->model->name<<"] comp["<<this->id<<"]");
 	int card = 1;
 	int numIndices = 0;
 	vector<string> ind;
-	if (context != NULL) {
-		context->fillDummyValue(ind);
+	if (ctx != NULL) {
+		ctx->fillDummyValue(ind);
 	}
 	numIndices = ind.size();
 	if (this->indexing == NULL) {
@@ -629,56 +603,25 @@ void ModelComp::fillLocalVar(ExpandedModel* em2)
 	if (this->indexing == NULL) {
 		LOG("this["<<this->id<<"] has no indexing over");
 		ostringstream oss(ostringstream::out);
-		context->fillDummyValue(oss);
+		ctx->fillDummyValue(oss);
 		aVar->addVarValue(oss);
 	}
 	else if (this->indexing->sets_mc.size() > 0) {
 		LOG("Indexing -- ["<<this->indexing->print()<<"]");
 		LOG("sets_mc["<<this->indexing->sets_mc.size()<<"]");
 		ostringstream oss(ostringstream::out);
-		if (context != NULL) {
-			context->fillDummyValue(oss);
+		if (ctx != NULL) {
+			ctx->fillDummyValue(oss);
 		}
 
 		vector<ModelComp*>::iterator it = this->indexing->sets_mc.begin();
-		this->fillLocalVarRecurive(context,aVar,it,oss);
+		this->fillLocalVarRecurive(ctx,aVar,it,oss);
 	}
-	em2->localVars.push_back(aVar);
+	ctx->localVars.push_back(aVar);
 
-	LOG( "fillLocalVar -- in model["<<this->model->name<<"] modelcomp["<<this->id<<"] aVar["<<aVar->name<<"] card["<<aVar->card<<"] numIndicies["<<aVar->numIndicies<<"]");
+	LOG( "fillLocalVar -- model["<<this->model->name<<"] comp["<<this->id<<"] aVar["<<aVar->name<<"] card["<<aVar->card<<"] numIndicies["<<aVar->numIndicies<<"]");
 }
 
-void ModelComp::analyseVarDepLevelsInCons()
-{
-	assert(this->type == TCON || this->type == TMAX || this->type==TMIN);
-	LOG("ModelComp::analyseConstraint --id["<<id<< "] attr["<<this->attributes->print()<<"] declared level["<<this->model->level<<"] ["<<this<<"]");
-	set<int> levels;
-	this->attributes->calcVarDefinedLevels(levels);
-
-
-	for(set<int>::iterator it=levels.begin();it!=levels.end();it++)
-	{
-		int level = *it;
-		set<int> deps;
-		this->attributes->calcSeparability(level,deps);
-		this->varDeps.insert(pair<int,set<int> >(level,deps));
-
-		LOG("Variable Declare Level: "<<level);
-		for(set<int>::iterator it2=deps.begin();it2!=deps.end();it2++)
-		{
-			LOG("	   Depend Level: "<<*it2);
-		}
-
-	}
-}
-
-Node* ModelComp::constructAutoDiffCons(ModelContext* ctx, Block* emb,ExpandedModel* emcol)
-{
-	assert(this->type == TCON);
-	LOG("constructAutoDiffCons - modelcomp["<<this->id<<"] ctx["<<ctx->getContextId()<<"]");
-	Node* node = this->attributes->constructAutoDiffNode(ctx,emb,emcol);
-	return node;
-}
 
 void ModelComp::calculateMemoryUsage(unsigned long& size) {
 	LOG_MEM("ModelComp::calculateMemoryUsage -- comp["<<this->id<<"]");
@@ -701,3 +644,56 @@ string& ModelComp::getHashKey() {
 	return this->hashKey;
 }
 
+void ModelComp::calculatePartialConstraints()
+{
+	assert(this->type == TCON || this->type == TMAX || this->type==TMIN);
+	LOG("ModelComp::analyseConstraint --id["<<id<< "] - indx["<<this->indexing->print()<<"-- attr["<<this->attributes->print()<<"] - declared level["<<this->model->level<<"] - ["<<this<<"]");
+	this->attributes->calculatePartialConstraints(this->partial);
+
+	hash_map<int,SyntaxNode*>::iterator it = this->partial.begin();
+	for(;it!=this->partial.end();it++)
+	{
+		SyntaxNode* node = (*it).second;
+		LOG("level ["<<(*it).first<<"] - ["<<node->print()<<"]");
+	}
+}
+
+/*create varDeps map , each entry in the map is the pair
+	(level -> levels) : level is the column level for a intersection block
+						levels are the set of int that corresponding to the list of levels required for evaluate
+						the derivatives of a intersection block.
+*/
+//void ModelComp::analyseVarDepLevelsInCons()
+//{
+//	assert(this->type == TCON || this->type == TMAX || this->type==TMIN);
+//	LOG("ModelComp::analyseConstraint --id["<<id<< "] attr["<<this->attributes->print()<<"] declared level["<<this->model->level<<"] ["<<this<<"]");
+//	set<int> levels;
+//	this->attributes->calcVarDefinedLevels(levels);
+//
+//
+//	for(set<int>::iterator it=levels.begin();it!=levels.end();it++)
+//	{
+//		int level = *it;
+//		set<int> deps;
+//		this->attributes->calcSeparability(level,deps);
+//		this->varDeps.insert(pair<int,set<int> >(level,deps));
+//
+//		LOG("Variable Declare Level: "<<level);
+//		for(set<int>::iterator it2=deps.begin();it2!=deps.end();it2++)
+//		{
+//			LOG("	   Depend Level: "<<*it2);
+//		}
+//
+//	}
+//}
+
+/*convert this modelcomp constraint to an expression tree in autodiff library.
+return the root node of the expression tree.
+*/
+//Node* ModelComp::constructAutoDiffCons(ModelContext* ctx, Block* emb,ExpandedModel* emcol)
+//{
+//	assert(this->type == TCON);
+//	LOG("constructAutoDiffCons - modelcomp["<<this->id<<"] ctx["<<ctx->getContextId()<<"]");
+//	Node* node = this->attributes->constructAutoDiffNode(ctx,emb,emcol);
+//	return node;
+//}

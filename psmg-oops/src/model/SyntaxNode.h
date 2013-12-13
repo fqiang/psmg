@@ -46,6 +46,7 @@
 #include "../context/Set.h"
 
 using namespace std;
+using namespace tr1;
 using namespace AutoDiff;
 
 class SyntaxNode {
@@ -174,29 +175,32 @@ public:
 	double calculateParamValue(hash_map<string, string>& dummyMap, hash_map<string, ModelComp*>& paramIndicies, ModelContext* context);
 	bool evalBool(hash_map<string, string>& dummyMap, hash_map<string, ModelComp*>& paramIndicies, ModelContext* context);
 	double evalTerm(hash_map<string, string>& dummyMap, hash_map<string, ModelComp*>& paramIndicies, ModelContext* context);
-//	double evalDiff(ModelContext* rowContext, ModelContext* colContext, ModelComp* varComp, string& varKey);
-	void evalDiff(ModelContext* rowContext, ModelContext* colContext, vector<double>& jcobs);
-	bool isZeroVector(vector<double>& v);
-	void multVectorScalar(vector<double>& v, double scalar, vector<double>& result);
-	void plusVector(vector<double>& left, vector<double>& right, vector<double>& result);
-	void minusVector(vector<double>& left, vector<double>& right, vector<double>& result);
-	void negateVector(vector<double>& v);
 	double evalRhs(ModelContext* context);
+//	double evalDiff(ModelContext* rowContext, ModelContext* colContext, ModelComp* varComp, string& varKey);
+//	void evalDiff(ModelContext* rowContext, ModelContext* colContext, vector<double>& jcobs);
+//	bool isZeroVector(vector<double>& v);
+//	void multVectorScalar(vector<double>& v, double scalar, vector<double>& result);
+//	void plusVector(vector<double>& left, vector<double>& right, vector<double>& result);
+//	void minusVector(vector<double>& left, vector<double>& right, vector<double>& result);
+//	void negateVector(vector<double>& v);
 	void calcSumSetComp(ModelContext* context, IndexSet** aSet);
 	void calculateCompsDummyNames(ModelContext* context, IndexSet* iset);
-	void calculateSet(ModelContext* context, IndexSet* iset);
-	string setOrgSetComp(ModelComp** orgSetComp);
+	void calculateIndexSet(ModelContext* context, IndexSet* iset);
+//	string setOrgSetComp(ModelComp** orgSetComp);
 	bool evalBool(ModelContext* context);
 	double evalTerm(ModelContext* context);
 	Set* evalSet(ModelContext* context);
 	string printVector(vector<double>&v);
 
-	void calcVarDefinedLevels(set<int>& levels);
-	void calcSeparability(int level, set<int>& deps);
-	bool containsVarDefInLevel(int level);
-	Node* constructAutoDiffNode(ModelContext* ctx, Block* emb, ExpandedModel* emcol);
-	Node* constructAutoDiffNode(ModelContext* ctx, Block* emb);
-	bool isContainVariablesInEm2(ModelContext* ctx,ExpandedModel* emcol);
+//	void calcVarDefinedLevels(set<int>& levels);
+//	void calcSeparability(int level, set<int>& deps);
+//	bool containsVarDefInLevel(int level);
+//	Node* constructAutoDiffNode(ModelContext* ctx, Block* emb, ExpandedModel* emcol);
+//	Node* constructAutoDiffNode(ModelContext* ctx, Block* emb);
+//	bool isContainVariablesInEm2(ModelContext* ctx,ExpandedModel* emcol);
+
+	void calculatePartialConstraints(hash_map<int,SyntaxNode*>&);
+	AutoDiff::Node* createAutoDiffConsDAG(ExpandedModel* emrow,ExpandedModel* emcol,unordered_map<string,AutoDiff::Node*>& varMap,int mode);
 
 	void calculateBaseValueVector(unsigned long& size);
 	virtual void calculateMemoryUsage(unsigned long& size);

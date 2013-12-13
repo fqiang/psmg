@@ -5,8 +5,8 @@
  *      Author: s0965328
  */
 
-#ifndef OPNODE_H_
-#define OPNODE_H_
+#ifndef OPNODE2_H_  //this is because OPNODE_H_ conflicts with AutoDiff::OPNode class
+#define OPNODE2_H_
 
 #include "SyntaxNode.h"
 
@@ -23,18 +23,18 @@ class OpNode : public SyntaxNode {
    std::ostream& put(std::ostream& s) const;
    OpNode *deep_copy();
    OpNode *clone();
-   void findIDREF(std::list<ModelComp*>& lmc) {
-      if(left) left->findIDREF(lmc);
-      if(right) right->findIDREF(lmc);
-   }
-   void findIDREF(std::list<SyntaxNode*> *lnd) {
-      if(left) left->findIDREF(lnd);
-      if(right) right->findIDREF(lnd);
-   }
-   void findOpCode(int oc, std::list<SyntaxNode*> *lnd) {
-      if(left) left->findOpCode(oc, lnd);
-      if(right) right->findOpCode(oc, lnd);
-   }
+//   void findIDREF(std::list<ModelComp*>& lmc) {
+//      if(left) left->findIDREF(lmc);
+//      if(right) right->findIDREF(lmc);
+//   }
+//   void findIDREF(std::list<SyntaxNode*> *lnd) {
+//      if(left) left->findIDREF(lnd);
+//      if(right) right->findIDREF(lnd);
+//   }
+//   void findOpCode(int oc, std::list<SyntaxNode*> *lnd) {
+//      if(left) left->findOpCode(oc, lnd);
+//      if(right) right->findOpCode(oc, lnd);
+//   }
    virtual void calculateMemoryUsage(unsigned long& size);
 };
 

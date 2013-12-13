@@ -62,12 +62,10 @@ class StochModelComp: public ModelComp {
   /* ======================== methods =================================== */
 
   //! Constructor that sets everything to default values
-  StochModelComp(const std::string& id);
+  StochModelComp(string id);
 
   //! Constructor
-  StochModelComp(const std::string& id_, compType type,
-                 SyntaxNode *indexing, SyntaxNode *attrib,
-                 StochModel *stoch = NULL);
+  StochModelComp(string id_, compType type,SyntaxNodeIx *indexing, SyntaxNode *attrib, StochModel *stoch = NULL);
 
   //! Transcribe a StochModelComp in a StochModel into a ModelComp 
   ModelComp *transcribeToModelComp(AmplModel *current_model,
@@ -76,7 +74,7 @@ class StochModelComp: public ModelComp {
                                    const int level);
 
   //! Shallow copy, only copies pointers
-  StochModelComp *clone() const;
+  StochModelComp *clone();
 
   //! Set the stochastic model
   void setStochModel(StochModel *stoch) { stochmodel = stoch; }

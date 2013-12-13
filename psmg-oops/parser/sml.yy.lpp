@@ -32,27 +32,27 @@ ID       [a-zA-Z][a-zA-Z0-9_]*
 %%
 
 -?{DIGIT}+".." {
-                long *dummy = new long;
-                *dummy = strtol(yytext, NULL, 10);
-                yylval.ival = dummy;
-                
-                if(errno == ERANGE)
-                fprintf(stderr, "Value overflow on line %i with token:" \
-                     "\n\"%s\"\n", yylineno, yytext);
-                unput('.');unput('.');
-                myreturn(INT_VAL);
+					long *dummy = new long;
+					*dummy = strtol(yytext, NULL, 10);
+					yylval.ival = dummy;
+					
+					if(errno == ERANGE)
+					fprintf(stderr, "Value overflow on line %i with token:" \
+					     "\n\"%s\"\n", yylineno, yytext);
+					unput('.');unput('.');
+					myreturn(INT_VAL);
                }
 ".."  myreturn(DOTDOT);
    /* Tokens with values */
 -?{DIGIT}+ {
-            long *dummy = new long;
-            *dummy = strtol(yytext, NULL, 10);
-            yylval.ival = dummy;
-            if(errno == ERANGE)
-               fprintf(stderr, "Value overflow on line %i with token:" \
-                     "\n\"%s\"\n", yylineno, yytext);
-            myreturn(INT_VAL);
-         }
+				long *dummy = new long;
+				*dummy = strtol(yytext, NULL, 10);
+				yylval.ival = dummy;
+				if(errno == ERANGE)
+				   fprintf(stderr, "Value overflow on line %i with token:" \
+				         "\n\"%s\"\n", yylineno, yytext);
+				myreturn(INT_VAL);
+         	}
 -?{DIGIT}+("."{DIGIT}*)?([eE]{DIGIT}+)?  {
             double *dummy = new double;
             *dummy = strtod(yytext, NULL);
@@ -140,11 +140,8 @@ format         myreturn(FORMAT);
 if             myreturn(IF);
 then           myreturn(THEN);
 else           myreturn(ELSE);
-and            myreturn(AND);
-or             myreturn(OR);
 exists         myreturn(EXISTS);
 forall         myreturn(FORALL);
-not            myreturn(NOT);
 within         myreturn(WITHIN);
 stages         myreturn(STAGES);
 
@@ -188,16 +185,20 @@ in       myreturn(IN);
 \/       myreturn('/');
 \*\*     myreturn(POWER);
 "^"      myreturn(POWER);
-"||"     myreturn(LOGICAL_OR);
-&&       myreturn(LOGICAL_AND);
-!        myreturn('!');
+"||"     myreturn(OR);
+&&       myreturn(AND);
+and      myreturn(AND);
+or       myreturn(OR);
+not      myreturn(NOT);
+!        myreturn(NOT);
 !=       myreturn(NE);
 \<=      myreturn(LE);
 \>=      myreturn(GE);
 ==       myreturn(EQ);
 \<       myreturn(LT);
 \>       myreturn(GT);
-\.\.     myreturn(ELLIPSE);
+cos		 myreturn(COS);
+sin		 myreturn(SIN);
 =        myreturn(ASSIGN);
 
    /* set operators */

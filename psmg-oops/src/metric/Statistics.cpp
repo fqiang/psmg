@@ -8,6 +8,6 @@
 #include "Statistics.h"
 
 
-int Statistics::numGetNzJacCall = 0;
+int Statistics::numGetNZJacCall = 0;
 int Statistics::numGetJacCall = 0;
 

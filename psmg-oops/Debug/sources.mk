@@ -23,7 +23,6 @@ C_UPPER_DEPS :=
 
 # Every subdirectory with source files must be described here
 SUBDIRS := \
-src \
 src/util \
 src/st_model \
 src/sml \
@@ -31,5 +30,6 @@ src/parser \
 src/oops \
 src/model \
 src/metric \
+src/interface \
 src/context \
 

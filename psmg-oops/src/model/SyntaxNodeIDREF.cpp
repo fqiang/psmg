@@ -20,8 +20,7 @@ SyntaxNodeIDREF::SyntaxNodeIDREF(ModelComp *r, SyntaxNode *val1) :
 SyntaxNodeIDREF::SyntaxNodeIDREF(int opCode_, ModelComp *r) :
 		SyntaxNode(opCode_), ref(r), stochparent(0) {
 	assert(opCode==IDREF||opCode==IDREFM);
-	LOG(
-			"SyntaxNodeIDREF constructor called -- opCode["<<opCode_<<"] ModelComp["<<r<<"]");
+	LOG("SyntaxNodeIDREF constructor called -- opCode["<<opCode_<<"] ModelComp["<<r<<"]");
 }
 
 SyntaxNodeIDREF::~SyntaxNodeIDREF() {
