@@ -109,11 +109,6 @@ public:
 		return values.size();
 	}
 
-	/** Retrieve the opCode */
-	int getOpCode() const {
-		return opCode;
-	}
-
 	/** Recursive printing of expression */
 	std::string print() const;
 

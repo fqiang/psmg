@@ -6,7 +6,6 @@
  */
 
 #include "SyntaxNodeIx.h"
-#include "ListNode.h"
 #include "IDNode.h"
 #include "../parser/sml.tab.h"
 #include "../util/global_util_functions.h"
@@ -54,10 +53,10 @@ const SyntaxNode* SyntaxNodeIx::getIndexingSet() const {
 
   if (ix==NULL) return NULL;
   /* remove outside braces from indexing expression */
-  if (ix->getOpCode() == LBRACE)
+  if (ix->opCode == LBRACE)
     ix = ix->front();
   /* assumes that the next level is the 'IN' keyword (if present) */
-  if (ix->getOpCode() == IN) {
+  if (ix->opCode == IN) {
     SyntaxNode::iterator i = ix->begin();
     dummyVar = *i;
     set = *(++i);
@@ -95,17 +94,17 @@ SyntaxNodeIx::getListDummyVars() const {
   for(int i=0;i<ncomp;i++){
     SyntaxNode *dv = dummyVarExpr[i];
     // a dummy var expression is either ID/IDREF or (ID1,...IDn)
-    if (dv->getOpCode() == ID || dv->getOpCode() ==IDREF ) {
+    if (dv->opCode == ID || dv->opCode ==IDREF ) {
       l.push_back(dv);
-    }else if(dv->getOpCode() == LBRACKET) {
+    }else if(dv->opCode == LBRACKET) {
       dv = dv->front();
-      if (dv->getOpCode() != COMMA) {
+      if (dv->opCode != COMMA) {
 	     cerr << "A dummy variable expression is either ID or (ID1,...ID2)\n";
 	     cerr << "Given expression: " << dv << "\n";
 	     exit(1);
       }
-      ListNode *dvl = static_cast<ListNode *>(dv);
-      for (ListNode::iterator j = dvl->begin(); j != dvl->end(); ++j)
+//      ListNode *dvl = static_cast<ListNode *>(dv);
+      for (SyntaxNode::iterator j = dv->begin(); j != dv->end(); ++j)
 	     l.push_back(*j);
     }else{
       cerr << "A dummy variable expression is either ID or (ID1,...ID2)\n";
@@ -141,7 +140,7 @@ void SyntaxNodeIx::splitExpression()
 
 	tmp = this->front();
 	// discard the colon (if there is one present: only interested in lhs)
-	if (tmp->getOpCode() == COLON)
+	if (tmp->opCode == COLON)
 	{
 		SyntaxNode::iterator tj = tmp->begin();
 		tmp = *tj; // step down tree
@@ -152,15 +151,15 @@ void SyntaxNodeIx::splitExpression()
 		qualifier = NULL;
 	}
 	/* this should now be a comma separated list */
-	if (tmp->getOpCode() == COMMA)
+	if (tmp->opCode == COMMA)
 	{
-		ListNode *tmpl = static_cast<ListNode*>(tmp);
+//		ListNode *tmpl = static_cast<ListNode*>(tmp);
 		ncomp = tmp->nchild();
 //		this->sets.resize(ncomp);
 //		this->sets_mc.resize(ncomp);
 //		this->dummyVarExpr.resize(ncomp);
 		int i = 0;
-		for (ListNode::iterator ti = tmpl->begin(); ti != tmpl->end();++ti, ++i)
+		for (SyntaxNode::iterator ti = tmp->begin(); ti != tmp->end();++ti, ++i)
 		{
 			tmp2 = findKeywordinTree(*ti, IN);
 			/* everything to the left of IN is a dummy variables */
@@ -260,7 +259,7 @@ SyntaxNode *SyntaxNodeIx::hasDummyVar(const string& name)
 		if (!tmp) continue; // no dummy var, just a set.
 
 		// this is either ID or (ID,   ,ID)
-		if (tmp->getOpCode() == ID) {
+		if (tmp->opCode == ID) {
 			IDNode *tmpid = (IDNode *) tmp;
 			LOG("Found dummy variable: " << tmpid->id());
 			if (name == tmpid->id())
@@ -268,15 +267,15 @@ SyntaxNode *SyntaxNodeIx::hasDummyVar(const string& name)
 		}
 		else{
 			/* This is a multidimensional dummy variable: */
-			assert(tmp->getOpCode() == LBRACKET);
+			assert(tmp->opCode == LBRACKET);
 			tmp = tmp->front();
-			ListNode *tmpl = static_cast<ListNode*>(tmp);
+//			ListNode *tmpl = static_cast<ListNode*>(tmp);
 			// and this should be a comma separated list
-			assert(tmpl);
-			assert(tmpl->getOpCode() == COMMA);
-			for (ListNode::iterator j = tmpl->begin(); j != tmpl->end(); ++j) {
+//			assert(tmpl);
+			assert(tmp->opCode == COMMA);
+			for (SyntaxNode::iterator j = tmp->begin(); j != tmp->end(); ++j) {
 				// items on the list should be ID
-				assert((*j)->getOpCode() == ID);
+				assert((*j)->opCode == ID);
 				IDNode *tmp2 = (IDNode *) *j;
 				LOG("Found dummy variable: " << tmp2->id());
 

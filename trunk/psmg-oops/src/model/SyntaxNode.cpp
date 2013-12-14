@@ -11,7 +11,6 @@
 #include "SyntaxNodeIx.h"
 #include "SyntaxNodeIDREF.h"
 #include "ValueNode.h"
-#include "ListNode.h"
 #include "OpNode.h"
 #include "IDNode.h"
 #include "../context/IndexSet.h"
@@ -242,7 +241,7 @@ ModelComp *SyntaxNode::findModelComp() const {
 string SyntaxNode::getArgumentList() const {
 	const SyntaxNodeIDREF *on;
 	string arglist = "";
-	if (getOpCode() != IDREF) {
+	if (opCode != IDREF) {
 		cerr << "Can only call getArgumentList for SyntaxNodes of type IDREF\n";
 		exit(1);
 	}
@@ -300,10 +299,10 @@ ostream& SyntaxNode::put(ostream&s) const {
 	 for(int j=0; j<level; ++j) cout << " ";
 	 if(level!=0) cout << "-";
 	 level++;
-	 cout << "here " << this->getOpCode() << "(" << node << ")\n";
+	 cout << "here " << this->opCode << "(" << node << ")\n";
 	 }*/
 
-	switch (this->getOpCode())
+	switch (this->opCode)
 	{
 		case 0:
 			s << **i;
@@ -460,14 +459,14 @@ ostream& SyntaxNode::put(ostream&s) const {
 			s<<**(++i);
 			break;
 		case COS:
+			s<<" cos(";
 			s<<**i;
-			s<<" cos ";
-			s<<**(++i);
+			s<<")";
 			break;
 		case SIN:
+			s<<" sin(";
 			s<<**i;
-			s<<" sin ";
-			s<<**(++i);
+			s<<")";
 			break;
 		case -99: // template<class T> ValueNode
 			cerr << "FAIL(-99)";
@@ -475,7 +474,7 @@ ostream& SyntaxNode::put(ostream&s) const {
 			break;
 		default:
 			s << endl;
-			cerr << "Unknown opcode " << this->getOpCode() << "\n";
+			cerr << "Unknown opcode " << this->opCode << "\n";
 			cerr << ".nval = " << this->nchild() << "\n";
 			for(;i != this->end();++i) {
 				cerr << "val[" << **i << "]\n";
@@ -517,7 +516,7 @@ int SyntaxNode::calculateVarDim() {
 int SyntaxNode::calculateSetDim() {
 	LOG(this->print());
 	int dim = 0;
-	if (this->opCode == DEFINED) { //OpNode
+	if (this->opCode == ASSIGN) { //OpNode
 		assert(this->values[0] != NULL);
 		assert(this->values.size() == 1);
 		dim = this->values[0]->calculateSetDim();
@@ -615,7 +614,7 @@ void SyntaxNode::calculateParamIndicies(vector<string>& paramIndiciesDummy, vect
 Set* SyntaxNode::calculateSetValue(ModelContext* context) {
 	Set* value = NULL;
 	LOG(this->print());
-	if (this->opCode == DEFINED) {
+	if (this->opCode == ASSIGN) {
 		value = this->values[0]->calculateSetValue(context);
 	}
 	else if (this->opCode == CROSS) {
@@ -770,7 +769,7 @@ Set* SyntaxNode::evalSet(ModelContext* context) {
 double SyntaxNode::calculateParamValue(hash_map<string, string>& dummyValueMap, hash_map<string, ModelComp*>& paramIndicies, ModelContext* context) {
 	LOG("calculateParamValue  ---  opCode["<<this->opCode<<"]  "<<this->print());
 	double rval = 0;
-	if (this->opCode == ASSIGN) {
+	if (this->opCode == DEFINED) {
 		rval = this->values[0]->calculateParamValue(dummyValueMap, paramIndicies, context);
 	}
 	else if (this->opCode == COMMA) {
@@ -1279,7 +1278,7 @@ string SyntaxNode::print_SyntaxNodesymb(const SyntaxNode *node) {
 	if (node == NULL) {
 		return "NULL";
 	}
-	if (node->getOpCode() == ID)
+	if (node->opCode == ID)
 		return "(ID T)";
 //  if ((inode = dynamic_cast<const ValueNode<long> *>(node))) {
 //    string temp = "T:";
@@ -1294,7 +1293,7 @@ string SyntaxNode::print_SyntaxNodesymb(const SyntaxNode *node) {
 
 	// start new version
 	// print node symbol
-	switch (node->getOpCode())
+	switch (node->opCode)
 	{
 		case IDREF: {
 			const SyntaxNodeIDREF *onir = dynamic_cast<const SyntaxNodeIDREF*>(node);
@@ -1334,7 +1333,7 @@ string SyntaxNode::print_SyntaxNodesymb(const SyntaxNode *node) {
 			ost << "\"*\"";
 			break;
 		default:
-			ost << "\"" << node->getOpCode() << "\"";
+			ost << "\"" << node->opCode << "\"";
 			break;
 	}
 	ost << "(";
@@ -1355,7 +1354,7 @@ string SyntaxNode::print_SyntaxNodesymb(const SyntaxNode *node) {
  *  in the Tree.
  */
 SyntaxNode* SyntaxNode::findKeywordinTree(SyntaxNode *root, int oc) {
-	if (root->getOpCode() == oc)
+	if (root->opCode == oc)
 		return root;
 
 	SyntaxNode *found, *res;
@@ -1410,12 +1409,11 @@ SyntaxNode* SyntaxNode::find_var_ref_in_context(AmplModel *model, SyntaxNode *re
 	 */
 
 	/* returns: pointer */
-	LOG("Finding ref:"<<ref<<" in AmplModel(context):"<<model->name);
+	LOG("find_var_ref_in_context ref["<<ref->print()<<"]  AmplModel["<<model->name<<"]");
 	SyntaxNode *tmp;
-	ListNode *argNode;
+	SyntaxNode *argNode;
 	IDNode *idNode;
 	SyntaxNodeIDREF *ret;
-	int stochparent = 0;
 
 	/* and now scan through the whole of the local context to see if we
 	 find any matches */
@@ -1430,28 +1428,27 @@ SyntaxNode* SyntaxNode::find_var_ref_in_context(AmplModel *model, SyntaxNode *re
 	 */
 
 	// split the expression 'ref' into an id part and an argument list
-	if (ref->getOpCode() == ID) {
-		LOG("  -- ["<<ref<<"] has an ID opCode");
+	if (ref->opCode == ID) {
+		LOG(" ID -- ["<<ref<<"] has an ID opCode");
 		idNode = (IDNode *) ref;
 		argNode = NULL;
 	}
-	else {
-		assert(ref->getOpCode() == LSBRACKET || ref->getOpCode() == LBRACKET);
-		LOG("  -- ["<<ref<<"] has an LSBRACKET or LBRACKET opCode");
+	else if(ref->opCode == LSBRACKET){
+		LOG(" LBRACKET -- ["<<ref<<"] has an LSBRACKET opCode");
 		SyntaxNode::iterator i = ref->begin();
 		idNode = (IDNode*) *i;
-		argNode = (ListNode*) *(++i);
-		assert(idNode->getOpCode() == ID);
-		assert(argNode->getOpCode() == COMMA);
+		argNode = *(++i);
+		assert(idNode->opCode == ID);
+		assert(argNode->opCode == COMMA || argNode->opCode == ID || argNode->opCode == IDREF);
+	}
+	else{
+		LOG("opCode -- "<<ref->opCode<<" should not be here! -- "<<ref->print());
+		assert(false);
 	}
 
 	// Test if this ID node is actually of type SyntaxNodeID and if so remember
 	// the value of stochparent
-	{
-		if (idNode->getStochParent() != 0)
-			// there is an extra argument, which is the stochparent
-			stochparent = idNode->getStochParent();
-	}
+	int stochparent = idNode->getStochParent();
 
 	LOG("--> now Search for matches of " << idNode->id() <<" in current active indexings");
 
@@ -1468,35 +1465,28 @@ SyntaxNode* SyntaxNode::find_var_ref_in_context(AmplModel *model, SyntaxNode *re
 
 	// ret could be NULL if it is actually a STAGE or NODE dummy variable
 	if (!ret) {
-		LOG("--> not found in either current index or current context's modelComp");
-		if (argNode) {
-			cerr << "dummy index of stageset or nodeset and argNode=true not "
-					"yet handled!" << endl;
-			exit(1);
-		}
-		return idNode; // return something at least vaguely meaningful
+		cerr<<"can't found ["<<idNode->print()<<"] in either current index or model["<<model->name<<"]"<<endl;
+		exit(1);
 	}
 
 	if (argNode) {
-		LOG("Adding argument list to node: " << *argNode);
-		//free(idNode->values); // jdh - what does this do?
-		for(ListNode::iterator i = argNode->begin();i != argNode->end();++i)
-			ret->push_back(*i);
-		if (ref->getOpCode() == LBRACKET) {
-			// this is old code to deal with ancestor(1).ID declarations. To go
-			cerr << "Executing old code to deal with ancestor(1).ID "
-					"declarations\n";
-			exit(1);
+		LOG("Adding ["<< argNode->print()<<"] to ["<<ret->print()<<"]");
 
-			// This is a reference indexed by '(..)'. In this case we are in
-			// a stoch block and the first argument refers to the stage
-			//      ret->stochrecourse = (SyntaxNode*)ret->values[0];
-			//for (int i = 1; i < ret->nchild(); ++i) {
-			//ret->values[i-1] = ret->values[i];
-			//}
-			//ret->nval--;
+		//free(idNode->values); // jdh - what does this do?
+		if(argNode->opCode == COMMA)
+		{
+			for(SyntaxNode::iterator i = argNode->begin();i != argNode->end();++i)
+				ret->push_back(*i);
 		}
-		argNode->clear();
+		else if(argNode->opCode == ID || argNode->opCode == IDREF)
+		{
+			ret->push_back(argNode);
+		}
+		else
+		{
+			LOG("argNode has to be ID, IDREF or COMMA");
+			assert(false);
+		}
 	}
 
 	ret->setStochParent(stochparent);
