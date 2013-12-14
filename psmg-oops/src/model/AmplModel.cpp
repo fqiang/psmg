@@ -21,7 +21,6 @@
 #include "SyntaxNodeIx.h"
 #include "IDNode.h"
 #include "OpNode.h"
-#include "ListNode.h"
 #include "SyntaxNodeIDREF.h"
 #include "changeitem.h"
 #include "../parser/sml.tab.h"
