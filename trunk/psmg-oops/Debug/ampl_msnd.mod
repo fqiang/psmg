@@ -17,7 +17,7 @@ param b{k in COMM, i in NODES} :=
 var sparecap{ARCS}>=0;
 
 block MCNFArcs{a in ARCS}: {
-	set ARCSDIFF := ARCS diff {a};
+	set ARCSDIFF = ARCS diff {a};
 	
 	block ANet{k in COMM}: {
 		var Flow{ARCSDIFF}>=0;
@@ -30,8 +30,8 @@ block MCNFArcs{a in ARCS}: {
 }
 
 block MCNFNodes{n in NODES}: {
-	set NODESDIFF := NODES diff {n};
-	set ARCSDIFF := {m in ARCS:arc_source[m]!=ord(n) && arc_target[m]!=ord(n)};
+	set NODESDIFF = NODES diff {n};
+	set ARCSDIFF = {m in ARCS:arc_source[m]!=ord(n) && arc_target[m]!=ord(n)};
 	
 	block NNet{k in COMM}: {
 		var Flow{ARCSDIFF} >= 0;
