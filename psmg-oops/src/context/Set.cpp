@@ -23,7 +23,6 @@
 #include <vector>
 #include "Set.h"
 #include "../model/SyntaxNode.h"
-#include "../model/ListNode.h"
 #include "../parser/data.tab.h"
 #include "../util/global_util_functions.h"
 
