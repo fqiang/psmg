@@ -80,7 +80,7 @@ class StochModel: public AmplModel{
   static vector <string> STAGE_LIST; //only for stochastic sml model file used only!
   // -------------------------- methods ----------------------------------
   //! Constructor 
-  StochModel(SyntaxNode *onStages, SyntaxNode *onNodes, SyntaxNode *onAncs,SyntaxNode *onProb, AmplModel *parent);
+  StochModel(const string& name, SyntaxNode *onStages, SyntaxNode *onNodes, SyntaxNode *onAncs,SyntaxNode *onProb, AmplModel *parent);
 
   //! Expand the StochModel to a nested set of flat models
   AmplModel *expandToFlatModel();

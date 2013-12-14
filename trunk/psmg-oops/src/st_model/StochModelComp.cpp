@@ -21,7 +21,6 @@
 #include "../model/SyntaxNodeIx.h"
 #include "../model/IDNode.h"
 #include "../model/OpNode.h"
-#include "../model/ListNode.h"
 #include "../model/AmplModel.h"
 #include "../parser/sml.tab.h"
 #include "StageNodeNode.h"
@@ -294,7 +293,7 @@ StochModelComp::transcribeToModelComp(AmplModel *current_model,
 		assert((*p)->nchild() == 1);
 		SyntaxNode *child = (*p)->front();
 
-		if (child->getOpCode() != COMMA || child->nchild() == 1)
+		if (child->opCode != COMMA || child->nchild() == 1)
 		{
 
 			// one argument version of Exp within an objective function
@@ -327,7 +326,7 @@ StochModelComp::transcribeToModelComp(AmplModel *current_model,
 				{
 					SyntaxNode *cnixon = thisAmpleModel->node->indexing;
 					// cnixon might contain a '{' => strip it if present
-					if (cnixon->getOpCode() == LBRACE)
+					if (cnixon->opCode == LBRACE)
 						cnixon = cnixon->front();
 					LOG("adding to listofsum -- ["<<cnixon->print()<<"]");
 					listofsum.push_front(cnixon->deep_copy());
@@ -340,7 +339,7 @@ StochModelComp::transcribeToModelComp(AmplModel *current_model,
 				}
 
 				// build the comma separated list and put braces around it
-				SyntaxNode *cslon = new ListNode(COMMA);
+				SyntaxNode *cslon = new SyntaxNode(COMMA);
 				for (q = listofsum.begin(); q != listofsum.end(); ++q)
 					cslon->push_back(*q);
 				cslon = new SyntaxNode(LBRACE, cslon);
@@ -365,7 +364,7 @@ StochModelComp::transcribeToModelComp(AmplModel *current_model,
 				newmc->moveUp(level);
 			}
 		}
-		if (child->getOpCode() == COMMA && child->nchild() > 1)
+		if (child->opCode == COMMA && child->nchild() > 1)
 		{
 			// this is the two argument version of Exp(..., ...)
 			// the second argument is the stage in which the expression should
@@ -386,7 +385,7 @@ StochModelComp::transcribeToModelComp(AmplModel *current_model,
 #if STRICT_ERROR_FOR_EXP_INSIDE_OBJECTIVE
 		// we should have dealt with Exp() inside an objective above, so this
 		// assertion should never trigger
-		assert(attributes->getOpCode() != EXPECTATION);
+		assert(attributes->opCode != EXPECTATION);
 #endif
 
 		// surround the objective expression with brackets for the multiplication
