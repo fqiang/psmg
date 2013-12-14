@@ -22,7 +22,6 @@
 #include "../model/SyntaxNodeIx.h"
 #include "../model/IDNode.h"
 #include "../model/OpNode.h"
-#include "../model/ListNode.h"
 #include "../model/SyntaxNodeIDREF.h"
 #include "StageNodeNode.h"
 #include "../parser/sml.tab.h"
@@ -40,11 +39,11 @@ vector<string> StochModel::STAGE_LIST;
  StochModel::StochModel()
  ---------------------------------------------------------------------------- */
 /** Constructor */
-StochModel::StochModel(SyntaxNode *onStages, SyntaxNode *onNodes,
-		SyntaxNode *onAncs, SyntaxNode *onProb, AmplModel *prnt) :
-		AmplModel("",NULL), is_symbolic_stages(false)
+StochModel::StochModel(const string& name, SyntaxNode *onStages, SyntaxNode *onNodes,
+		SyntaxNode *onAncs, SyntaxNode *onProb, AmplModel *par) :
+		AmplModel(name,par), is_symbolic_stages(false)
 {
-	LOG("create StochModel -- onStages["<<onStages<<"] noNodes["<<onNodes<<"] onAncs["<<onAncs<<"] onProb["<<onProb<<"] prnt["<<prnt->name<<"]");
+	LOG("create StochModel -- onStages["<<onStages<<"] noNodes["<<onNodes<<"] onAncs["<<onAncs<<"] onProb["<<onProb<<"] prnt["<<par->name<<"]");
 	/* Split up possible indexing expressions for params */
 	StochModel::splitIn(onStages, &stagedummy, &stageset);
 	StochModel::splitIn(onNodes, &nodedummy, &nodeset);
@@ -63,7 +62,6 @@ StochModel::StochModel(SyntaxNode *onStages, SyntaxNode *onNodes,
 				<< " not allowed" << endl;
 		exit(1);
 	}
-	parent = prnt;
 	LOG("end create StochModel -- ");
 }
 
@@ -329,7 +327,7 @@ AmplModel* StochModel::expandToFlatModel()
 				// on_iinn: this_nd in NODES
 				on_iinN = new OpNode(IN, new IDNode("this_nd"), nodeset->clone());
 				// onai: A[this_nd]
-				onai = new SyntaxNode(LSBRACKET, anc->clone(),new ListNode(COMMA, new IDNode("this_nd")));
+				onai = new SyntaxNode(LSBRACKET, anc->clone(),new SyntaxNode(COMMA, new IDNode("this_nd")));
 				// on2: A[this_nd]=="null"
 				on2 = new OpNode(EQ, onai, new IDNode("\"null\""));
 				// on1: :={this_nd in NODES:Parent[this_nd] == "null"};
@@ -360,7 +358,7 @@ AmplModel* StochModel::expandToFlatModel()
 			on1 = anc->clone();
 			// this is the comma separated list
 			/* I think that  dummy variable is just left as a ID */
-			on2 = new ListNode(COMMA, new IDNode("this_nd"));
+			on2 = new SyntaxNode(COMMA, new IDNode("this_nd"));
 			// this is A[i]
 			onai = new SyntaxNode(LSBRACKET, on1, on2);
 			// this is the A[i] in indSO
@@ -591,7 +589,7 @@ SyntaxNodeIDREF* StochModel::createIdrefNode(IDNode *ref)
 
 void StochModel::splitIn(SyntaxNode* expr, IDNode **dummy, SyntaxNode **set)
 {
-	if (expr->getOpCode() == IN)
+	if (expr->opCode == IN)
 	{
 		SyntaxNode::iterator i = expr->begin();
 		*dummy = static_cast<IDNode *>(*i);
