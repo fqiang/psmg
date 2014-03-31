@@ -30,6 +30,5 @@ src/parser \
 src/oops \
 src/model \
 src/metric \
-src/interface \
 src/context \
 

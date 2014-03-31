@@ -5,51 +5,51 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
 ../src/model/AmplModel.cpp \
-../src/model/CompositeSet.cpp \
-../src/model/IDNode.cpp \
-../src/model/IndexingSet.cpp \
-../src/model/ListNode.cpp \
-../src/model/ListSet.cpp \
+../src/model/ConsComp.cpp \
+../src/model/DumCompEntry.cpp \
 ../src/model/ModelComp.cpp \
-../src/model/OpNode.cpp \
-../src/model/SetNode.cpp \
-../src/model/SimpleSet.cpp \
+../src/model/ObjComp.cpp \
+../src/model/ParamComp.cpp \
+../src/model/SetComp.cpp \
 ../src/model/SyntaxNode.cpp \
+../src/model/SyntaxNodeID.cpp \
 ../src/model/SyntaxNodeIDREF.cpp \
-../src/model/SyntaxNodeIx.cpp \
-../src/model/ValueNode.cpp 
+../src/model/SyntaxNodeIDREFM.cpp \
+../src/model/SyntaxNodeOP.cpp \
+../src/model/SyntaxNodeValue.cpp \
+../src/model/VarComp.cpp 
 
 OBJS += \
 ./src/model/AmplModel.o \
-./src/model/CompositeSet.o \
-./src/model/IDNode.o \
-./src/model/IndexingSet.o \
-./src/model/ListNode.o \
-./src/model/ListSet.o \
+./src/model/ConsComp.o \
+./src/model/DumCompEntry.o \
 ./src/model/ModelComp.o \
-./src/model/OpNode.o \
-./src/model/SetNode.o \
-./src/model/SimpleSet.o \
+./src/model/ObjComp.o \
+./src/model/ParamComp.o \
+./src/model/SetComp.o \
 ./src/model/SyntaxNode.o \
+./src/model/SyntaxNodeID.o \
 ./src/model/SyntaxNodeIDREF.o \
-./src/model/SyntaxNodeIx.o \
-./src/model/ValueNode.o 
+./src/model/SyntaxNodeIDREFM.o \
+./src/model/SyntaxNodeOP.o \
+./src/model/SyntaxNodeValue.o \
+./src/model/VarComp.o 
 
 CPP_DEPS += \
 ./src/model/AmplModel.d \
-./src/model/CompositeSet.d \
-./src/model/IDNode.d \
-./src/model/IndexingSet.d \
-./src/model/ListNode.d \
-./src/model/ListSet.d \
+./src/model/ConsComp.d \
+./src/model/DumCompEntry.d \
 ./src/model/ModelComp.d \
-./src/model/OpNode.d \
-./src/model/SetNode.d \
-./src/model/SimpleSet.d \
+./src/model/ObjComp.d \
+./src/model/ParamComp.d \
+./src/model/SetComp.d \
 ./src/model/SyntaxNode.d \
+./src/model/SyntaxNodeID.d \
 ./src/model/SyntaxNodeIDREF.d \
-./src/model/SyntaxNodeIx.d \
-./src/model/ValueNode.d 
+./src/model/SyntaxNodeIDREFM.d \
+./src/model/SyntaxNodeOP.d \
+./src/model/SyntaxNodeValue.d \
+./src/model/VarComp.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
