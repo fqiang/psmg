@@ -10,6 +10,9 @@
  *      Author: s0965328
  */
 
+typedef unsigned int uint;
+typedef unsigned long ulong;
+
 #ifdef DEBUG
 #define DEBUG_PRINT_ENABLED 1 //enable debug print
 #define DEBUG_YAC_DATA_ENABLED 1

@@ -19,16 +19,14 @@
 #define AMPLMODEL_H
 
 #include "ModelComp.h"
+#include "SetComp.h"
+#include "ParamComp.h"
+#include "VarComp.h"
+#include "ConsComp.h"
+#include "ObjComp.h"
 #include "changeitem.h"
 #include <vector>
 #include <string>
-
-class ExpandedModel;
-class IDNode;
-class SyntaxNode;
-class SyntaxNodeIx;
-class SyntaxNodeIDREF;
-struct changeitem;
 
 using namespace std;
 
@@ -48,112 +46,76 @@ extern void parse_data(ModelContext* rootContext);
  *  It keeps track of both the number of every type registered and a linked
  *  list of entries describing each of the entities in more detail.
  */
-class AmplModel{
- public:
+class AmplModel : public ModelComp{
+
+public:
+	/** The root model of the AmplModel tree */
+	static AmplModel *root;
+	static int MAX_LEVEL;
+	/** The parent if this is a submodel of another model */
+	AmplModel *parent;
+
+	int n_vars;      //!< number of variable declarations
+	int n_cons;      //!< number of constraint declarations
+	int n_params;    //!< number of parameter declarations
+	int n_sets;      //!< number of set declarations
+	int n_objs;      //!< number of objective declarations
+	int n_submodels; //!< number of submodel/block declarations
+	int n_total;     //!< total number of declarations
+	int level;       //!< level of this model on the flat model tree (root=0)
+
+	/** The list of components of this model */
+	vector<ModelComp*> all_comps;
+	vector<SetComp*> set_comps;
+	vector<ParamComp*> param_comps;
+	vector<VarComp*> var_comps;
+	vector<ConsComp*> con_comps;
+	vector<AmplModel*> subm_comps;
+	ObjComp* obj_comp;
+
+	// -------------------------- methods ----------------------------------
+	/** Constructor */
+	AmplModel(const string& name, AmplModel *par, SyntaxNode* index);
+
+	/** Destructor */
+	virtual ~AmplModel();
+
+	/** Add a model component to the model */
+	virtual void addComp(ModelComp *comp);
+
+	/** Recursive detailed debugging output */
+	void logModel(const char *filename);
+
+	//find the ModelComp to fill the CompDescr.
+	ModelComp* findModelComp(string& id);
+	ParamComp* findParamComp(string& id);
+	SetComp* findSetComp(string& id);
+	void calculateModelComp(ModelContext* context);
+	void calculateModelCompRecursive(ModelContext* context);
+	ExpandedModel* createExpandedModel(string dummyVar,SetComp* comp,string value,ModelContext* parent);
+	void reassignModelIndexDependencies();
+	void settingUpLevels(int);
+
+	void formulateConstraints();
+	void calculateLocalVar(ModelContext* context);
+	void calculateMemoryUsage(unsigned long& size);
 
 
-  /** The root model of the AmplModel tree */
-  static AmplModel *root;
-  static int MAX_LEVEL;
-  /** The parent if this is a submodel of another model */
-  AmplModel *parent;
+	void dump(std::ostream& fout,int);
 
 
-  /** The ModelComp node corresponding to this model (defined if this is not
-   *  root) */
-  ModelComp *node;
-
-  /** Name of the block defining this (sub)model */
-  string name;
-
-  int n_vars;      //!< number of variable declarations 
-  int n_cons;      //!< number of constraint declarations 
-  int n_params;    //!< number of parameter declarations 
-  int n_sets;      //!< number of set declarations 
-  int n_objs;      //!< number of objective declarations 
-  int n_submodels; //!< number of submodel/block declarations
-  int n_total;     //!< total number of declarations
-  int level;       //!< level of this model on the flat model tree (root=0)
-
-
-
-  /** The list of components of this model */
-  vector<ModelComp*> all_comps;
-  vector<ModelComp*> set_comps;
-  vector<ModelComp*> param_comps;
-  vector<ModelComp*> var_comps;
-  vector<ModelComp*> con_comps;
-  vector<ModelComp*> subm_comps;
-  ModelComp* obj_comp;
-
-
-
-  /** List of changes that should be applied to the models */
-  static std::list<changeitem> changes;
-
-
-  // -------------------------- methods ----------------------------------
-  void deleteModelCompVector(vector<ModelComp*> comps);
-  /** Constructor */
-  AmplModel(const std::string& orig_name, AmplModel *par);
-  
-  /** Destructor */
-  virtual ~AmplModel();
-
-  /** Set the global name by concatenating ancestor names */
-  void setGlobalName();      
-
-  /** Set the global name recursively for this and all submodels */
-  void setGlobalNameRecursive();      
-
-  /** Recursively write out all tagged model components in this model and 
-      submodels to file */
-  void writeTaggedComponents(std::ostream& fout);
-
-  /** Add a model component to the model */
-  virtual void addComp(ModelComp *comp);
-
-  /** Remove a model component from the model */
-  void removeComp(ModelComp *comp);
-  static void removeComp(vector<ModelComp*> comps, ModelComp* comp);
-  void removeAllComps();
-
-  /** Recursively recalculate dependency list and re-resolve IDREF nodes */
-  void reassignDependencies();
-
-  /** Print debugging output recursively */
-  void print() const;
-
-  /** Recursive detailed debugging output */
-  void logModel(const char *filename) const;
-
-  /** Recursive detailed debugging output */
-  void dump(std::ostream& fout) const;
-
-  static void applyChanges(); //< apply the model changes stored in Q
-
-  virtual SyntaxNodeIDREF* createIdrefNode(IDNode *ref);
-
-  bool isCompInThisModel(ModelComp* comp);
-
-  // Virtual methods implemented only for stochastic models
-  virtual AmplModel* expandToFlatModel() { throw; }
-
-  //Feng start
-
-  //find the ModelComp to fill the CompDescr.
-  ModelComp* findModelComp(string id,compType type);
-  void calculateModelComp(ModelContext* context);
-  void calculateModelCompRecursive(ModelContext* context);
-  ExpandedModel* createExpandedModel(string dummyVar,ModelComp* comp,string value,ModelContext* parent);
-  void reassignModelIndexDependencies();
-  void settingUpLevels(int);
-
-  void formulateConstraints();
-  void fillLocalVar(ModelContext* context);
-  void calculateMemoryUsage(unsigned long& size);
-  //Feng end
-
+//legacy!
+//	virtual SyntaxNodeIDREF* createIdrefNode(SyntaxNodeID *ref);
+//	static void applyChanges(); //< apply the model changes stored in Q
+//	// Virtual methods implemented only for stochastic models
+//	virtual AmplModel* expandToFlatModel() { throw; }
+//	/** Remove a model component from the model */
+//	void removeComp(ModelComp *comp);
+//	template<typename T> void removeComp(vector<T*> comps, ModelComp* comp);
+//	/** List of changes that should be applied to the models */
+//	static std::list<changeitem> changes;
+//	/** Recursively recalculate dependency list and re-resolve IDREF nodes */
+//	void reassignDependencies();
 };
 
 #endif

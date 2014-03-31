@@ -15,12 +15,13 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#include "../sml/Sml.h"
-#include "../model/AmplModel.h"
-#include "../context/ModelContext.h"
 #include "../util/global_util_functions.h"
 #include "../sml/GlobalVariables.h"
+#include "../sml/Sml.h"
 #include "../metric/Statistics.h"
+#include "../model/AmplModel.h"
+#include "../context/ModelContext.h"
+#include "../context/Block.h"
 #include "mpi.h"
 #include <iostream>
 #include <sys/types.h>
@@ -28,10 +29,6 @@
 #include <time.h>
 #include <vector>
 #include <string>
-
-#ifdef HAVE_DIRECT_H
-#include <direct.h> // for mkdir() under MinGW
-#endif
 
 using namespace std;
 
@@ -133,11 +130,11 @@ void Sml::printEMStructure(string filename="")
 	LOG("============== printEMStructure =============================");
 	string line="   ";
 	if(filename.compare("")==0){
-		ExpandedModel::root->printEMInfo(line,cout);
+		ExpandedModel::root->printEMRecursive(line,cout);
 	}
 	else{
 		ofstream file(filename.c_str(),ofstream::out);
-		ExpandedModel::root->printEMInfo(line,file);
+		ExpandedModel::root->printEMRecursive(line,file);
 	}
 	LOG("============== END printEMStructure =============================");
 }
@@ -236,87 +233,104 @@ int Sml::analyseOptions(int argc, char **argv)
 	return 0;
 }
 
-void Sml::testRecursiveCreateEMB0(ExpandedModel* root,ExpandedModel* curr)
+void Sml::testInterfaceLocal2(ExpandedModel* emrow)
 {
-	vector<ExpandedModel*>::iterator it = curr->children.begin();
-	int nr, nc, nb, nz;
-	std::vector<boost::numeric::ublas::compressed_matrix<double> > blocks;
-	std::vector<boost::numeric::ublas::compressed_matrix<double>  >::iterator bit;
-	std::vector<unsigned int> nzs;
-	std::vector<unsigned int>::iterator nit;
-	nz = root->nz_jacobs_local(curr);
-	nb = root->nz_jacobs_distribute(curr,nzs);
-	nr = root->getNLocalCons();
-	nc = curr->getNLocalVars();
-	vector<double> fval;
-	root->cons_feval_distribute(curr,fval);
-	assert(fval.size()==nr);
-	root->cons_jacobs_distribute(curr,blocks);
+	Block* block = emrow->getBlockLocal();
 
-	for(bit=blocks.begin();bit!=blocks.end();bit++)
+	BOOST_FOREACH(ExpandedModel* em, block->ems)
 	{
-		LOG("block -- "<<*bit);
+		uint numPriVar = em->getNLocalVars();
+		double elts[numPriVar];
+		for(uint i=0;i<numPriVar;i++)
+		{
+			elts[i] = 0.1*i+0.1;
+		}
+		em->update_primal_var_soln(elts);
 	}
-	for(nit=nzs.begin();nit!=nzs.end();nit++)
-	{
-		LOG("block nz -- "<<*nit);
-	}
-
-	nr = curr->getNLocalCons();
-	nc = root->getNLocalVars();
-	vector<double> f2val;
-	nz = curr->nz_jacobs_local(root);
-	nzs.clear();
-	nb = curr->nz_jacobs_distribute(root,nzs);
-	curr->cons_feval_distribute(root,f2val);
-	assert(f2val.size()==nr);
-	blocks.clear();
-	curr->cons_jacobs_distribute(root,blocks);
-	for(bit=blocks.begin();bit!=blocks.end();bit++)
-	{
-		LOG("block -- "<<*bit);
-	}
-	for(nit=nzs.begin();nit!=nzs.end();nit++)
-	{
-		LOG("block nz -- "<<*nit);
-	}
-
-	for(it = curr->children.begin();it != curr->children.end();it++) {
-		this->testRecursiveCreateEMB0(root, *it);
-	}
-
 }
 
-void Sml::testRecursiveCreateEMB1(ExpandedModel* root)
+void Sml::testInterfaceLocal1(ExpandedModel* emrow,ExpandedModel* emcol )
+{
+	//update local/primal variable values before calling Local Interface methods
+	this->testInterfaceLocal2(emrow);
+
+	uint nr, nc, nz;
+	//for emrow x emcol block  -- normal matrix block
+	nr = emrow->getNLocalCons();
+	nc = emcol->getNLocalVars();
+
+	//Objective gradient declared by (objective from emrow) X (variables from emcol) ~ ie. [either 1 X emcol.numLocalVar] or [0 X emcol.numLocalVar]
+	vector<double> ograd;
+	emrow->obj_grad_local(emcol,ograd);
+	assert(emrow->model->obj_comp==NULL || ograd.size() == nc);
+	LOG("Objective gradient vector  -- ograd size["<<ograd.size()<<"]   ------ ["<<emrow->name<<"] X ["<<emcol->name<<"]");
+
+	//Objective Hessian declared by (variables from emrow) X (variables from emcol)
+	nz = emrow->nz_obj_hess_local(emcol);
+	boost::numeric::ublas::compressed_matrix<double> objhess;
+	emrow->obj_hess_local(emcol,objhess);
+	assert(objhess.size1()==emrow->getNLocalVars() && objhess.size2() == nc);
+	LOG("Objective Hessian block  -- ["<<objhess.size1()<<" X "<<objhess.size2()<<"]   -- nz["<<nz<<"]  -------  ["<<emrow->name<<"] X ["<<emcol->name<<"]");
+	objhess.clear();
+
+	//Constraints Jacobian submatrix declared by (constraints from emrow) X (variables from emcol)
+	nz = emrow->nz_cons_jacobs_local(emcol);
+	boost::numeric::ublas::compressed_matrix<double> consjac;
+	emrow->cons_jacobs_local(emcol,consjac);
+	assert(consjac.size1()==nr && consjac.size2() == nc);
+	LOG("Jacobian block  -- ["<<consjac.size1()<<" X "<<consjac.size2()<<"]   -- nz["<<nz<<"]  ------ ["<<emrow->name<<"] X ["<<emcol->name<<"]");
+	consjac.clear();
+
+	//Constraints Hessian submatrix declared by (variables from emrow) X (variables from emcol)
+	nz = emrow->nz_cons_hess_local(emcol);
+	boost::numeric::ublas::compressed_matrix<double> conshess;
+	emrow->cons_hess_local(emcol,conshess);
+	assert(conshess.size1()==emrow->numLocalVars && conshess.size2() == nc);  //hessian is square matrix
+	LOG("Hessian block  -- ["<<conshess.size1()<<" X "<<conshess.size2()<<"]   -- nz["<<nz<<"]  -------  ["<<emrow->name<<"] X ["<<emcol->name<<"]");
+	conshess.clear();
+}
+
+void Sml::testInterfaceLocal0(ExpandedModel* root,ExpandedModel* curr)
+{
+	this->testInterfaceLocal1(root,curr);
+	this->testInterfaceLocal1(curr,root);
+	vector<ExpandedModel*>::iterator it = curr->children.begin();
+	for(it = curr->children.begin();it != curr->children.end();it++) {
+		this->testInterfaceLocal0(root, *it);
+	}
+}
+
+void Sml::testInterfaceLocal(ExpandedModel* root)
 {
 	vector<ExpandedModel*>::iterator it = root->children.begin();
 	for(;it!=root->children.end();it++)
 	{
-		this->testRecursiveCreateEMB0(root,(*it));
-		this->testRecursiveCreateEMB1(*it);
+		this->testInterfaceLocal0(root,(*it));
+		this->testInterfaceLocal(*it);
 	}
-	int nr, nc, nz, nb;
-	std::vector<boost::numeric::ublas::compressed_matrix<double> > blocks;
-	std::vector<boost::numeric::ublas::compressed_matrix<double>  >::iterator bit;
-	std::vector<unsigned int> nzs;
-	std::vector<unsigned int>::iterator nit;
-	nr = root->getNLocalVars();
-	nc = root->getNLocalCons();
-	nz = root->nz_jacobs_local(root);
-	nb = root->nz_jacobs_distribute(root,nzs);
-	vector<double> fval;
-	root->cons_feval_distribute(root,fval);
-	assert(fval.size()==nr);
-	root->cons_jacobs_distribute(root,blocks);
 
-	for(bit=blocks.begin();bit!=blocks.end();bit++)
-	{
-		LOG("block -- "<<*bit);
-	}
-	for(nit=nzs.begin();nit!=nzs.end();nit++)
-	{
-		LOG("block nz -- "<<*nit);
-	}
+	//update local/primal variable values before calling Local Interface methods
+	this->testInterfaceLocal2(root);
+
+	//Object and Constraint Evaluation Local Inteface calls
+	uint nr, nc;
+	nr = root->getNLocalCons();
+	nc = root->getNLocalVars();
+
+	//for diagonal blocks
+	double oval;
+	root->obj_feval_local(oval);
+	LOG("Objective Eval -- ["<<"< oval["<<oval<<"]  ------ ["<<root->name<<"] X ["<<root->name<<"]");
+	assert(root->model->obj_comp!=NULL || (isnan(oval) && root->model->obj_comp == NULL));
+
+	vector<double> fval;
+	root->cons_feval_local(fval);
+	assert(fval.size()==nr);
+	LOG("Constraint Eval -- ["<<"<fval size ["<<fval.size()<<"]  ------ ["<<root->name<<"] X ["<<root->name<<"]");
+	fval.clear();
+
+	//calling Local inteface calls for Gradient and Hessian of the diagonal block
+	this->testInterfaceLocal1(root,root);
 }
 
 int main(int argc, char **argv)
@@ -372,8 +386,9 @@ int main(int argc, char **argv)
 
 	assert(ExpandedModel::root != NULL);
 
-
-	Sml::instance()->testRecursiveCreateEMB1(ExpandedModel::root);
+	//Testing Section start
+	Sml::instance()->testInterfaceLocal(ExpandedModel::root);
+	//Testing Section end
 
 	Sml::instance()->printEMStructure(GV(logdir)+"logEM.dat");
 
@@ -392,8 +407,7 @@ int main(int argc, char **argv)
 	TIMER_LIST;
 	TIMER_RESET;
 
-	cout<<"["<<GlobalVariables::rank<<"/"<<GlobalVariables::size<<"] - GetNzJac["<<Statistics::numGetNZJacCall<<"]"<<endl;
-	cout<<"["<<GlobalVariables::rank<<"/"<<GlobalVariables::size<<"] - GetJac["<<Statistics::numGetJacCall<<"]"<<endl;
+	Statistics::logStatistics(cout);
 
 	MPI_Barrier(MPI_COMM_WORLD);
 	MPI::Finalize();

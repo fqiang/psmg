@@ -36,7 +36,7 @@ block MCNFNodes{n in NODES}: {
 	block NNet{k in COMM}: {
 		var Flow{ARCSDIFF} >= 0;
 		subject to FlowBlance{i in NODESDIFF}:
-			sum{j in ARCSDIFF:arc_target[j]==ord(i)}(Flow[j]) - sum{j in ARCSDIFF:arc_source[j]==ord(i)}(Flow[j]) = b[k,i];
+			sum{j in ARCSDIFF:arc_target[j]==i}(Flow[j]) - sum{j in ARCSDIFF:arc_source[j]==i}(Flow[j]) = b[k,i];
 	}
 
 	var capslacknode{ARCSDIFF} >= 0;
@@ -44,5 +44,5 @@ block MCNFNodes{n in NODES}: {
 		sum{k in COMM} (NNet[k].Flow[j]) + capslacknode[j] - sparecap[j] = basecap[j];
 }
 
-minimize costToInstall: sum{x in ARCS} (sparecap[x]*cost[x]);
+minimize costToInstall: sum{a in ARCS} (sparecap[a]*cost[a]);
 	

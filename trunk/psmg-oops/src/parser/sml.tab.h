@@ -148,20 +148,28 @@
      LBRACKET = 366,
      RBRACKET = 367,
      DEFINED = 368,
-     DOT = 369,
-     SUFFIX = 370,
-     BLOCK = 371,
-     IDREF = 372,
-     IDREFM = 373,
-     STAGE = 374,
-     NODE = 375,
-     USING = 376,
-     DETERMINISTIC = 377,
-     EXPECTATION = 378,
-     STOCHASTIC = 379,
-     STAGES = 380,
-     ANCESTOR = 381,
-     ASSIGN = 382
+     SUFFIX = 369,
+     BLOCK = 370,
+     USING = 371,
+     DETERMINISTIC = 372,
+     EXPECTATION = 373,
+     STOCHASTIC = 374,
+     STAGES = 375,
+     ANCESTOR = 376,
+     IDREF = 377,
+     IDREFM = 378,
+     VALUE = 379,
+     LIST = 380,
+     INDEX = 381,
+     DVAR = 382,
+     DOT = 383,
+     STAGE = 384,
+     NODE = 385,
+     ASSIGN = 386,
+     MINUS = 387,
+     PLUS = 388,
+     DIVID = 389,
+     TIMES = 390
    };
 #endif
 /* Tokens.  */
@@ -276,20 +284,28 @@
 #define LBRACKET 366
 #define RBRACKET 367
 #define DEFINED 368
-#define DOT 369
-#define SUFFIX 370
-#define BLOCK 371
-#define IDREF 372
-#define IDREFM 373
-#define STAGE 374
-#define NODE 375
-#define USING 376
-#define DETERMINISTIC 377
-#define EXPECTATION 378
-#define STOCHASTIC 379
-#define STAGES 380
-#define ANCESTOR 381
-#define ASSIGN 382
+#define SUFFIX 369
+#define BLOCK 370
+#define USING 371
+#define DETERMINISTIC 372
+#define EXPECTATION 373
+#define STOCHASTIC 374
+#define STAGES 375
+#define ANCESTOR 376
+#define IDREF 377
+#define IDREFM 378
+#define VALUE 379
+#define LIST 380
+#define INDEX 381
+#define DVAR 382
+#define DOT 383
+#define STAGE 384
+#define NODE 385
+#define ASSIGN 386
+#define MINUS 387
+#define PLUS 388
+#define DIVID 389
+#define TIMES 390
 
 
 
@@ -299,20 +315,20 @@ typedef union YYSTYPE
 {
 
 /* Line 2068 of yacc.c  */
-#line 68 "sml.tab.ypp"
+#line 73 "sml.tab.ypp"
 
   int optype;
-  compType ctype;
+  objType otype;
   long *ival;
   double *fval;
-  char *string;
+  char* string;
+  AmplModel* model;
   SyntaxNode *opPtr;
-  SyntaxNodeIx *opPtrIx;
 
 
 
 /* Line 2068 of yacc.c  */
-#line 316 "../src/parser/sml.tab.hpp"
+#line 332 "../src/parser/sml.tab.hpp"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

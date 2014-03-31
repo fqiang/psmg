@@ -1,28 +1,32 @@
 /*
- * OpNode.h
+ * SyntaxNodeOP.h
  *
  *  Created on: 28 Sep 2011
  *      Author: s0965328
  */
 
-#ifndef OPNODE2_H_  //this is because OPNODE_H_ conflicts with AutoDiff::OPNode class
-#define OPNODE2_H_
+#ifndef SYNTAXNODEOP_H_  //this is because OPNODE_H_ conflicts with AutoDiff::OPNode class
+#define SYNTAXNODEOP_H_
 
 #include "SyntaxNode.h"
 
 /** @class OpNode
  *  Represents an operator.
  */
-class OpNode : public SyntaxNode {
+class SyntaxNodeOP : public SyntaxNode {
   public:
    SyntaxNode *left;
    SyntaxNode *right;
 
   public:
-   OpNode(int opCode, SyntaxNode *op1, SyntaxNode *op2=NULL);
-   std::ostream& put(std::ostream& s) const;
-   OpNode *deep_copy();
-   OpNode *clone();
+   SyntaxNodeOP(int opCode, SyntaxNode *op1, SyntaxNode *op2=NULL);
+   std::ostream& put(std::ostream& s);
+   virtual void calculateMemoryUsage(unsigned long& size);
+
+//legacy!!
+
+//   OpNode *deep_copy();
+//   OpNode *clone();
 //   void findIDREF(std::list<ModelComp*>& lmc) {
 //      if(left) left->findIDREF(lmc);
 //      if(right) right->findIDREF(lmc);
@@ -35,7 +39,6 @@ class OpNode : public SyntaxNode {
 //      if(left) left->findOpCode(oc, lnd);
 //      if(right) right->findOpCode(oc, lnd);
 //   }
-   virtual void calculateMemoryUsage(unsigned long& size);
 };
 
 #endif /* OPNODE_H_ */

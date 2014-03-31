@@ -14,17 +14,19 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
-#ifndef COMPDESCRPARAM_H
-#define COMPDESCRPARAM_H
+#ifndef PARAM_H_
+#define PARAM_H_
 
-#include "CompDescr.h"
-#include "Set.h"
 #include <string>
-#include <ext/hash_map>
+#include "../util/global_util_functions.h"
+#include "CompDescr.h"
+
+class ParamComp;
 
 
 using namespace std;
 using namespace __gnu_cxx;
+
 
 /** @class CompDescrParam
  *  This class describes a parameter: it consists of
@@ -32,25 +34,18 @@ using namespace __gnu_cxx;
  *   - a list of parameter values (in dense format?) - 
  *         i.e. a multidimensional array
  */  
-class Param: public CompDescr{
-
-	private:
-
-		int numIndicies; 	//number of set indices
-		string name;		//param name
+class	 Param: public CompDescr{
 
 	public:
+		string name;		//param name
 		int card;  			//number of values
-		hash_map<string,double> paramValues;
+		int numIndicies; 	//number of set indices
 
-		Param(int numInd_,string name_);
+		Param(ParamComp* comp);
 		~Param();
 
-		void addParamValue(string indiciesKey, double);
-		double findParamValue(string indiciesKey);
-		string toString() const;
-		string getName();
-		void calculateMemoryUsage(unsigned long& size);
+		virtual string toString() =0;
+		virtual void calculateMemoryUsage(unsigned long& size) =0;
 
 };
 

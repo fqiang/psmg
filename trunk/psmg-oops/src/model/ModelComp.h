@@ -18,35 +18,18 @@
 #ifndef MODELCOMP_H_
 #define MODELCOMP_H_
 
-#include "../context/CompDescr.h"
-#include "../context/ModelContext.h"
-#include "../context/EMBlock.h"
-#include "../context/CBlock.h"
 #include <list>
 #include <string>
 #include <vector>
-#include <set>
-#include <ext/hash_map>
-#include "autodiff.h"
 
-using namespace std;
-using namespace __gnu_cxx;
-using namespace AutoDiff;
-
-class AmplModel;
-class StochModel;
 class SyntaxNode;
-class SyntaxNodeIx;
-class ModelContext;
-class ExpandedModel;
-
-enum { NOARG = 0,
-       WITHARG = 1,
-       ONLYARG = 2};
+class AmplModel;
 
 using namespace std;
+
 /** Possible types of a model component */
-typedef enum {TVAR=0, TCON, TPARAM, TSET, TMIN, TMAX, TMODEL, TNOTYPE} compType;
+typedef enum {TVAR=0, TCON, TPARAM, TSET, TOBJ, TMODEL, TNOTYPE} compType;
+typedef enum {TMAX=0,TMIN} objType;
 
 /** @class ModelComp
  *  Object to represent a component of an AMPL/SML model/block.
@@ -63,39 +46,82 @@ typedef enum {TVAR=0, TCON, TPARAM, TSET, TMIN, TMAX, TMODEL, TNOTYPE} compType;
  */
 class ModelComp{
  public:
-  static const std::string nameTypes[];
-  static const std::string compTypes[];
 
-  /** Type of the component */
-  compType type;
+	const static string nameTypes[6];
 
-  /** Name of the component */
-  std::string id;
+	/** Name of the component */
+	std::string name;
 
-  /** A tree of specifications (which includes :=, within, default, >=) */
-  SyntaxNode *attributes;   
-			 
-  /**  Indexing expression */
-  SyntaxNodeIx *indexing;
+	/** Type of the component */
+	compType type;
 
-  /** The model this component belongs to */
-  AmplModel *model; //owner of this comp
+	/** A tree of specifications (which includes :=, within, default, >=) */
+	SyntaxNode *attributes;
 
-  /** A pointer to an AmplModel structure for components of type MODEL
-   *  @attention Better implemented as a subclass of ModelComp. */
-  AmplModel *other; //corresponding AmplModel object
+	/**  Indexing expression */
+	SyntaxNode *indexing;
 
-  int moveUpLevel;
+	/** The model this component belongs to */
+	AmplModel *model; //owner of this comp
 
-  string hashKey;
+//	string hashKey;
+
+	/** Constructor */
+	ModelComp(const string& _id, compType type, SyntaxNode *_indexing, SyntaxNode *_attribute);
+
+	/** Destructor */
+	virtual ~ModelComp();
+
+
+	/** Detailed debugging output */
+	virtual void dump(std::ostream& fout,int) = 0;
+
+//	string& getHashKey();
+	void calculateMemoryUsage(unsigned long& size);
+
+
+//legacy!!
+
+
+//  /** Default constructor */
+//  ModelComp(string id);
+//
+//  /** Duplicate the object: shallow copy */
+//   virtual ModelComp *clone() const;
+//
+//   /** Duplicate the object: deep copy */
+//   ModelComp *deep_copy() const;
+//   // Virtual methods implemented only for stochastic models
+//
+//     virtual void setStochModel(StochModel *stoch) { throw; }
+     virtual void setStageSetNode(SyntaxNode *stageSet) { throw; }
+     virtual void setDeterministic(bool det) { throw; }
+//     virtual SyntaxNode* getStageSetNode() const { throw; }
+//     virtual void addStageName(const std::string& name) { throw; }
+//     virtual const std::vector<std::string>& getStageNames() const { throw; }
+//     virtual ModelComp* transcribeToModelComp(AmplModel *current_model,
+//                                              const std::string& nodedummy,
+//                                              const std::string& stagedummy,
+//                                              const int level) { throw; }
+
+
+  //for TCON
+  //  hash_map<int,set<int> > varDeps; //belong to TCON -- map separability of variable declared in level -> set of levels
+  //  void analyseVarDepLevelsInCons();
+  //  Node* constructAutoDiffCons(ModelContext* ctx, Block* emb,ExpandedModel* emcol);
+
+  //  /** Set up list of dependencies for this component */
+  //  void setUpDependencies();
+   //end TCON
+
 
  protected:
 
-  /** List of all entities that this model component depends on.
-   *
-   *  This lists all model components used in the definition of this component.
-   */
-  std::list<ModelComp*> dependencies;
+//  /** List of all entities that this model component depends on.
+//   *
+//   *  This lists all model components used in the definition of this component.
+//   */
+//  std::list<ModelComp*> dependencies;
 
   /** Components can be tagged by the tagDependencies method which sets
    *  this tag for this components and everything that it depends on
@@ -107,89 +133,13 @@ class ModelComp{
    */
   //CompDescr *compDescr;
 
- public:
-
-  /** Constructor */
-  ModelComp(string _id, compType _type,SyntaxNodeIx *_indexing, SyntaxNode *_attribute);
-
-  /** Default constructor */
-  ModelComp(string id);
-
-  /** Destructor */
-  virtual ~ModelComp();
-
-  /** Set up list of dependencies for this component */
-  void setUpDependencies();
-
-  /** Detailed debugging output */
-  void dump(std::ostream& fout,int) const;
-
-  /** Recalculate dependency list and re-resolve IDREF nodes */
-  void reassignDependencies();
-
-  /** Move this model component up in the model tree */
-  void moveUp(int level);
-
-  /** Duplicate the object: shallow copy */
-  virtual ModelComp *clone() const;
-
-  /** Duplicate the object: deep copy */
-  ModelComp *deep_copy() const;
-
-  // Virtual methods implemented only for stochastic models
-
-  virtual void setStochModel(StochModel *stoch) { throw; }
-  virtual void setStageSetNode(SyntaxNode *stageSet) { throw; }
-  virtual void setDeterministic(bool det) { throw; }
-  virtual SyntaxNode* getStageSetNode() const { throw; }
-  virtual void addStageName(const std::string& name) { throw; }
-  virtual const std::vector<std::string>& getStageNames() const { throw; }
-  virtual ModelComp* transcribeToModelComp(AmplModel *current_model,
-                                           const std::string& nodedummy,
-                                           const std::string& stagedummy,
-                                           const int level) { throw; }
-
-  //Feng
-  //for TSET
-  int setDim; //belong to set
-  int setCard; //belong to set
-  void setSetDim();
-  void calculateSetModelComp(ModelContext* context);
-  //end TSET
-
-  //for TPARAM
-  vector<string> paramIndiciesDummy; //belong to param  dummay->Set*
-  vector<ModelComp*> paramIndiciesComp;
-  hash_map<string,ModelComp*> paramIndiciesMap;
-  void setParamIndicies();
-  int getNumParamIndicies();
-  void calculateParamModelComp(ModelContext* context);
-  //end TPARAM
-
-  //for TVAR
-  int varDim; //belong to TVar
-  int varCard; //belong to TVar
-  void fillLocalVar(ModelContext* ctx);
-  void calculateLocalVar(ModelContext* context);
-  void fillLocalVarRecurive(ModelContext* context,Var* aVar,vector<ModelComp*>::iterator it,ostringstream& oss);
-  //end TVAR
-
-  //for TCON
-  hash_map<int,SyntaxNode*> partial;
-  void calculatePartialConstraints();
-//  hash_map<int,set<int> > varDeps; //belong to TCON -- map separability of variable declared in level -> set of levels
-//  void analyseVarDepLevelsInCons();
-//  Node* constructAutoDiffCons(ModelContext* ctx, Block* emb,ExpandedModel* emcol);
-  //end TCON
-
-  string& getHashKey();
-  void calculateMemoryUsage(unsigned long& size);
-  //feng end
+  //  /** Recalculate dependency list and re-resolve IDREF nodes */
+  //  void reassignDependencies();
 
  private:
 
-  /** Find dependencies for this component */
-  void findDependencies(const SyntaxNode *nd);
+//  /** Find dependencies for this component */
+//  void findDependencies(const SyntaxNode *nd);
 
 };
 

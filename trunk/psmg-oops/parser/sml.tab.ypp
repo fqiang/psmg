@@ -17,76 +17,81 @@
 %debug
 
 %{
-   #define YYERROR_VERBOSE
-   #include <stdio.h>
-   #include <stdlib.h>
-   #include <assert.h>
-   #include <iostream>
-   #include "../model/SyntaxNode.h"
-   #include "../model/SyntaxNodeIx.h"
-   #include "../model/OpNode.h"
-   #include "../model/IDNode.h"
-   #include "../model/ValueNode.h"
-   #include "../model/SyntaxNodeIDREF.h"
-   #include "../model/AmplModel.h"
-  
-   #include "../st_model/StochModel.h"
-   #include "../st_model/StochModelComp.h"
+    #define YYERROR_VERBOSE
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include <assert.h>
+    #include <iostream>
+    #include "../model/ObjComp.h"
+    #include "../model/ModelComp.h" 
+    #include "../model/AmplModel.h"
+    #include "../model/SyntaxNode.h"
+    #include "../model/SyntaxNodeOP.h"
+    #include "../model/SyntaxNodeID.h"
+    #include "../model/SyntaxNodeValue.h"
+    #include "../model/SyntaxNodeIDREF.h"
+    #include "../model/SyntaxNodeIDREFM.h"
+//    #include "../st_model/StochModel.h"
+//    #include "../st_model/StochModelComp.h"
    
-   #include "../sml/GlobalVariables.h"
-   #include "../util/global_util_functions.h"
+    #include "../sml/GlobalVariables.h"
+    #include "../util/global_util_functions.h"
+    
+    using namespace std;
 
-   using namespace std;
+    void print_index_dummy_vars();
+    void record_dummy_var();
+    void restore_dummy_var();
+ 
+    void begin_model(const string& name, SyntaxNode *indexing);
+    void end_model(const string& name);
+    void begin_smodel(const string& name, SyntaxNode *indexing, SyntaxNode *stochsets);
+    void end_smodel(const string& name);
 
-   void add_indexing(SyntaxNodeIx *indexing);
-   void rem_indexing(SyntaxNodeIx *indexing);
-   void begin_model(char *name, SyntaxNodeIx *indexing);
-   void end_model(char *name);
-   void begin_smodel(char *name, SyntaxNodeIx *indexing, SyntaxNode *stochsets);
-   void end_smodel(char *name);
+    extern int yylineno;
+    int yylex(void);
+    void yyerror(const char *s);
 
-   extern int yylineno;
-   int yylex(void);
-   void yyerror(const char *s);
-
-   static AmplModel *current_model;    /* this is the model currently active */
+    static AmplModel *current_model;    /* this is the model currently active */
                                        /* this is the GLOBAL context */
-   SyntaxNodeIx *list_of_indexing[20];    /* list of currently applicable 
-                                                indexing expressions */
-   int n_indexing;
-   /* ---------------- stochastic global variables:------------------------ */
-   static bool is_stoch_model;      /* true if inside stochastic model def */
-   /* these are set by global stocastic modifier commands */
-   static bool is_deterministic_glo;
-   static SyntaxNode *stages_glo;
-   extern FILE *yyin;
 
-   void addStochInfo(ModelComp *newmc, SyntaxNode*);
+	vector<string> index_dummy_vars;    
+	vector<int> dummy_var_size;                                            
+	bool isDummyVar(string&);
+	                                                
+    /* ---------------- stochastic global variables:------------------------ */
+    static bool is_stoch_model;      /* true if inside stochastic model def */
+    /* these are set by global stocastic modifier commands */
+    static bool is_deterministic_glo;
+    static SyntaxNode *stages_glo;
+    extern FILE *yyin;
+
+    void addStochInfo(ModelComp *newmc, SyntaxNode*);
 %}
 
 %union
 {
   int optype;
-  compType ctype;
+  objType otype;
   long *ival;
   double *fval;
-  char *string;
+  char* string;
+  AmplModel* model;
   SyntaxNode *opPtr;
-  SyntaxNodeIx *opPtrIx;
 }
 
-%type <string> setdef paramdef vardef cnstr
-%type <opPtr> expr value  expr_list /*equation*/  
+%type <opPtr> expr value  expr_list 
 %type <opPtr> stochattr_opt 
-%type <opPtr> setattributes_opt setattribute /*setattributes*/
-%type <opPtr> paramattributes_opt paramattribute /*paramattributes*/
+%type <opPtr> setattributes_opt setattribute 
+%type <opPtr> paramattributes_opt paramattribute
 %type <opPtr> varattributes_opt varattributes varattribute
-%type <opPtr> setexpr_list lexpr 
-%type <opPtr> setexpression identifier iditem setexpr_item /*mdim_dummy_start*/
-%type <opPtr> mdim_dummy mdim_dummy_list indexing_condition /*start_indexing*/
-%type <opPtrIx> indexing_opt indexing  
-%type <optype> relop reduction_op func_op ubsetop bsetop blogic_op ulogic_op b_compare_op 
-%type <ctype> cnstr_type
+%type <opPtr> lexpr 
+%type <opPtr> setexpression identifier
+%type <opPtr> indexing_opt indexing_set 
+%type <opPtr> indexing_condition_opt indexing_setexpr_list indexing_setexpr_item /*set_identifier */
+%type <opPtr> indexing_dummy indexing_dummy_list
+%type <optype> relop reduction_op func_op ubsetop bsetop blogic_op ulogic_op b_compare_op
+%type <otype> objdef_type
 
 %token <string> ID 
 %token <ival> INT_VAL
@@ -101,25 +106,28 @@
 %token OBJECTIVE SUBJECTTO SUM PROD IN POWER NE LE GE EQ LT GT SIN COS UNION DIFF
 %token CROSS INTER SYMDIFF LBRACE RBRACE COMMA SEMICOLON LSBRACKET RSBRACKET
 %token COLON LBRACKET RBRACKET DEFINED /* LOGICAL_OR LOGICAL_AND  ELLIPSE */
-%token DOT SUFFIX BLOCK IDREF IDREFM STAGE NODE
-/*%token PUBLIC RANDOM SBLOCK BEG TIMESTAGE */
+%token SUFFIX BLOCK
 %token USING DETERMINISTIC EXPECTATION STOCHASTIC STAGES
 %token ANCESTOR
+%token IDREF IDREFM VALUE LIST INDEX DVAR DOT STAGE NODE
 
+
+%nonassoc ASSIGN
 %left OR
 %left AND
 %left EQ NE
 %left LT LE GT GE
-%left '+' '-'
-%left '*' '/'
-%right ASSIGN
-%right DEFINED
+%left PLUS MINUS
+%left TIMES DIVID
 %right SUM
-%right POWER
+%left POWER
 %left '!'
+%right DEFINED
 %left DOTDOT
 
+
 %%
+
 statements: /* empty */
           | statements statement 
           ;
@@ -132,22 +140,15 @@ block:   stochblock
 /* -------------------------------------------------------------------- 
   blockblock
 ------------------------------------------------------------------------- */
-/* A blockblock is a block definition of the form
-
-     block name{indexing}:
-       statements
-     end block;
-*/
-
-blockblock: BLOCK ID indexing_opt COLON {   
-				YAC_MODEL_LOG("blockblock: BLOCK ID indexing_opt COLON LBRACE statements RBRACE --- rule matched!");
-				add_indexing($3);
-				begin_model((char*)$2,$3);
-			}
-			LBRACE statements RBRACE 
-			{
-               	end_model((char*)$2);
-               	rem_indexing($3);
+blockblock: BLOCK ID 
+			{  
+				YAC_MODEL_LOG("blockblock: -- started -- "<<$2);
+				record_dummy_var();
+			} indexing_opt COLON {   
+				begin_model($2,$4);
+			} LBRACE statements RBRACE {
+               	end_model($2);
+               	restore_dummy_var();
             }
           ;
          
@@ -169,98 +170,181 @@ where
   The whole block is repeated over all STAGES (actually over all NODES). 
   Entities marked 'deterministic' are only repeated over STAGES
 
---------------------------------------------------------------------
-Logic of stochastic qualifiers: deterministic/stages:
- - if an sblock is started, then is_stoch_model is set to true
- - if an sblock is closed, then is_stoch_model is set to false
- - deterministc/stages are read in as attributes to param/set/var/etc defs
- - their value is stored in global variables stages/is_deterministic
-*/
-
-stochblock: stochblockbegin LBRACE statements RBRACE {
-               end_smodel(NULL);
-               rem_indexing(NULL);
+-------------------------------------------------------------------- */
+stochblock: BLOCK ID
+			{
+				YAC_MODEL_LOG("stochblock: -- started - "<<$2);
+				record_dummy_var();
+			} indexing_opt STOCHASTIC USING LBRACKET indexing_setexpr_list RBRACKET COLON 
+			{
+				is_stoch_model = true;
+				assert(false); //$8 is already included in the the indexing
+				begin_smodel((char*)$2, $4, $8);
+    	    } LBRACE statements RBRACE 
+    	    {
+               end_smodel((char*)$2);
+               
+               is_stoch_model = false;
+	           restore_dummy_var();
+               YAC_MODEL_LOG("vardef: -- end -- "<<$2);
             }
           ;
-    
-/* FIXME: optionlist is of form '(ID COMMA ID ...)'
-     need to call new SyntaxNode and addToListItem functions in the 
-     processing of optionlist and its children */
-stochblockbegin:  BLOCK ID indexing_opt STOCHASTIC USING LBRACKET 
-                        setexpr_list RBRACKET COLON {
-                     add_indexing($3);
-                     begin_smodel((char*)$2, $3, $7);
-                  }
-               ;
 
 /* -------------------------------------------------------------------- 
   stageblock
 ------------------------------------------------------------------------- */
 
-stageblock: stageblock_start LBRACE statements RBRACE {
-               stages_glo = NULL;
+stageblock: STAGES
+			{
+				assert(is_stoch_model == true);
+				record_dummy_var();		
+			} indexing_set COLON 
+			{    
+				stages_glo = $3;
+	        } LBRACE statements RBRACE {
+                stages_glo = NULL;
+				restore_dummy_var();            	
             }
-/*          | stageblock_start statements END STAGE SEMICOLON {
-               stages_glo = NULL;
-            }*/
-          ;
+          	;
 
-stageblock_start: STAGES setexpression COLON {              
-                     if (!is_stoch_model) { 
-                        cerr << "Syntax Error: keyword 'stages' can only be "
-                        "used in stochastic blocks" << endl;
-                        exit(1);
-                     }
-                     stages_glo = $2;
-                  }
-                ;
+stochattr_opt: /* empty */ {$$ = NULL;}
+             |	DETERMINISTIC 
+             	{
+                	assert(is_stoch_model==true);
+                  	$$ = new SyntaxNode(DETERMINISTIC);
+             	}
+             | 	STAGES
+             	{
+                	assert(is_stoch_model==true);
+             		record_dummy_var();
+             	} indexing_set 
+             	{
+                	restore_dummy_var(); 
+                  	$$ = $3;
+               	}
+             ;
 
 /* -------------------------------------------------------------------- 
   ``Standard'' AMPL
 ------------------------------------------------------------------------- */
 
-
-statement:  setdef SEMICOLON 
-			{                  
-				YAC_MODEL_LOG("parsed setdef:"<<$1);
-			}
-         |  paramdef SEMICOLON
-			{                  
-				YAC_MODEL_LOG("parsed paramdef:"<<$1);
-			}
-         |  vardef SEMICOLON
-			{                  
-				YAC_MODEL_LOG("parsed vardef:"<<$1);
-			}
-         |  cnstr SEMICOLON
- 			{                  
-				YAC_MODEL_LOG("parsed cnstr:"<<$1);
-			}
-         |  block
+statement:  setdef 
+         |  paramdef
+	     |  vardef
+	     |  consdef
+	     | 	objdef
+ 	     |  block
          ;
 
+/****************************************************************************/
+// Indexing 
+// not allowing dummy set declaration
+// no recursive indexing set declaration.
+// indexing_set : { .... , .... , .... : condition }
+/**************************************************************************/     
+
+indexing_opt: /* empty */ {		$$=NULL;	}
+            | indexing_set { $$ = $1; }
+            ;
+
+indexing_set:	LBRACE indexing_setexpr_list indexing_condition_opt RBRACE 
+				{	
+					YAC_MODEL_LOG("indexing -- rule matched!");
+					SyntaxNode *tmp = NULL;
+		      		tmp = new SyntaxNode(LBRACE, new SyntaxNode(COLON, $2, $3));
+		           	$$ = tmp;
+		           	YAC_MODEL_LOG("indexing -- rule end -- "<<$$->print());
+				}
+			;
+
+indexing_condition_opt: /* empty */ { $$=NULL; }
+				  		| COLON lexpr
+				  		{
+				  			$$=$2;
+				  		}
+				  		;
+		
+
+indexing_setexpr_list:  indexing_setexpr_item {  $$ = new SyntaxNode(COMMA,$1); }
+            |  indexing_setexpr_list COMMA indexing_setexpr_item
+            {
+                  assert($1->opCode == COMMA);
+                  $1->push_back($3);
+                  $$ = $1;
+			}
+            ;
+
+indexing_setexpr_item:	identifier
+						{  
+							$$ = $1; 
+						} 
+			            | indexing_dummy_list IN identifier 
+			         	{
+			              	assert($1->opCode == COMMA);
+		              		$$ = new SyntaxNode(IN, $1,$3);
+			           	}
+			           	| INT_VAL
+			           	{
+			           		$$ = new SyntaxNodeValue(*$1);
+			           	}
+			           	| expr DOTDOT expr
+			           	{
+			           		$$ = new SyntaxNode(DOTDOT, $1, $3);
+			           	}            
+
+indexing_dummy_list:ID 
+					{ 
+						SyntaxNodeID* idnode = new SyntaxNodeID($1);
+						index_dummy_vars.push_back(idnode->id);
+						$$ = new SyntaxNode(COMMA, idnode);
+					}
+			  		| LBRACKET indexing_dummy RBRACKET 
+			  		{ 
+			  			$$ = $2;
+			  		}
+			  		;
+		  
+indexing_dummy: ID 
+				{
+					SyntaxNodeID* idnode = new SyntaxNodeID($1);
+					index_dummy_vars.push_back(idnode->id);
+					$$ = new SyntaxNode(COMMA, idnode);
+				}
+			   	|indexing_dummy COMMA ID
+			   	{
+			   		assert($1->opCode == COMMA);
+			   		SyntaxNodeID* idnode = new SyntaxNodeID($3);
+			   		$1->push_back(idnode);
+					index_dummy_vars.push_back(idnode->id);
+			   		$$ = $1;
+			   	}
+			   	;
+			   
+/****************************************************************************/		
 /*  -------------------------------------------------------------------
  set def statement
  -------------------------------------------------------------------   */
-setdef:	SET ID indexing_opt 
+setdef:	SET ID
 		{
-			YAC_MODEL_LOG("setdef:[SET ID indexing_opt] - ID=["<<$2<<"] indexing_opt=["<<$3<<"]");
-            if ($3) add_indexing($3);
-        }
-        stochattr_opt setattributes_opt 
+			YAC_MODEL_LOG("setdef: start -- ID=["<<$2<<"]");
+			record_dummy_var();
+		} indexing_opt stochattr_opt setattributes_opt SEMICOLON
         {
-            YAC_MODEL_LOG("stochattr_opt=[" << $5<<"]");
-            YAC_MODEL_LOG("setattributes_opt=[" <<$6<<"]");
+            YAC_MODEL_LOG("indexing_opt=["<<$4<<"]");
+            YAC_MODEL_LOG("stochattr_opt=["<<$5<<"]");
+            YAC_MODEL_LOG("setattributes_opt=["<<$6<<"]");
             ModelComp *newmc;
             if (is_stoch_model){
-               newmc = new StochModelComp($2, TSET, $3, $6);
-               addStochInfo(newmc, $5);
+            	assert(false); //TODO: stochastic fix
+ //              newmc = new StochModelComp($2, TSET, $4, $6);
+ //              addStochInfo(newmc, $5);
             }else{
-               newmc = new ModelComp($2, TSET, $3, $6);
+               newmc = new SetComp($2, $4, $6);
             }
             current_model->addComp(newmc);
-            if ($3) rem_indexing($3);
-            $$=$2; 
+           	
+           	restore_dummy_var();
+           	YAC_MODEL_LOG("setdef: -- end -- "<<$2);
         }
       ;
       
@@ -269,36 +353,36 @@ setattributes_opt:   /* empty */ { $$=NULL; }
                  	{
                  		if($1!=NULL)
                  		{
-                 			if($1->opCode != COMMA)
-                 			{
-                 				$1 = new SyntaxNode(COMMA,$1);
-                 			}
-                 			assert($2!=NULL);
+                 			assert($1->opCode==COMMA);
                  			$1->push_back($2);
+                 			$$ = $1;
                  		}
-                 		$$ = $1;
+                 		else
+                 		{
+                 			$$ = new SyntaxNode(COMMA,$2);
+                 		}
                  	}
                  ;
                  
 
 setattribute: 	DIMEN INT_VAL 
 				{
-					$$ = new SyntaxNode(DIMEN, new ValueNode(*$2));
+					$$ = new SyntaxNode(DIMEN, new SyntaxNodeValue(*$2));
 	           	}
-            | 	WITHIN setexpression 
+            | 	ASSIGN
+            	{
+            		record_dummy_var();
+            	} setexpression 
 	            {
+					$$ = new SyntaxNodeOP(ASSIGN, $3);
+	            	restore_dummy_var();
+				}
+			|	WITHIN identifier
+				{
+					assert($2->opCode == IDREF);
 					$$ = new SyntaxNode(WITHIN, $2);
 				}
-            | 	ASSIGN setexpression 
-           		{
-					YAC_MODEL_LOG("setattribute: ASSIGN setexpression  -- "<<$2);
-					$$ = new OpNode(ASSIGN, $2);
-	           	}
-            |  	DEFAULT setexpression 
-            	{
-                	$$ = new SyntaxNode(DEFAULT, $2);
-               	}
-            |  	ORDERED 
+            | 	ORDERED 
             	{ 
             		$$ = new SyntaxNode(ORDERED); 
             	}
@@ -307,38 +391,41 @@ setattribute: 	DIMEN INT_VAL
 /*  -------------------------------------------------------------------
  param def statement
  -------------------------------------------------------------------   */
-paramdef:  	PARAM ID indexing_opt {
-				YAC_MODEL_LOG("paramdef: -- indexing_opt -- "<<$3);
-               if ($3) add_indexing($3);
-            } stochattr_opt paramattributes_opt {
-               ModelComp *newmc;
-               if (is_stoch_model){
-               	  YAC_MODEL_LOG("paramdef: -- stochInfo --"<<$5);
-                  StochModelComp *newmcs = new StochModelComp($2,TPARAM,$3,$6);
-                  addStochInfo(newmcs, $5);
-                  newmc = newmcs;
-               }else{
-               	  YAC_MODEL_LOG("create param comp - id["<<$3<<"]");
-                  newmc = new ModelComp($2, TPARAM, $3, $6);
-               }
-               current_model->addComp(newmc);
-               if ($3) rem_indexing($3);
-               $$ = $2;
+paramdef:  	PARAM ID
+			{
+				YAC_MODEL_LOG("paramdef: -- start -- "<<$2);
+				record_dummy_var();
+			} indexing_opt stochattr_opt paramattributes_opt SEMICOLON {
+			   	ModelComp *newmc;
+			   	if (is_stoch_model){
+			   		YAC_MODEL_LOG("paramdef: -- stochInfo --"<<$5);
+			   		assert(false); //TODO: stochastic fix
+//			      	StochModelComp *newmcs = new StochModelComp($2,TPARAM,$4,$6);
+//			      	addStochInfo(newmcs, $5);
+//			      	newmc = newmcs;
+			   	}else{
+			   		newmc = new ParamComp($2, $4, $6);
+			   	}
+               	current_model->addComp(newmc);
+               	
+               	restore_dummy_var();
+               	YAC_MODEL_LOG("paramdef: -- end -- "<<$2);
             }
         ;
         
 paramattributes_opt: /* empty */ { $$ = NULL; }
-                   | paramattribute paramattributes_opt
+                   | paramattributes_opt paramattribute 
                    	 {
-                   	 	if($2!=NULL)
+                   	 	if($1!=NULL)
                  		{
-                 			if($1->opCode != COMMA)
-                 			{
-                 				$1 = new SyntaxNode(COMMA,$1);
-                 			}
+                 			assert($1->opCode == COMMA);
                  			$1->push_back($2);
+                 			$$ = $1;
                  		}
-                 		$$ = $1;
+                 		else
+                 		{
+                 			$$ = new SyntaxNode(COMMA,$2);
+                   	 	}
                    	 }
                    	 
                    ;
@@ -346,31 +433,40 @@ paramattributes_opt: /* empty */ { $$ = NULL; }
 paramattribute:   BINARY {$$ = new SyntaxNode(BINARY);}
               |   INTEGER {$$ = new SyntaxNode(INTEGER);}
               |   SYMBOLIC {$$ = new SyntaxNode(SYMBOLIC);}
-              |   relop expr {$$ = new OpNode($1, $2);}
-              |   IN setexpression {$$ = new OpNode(IN, $2);}
+              |   relop expr {$$ = new SyntaxNodeOP($1, $2);}
               |   DEFAULT expr {$$ = new SyntaxNode(DEFAULT, $2);}
-              |   DEFINED expr {$$ = new OpNode(DEFINED, $2);}
+              |   DEFINED expr {$$ = new SyntaxNodeOP(DEFINED, $2);}
               ;
               
-
+relop:   LE {$$=LE;}
+     |   GE {$$=GE;}
+     |   LT {$$=LT;}
+     |   GT {$$=GT;}
+     |   EQ {$$=EQ;}
+     |   NE {$$=NE;}
+     ;
+     	   
 /*  -------------------------------------------------------------------
  var def statement
  -------------------------------------------------------------------   */
-vardef:  VAR ID indexing_opt {
-            if ($3) add_indexing($3);
-         } stochattr_opt varattributes_opt {
+vardef: VAR ID 
+		{
+			YAC_MODEL_LOG("vardef: -- start -- "<<$2);
+			record_dummy_var();
+		}indexing_opt stochattr_opt varattributes_opt SEMICOLON {
             ModelComp *newmc;
             if (is_stoch_model){
-               newmc = new StochModelComp($2, TVAR, $3, $6);
-               addStochInfo(newmc, $5);
+            	assert(false); //TODO: stochastic fix
+//               	newmc = new StochModelComp($2, TVAR, $4, $6);
+//               	addStochInfo(newmc, $5);
             }else{
-               newmc = new ModelComp($2, TVAR, $3, $6);
+               newmc = new VarComp($2, $4, $6);
             }
 
             current_model->addComp(newmc);
-            if ($3) rem_indexing($3);
-            $$=$2; 
-         }
+          	restore_dummy_var();
+          	YAC_MODEL_LOG("vardef: -- end -- "<<$2);
+        }
       ;
      
 varattributes_opt:   /* empty */ {$$=NULL;}
@@ -380,14 +476,11 @@ varattributes_opt:   /* empty */ {$$=NULL;}
 
 varattributes: varattribute 
 			   {
-					$$ = $1; 
+					$$ = new SyntaxNode(COMMA,$1); 
                }
              | varattributes COMMA varattribute 
                {
-               		if($1->opCode != COMMA)
-               		{
-               			$1 = new SyntaxNode(COMMA,$1);
-               		}
+               		assert($1->opCode == COMMA);
              		$1->push_back($3);
              		$$ = $1;
                }
@@ -395,161 +488,113 @@ varattributes: varattribute
 
 varattribute:  BINARY {$$ = new SyntaxNode(BINARY);}
             |  INTEGER {$$ = new SyntaxNode(INTEGER);}
-            |  SYMBOLIC {$$ = new SyntaxNode(SYMBOLIC);}
-            |  LE expr {$$ = new OpNode(LE, $2);}
-            |  GE expr {$$ = new OpNode(GE, $2);}
-            |  DEFINED expr {$$ = new OpNode(DEFINED, $2);}
-            |  ASSIGN expr {$$ = new OpNode(ASSIGN, $2);}
+            |  LE expr {$$ = new SyntaxNodeOP(LE, $2);}
+            |  GE expr {$$ = new SyntaxNodeOP(GE, $2);}
             |  DEFAULT expr {$$ = new SyntaxNode(DEFAULT, $2);}
-            |  IN setexpression {$$ = new OpNode(IN, $2);}
-            |  SUFFIX ID expr {$$ = new SyntaxNode(SUFFIX, new IDNode($2), $3);}
+            |  SUFFIX ID expr {$$ = new SyntaxNode(SUFFIX, new SyntaxNodeID($2), $3);}
             ;
      
 /*  -------------------------------------------------------------------
- cnstr def statement
+ consdef def statement
  -------------------------------------------------------------------   */     
-cnstr: 	cnstr_type ID indexing_opt 
+consdef:	SUBJECTTO ID
+			{
+				YAC_MODEL_LOG("consdef: -- start -- "<<$2);
+				record_dummy_var();
+			} indexing_opt stochattr_opt COLON expr SEMICOLON
+			{
+				YAC_MODEL_LOG("consdef: -- indexing -- "<<$4);
+				ModelComp *newmc;
+	            if (is_stoch_model){
+					assert(false); //TODO: stochastic fix
+//	               newmc = new StochModelComp($2, $4, $7);
+//	               addStochInfo(newmc, $5);
+	            }else{
+	               newmc = new ConsComp($2, $4, $7);
+	            }
+	            current_model->addComp(newmc);
+	            
+	            restore_dummy_var();
+	            YAC_MODEL_LOG("consdef: -- end -- "<<$2);
+			}
+			;
+
+/*-------------------------------------------------------------------------
+objdef def statement
+--------------------------------------------------------------------------*/
+objdef: objdef_type ID stochattr_opt COLON expr SEMICOLON
 		{
-        	if ($3) add_indexing($3);
-        } 
-		stochattr_opt COLON expr
-		{
+			YAC_MODEL_LOG("objdef: -- "<<$2);
 			ModelComp *newmc;
             if (is_stoch_model){
-               newmc = new StochModelComp($2, $1, $3, $7);
-               addStochInfo(newmc, $5);
+	            assert(false); //TODO: stochastic fix
+//               newmc = new StochModelComp($2, $1, NULL, $5); //as NULL for indexing
+//               addStochInfo(newmc, $5);
             }else{
-               newmc = new ModelComp($2, $1, $3, $7);
+               newmc = new ObjComp($2, $1, $5);
             }
             current_model->addComp(newmc);
-            if ($3) rem_indexing($3);
-			$$ =$2;
-		}
-	 ;
-
-cnstr_type: MAXIMIZE  { $$ = TMAX;  }
-		  | MINIMIZE  { $$ = TMIN;  }
-		  | SUBJECTTO { $$ = TCON;  }
-  		  ;
-  		  
-relop:   LE {$$=LE;}
-     |   GE {$$=GE;}
-     |   LT {$$=LT;}
-     |   GT {$$=GT;}
-     |   ASSIGN {$$=ASSIGN;}
-     |   EQ {$$=EQ;}
-     |   NE {$$=NE;}
-     ;
-
-indexing_opt: /* empty */ {		$$=NULL;	}
-            | indexing { $$ = $1; }
-            ;
-
-indexing: LBRACE setexpr_list 
-		{
-			YAC_MODEL_LOG("indexing -- rule matched!");
-			SyntaxNodeIx* indx = new SyntaxNodeIx(new SyntaxNode(LBRACE, $2));
-			add_indexing(indx);
-			$<opPtrIx>$ = indx;
-		}
-		indexing_condition RBRACE 
-		{	
-        	SyntaxNode *tmp = NULL;
-      		if($4!=NULL)
-           	{
-           		tmp = new SyntaxNode(LBRACE, new SyntaxNode(COLON, $2, $4));
-           	}
-           	else
-           	{
-           		tmp = new SyntaxNode(LBRACE, $2);
-           	}
-           	rem_indexing($<opPtrIx>3);
-           	$$ = new SyntaxNodeIx(tmp);
-           	YAC_MODEL_LOG("indexing -- rule end");
+            
+            YAC_MODEL_LOG("objdef: -- end -- "<<$2);
 		}
 		;
-
-indexing_condition: /* empty */ { $$=NULL; }
-				  | COLON lexpr
-				  	{
-				  		$$=$2;
-				  	}
-				  	;
-         
-
-setexpr_list:  setexpr_item {  $$ = $1; }
-            |  setexpr_list COMMA setexpr_item
-            {
-                  if ($1->opCode != COMMA)
-                  {
-                     $1 = new SyntaxNode(COMMA, $1);
-                  }
-                  $1->push_back($3);
-                  $$ = $1;
-			}
-            ;
-
-setexpr_item: setexpression {  $$ = $1; } 
-            | mdim_dummy IN setexpression 
-         	{
-              	$$ = new OpNode(IN, $1, $3);
-           	}
-            ;
-
-mdim_dummy: ID { $$ = new IDNode($1); }
-		  | LBRACKET mdim_dummy_list RBRACKET { $$ = $2;}
-		  ;
-		  
-mdim_dummy_list: ID { $$ = new IDNode($1); }
-			   | mdim_dummy_list COMMA ID
-			   {
-			   		if($1->opCode != COMMA)
-			   		{
-			   			$1 = new SyntaxNode(COMMA,$1);
-			   		}
-			   		$1->push_back(new IDNode($3));
-			   		$$ = $1;
-			   }
-			   ;
+		
+objdef_type:	MAXIMIZE { $$ = TMAX; }  
+  			| 	MINIMIZE { $$ = TMIN; }
+  			;
+  			
+/*-------------------------------------------------------------------------*/
 			   
 /* this is anything that evaluates to a set */
-setexpression: 
-			 indexing {
+setexpression: 	indexing_set 
+				{
 					YAC_MODEL_LOG("setexpression: indexing -- "<<$1);
 					$$= $1;
 				}
-			 | identifier {
-	     		YAC_MODEL_LOG("setexpression: identifier -- rule matched");
-	     		$$ = $1;
-             }
-			             
-             | setexpression bsetop setexpression {
-					$$ = new SyntaxNode($2, $1, $3);
-               }
-             | setexpression ubsetop setexpression {
-                  	$$ = new SyntaxNode($2, $1, $3);
-               }
-             | expr DOTDOT expr {
-					$$ = new SyntaxNode(DOTDOT,$1, $3);
-               }
-             | SETOF indexing
+			 	| identifier 
+			 	{
+		     		YAC_MODEL_LOG("setexpression: identifier -- rule matched -- "<<$1);
+		     		assert($1->opCode == IDREF);
+		     		$$ = $1;
+             	}
+             	| SETOF 
              	{ 
-	         		YAC_MODEL_LOG("setexpression - setof --  "<<$2);
-	         		add_indexing($2);
-	         		$<opPtrIx>$ = $2;
-	         	} identifier {
-	         		$$ = new SyntaxNode(SETOF,$2,$4);
-	         		rem_indexing($<opPtrIx>3);
+	         		YAC_MODEL_LOG("setexpression - setof -- start ");
+	         		record_dummy_var();
+	         	} indexing_set identifier {
+	         		restore_dummy_var();
+	         		$$ = new SyntaxNode(SETOF,$3,$4);
 	            }
-             ;
+             	| setexpression bsetop setexpression {
+					$$ = new SyntaxNode($2, $1, $3);
+               	}
+             	| setexpression ubsetop setexpression {
+                  	$$ = new SyntaxNode($2, $1, $3);
+               	}
+             	;
 
 
-lexpr:  expr IN setexpression {
-			YAC_MODEL_LOG("lexpr: expr IN setexpression - rule matched! "<<$1<<" "<<$3);
-			$$ = new OpNode(IN,$1,$3);
+bsetop:  DIFF     { $$ = DIFF; }
+      |  SYMDIFF  { $$ = SYMDIFF; }
+      |  CROSS    { $$ = CROSS; }
+      ;
+
+ubsetop: UNION    { $$ = UNION; }
+      |  INTER    { $$ = INTER; }
+      ;
+      
+/*------------------------------------------------------------------------------------ */
+
+//Logical expression
+/*------------------------------------------------------------------------------------ */
+lexpr:  identifier IN identifier {
+			YAC_MODEL_LOG("lexpr: identifier IN identifier - rule matched! "<<$1<<" "<<$3);
+			assert($3->opCode == IDREF);
+			$$ = new SyntaxNode(IN,$1,$3);
 		}
      |  LBRACKET lexpr RBRACKET {
-            $$ = $2; }
+            $$ = $2; 
+		}
      |  lexpr blogic_op lexpr 
      	{
      		$$ = new SyntaxNode($2,$1,$3);
@@ -577,36 +622,8 @@ blogic_op: AND { $$ = AND; }
 		;
 ulogic_op: NOT  {  $$ = NOT; }
 		;
-
-stochattr_opt: /* empty */ {$$ = NULL;}
-             | DETERMINISTIC {
-                  // check that this is in a stochastic model
-                  if (!is_stoch_model){ 
-                     cerr << "Syntax Error: keyword 'DETERMINISTIC' can only"
-                        "be used in stochastic blocks\n";
-                     exit(1);
-                  }
-                  $$ = new SyntaxNode(DETERMINISTIC);
-               }
-             | STAGES setexpression {
-                  // check that this is in a stochastic model
-                  if (!is_stoch_model){ 
-                     cerr << "Syntax Error: keyword 'STAGES' can only be used"
-                        "in stochastic blocks\n";
-                     exit(1);
-                  }
-                  $$ = $2;
-               }
-             ;
-
-bsetop:  DIFF     { $$ = DIFF; }
-      |  SYMDIFF  { $$ = SYMDIFF; }
-      |  CROSS    { $$ = CROSS; }
-      ;
-
-ubsetop: UNION    { $$ = UNION; }
-      |  INTER    { $$ = INTER; }
-      ;
+		
+/*------------------------------------------------------------------------------------ */
       
 
 /* Identifier is any quotation of a predefined object:
@@ -614,145 +631,107 @@ ubsetop: UNION    { $$ = UNION; }
    An iditem is simply a tree of SyntaxNodes that serve as an identifier.
    An 'identifer' is a SyntaxNode of type IDREF or IDREFM.
 */
-identifier: iditem {
-               /* this is a simple identifier in global context */
-               YAC_MODEL_LOG("identifier: iditem  -- "<<$1);
-               $$ = SyntaxNode::find_var_ref_in_context(current_model, $1);
+identifier: ID 
+			{
+			   	YAC_MODEL_LOG("identifier: ID  -- "<<$1);
+			   	string key = $1;
+			   	if(isDummyVar(key))
+			   	{
+					$$ = new SyntaxNodeID($1);
+			   	}
+			   	else
+			   	{
+			   		ModelComp* 	ref = current_model->findModelComp(key);
+			   		if(ref->type == TMODEL){
+			   		   	$$ = new SyntaxNodeIDREFM(IDREFM,new SyntaxNodeID($1),static_cast<AmplModel*>(ref));
+				   	}
+				   	else
+				   	{
+				   	   	$$ = new SyntaxNodeIDREF(IDREF,new SyntaxNodeID($1),ref);
+				   	}
+			   	}
             }
-          | identifier DOT iditem {
-               /* identifier sets the context for the iditem:
-                  The result of this is either a context setting or a
-                  complete description of a variable.
-
-                  Can implement this by simply adding context and argument lists
-                
-                  A variable reference should be represented internally as a
-                  pointer to the referenced object in the model list
-                  and a pointer to the list of arguments
-
-                  This can be represented as a SyntaxNode with
-                  ->opCode = ID;
-                  ->nval = # of arguments
-                  ->values[0] = pointer to entity in model list
-                  ->values[1 - n] = arguments 
-
-                  CONTEXT: iditems can be interpreted in two different contexts
-                  1) is the global context (i.e. referring from the model
-                     part that is currently defined)
-                  2) is a local context that can be set by preceeding bits
-                     of a dot'd expression. If a dot'd expression is 
-                     parsed the flag 'local_context' should be set and 
-                     'local_context' should be set to the current local
-                     context. 
-                  a context is expressed as a pointer to a model entity
-               */
-       
-               /* identifier sets the context for the idem */
-               /* this only works if the identifier is actually a reference 
-                  to a submodel */
-
-               if ($1->opCode != IDREFM) {
-                  cerr << "Attempting to use dot specifier for something not an object:\n " << *($1) << "\n";
-                  exit(1);
-               }
-               AmplModel* local_context = (((SyntaxNodeIDREF*)$1)->ref)->other;
-
-               $$ = SyntaxNode::find_var_ref_in_context(local_context, $3);
-
-               YAC_MODEL_LOG("Merge identifier:"<< *($1) <<"-----> iditem:"<<*($3));
-               /* merge argument lists */
-               $$->merge($1);
-            }
+          | ANCESTOR LBRACKET INT_VAL RBRACKET DOT identifier
+          	{
+          		assert(is_stoch_model==true);
+	            $$ = new SyntaxNode(ANCESTOR, new SyntaxNodeValue(*$3), $6);
+          	}
+          | identifier LSBRACKET expr_list RSBRACKET
+          	{
+          		$1->push_back($3);
+          		$$ = $1;
+          	}    
+          | identifier DOT
+          	{
+               	$<model>$ = current_model;
+          		assert($1->opCode == IDREFM);
+          		current_model = static_cast<SyntaxNodeIDREFM*>($1)->ref;
+			}
+			identifier
+			{
+				 $$ = new SyntaxNode(DOT, $1, $4); 
+				 current_model = $<model>3;
+			}
           ;
 
+/*------------------------------------------------------------------------------------ */
 
-
-
-iditem:  ID {                               /* simple identifier */
-			YAC_MODEL_LOG("iditem : ID -- "<<$1);
-            $$=new IDNode($1);
-         }
-      |  iditem LSBRACKET expr_list RSBRACKET { /* subscripted id'fier */
-            YAC_MODEL_LOG("iditem: iditem LSBRACKET expr_list RSBRACKET --  "<<$1<<" ["<<$3<<"]");
-            $$ = new SyntaxNode(LSBRACKET, $1, $3);
-         } 
-      |  ANCESTOR LBRACKET INT_VAL RBRACKET DOT iditem {
-            // the same as above, just different syntax "ancestor(1).xh[i]"
-            // => need to change the ID node in iditem into a binary node
-            //    with INT_VAL ($3) as the second argument
-   			assert(is_stoch_model==true);
-            // iditem is either an ID or a LSBRACKET node
-            SyntaxNode *node = $6;
-            IDNode *idnode;
-            if (node->opCode == LSBRACKET)
-               idnode = (IDNode*) node->front();
-            else
-               idnode = (IDNode *) node;
-            assert(idnode->opCode == ID);
-            assert(idnode->getStochParent() == 0);
-            idnode->setStochParent(*$3);
-            $$ = $6;
-         }
-      ;
-
-/* expr_list: is a comma separated list of expr's */
-/* used as argument list to functions 
-   RETURNS: 
-   *SyntaxNode of type COMMA representing a linked list of items
-*/
-
-expr_list:  expr 
+expr_list:	expr 
 			{
 				YAC_MODEL_LOG("expr_list: expr rule matched! "<<$1);
-               	$$ = $1;
+               	$$ = new SyntaxNode(COMMA,$1);
             }
-         |  expr_list COMMA expr { 
-               if($1->opCode != COMMA);
-               {
-               		$1 = new SyntaxNode(COMMA,$1);
-               }
-               $$ = $1->push_back($3);
+         |  expr_list COMMA expr 
+         	{ 
+         		YAC_MODEL_LOG("expr_list: expr_list COMMA expr -- "<<$1);
+         		YAC_MODEL_LOG("expr_list: expr_list COMMA expr -- "<<$3);
+               	assert($1->opCode == COMMA);
+               	$$ = $1->push_back($3);
             }
          ;
 
-expr: value { YAC_MODEL_LOG("expr: value rule matched!" <<$1); }
-    | LBRACKET expr_list RBRACKET { $$ = $2; }
-    | expr '+' expr { $$ = new OpNode('+', $1, $3); }
-    | expr '-' expr { $$ = new OpNode('-', $1, $3); }
-    | '-' expr { $$ = new OpNode('-', $2); }
-    | expr '*' expr { $$ = new OpNode('*', $1, $3); }
-    | expr '/' expr { $$ = new OpNode('/', $1, $3); }
-    | expr POWER expr { $$ = new OpNode(POWER, $1, $3); }
-    | expr DOTDOT expr { $$ = new SyntaxNode(DOTDOT, $1, $3); }
-    | expr ASSIGN expr {	$$ = new OpNode(ASSIGN, $1, $3); }
-    | reduction_op indexing 
-      {	add_indexing($2);} 
-      LBRACKET expr RBRACKET 
-      {   
-      	/*feng - need a bracket to handle current indexing? eg. sum{}(expr) - sum{}(expr) vs sum{}(expr - sum{}(expr))*/
-        /* reduction operator: do we need to keep track of the ID of the dummy variable(s)? */
-      	$$ = new SyntaxNode($1, $2, $5);
-      	rem_indexing($2);
-      }
+expr: value 
+	{ 
+		YAC_MODEL_LOG("expr: value rule matched!" <<$1);
+		$$ = $1;
+	}
+	| identifier
+	{
+		$$ = $1;
+	}
+    | LBRACKET expr RBRACKET { $$ = $2; }
+    | MINUS expr { $$ = new SyntaxNodeOP(MINUS, $2); }
+    | expr PLUS expr { $$ = new SyntaxNodeOP(PLUS, $1, $3); }
+    | expr MINUS expr { $$ = new SyntaxNodeOP(MINUS, $1, $3); }
+    | expr TIMES expr { $$ = new SyntaxNodeOP(TIMES, $1, $3); }
+    | expr DIVID expr { $$ = new SyntaxNodeOP(DIVID, $1, $3); }
+    | expr POWER expr { $$ = new SyntaxNodeOP(POWER, $1, $3); }
+    | expr ASSIGN expr { $$ = new SyntaxNodeOP(ASSIGN, $1, $3); }
     | IF lexpr THEN expr { $$ = new SyntaxNode(IF, $2, $4); }
     | IF lexpr THEN expr ELSE expr { $$ = new SyntaxNode(IF, $2, $4, $6); }
-    | FIRST LBRACKET setexpression RBRACKET { $$ = new SyntaxNode(FIRST, $3); }
-    | LAST LBRACKET setexpression RBRACKET { $$ = new SyntaxNode(LAST, $3); }
     | EXPECTATION LBRACKET expr_list RBRACKET 
       { 
       	$$ = new SyntaxNode(EXPECTATION, $3);
       }
-    | func_op LBRACKET expr_list RBRACKET 
+    | func_op LBRACKET expr RBRACKET 
       { 
       	$$ = new SyntaxNode($1, $3);
+      }
+    | reduction_op
+	  {	
+	  	record_dummy_var();
+	  } indexing_set LBRACKET expr RBRACKET 
+      {  
+		restore_dummy_var();
+      	$$ = new SyntaxNode($1, $3, $5);
       }
     ;
 
 func_op : ORD  { $$=ORD;   }
-     | CARD { $$=CARD;  }
-     | SIN  { $$ = SIN; }
-     | COS  { $$ = COS; }
-     ;
+		| CARD { $$=CARD;  }
+		| SIN  { $$ = SIN; }
+		| COS  { $$ = COS; }
+		;
 
 reduction_op:  SUM { $$=SUM; }
             |  MAX { $$=MAX; }
@@ -761,14 +740,10 @@ reduction_op:  SUM { $$=SUM; }
             ;
 
 value:   INT_VAL {
-            $$=new ValueNode(*$1);
+            $$=new SyntaxNodeValue(*$1);
          }
      |   FLOAT_VAL { 
-            $$=new ValueNode(*$1);
-         }
-     |   identifier { 
-     		YAC_MODEL_LOG("value: identifier rule matched! "<<$1->print());
-            $$=$1;
+            $$=new SyntaxNodeValue(*$1);
          }
      |   INFINITE { 
             $$ = new SyntaxNode(INFINITE);
@@ -779,7 +754,6 @@ value:   INT_VAL {
 
 void yyerror(const char *s) {
    cerr << "MODEL: " << s << " on line " << yylineno << "\n";
-   //fprintf(stderr, "%s\n", s);
 }
 
 
@@ -789,7 +763,6 @@ yywrap
 /* not sure if this is correct, found this somewhere on the internet
    should open the data file and somehow tell the parser to carry on 
    reading in "data mode"
-
  */
 int yywrap(void) {
    return 1;
@@ -798,27 +771,24 @@ int yywrap(void) {
 /* ----------------------------------------------------------------------------
 begin_model
 ---------------------------------------------------------------------------- */
-void begin_model(char *name, SyntaxNodeIx *indexing) 
+void begin_model(const string& name, SyntaxNode *indexing) 
 {
-	YAC_MODEL_LOG("begin_model  ["<< name <<"] indexing["<<indexing->print()<<"]");
-	AmplModel *new_mod = new AmplModel(name,current_model);
+	YAC_MODEL_LOG("begin_model  ["<< name <<"] indexing["<<indexing->print()<<"] -- curr model["<<current_model->name<<"]");
+	AmplModel *new_mod = new AmplModel(name,current_model,indexing);
 	
-	/* FIXME: include attrib in definition */
-	ModelComp* newmc = new ModelComp(name, TMODEL, indexing, NULL);
-	newmc->other = new_mod;
-	
-	new_mod->node = newmc;            /* add pointer-to-node to the model */
-	current_model->addComp(newmc);
+	current_model->addComp(new_mod);
 	  
 	/* and change current model */
 	current_model = new_mod;
+	YAC_MODEL_LOG("     current model now "<<current_model->name);
 }
 
 /* ----------------------------------------------------------------------------
 begin_smodel
 ---------------------------------------------------------------------------- */
-void begin_smodel(char *name, SyntaxNodeIx *indexing, SyntaxNode *stochsets) 
+void begin_smodel(const string& name, SyntaxNode *indexing, SyntaxNode *stochsets) 
 {
+	assert(false); // TODO fix stocahstic!
    LOG_SM("Start Stochastic Model: " << name <<"indexing ["<<indexing->print()<<"]");
    if (!stochsets || stochsets->nchild()!=4){
       cerr << "Syntax error in Stochastic Block definition: \n";
@@ -832,28 +802,26 @@ void begin_smodel(char *name, SyntaxNodeIx *indexing, SyntaxNode *stochsets)
    SyntaxNode *prob = *(++i);
    SyntaxNode *stages = *(++i);
    LOG("   anc = [" << anc << endl << "]   prob = [" << prob<<"]"<< "   stages = [" << stages<<"]");
-   StochModel* new_mod = new StochModel(name, stages, nodes, anc, prob, current_model);
+ //  StochModel* new_mod = new StochModel(name, stages, nodes, anc, prob, current_model);
   
-   /* Fixme: include attrib in definition */
-   ModelComp* newmc = new ModelComp(name, TMODEL, indexing, NULL);
-   newmc->other = new_mod;
+ //  ModelComp* newmc = new ModelComp(name, TMODEL, indexing, NULL);
+ //  newmc->other = new_mod;
 
-   new_mod->node = newmc;            /* add pointer-to-node to the model */
-   current_model->addComp(newmc);
+ //  new_mod->node = newmc;            /* add pointer-to-node to the model */
+ //  current_model->addComp(newmc);
  
    /* and change current model */
-   current_model = new_mod;
-   is_stoch_model = true;
+ //  current_model = new_mod;
 }
 
 /* ----------------------------------------------------------------------------
 end_model
 ---------------------------------------------------------------------------- */
-void end_model(char *name) 
+void end_model(const string& name) 
 {
 	YAC_MODEL_LOG("end_model -- ["<<current_model->name<<"]");
 	// Check end block name matches block name
-	if (name && string(name) != current_model->name) {
+	if (string(name) != current_model->name) {
 		cerr << "end block '" << name << "' encountered in block '" << 
 		current_model->name << "'" << endl;
 		exit(1);
@@ -865,27 +833,28 @@ void end_model(char *name)
 /* ----------------------------------------------------------------------------
 end_smodel
 ---------------------------------------------------------------------------- */
-void end_smodel(char *name){
+void end_smodel(const string& name){
   // current_model is a StochModel -> convert this into a tree a FlatModels
-
+  YAC_MODEL_LOG("end_smodel -- ["<<current_model->name<<"]");
+  assert(false); //TODO fix stochastic
   // Check end block name matches block name
-  if (name && name != current_model->name) {
+  if (name != current_model->name) {
     cerr << "end stochastic block '" << name << "' encountered in stochastic "
       "block '" << current_model->name << "'" << endl;
     exit(1);
   }
 
   // this is the ModelComp pointing to the StochModel
-  ModelComp *mc = current_model->node; 
+ // ModelComp *mc = current_model->node; 
   
   // point that to the expanded flat model tree
-  mc->other = current_model->expandToFlatModel();
+ // mc->other = current_model->expandToFlatModel();
 
   // and change the name of the ModelComp of this model to the name of the 
   // new (AmplModel) model. 
   // (this is a concatenation of the StochModel name and the name of the 
   // first stage)
-  mc->id = mc->other->name;
+//  mc->id = mc->other->name;
 
   // and go back to the parent 
   current_model = current_model->parent;
@@ -898,21 +867,48 @@ void end_smodel(char *name){
 /* ------------------------------------------------------------------------
 add_indexing/rem_indexing
 -------------------------------------------------------------------------- */
-void  add_indexing(SyntaxNodeIx *indexing){
-   YAC_MODEL_LOG("add_indexing -- indexing:["<< *indexing<<"] "<<SyntaxNode::print_SyntaxNodesymb(indexing));
-   list_of_indexing[n_indexing] = indexing;
-   YAC_MODEL_LOG("[add_index] - length of indexing now: " << n_indexing+1);
-   n_indexing++;
+void print_index_dummy_vars()
+{
+	YAC_MODEL_LOG("print_index_dummy_vars -- ");
+	for(int i=0;i<index_dummy_vars.size();i++)
+	{
+		YAC_MODEL_LOG("["<<i<<"] "<<index_dummy_vars[i]);
+	}	
 }
 
-void rem_indexing(SyntaxNodeIx *indexing){
-	YAC_MODEL_LOG("rem_indexing -- " << *indexing);
-	if (indexing){
-    	assert(indexing==list_of_indexing[n_indexing-1]);
-   	}
-	n_indexing--;
-   	YAC_MODEL_LOG("rem_indexing --  length now[" << n_indexing<<"]" );
+void record_dummy_var()
+{
+	YAC_MODEL_LOG("record_dummy_var -- size["<<index_dummy_vars.size()<<"]");
+	dummy_var_size.push_back(index_dummy_vars.size());
 }
+
+void restore_dummy_var()
+{
+	YAC_MODEL_LOG("restore_dummy_var -- size["<<index_dummy_vars.size()<<"]");
+	print_index_dummy_vars();
+	int pre_size = dummy_var_size.back();
+	assert(pre_size <= index_dummy_vars.size());
+	for(int i=index_dummy_vars.size()-1;i>=pre_size;i--)
+	{
+		YAC_MODEL_LOG("remove - "<<index_dummy_vars[i]);
+	}
+	dummy_var_size.pop_back();
+	index_dummy_vars.resize(pre_size);
+	print_index_dummy_vars();
+}
+
+bool isDummyVar(string& v)
+{
+	for(vector<string>::iterator it=index_dummy_vars.begin();it!=index_dummy_vars.end();it++)
+	{
+		if(v.compare(*it)==0)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 
 /* ---------------------------------------------------------------------------
 Stochastic model helper functions
@@ -935,7 +931,9 @@ int parse_model()
 	int errcode = 0;
 	yyin = fopen(GlobalVariables::modelfilename.c_str(),"r");
 	assert(errcode==0);
-   	AmplModel::root = new AmplModel("root",NULL);
+	string name = "root";
+	
+   	AmplModel::root = new AmplModel(name,NULL,NULL);
    	current_model = AmplModel::root;
    	is_stoch_model = false;
    	is_deterministic_glo = false;
