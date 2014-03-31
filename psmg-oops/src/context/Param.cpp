@@ -16,69 +16,29 @@
  */
 
 #include "Param.h"
-#include "../parser/data.tab.h"
-#include "../sml/GlobalVariables.h"
-#include "../util/global_util_functions.h"
 #include <string>
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
 #include <sstream>
+#include "../parser/data.tab.h"
+#include "../sml/GlobalVariables.h"
+#include "../util/global_util_functions.h"
+#include "../model/ParamComp.h"
 
 using namespace std;
 
 using namespace __gnu_cxx;
 
-Param::Param(int numInd_,string name_):numIndicies(numInd_),name(name_),card(0)
+Param::Param(ParamComp* comp):numIndicies(comp->numIndicies),name(comp->name),card(0)
 {
 	LOG("Create param - name["<<name<<"] numIndicies["<<numIndicies<<"]");
 }
 
 Param::~Param()
 {
-	paramValues.clear();
+	LOG("delete param - name["<<name<<"]");
 }
 
-void Param::addParamValue(string indiciesKey, double value)
-{
-	LOG("Add ParamValue name["<<name<<"] index["<<card<<"] ["<<indiciesKey<<" <= "<<value<<"]");
-	paramValues.insert(pair<string,double>(indiciesKey,value));
-	card++;
-}
 
-double Param::findParamValue(string indiciesKey)
-{
-	LOG("-- findParamValue in    - "<<endl<<this->toString());
-	double rval = (this->paramValues.find(indiciesKey)->second);
-	LOG("-- findParamValue in    - ["<<rval<<"]");
-	return rval;
-}
-
-string Param::toString() const
-{
-	ostringstream oss;
-	hash_map<string,double>::const_iterator i;
-	for(i=this->paramValues.begin();i!=this->paramValues.end();i++)
-	{
-		oss<<(*i).first<<"-->"<<(*i).second<<endl;
-	}
-	return oss.str();
-}
-
-string Param::getName()
-{
-	return this->name;
-}
-
-void Param::calculateMemoryUsage(unsigned long& size)
-{
-	size += sizeof(Param);
-	size += name.size() + 1;
-	hash_map<string,double>::iterator it = paramValues.begin();
-	for(;it!=paramValues.end();it++)
-	{
-		size += sizeof(pair<string,double>);
-		size += (*it).first.size() + 1;
-	}
-}

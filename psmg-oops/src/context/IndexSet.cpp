@@ -6,82 +6,161 @@
  */
 
 #include "IndexSet.h"
-#include "../model/ModelComp.h";
+#include "../model/SetComp.h"
 
-IndexSet::IndexSet(string name_) : name(name_) {
-	// TODO Auto-generated constructor stub
+string IndexSet::TMP = "TMP_";
+
+IndexSet::IndexSet(string& name_) : name(name_) {
 
 }
 
 IndexSet::~IndexSet() {
-	dummyVarNames.clear();
-	setIndicies.clear();
-}
-
-void IndexSet::addSet(Set* aSet)
-{
-	assert(aSet->dim==this->dummyVarNames.size());
-	assert(this->dummyVarNames.size()==this->comps.size());
-	vector<string>::iterator it=aSet->setValues_data_order.begin();
-	for(;it!=aSet->setValues_data_order.end();it++)
+	for(boost::unordered_map<string,Set*>::iterator it=dummySetMap.begin();it!=dummySetMap.end();it++)
 	{
-		vector<string> v;
-		v.push_back(*it);
-		this->setIndicies.push_back(v);
+		Set::deleteSet(it->second);
 	}
+	this->dummySetMap.clear();
+	this->dummyCompMap.clear();
 }
 
-string IndexSet::toString() const
+
+void IndexSet::addSet(string& dummyVar, Set* aSet,SetComp* comp)
+{
+	assert(aSet->dim==1); //TODO for now just handle one-dim set
+	this->dummySetMap.insert(pair<string,Set*>(dummyVar,aSet));
+	this->dummyCompMap.insert(pair<string,SetComp*>(dummyVar,comp));
+}
+
+string IndexSet::toString()
 {
 	ostringstream oss(ostringstream::out);
-	vector< vector<string> >::const_iterator it1 = setIndicies.begin();
-	vector<string>::const_iterator it2 = dummyVarNames.begin();
-	vector<ModelComp*>::const_iterator it3 = comps.begin();
-
-	oss<<"IndexSet:"<<name;
-	assert(dummyVarNames.size()==comps.size());
-	for(;it2!=dummyVarNames.end();it2++,it3++)
+	boost::unordered_map<string,Set*>::iterator it = this->dummySetMap.begin();
+	oss<<"IndexSet:["<<name<<"]"<<endl;
+	for(;it!=this->dummySetMap.end();it++)
 	{
-		oss<<"{"<<(*it3)->id<<"-"<<*it2<<"} - ";
-	}
-
-	for(;it1!=setIndicies.end();it1++)
-	{
-		assert((*it1).size()==comps.size());
-		vector<string>::const_iterator ind = (*it1).begin();
-		for(;ind!=(*it1).end();ind++)
-		{
-			oss<<*ind;
-		}
-		oss<<"}";
+		oss<<"["<<it->first<<"] ";
+		oss<<it->second->toString()<<endl;
 	}
 	return oss.str();
 }
 
-void IndexSet::calculateMemoryUsage(unsigned long& size)
+void IndexSet::calculateMemoryUsage(unsigned long int& size)
 {
-		size += sizeof(IndexSet);
-		size += name.size() + 1;
-
-		vector< vector<string> >::const_iterator it1 = setIndicies.begin();
-		vector<string>::const_iterator it2 = dummyVarNames.begin();
-		vector<ModelComp*>::const_iterator it3 = comps.begin();
-		assert(dummyVarNames.size()==comps.size());
-
-		for(;it2!=dummyVarNames.end();it2++,it3++)
+	size += sizeof(IndexSet);
+	size += name.size() + 1;
+	boost::unordered_map<string,Set*>::iterator it = this->dummySetMap.begin();
+	for(;it!=this->dummySetMap.end();it++)
+	{
+		size += sizeof(pair<string,Set*>);
+		size += it->first.size()+1;
+		string setname = it->second->name;
+		if(setname.compare(0,4,Set::TMP)==0)
 		{
-			size += (*it2).size() + 1;
-			size += sizeof(ModelComp*);
+			it->second->calculateMemoryUsage(size);
 		}
-
-		for(;it1!=setIndicies.end();it1++)
-		{
-			assert((*it1).size()==comps.size());
-			size += sizeof(vector<string>);
-			vector<string>::const_iterator ind = (*it1).begin();
-			for(;ind!=(*it1).end();ind++)
-			{
-				size += (*ind).size() + 1;
-			}
-		}
+	}
 }
+
+
+//IndexSet::~IndexSet() {
+//	dummyVarNames.clear();
+//	setIndicies.clear();
+//}
+
+//string IndexSet::toString()
+//{
+//	ostringstream oss(ostringstream::out);
+//	vector< vector<string> >::const_iterator it1 = setIndicies.begin();
+//	vector<string>::const_iterator it2 = dummyVarNames.begin();
+//	vector<ModelComp*>::const_iterator it3 = comps.begin();
+//
+//	oss<<"IndexSet:"<<name;
+//	assert(dummyVarNames.size()==comps.size());
+//	for(;it2!=dummyVarNames.end();it2++,it3++)
+//	{
+//		oss<<"{"<<(*it3)->id<<"-"<<*it2<<"} - ";
+//	}
+//
+//	for(;it1!=setIndicies.end();it1++)
+//	{
+//		assert((*it1).size()==comps.size());
+//		vector<string>::const_iterator ind = (*it1).begin();
+//		for(;ind!=(*it1).end();ind++)
+//		{
+//			oss<<*ind;
+//		}
+//		oss<<"}";
+//	}
+//	return oss.str();
+//}
+
+//void IndexSet::calculateMemoryUsage(unsigned long& size)
+//{
+//		size += sizeof(IndexSet);
+//		size += name.size() + 1;
+//
+//		vector< vector<string> >::const_iterator it1 = setIndicies.begin();
+//		vector<string>::const_iterator it2 = dummyVarNames.begin();
+//		vector<ModelComp*>::const_iterator it3 = comps.begin();
+//		assert(dummyVarNames.size()==comps.size());
+//
+//		for(;it2!=dummyVarNames.end();it2++,it3++)
+//		{
+//			size += (*it2).size() + 1;
+//			size += sizeof(ModelComp*);
+//		}
+//
+//		for(;it1!=setIndicies.end();it1++)
+//		{
+//			assert((*it1).size()==comps.size());
+//			size += sizeof(vector<string>);
+//			vector<string>::const_iterator ind = (*it1).begin();
+//			for(;ind!=(*it1).end();ind++)
+//			{
+//				size += (*ind).size() + 1;
+//			}
+//		}
+//}
+
+
+//void IndexSet::addSet(Set* aSet)
+//{
+//	assert(aSet->dim==this->dummyVarNames.size());
+//	assert(this->dummyVarNames.size()==this->comps.size());
+//	vector<string>::iterator it=aSet->setValues_data_order.begin();
+//	for(;it!=aSet->setValues_data_order.end();it++)
+//	{
+//		vector<string> v;
+//		v.push_back(*it);
+//		this->setIndicies.push_back(v);
+//	}
+//}
+
+
+//string IndexSet::toString()
+//{
+//	ostringstream oss(ostringstream::out);
+//	vector< vector<string> >::const_iterator it1 = setIndicies.begin();
+//	vector<string>::const_iterator it2 = dummyVarNames.begin();
+//	vector<ModelComp*>::const_iterator it3 = comps.begin();
+//
+//	oss<<"IndexSet:"<<name;
+//	assert(dummyVarNames.size()==comps.size());
+//	for(;it2!=dummyVarNames.end();it2++,it3++)
+//	{
+//		oss<<"{"<<(*it3)->id<<"-"<<*it2<<"} - ";
+//	}
+//
+//	for(;it1!=setIndicies.end();it1++)
+//	{
+//		assert((*it1).size()==comps.size());
+//		vector<string>::const_iterator ind = (*it1).begin();
+//		for(;ind!=(*it1).end();ind++)
+//		{
+//			oss<<*ind;
+//		}
+//		oss<<"}";
+//	}
+//	return oss.str();
+//}
+

@@ -54,36 +54,3 @@ void print_mem_usage(string name)
    cout<<"["<<GlobalVariables::rank<<"/"<<GlobalVariables::size<<"] LOG_SYS_MEM["<<name<<"]"<<" Pid["<<pid<<"]"<<" VM[ "<<vm_usage<<" ] RSS[ "<<resident_set<<" ]"<<endl;
 
 }
-
-
-//designed to be use in runtime debuger
-void dumpHashmapInt(hash_map<int,vector<int> >& hp)
-{
-	hash_map<int,vector<int> >::iterator it = hp.begin();
-	for(; it!=hp.end();it++)
-	{
-		printf("key[%d] ",it->first);
-		vector<int> values = it->second;
-		for(vector<int>::iterator it1 = values.begin();it1!=values.end();it1++)
-		{
-			printf("\t %d  \t",*it1);
-		}
-		printf("\n");
-	}
-}
-
-//designed to be use in runtime debuger
-void dumpHashmapDouble(hash_map<int,vector<double> >& hp)
-{
-	hash_map<int,vector<double> >::iterator it = hp.begin();
-	for(; it!=hp.end();it++)
-	{
-		printf("key[%d] ",it->first);
-		vector<double> values = it->second;
-		for(vector<double>::iterator it1 = values.begin();it1!=values.end();it1++)
-		{
-			printf("\t %f  \t",*it1);
-		}
-		printf("\n");
-	}
-}

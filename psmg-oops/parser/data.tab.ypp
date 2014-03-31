@@ -21,7 +21,10 @@
    	#include "../sml/GlobalVariables.h"
    	#include "../context/Set.h"
 	#include "../context/ModelContext.h"
-   	#include "../context/Param.h"
+	#include "../context/PValueSym.h"
+	#include "../context/PValueValue.h"
+   	#include "../context/ParamMult.h"
+   	#include "../context/ParamSingle.h"
    	#include "../model/AmplModel.h"
    	#include "../model/ModelComp.h"
    	#include <cassert>
@@ -93,9 +96,27 @@ set_def:	SET set_name DEFINE member SEMICOLON {
 				YAC_DATA_LOG($4);
 				
 				string id($2);
-				ModelComp* setComp = AmplModel::root->findModelComp(id,TSET);
-				Set* setValue = new Set(setComp->setDim,setComp->id);
-				setValue->fillSetValues($4);
+				SetComp* setComp = AmplModel::root->findSetComp(id);
+				Set* setValue = Set::createSet(setComp);
+				char* token;
+				token = strtok($4,",() ");
+			
+				ostringstream oss(ostringstream::out);
+				unsigned int tokenNum = 0;
+				do
+				{
+					oss<<token;
+					tokenNum++;
+					if(tokenNum%setValue->dim == 0)
+					{
+						setValue->addSetValue(oss);
+						oss.str("");
+						oss.clear();
+					}
+					token = strtok(NULL,",() ");
+				}while(token!=NULL);
+	
+				
 				setComp->setCard = setValue->card;
 				rootContext->addCompValueMap(setComp,setValue);
         	}
@@ -163,12 +184,89 @@ param_def:	PARAM param_name DEFINE param_specs SEMICOLON {
 				YAC_DATA_LOG("   ===== VALUE ====");
 				YAC_DATA_LOG($4);
 				string id($2);
-				ModelComp* paramComp = AmplModel::root->findModelComp(id,TPARAM);
-				Param* param_ = new Param(paramComp->getNumParamIndicies(),paramComp->id);
-                assert(paramComp->getNumParamIndicies() == 0);
-				double pvalue = atof($4);
-				param_->addParamValue("",pvalue);
-                rootContext->addCompValueMap(paramComp,param_);
+				ParamComp* paramComp = AmplModel::root->findParamComp(id);
+				Param* param = NULL;
+				
+				param = new ParamSingle(paramComp);
+				assert(paramComp->getNumSetIndices() == 0);
+				PValue* pval = NULL;
+				if(paramComp->isSym){
+					string v($4);
+					pval = new PValueSym(v);
+				}
+				else
+				{
+					pval = new PValueValue();
+					static_cast<PValueValue*>(pval)->value = atof($4);
+	            }
+	            static_cast<ParamSingle*>(param)->setParamValue(pval);
+	            assert(param->card == 1);
+                rootContext->addCompValueMap(paramComp,param);
+			}
+			| PARAM COLON set_name COLON param_names DEFINE param_specs SEMICOLON
+			{
+				YAC_DATA_LOG("multiple params and set define start");
+				YAC_DATA_LOG("set : "<<$3<<"  params: "<<$5);
+				YAC_DATA_LOG("   ===== VALUE ====");
+				YAC_DATA_LOG($7);
+				
+				string setid($3);
+				SetComp* setComp = AmplModel::root->findSetComp(setid);
+				assert(setComp->setDim == 1); //only 1-dim set can be specified in this grammar
+				Set* setValue = Set::createSet(setComp);
+				rootContext->addCompValueMap(setComp,setValue);
+				
+				char* tok = strtok($5,",");
+				vector<ParamComp*> paramModels;
+				vector<Param*> params;
+				int numIndicies = 0;
+				while(tok!=NULL)
+				{
+					string id(tok);
+					ParamComp* paramComp = AmplModel::root->findParamComp(id);
+					Param* param = new ParamMult(paramComp);
+					paramModels.push_back(paramComp);
+					params.push_back(param);
+					rootContext->addCompValueMap(paramComp,param);		
+					assert(numIndicies = paramComp->getNumSetIndices() || numIndicies == 0);
+					tok = strtok(NULL,",");
+				}
+				
+				ostringstream oss(ostringstream::out);
+                int curr_index = 0;
+				tok = strtok($7,",");
+				while(tok!=NULL)
+				{
+					YAC_DATA_LOG("tok: - "<<tok);
+					oss<<tok;
+                    ++curr_index;
+					if(curr_index == numIndicies)
+                    {
+                    		setValue->addSetValue(oss);
+                    		vector<Param*>::iterator i=params.begin();
+                    		vector<ParamComp*>::iterator j=paramModels.begin();
+                    		for(;i!=params.end();i++,j++)
+                            {
+                                    tok=strtok(NULL,",");
+                                    ParamMult* p = static_cast<ParamMult*>(*i);
+                                    ParamComp* pc = (*j);
+                            		
+                            		PValue* pval = NULL;
+                            		if(pc->isSym){
+                            			string v(tok);
+                            			pval = new PValueSym(v);
+                            		}
+                            		else {
+                            			pval = new PValueValue();
+                            			static_cast<PValueValue*>(pval)->value = atof(tok);
+                            		}
+                            		p->addParamValue(oss.str(),pval);
+                            }
+                            oss.str("");
+                            curr_index = 0;
+                    }
+                    tok = strtok(NULL,",");
+				}
 			}
 			| PARAM COLON param_names DEFINE param_specs SEMICOLON {
 				YAC_DATA_LOG("multiple params define start -FOR === ["<<$3<<"]");
@@ -176,20 +274,20 @@ param_def:	PARAM param_name DEFINE param_specs SEMICOLON {
 				YAC_DATA_LOG($5);
 				
 				char* tok = strtok($3,",");
-				vector<ModelComp*> paramModels;
+				vector<ParamComp*> paramModels;
 				vector<Param*> params;
 				int numIndicies = 0;
 				int numIndicies_init = -1;
 				while(tok!=NULL)
 				{
 					string id(tok);
-					ModelComp* paramComp = AmplModel::root->findModelComp(id,TPARAM);
+					ParamComp* paramComp = AmplModel::root->findParamComp(id);
 					paramModels.push_back(paramComp);
-					Param* paramValue = new Param(paramComp->getNumParamIndicies(),paramComp->id);
+					Param* paramValue = new ParamMult(paramComp);
 					params.push_back(paramValue);
 					rootContext->addCompValueMap(paramComp,paramValue);
 					
-					numIndicies = paramComp->getNumParamIndicies();
+					numIndicies = paramComp->getNumSetIndices();
 					if(numIndicies_init == -1) numIndicies_init = numIndicies;
 					assert(numIndicies_init==numIndicies);
 					
@@ -205,11 +303,25 @@ param_def:	PARAM param_name DEFINE param_specs SEMICOLON {
                     ++curr_index;
 					if(curr_index == numIndicies)
                     {
-                            for(vector<Param*>::iterator i=params.begin();i!=params.end();i++)
+                    		vector<Param*>::iterator i=params.begin();
+                        	vector<ParamComp*>::iterator j=paramModels.begin();
+                            for(;i!=params.end();i++,j++)
                             {
                                     tok=strtok(NULL,",");
-                                    double pvalue = atof(tok);
-                                    (*i)->addParamValue(oss.str(),pvalue);
+                                 	ParamMult* p = static_cast<ParamMult*>(*i);
+                                    ParamComp* pc = (*j);
+                                    
+                                    PValue* pval = NULL;
+                                    if(pc->isSym)
+                                    {
+                                    	string v(tok);
+                                    	pval = new PValueSym(v);
+                                    }
+                                    else
+                                    {
+                                    	pval = new PValueValue(atof(tok));
+                                    }
+                                    p->addParamValue(oss.str(),pval);
                             }
                             oss.str("");
                             curr_index = 0;

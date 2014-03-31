@@ -80,7 +80,10 @@
    	#include "../sml/GlobalVariables.h"
    	#include "../context/Set.h"
 	#include "../context/ModelContext.h"
-   	#include "../context/Param.h"
+	#include "../context/PValueSym.h"
+	#include "../context/PValueValue.h"
+   	#include "../context/ParamMult.h"
+   	#include "../context/ParamSingle.h"
    	#include "../model/AmplModel.h"
    	#include "../model/ModelComp.h"
    	#include <cassert>
@@ -102,7 +105,7 @@
 
 
 /* Line 268 of yacc.c  */
-#line 106 "../src/parser/data.tab.cpp"
+#line 109 "../src/parser/data.tab.cpp"
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -181,7 +184,7 @@ typedef union YYSTYPE
 {
 
 /* Line 293 of yacc.c  */
-#line 46 "data.tab.ypp"
+#line 49 "data.tab.ypp"
 
    long ival;
    double fval;
@@ -190,7 +193,7 @@ typedef union YYSTYPE
 
 
 /* Line 293 of yacc.c  */
-#line 194 "../src/parser/data.tab.cpp"
+#line 197 "../src/parser/data.tab.cpp"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -202,7 +205,7 @@ typedef union YYSTYPE
 
 
 /* Line 343 of yacc.c  */
-#line 206 "../src/parser/data.tab.cpp"
+#line 209 "../src/parser/data.tab.cpp"
 
 #ifdef short
 # undef short
@@ -421,16 +424,16 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  2
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   44
+#define YYLAST   57
 
 /* YYNTOKENS -- Number of terminals.  */
 #define YYNTOKENS  23
 /* YYNNTS -- Number of nonterminals.  */
 #define YYNNTS  15
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  28
+#define YYNRULES  29
 /* YYNRULES -- Number of states.  */
-#define YYNSTATES  47
+#define YYNSTATES  54
 
 /* YYTRANSLATE(YYLEX) -- Bison symbol number corresponding to YYLEX.  */
 #define YYUNDEFTOK  2
@@ -478,8 +481,8 @@ static const yytype_uint8 yytranslate[] =
 static const yytype_uint8 yyprhs[] =
 {
        0,     0,     3,     4,     7,     9,    11,    14,    20,    22,
-      24,    26,    28,    31,    35,    40,    42,    46,    52,    59,
-      61,    64,    66,    69,    71,    73,    75,    77,    79
+      24,    26,    28,    31,    35,    40,    42,    46,    52,    61,
+      68,    70,    73,    75,    78,    80,    82,    84,    86,    88
 };
 
 /* YYRHS -- A `-1'-separated list of the rules' RHS.  */
@@ -490,18 +493,18 @@ static const yytype_int8 yyrhs[] =
        3,    -1,    29,    -1,    30,    -1,    37,    -1,    29,    37,
       -1,    20,    31,    21,    -1,    30,    20,    31,    21,    -1,
       37,    -1,    31,    22,    37,    -1,     8,    36,    10,    34,
-      14,    -1,     8,    15,    33,    10,    34,    14,    -1,    36,
-      -1,    33,    36,    -1,    35,    -1,    34,    35,    -1,     3,
-      -1,     4,    -1,     5,    -1,     3,    -1,     3,    -1,     4,
-      -1
+      14,    -1,     8,    15,    27,    15,    33,    10,    34,    14,
+      -1,     8,    15,    33,    10,    34,    14,    -1,    36,    -1,
+      33,    36,    -1,    35,    -1,    34,    35,    -1,     3,    -1,
+       4,    -1,     5,    -1,     3,    -1,     3,    -1,     4,    -1
 };
 
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,    79,    79,    80,    83,    84,    85,    90,   104,   109,
-     113,   119,   123,   132,   139,   149,   152,   161,   173,   222,
-     225,   234,   237,   246,   249,   252,   257,   262,   265
+       0,    82,    82,    83,    86,    87,    88,    93,   125,   130,
+     134,   140,   144,   153,   160,   170,   173,   182,   206,   271,
+     334,   337,   346,   349,   358,   361,   364,   369,   374,   377
 };
 #endif
 
@@ -535,16 +538,16 @@ static const yytype_uint16 yytoknum[] =
 static const yytype_uint8 yyr1[] =
 {
        0,    23,    24,    24,    25,    25,    25,    26,    27,    28,
-      28,    29,    29,    30,    30,    31,    31,    32,    32,    33,
-      33,    34,    34,    35,    35,    35,    36,    37,    37
+      28,    29,    29,    30,    30,    31,    31,    32,    32,    32,
+      33,    33,    34,    34,    35,    35,    35,    36,    37,    37
 };
 
 /* YYR2[YYN] -- Number of symbols composing right hand side of rule YYN.  */
 static const yytype_uint8 yyr2[] =
 {
        0,     2,     0,     2,     1,     1,     2,     5,     1,     1,
-       1,     1,     2,     3,     4,     1,     3,     5,     6,     1,
-       2,     1,     2,     1,     1,     1,     1,     1,     1
+       1,     1,     2,     3,     4,     1,     3,     5,     8,     6,
+       1,     2,     1,     2,     1,     1,     1,     1,     1,     1
 };
 
 /* YYDEFACT[STATE-NAME] -- Default reduction number in state STATE-NUM.
@@ -553,64 +556,68 @@ static const yytype_uint8 yyr2[] =
 static const yytype_uint8 yydefact[] =
 {
        2,     0,     1,     0,     0,     0,     3,     4,     5,     6,
-       8,     0,    26,     0,     0,     0,     0,    19,     0,    27,
-      28,     0,     0,     9,    10,    11,     0,    20,    23,    24,
-      25,     0,    21,     0,    15,     7,    12,     0,     0,    17,
-      22,    13,     0,     0,    18,    16,    14
+       8,     0,    27,     0,     0,     0,    27,     0,     0,    20,
+       0,    28,    29,     0,     0,     9,    10,    11,     0,     0,
+      21,    24,    25,    26,     0,    22,     0,    15,     7,    12,
+       0,     0,     0,    17,    23,    13,     0,     0,     0,    19,
+      16,    14,     0,    18
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-      -1,     1,     6,     7,    11,    22,    23,    24,    33,     8,
-      16,    31,    32,    14,    34
+      -1,     1,     6,     7,    11,    24,    25,    26,    36,     8,
+      18,    34,    35,    19,    37
 };
 
 /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
    STATE-NUM.  */
-#define YYPACT_NINF -18
+#define YYPACT_NINF -31
 static const yytype_int8 yypact[] =
 {
-     -18,    17,   -18,   -10,    10,     0,   -18,   -18,   -18,   -18,
-     -18,    12,   -18,    25,    29,    -2,     9,   -18,    27,   -18,
-     -18,    30,    26,    30,    21,   -18,    27,   -18,   -18,   -18,
-     -18,     2,   -18,    14,   -18,   -18,   -18,    30,     6,   -18,
-     -18,   -18,    30,    16,   -18,   -18,   -18
+     -31,    31,   -31,    -9,    11,     0,   -31,   -31,   -31,   -31,
+     -31,    10,   -31,    43,    24,     3,    32,    36,    30,   -31,
+      25,   -31,   -31,    39,    40,    39,    33,   -31,    49,    25,
+     -31,   -31,   -31,   -31,     5,   -31,    23,   -31,   -31,   -31,
+      39,    38,    13,   -31,   -31,   -31,    39,    28,    25,   -31,
+     -31,   -31,    21,   -31
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -18,   -18,   -18,   -18,   -18,   -18,   -18,   -18,     5,   -18,
-     -18,    18,   -17,    13,   -15
+     -31,   -31,   -31,   -31,    42,   -31,   -31,   -31,    16,   -31,
+      29,   -27,   -30,    -5,   -14
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]].  What to do in state STATE-NUM.  If
    positive, shift that token.  If negative, reduce the rule which
    number is the opposite.  If YYTABLE_NINF, syntax error.  */
-#define YYTABLE_NINF -1
-static const yytype_uint8 yytable[] =
+#define YYTABLE_NINF -9
+static const yytype_int8 yytable[] =
 {
-      25,    19,    20,    12,     9,    28,    29,    30,    36,    28,
-      29,    30,    12,    10,    40,    13,    39,     2,    21,    26,
-      44,    40,    15,     3,     4,     5,    17,    45,    12,    27,
-      28,    29,    30,    19,    20,    41,    42,    46,    42,    18,
-      35,    37,    43,     0,    38
+      14,    27,    42,    12,    44,     9,    21,    22,    31,    32,
+      33,    39,    44,    30,    10,    13,    31,    32,    33,    43,
+      15,    52,    44,    23,    31,    32,    33,    49,    31,    32,
+      33,     2,    50,    12,    20,    53,    30,     3,     4,     5,
+      29,    12,    21,    22,    45,    46,    16,    -8,    48,    51,
+      46,    28,    12,    40,    38,    17,    47,    41
 };
 
 #define yypact_value_is_default(yystate) \
-  ((yystate) == (-18))
+  ((yystate) == (-31))
 
 #define yytable_value_is_error(yytable_value) \
   YYID (0)
 
-static const yytype_int8 yycheck[] =
+static const yytype_uint8 yycheck[] =
 {
-      15,     3,     4,     3,    14,     3,     4,     5,    23,     3,
-       4,     5,     3,     3,    31,    15,    14,     0,    20,    10,
-      14,    38,    10,     6,     7,     8,    13,    42,     3,    16,
-       3,     4,     5,     3,     4,    21,    22,    21,    22,    10,
-      14,    20,    37,    -1,    26
+       5,    15,    29,     3,    34,    14,     3,     4,     3,     4,
+       5,    25,    42,    18,     3,    15,     3,     4,     5,    14,
+      10,    48,    52,    20,     3,     4,     5,    14,     3,     4,
+       5,     0,    46,     3,    10,    14,    41,     6,     7,     8,
+      10,     3,     3,     4,    21,    22,     3,    15,    10,    21,
+      22,    15,     3,    20,    14,    13,    40,    28
 };
 
 /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
@@ -618,10 +625,11 @@ static const yytype_int8 yycheck[] =
 static const yytype_uint8 yystos[] =
 {
        0,    24,     0,     6,     7,     8,    25,    26,    32,    14,
-       3,    27,     3,    15,    36,    10,    33,    36,    10,     3,
-       4,    20,    28,    29,    30,    37,    10,    36,     3,     4,
-       5,    34,    35,    31,    37,    14,    37,    20,    34,    14,
-      35,    21,    22,    31,    14,    37,    21
+       3,    27,     3,    15,    36,    10,     3,    27,    33,    36,
+      10,     3,     4,    20,    28,    29,    30,    37,    15,    10,
+      36,     3,     4,     5,    34,    35,    31,    37,    14,    37,
+      20,    33,    34,    14,    35,    21,    22,    31,    10,    14,
+      37,    21,    34,    14
 };
 
 #define yyerrok		(yyerrstatus = 0)
@@ -1458,7 +1466,7 @@ yyreduce:
         case 6:
 
 /* Line 1806 of yacc.c  */
-#line 85 "data.tab.ypp"
+#line 88 "data.tab.ypp"
     {
 				YAC_DATA_LOG("data rule matched");
 			}
@@ -1467,16 +1475,34 @@ yyreduce:
   case 7:
 
 /* Line 1806 of yacc.c  */
-#line 90 "data.tab.ypp"
+#line 93 "data.tab.ypp"
     {
 				YAC_DATA_LOG("set define start - FOR === ["<<(yyvsp[(2) - (5)].string)<<"]");
 				YAC_DATA_LOG("   ===== VALUE ====");
 				YAC_DATA_LOG((yyvsp[(4) - (5)].string));
 				
 				string id((yyvsp[(2) - (5)].string));
-				ModelComp* setComp = AmplModel::root->findModelComp(id,TSET);
-				Set* setValue = new Set(setComp->setDim,setComp->id);
-				setValue->fillSetValues((yyvsp[(4) - (5)].string));
+				SetComp* setComp = AmplModel::root->findSetComp(id);
+				Set* setValue = Set::createSet(setComp);
+				char* token;
+				token = strtok((yyvsp[(4) - (5)].string),",() ");
+			
+				ostringstream oss(ostringstream::out);
+				unsigned int tokenNum = 0;
+				do
+				{
+					oss<<token;
+					tokenNum++;
+					if(tokenNum%setValue->dim == 0)
+					{
+						setValue->addSetValue(oss);
+						oss.str("");
+						oss.clear();
+					}
+					token = strtok(NULL,",() ");
+				}while(token!=NULL);
+	
+				
 				setComp->setCard = setValue->card;
 				rootContext->addCompValueMap(setComp,setValue);
         	}
@@ -1485,7 +1511,7 @@ yyreduce:
   case 8:
 
 /* Line 1806 of yacc.c  */
-#line 104 "data.tab.ypp"
+#line 125 "data.tab.ypp"
     { 
 				(yyval.string) = (yyvsp[(1) - (1)].string);
 			}
@@ -1494,7 +1520,7 @@ yyreduce:
   case 9:
 
 /* Line 1806 of yacc.c  */
-#line 109 "data.tab.ypp"
+#line 130 "data.tab.ypp"
     {
 				//YAC_DATA_LOG("member_items["<<$1<<"]"); 
 				(yyval.string) = (yyvsp[(1) - (1)].string); 
@@ -1504,7 +1530,7 @@ yyreduce:
   case 10:
 
 /* Line 1806 of yacc.c  */
-#line 113 "data.tab.ypp"
+#line 134 "data.tab.ypp"
     { 
 				//YAC_DATA_LOG("member_pairs["<<$1<<"]");
 				(yyval.string) = (yyvsp[(1) - (1)].string);
@@ -1514,7 +1540,7 @@ yyreduce:
   case 11:
 
 /* Line 1806 of yacc.c  */
-#line 119 "data.tab.ypp"
+#line 140 "data.tab.ypp"
     {
 				//YAC_DATA_LOG("last set value ["<<$1<<"]");
 				(yyval.string) = (yyvsp[(1) - (1)].string);
@@ -1524,7 +1550,7 @@ yyreduce:
   case 12:
 
 /* Line 1806 of yacc.c  */
-#line 123 "data.tab.ypp"
+#line 144 "data.tab.ypp"
     {
 				ostringstream oss(ostringstream::out);
 				oss<<(yyvsp[(1) - (2)].string)<<','<<(yyvsp[(2) - (2)].string);
@@ -1537,7 +1563,7 @@ yyreduce:
   case 13:
 
 /* Line 1806 of yacc.c  */
-#line 132 "data.tab.ypp"
+#line 153 "data.tab.ypp"
     {
 				//YAC_DATA_LOG("last set value tuple ["<<$2<<"]");
 				ostringstream oss(ostringstream::out);
@@ -1550,7 +1576,7 @@ yyreduce:
   case 14:
 
 /* Line 1806 of yacc.c  */
-#line 139 "data.tab.ypp"
+#line 160 "data.tab.ypp"
     {
 				//YAC_DATA_LOG("a set value tuple ["<<$3<<"]");
 				ostringstream oss(ostringstream::out);
@@ -1564,7 +1590,7 @@ yyreduce:
   case 15:
 
 /* Line 1806 of yacc.c  */
-#line 149 "data.tab.ypp"
+#line 170 "data.tab.ypp"
     { 
 				(yyval.string) = (yyvsp[(1) - (1)].string);
 			}
@@ -1573,7 +1599,7 @@ yyreduce:
   case 16:
 
 /* Line 1806 of yacc.c  */
-#line 152 "data.tab.ypp"
+#line 173 "data.tab.ypp"
     {
 				ostringstream oss(ostringstream::out);
 				oss<<(yyvsp[(1) - (3)].string)<<','<<(yyvsp[(3) - (3)].string);
@@ -1586,45 +1612,127 @@ yyreduce:
   case 17:
 
 /* Line 1806 of yacc.c  */
-#line 161 "data.tab.ypp"
+#line 182 "data.tab.ypp"
     { 
 				YAC_DATA_LOG("single param define start -FOR === ["<<(yyvsp[(2) - (5)].string)<<"]");
 				YAC_DATA_LOG("   ===== VALUE ====");
 				YAC_DATA_LOG((yyvsp[(4) - (5)].string));
 				string id((yyvsp[(2) - (5)].string));
-				ModelComp* paramComp = AmplModel::root->findModelComp(id,TPARAM);
-				Param* param_ = new Param(paramComp->getNumParamIndicies(),paramComp->id);
-                assert(paramComp->getNumParamIndicies() == 0);
-				double pvalue = atof((yyvsp[(4) - (5)].string));
-				param_->addParamValue("",pvalue);
-                rootContext->addCompValueMap(paramComp,param_);
+				ParamComp* paramComp = AmplModel::root->findParamComp(id);
+				Param* param = NULL;
+				
+				param = new ParamSingle(paramComp);
+				assert(paramComp->getNumSetIndices() == 0);
+				PValue* pval = NULL;
+				if(paramComp->isSym){
+					string v((yyvsp[(4) - (5)].string));
+					pval = new PValueSym(v);
+				}
+				else
+				{
+					pval = new PValueValue();
+					static_cast<PValueValue*>(pval)->value = atof((yyvsp[(4) - (5)].string));
+	            }
+	            static_cast<ParamSingle*>(param)->setParamValue(pval);
+	            assert(param->card == 1);
+                rootContext->addCompValueMap(paramComp,param);
 			}
     break;
 
   case 18:
 
 /* Line 1806 of yacc.c  */
-#line 173 "data.tab.ypp"
+#line 207 "data.tab.ypp"
+    {
+				YAC_DATA_LOG("multiple params and set define start");
+				YAC_DATA_LOG("set : "<<(yyvsp[(3) - (8)].string)<<"  params: "<<(yyvsp[(5) - (8)].string));
+				YAC_DATA_LOG("   ===== VALUE ====");
+				YAC_DATA_LOG((yyvsp[(7) - (8)].string));
+				
+				string setid((yyvsp[(3) - (8)].string));
+				SetComp* setComp = AmplModel::root->findSetComp(setid);
+				assert(setComp->setDim == 1); //only 1-dim set can be specified in this grammar
+				Set* setValue = Set::createSet(setComp);
+				rootContext->addCompValueMap(setComp,setValue);
+				
+				char* tok = strtok((yyvsp[(5) - (8)].string),",");
+				vector<ParamComp*> paramModels;
+				vector<Param*> params;
+				int numIndicies = 0;
+				while(tok!=NULL)
+				{
+					string id(tok);
+					ParamComp* paramComp = AmplModel::root->findParamComp(id);
+					Param* param = new ParamMult(paramComp);
+					paramModels.push_back(paramComp);
+					params.push_back(param);
+					rootContext->addCompValueMap(paramComp,param);		
+					assert(numIndicies = paramComp->getNumSetIndices() || numIndicies == 0);
+					tok = strtok(NULL,",");
+				}
+				
+				ostringstream oss(ostringstream::out);
+                int curr_index = 0;
+				tok = strtok((yyvsp[(7) - (8)].string),",");
+				while(tok!=NULL)
+				{
+					YAC_DATA_LOG("tok: - "<<tok);
+					oss<<tok;
+                    ++curr_index;
+					if(curr_index == numIndicies)
+                    {
+                    		setValue->addSetValue(oss);
+                    		vector<Param*>::iterator i=params.begin();
+                    		vector<ParamComp*>::iterator j=paramModels.begin();
+                    		for(;i!=params.end();i++,j++)
+                            {
+                                    tok=strtok(NULL,",");
+                                    ParamMult* p = static_cast<ParamMult*>(*i);
+                                    ParamComp* pc = (*j);
+                            		
+                            		PValue* pval = NULL;
+                            		if(pc->isSym){
+                            			string v(tok);
+                            			pval = new PValueSym(v);
+                            		}
+                            		else {
+                            			pval = new PValueValue();
+                            			static_cast<PValueValue*>(pval)->value = atof(tok);
+                            		}
+                            		p->addParamValue(oss.str(),pval);
+                            }
+                            oss.str("");
+                            curr_index = 0;
+                    }
+                    tok = strtok(NULL,",");
+				}
+			}
+    break;
+
+  case 19:
+
+/* Line 1806 of yacc.c  */
+#line 271 "data.tab.ypp"
     {
 				YAC_DATA_LOG("multiple params define start -FOR === ["<<(yyvsp[(3) - (6)].string)<<"]");
 				YAC_DATA_LOG("   ===== VALUE ====");
 				YAC_DATA_LOG((yyvsp[(5) - (6)].string));
 				
 				char* tok = strtok((yyvsp[(3) - (6)].string),",");
-				vector<ModelComp*> paramModels;
+				vector<ParamComp*> paramModels;
 				vector<Param*> params;
 				int numIndicies = 0;
 				int numIndicies_init = -1;
 				while(tok!=NULL)
 				{
 					string id(tok);
-					ModelComp* paramComp = AmplModel::root->findModelComp(id,TPARAM);
+					ParamComp* paramComp = AmplModel::root->findParamComp(id);
 					paramModels.push_back(paramComp);
-					Param* paramValue = new Param(paramComp->getNumParamIndicies(),paramComp->id);
+					Param* paramValue = new ParamMult(paramComp);
 					params.push_back(paramValue);
 					rootContext->addCompValueMap(paramComp,paramValue);
 					
-					numIndicies = paramComp->getNumParamIndicies();
+					numIndicies = paramComp->getNumSetIndices();
 					if(numIndicies_init == -1) numIndicies_init = numIndicies;
 					assert(numIndicies_init==numIndicies);
 					
@@ -1640,11 +1748,25 @@ yyreduce:
                     ++curr_index;
 					if(curr_index == numIndicies)
                     {
-                            for(vector<Param*>::iterator i=params.begin();i!=params.end();i++)
+                    		vector<Param*>::iterator i=params.begin();
+                        	vector<ParamComp*>::iterator j=paramModels.begin();
+                            for(;i!=params.end();i++,j++)
                             {
                                     tok=strtok(NULL,",");
-                                    double pvalue = atof(tok);
-                                    (*i)->addParamValue(oss.str(),pvalue);
+                                 	ParamMult* p = static_cast<ParamMult*>(*i);
+                                    ParamComp* pc = (*j);
+                                    
+                                    PValue* pval = NULL;
+                                    if(pc->isSym)
+                                    {
+                                    	string v(tok);
+                                    	pval = new PValueSym(v);
+                                    }
+                                    else
+                                    {
+                                    	pval = new PValueValue(atof(tok));
+                                    }
+                                    p->addParamValue(oss.str(),pval);
                             }
                             oss.str("");
                             curr_index = 0;
@@ -1654,19 +1776,19 @@ yyreduce:
 			}
     break;
 
-  case 19:
+  case 20:
 
 /* Line 1806 of yacc.c  */
-#line 222 "data.tab.ypp"
+#line 334 "data.tab.ypp"
     {
 				(yyval.string) = (yyvsp[(1) - (1)].string);
 			}
     break;
 
-  case 20:
+  case 21:
 
 /* Line 1806 of yacc.c  */
-#line 225 "data.tab.ypp"
+#line 337 "data.tab.ypp"
     {
 				ostringstream oss(ostringstream::out);
 				oss<<(yyvsp[(1) - (2)].string)<<','<<(yyvsp[(2) - (2)].string);  //each param_name(set_value) is on newline
@@ -1676,19 +1798,19 @@ yyreduce:
 			}
     break;
 
-  case 21:
+  case 22:
 
 /* Line 1806 of yacc.c  */
-#line 234 "data.tab.ypp"
+#line 346 "data.tab.ypp"
     {
 				(yyval.string) = (yyvsp[(1) - (1)].string);
 			}
     break;
 
-  case 22:
+  case 23:
 
 /* Line 1806 of yacc.c  */
-#line 237 "data.tab.ypp"
+#line 349 "data.tab.ypp"
     {
 				ostringstream oss(ostringstream::out);
 				oss<<(yyvsp[(1) - (2)].string)<<','<<(yyvsp[(2) - (2)].string);  //each on newline
@@ -1698,19 +1820,10 @@ yyreduce:
 			}
     break;
 
-  case 23:
-
-/* Line 1806 of yacc.c  */
-#line 246 "data.tab.ypp"
-    {
-				(yyval.string) = (yyvsp[(1) - (1)].string);
-			}
-    break;
-
   case 24:
 
 /* Line 1806 of yacc.c  */
-#line 249 "data.tab.ypp"
+#line 358 "data.tab.ypp"
     {
 				(yyval.string) = (yyvsp[(1) - (1)].string);
 			}
@@ -1719,7 +1832,7 @@ yyreduce:
   case 25:
 
 /* Line 1806 of yacc.c  */
-#line 252 "data.tab.ypp"
+#line 361 "data.tab.ypp"
     {
 				(yyval.string) = (yyvsp[(1) - (1)].string);
 			}
@@ -1728,7 +1841,7 @@ yyreduce:
   case 26:
 
 /* Line 1806 of yacc.c  */
-#line 257 "data.tab.ypp"
+#line 364 "data.tab.ypp"
     {
 				(yyval.string) = (yyvsp[(1) - (1)].string);
 			}
@@ -1737,8 +1850,8 @@ yyreduce:
   case 27:
 
 /* Line 1806 of yacc.c  */
-#line 262 "data.tab.ypp"
-    { 
+#line 369 "data.tab.ypp"
+    {
 				(yyval.string) = (yyvsp[(1) - (1)].string);
 			}
     break;
@@ -1746,7 +1859,16 @@ yyreduce:
   case 28:
 
 /* Line 1806 of yacc.c  */
-#line 265 "data.tab.ypp"
+#line 374 "data.tab.ypp"
+    { 
+				(yyval.string) = (yyvsp[(1) - (1)].string);
+			}
+    break;
+
+  case 29:
+
+/* Line 1806 of yacc.c  */
+#line 377 "data.tab.ypp"
     {
 				(yyval.string) = (yyvsp[(1) - (1)].string);
 			}
@@ -1755,7 +1877,7 @@ yyreduce:
 
 
 /* Line 1806 of yacc.c  */
-#line 1759 "../src/parser/data.tab.cpp"
+#line 1881 "../src/parser/data.tab.cpp"
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1986,7 +2108,7 @@ yyreturn:
 
 
 /* Line 2067 of yacc.c  */
-#line 270 "data.tab.ypp"
+#line 382 "data.tab.ypp"
 
 
 void dataerror(const char *s) {

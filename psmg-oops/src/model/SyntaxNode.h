@@ -40,14 +40,20 @@
 #include <cassert>
 #include <cstdlib>
 #include <iostream>
+#include <boost/unordered_map.hpp>
 
-#include "AmplModel.h"
+#include "ModelComp.h"
 #include "autodiff.h"
-#include "../context/Set.h"
+#include "../context/ModelContext.h"
+#include "../context/SetSimple.h"
+#include "../context/ExpandedModel.h"
+#include "../context/PValue.h"
+
+class SyntaxNodeIDREF;
+class AmplModel;
+class SetComp;
 
 using namespace std;
-using namespace tr1;
-using namespace AutoDiff;
 
 class SyntaxNode {
 
@@ -110,7 +116,7 @@ public:
 	}
 
 	/** Recursive printing of expression */
-	std::string print() const;
+	std::string print() ;
 
 	/** Return the value of this node as a string */
 	virtual std::string getName() const {
@@ -118,58 +124,24 @@ public:
 		return "(fail)";
 	}
 
-	/** Diagnostic printing */
-	void dump(std::ostream& fout) const;
-
-	// node is a dummy var -> remove (..)
-	std::string printDummyVar() const;
-
-	/** Return comma separated list of arguments for IDREF nodes */
-	std::string getArgumentList() const;
-
-	/** Find all the IDREF nodes at or below the current node */
-	virtual void findIDREF(std::list<ModelComp*>& lmc) const;
-
-	/** Find all the IDREF nodes at or below the current node */
-	virtual void findIDREF(std::list<SyntaxNode*> *lnd);
-
-	/** Find all nodes of opCode @a oc at or below the current node */
-	virtual void findOpCode(int oc, std::list<SyntaxNode*> *lnd);
-
-	/** Find the ModelComp (if it exists) referred to by this SyntaxNode.
-	 *
-	 *  If the expression given by this SyntaxNode is an immediate reference to
-	 *  a ModelComp then return that, otherwise return NULL.
-	 */
-	ModelComp *findModelComp() const;
-
-	SyntaxNode* merge(const SyntaxNode *src);
-
-	/** Creates a deep copy of the nodes: SyntaxNodes pointed to are recreated
-	 *  as well.
-	 *
-	 *  Non-SyntaxNode objects pointed to are not recreated, here just pointers
-	 *  are copied (->ref in the case of a SyntaxNodeIDREF object).
-	 *  The int/double entries pointed to by INT_VAL/FLOAT_VAL SyntaxNodes *are*
-	 *  recreated.
-	 */
-	virtual SyntaxNode *deep_copy();
-
-	/** Creates a copy of the node, reusing the pointer in the current node */
-	virtual SyntaxNode *clone();
-
-	virtual std::ostream& put(std::ostream& s) const;
+	virtual std::ostream& put(std::ostream& s);
 	virtual SyntaxNode *push_back(SyntaxNode *newitem);
 	virtual SyntaxNode *push_front(SyntaxNode *newitem);
 
 	//Feng
 	int calculateSetDim();
 	int calculateVarDim();
-	void calculateParamIndicies(vector<string>&, vector<ModelComp*>&, hash_map<string, ModelComp*>&);
+	int calculateParamSetIndicies();
+	bool isParamSymbolic();
+	void calculateParamIndicies(vector<string>&, vector<SetComp*>&);
+	void calculateSetValue(ModelContext* context, Set* rval);
 	Set* calculateSetValue(ModelContext* context);
-	double calculateParamValue(hash_map<string, string>& dummyMap, hash_map<string, ModelComp*>& paramIndicies, ModelContext* context);
-	bool evalBool(hash_map<string, string>& dummyMap, hash_map<string, ModelComp*>& paramIndicies, ModelContext* context);
-	double evalTerm(hash_map<string, string>& dummyMap, hash_map<string, ModelComp*>& paramIndicies, ModelContext* context);
+//	Set* calculateTempSet(ModelContext* context);
+//	void calculateParamValue(ModelContext* context,double&);
+//	void calculateParamValue(ModelContext* context,string&);
+	void calculateVarDimCard(ModelContext* ctx, uint& dim, uint& card);
+	void calculateVarBounds(ModelContext* ctx, double& upper, double& lower);
+	void calculateConCard(ModelContext* ctx,int& card);
 	double evalRhs(ModelContext* context);
 //	double evalDiff(ModelContext* rowContext, ModelContext* colContext, ModelComp* varComp, string& varKey);
 //	void evalDiff(ModelContext* rowContext, ModelContext* colContext, vector<double>& jcobs);
@@ -178,14 +150,15 @@ public:
 //	void plusVector(vector<double>& left, vector<double>& right, vector<double>& result);
 //	void minusVector(vector<double>& left, vector<double>& right, vector<double>& result);
 //	void negateVector(vector<double>& v);
-	void calcSumSetComp(ModelContext* context, IndexSet** aSet);
-	void calculateCompsDummyNames(ModelContext* context, IndexSet* iset);
-	void calculateIndexSet(ModelContext* context, IndexSet* iset);
+//	void calcSumSetComp(ModelContext* context, IndexSet** aSet);
+//	void calculateCompsDummyNames(ModelContext* context, IndexSet* iset);
+//	void calculateIndexSet(ModelContext* context, IndexSet* iset);
 //	string setOrgSetComp(ModelComp** orgSetComp);
 	bool evalBool(ModelContext* context);
-	double evalTerm(ModelContext* context);
-	Set* evalSet(ModelContext* context);
+	void evalTerm(ModelContext* context,PValue**);
+	IndexSet* createIndexSet(ModelContext* context);
 	string printVector(vector<double>&v);
+//	void evalTerm(ModelContext* context,string&);
 
 //	void calcVarDefinedLevels(set<int>& levels);
 //	void calcSeparability(int level, set<int>& deps);
@@ -194,8 +167,9 @@ public:
 //	Node* constructAutoDiffNode(ModelContext* ctx, Block* emb);
 //	bool isContainVariablesInEm2(ModelContext* ctx,ExpandedModel* emcol);
 
-	void calculatePartialConstraints(hash_map<int,SyntaxNode*>&);
-	AutoDiff::Node* createAutoDiffConsDAG(ExpandedModel* emrow,ExpandedModel* emcol,unordered_map<string,AutoDiff::Node*>& varMap,int mode);
+	void calculatePartialConstraints(boost::unordered_map<int,SyntaxNode*>&);
+	SyntaxNode* moveConsToLeft();
+	AutoDiff::Node* createAutoDiffConsDAG(ExpandedModel* emrow,ExpandedModel* emcol,int mode);
 
 	void calculateBaseValueVector(unsigned long& size);
 	virtual void calculateMemoryUsage(unsigned long& size);
@@ -203,24 +177,65 @@ public:
 
 
 	static SyntaxNode *findKeywordinTree(SyntaxNode *root, int oc);
-	static SyntaxNode* find_var_ref_in_context(AmplModel *context, SyntaxNode *ref);
+	static SyntaxNode* find_var_ref_in_context(AmplModel* context, SyntaxNode *ref);
 	static SyntaxNode* find_var_ref_in_indexing(const std::string& name);
-	static string print_SyntaxNodesymb(const SyntaxNode *node);
 
 private:
 	static SyntaxNode* findSyntaxNodeChild(SyntaxNode* node, int op);
 	bool isDepend(vector<ModelComp*> varComps);
 	void handleSum(ModelContext* rowContext, vector<double>& jcobs, ModelContext* colContext);
-	void foreachSetValue(vector<ModelComp*> comps, vector<string>& dummyVars, Set* aSet, ModelContext* rowContext, vector<double>& jcobs, ModelContext* colContext);
-	static void getIndiciesKey(string& varKey, SyntaxNodeIDREF* refn, ModelContext* rowContext);
+	void foreachSetValue(vector<ModelComp*> comps, vector<string>& dummyVars, SetSimple* aSet, ModelContext* rowContext, vector<double>& jcobs, ModelContext* colContext);
+	void getIndiciesKey(ModelContext* ctx,string& varKey);
 	static bool isContainsInEm2(string& varKey, ExpandedModel* em);
-	OPCODE opCodeTranslateToAutoDiffOp(int opCode);
+	AutoDiff::OPCODE opCodeTranslateToAutoDiffOp(int opCode);
+	AutoDiff::Node* createAutoDiffConIDREF(int mode, ModelContext* ctx);
 };
 
 
-std::ostream& operator<<(std::ostream& s, const SyntaxNode &node);
-std::ostream& operator<<(std::ostream& s, const SyntaxNode *node);
+std::ostream& operator<<(std::ostream& s, SyntaxNode &node);
+std::ostream& operator<<(std::ostream& s, SyntaxNode *node);
 
 // Routines taken from ampl.h
 
 #endif /* SYNTAXNODE1_H_ */
+
+
+
+//legacy !!
+
+//	void getIDREFIndiciesKey(ModelContext* ctx,string& varKey);
+
+//	// node is a dummy var -> remove (..)
+//	std::string printDummyVar() ;
+//
+//	/** Return comma separated list of arguments for IDREF nodes */
+//	std::string getArgumentList() const;
+
+//	/** Find all the IDREF nodes at or below the current node */
+//	virtual void findIDREF(std::list<ModelComp*>& lmc) const;
+//
+//	/** Find all the IDREF nodes at or below the current node */
+//	virtual void findIDREF(std::list<SyntaxNode*> *lnd);
+//
+//	/** Find all nodes of opCode @a oc at or below the current node */
+//	virtual void findOpCode(int oc, std::list<SyntaxNode*> *lnd);
+
+//	/** Find the ModelComp (if it exists) referred to by this SyntaxNode.
+//	 *
+//	 *  If the expression given by this SyntaxNode is an immediate reference to
+//	 *  a ModelComp then return that, otherwise return NULL.
+//	 */
+//	ModelComp *findModelComp() const;
+
+//	/** Creates a deep copy of the nodes: SyntaxNodes pointed to are recreated
+//	 *  as well.
+//	 *
+//	 *  Non-SyntaxNode objects pointed to are not recreated, here just pointers
+//	 *  are copied (->ref in the case of a SyntaxNodeIDREF object).
+//	 *  The int/double entries pointed to by INT_VAL/FLOAT_VAL SyntaxNodes *are*
+//	 *  recreated.
+//	 */
+//	virtual SyntaxNode *deep_copy();
+//
+//	/** Creates a copy of the node, reusing the pointer in the current node */
+//	virtual SyntaxNode *clone();

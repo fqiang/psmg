@@ -45,20 +45,15 @@ class SyntaxNodeIDREF : public SyntaxNode {
  public:
 
   /** Default constructor */
-  SyntaxNodeIDREF(ModelComp *r=NULL, SyntaxNode *val1=NULL);
+  SyntaxNodeIDREF(int opCode,  SyntaxNode *val1=NULL, ModelComp *r=NULL);
 
   /** Constructor */
   SyntaxNodeIDREF(int opCode, ModelComp *r);
 
   virtual ~SyntaxNodeIDREF();
 
-  /** Creates a shallow copy: points to the same components as the original */
-  SyntaxNodeIDREF *clone();
 
-  /** Creates a copy using all new datastructures (does not duplicate ref) */
-  SyntaxNodeIDREF *deep_copy();
-
-  std::ostream& put(std::ostream& s) const;
+  std::ostream& put(std::ostream& s);
 
   /** Retrieve the level of the parent stage */
   int getStochParent() const { return stochparent; }
@@ -66,9 +61,15 @@ class SyntaxNodeIDREF : public SyntaxNode {
   /** Set the level of the parent stage */
   void setStochParent(int parent) { stochparent = parent; }
 
-  ModelComp* getModelComp() const { return ref; }
-
   virtual void calculateMemoryUsage(unsigned long& size);
 };
 
 #endif /* SYNTAXNODEIDREF_H_ */
+
+
+///** Creates a shallow copy: points to the same components as the original */
+//SyntaxNodeIDREF *clone();
+//
+///** Creates a copy using all new datastructures (does not duplicate ref) */
+//SyntaxNodeIDREF *deep_copy();
+

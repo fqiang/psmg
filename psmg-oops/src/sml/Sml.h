@@ -38,8 +38,10 @@ public:
 	void resetContextTree();
 	void formulateConstraints();
 	void printEMStructure(string filename);
-	void testRecursiveCreateEMB0(ExpandedModel* root,ExpandedModel* other);
-	void testRecursiveCreateEMB1(ExpandedModel* root);
+	void testInterfaceLocal0(ExpandedModel* root,ExpandedModel* other);
+	void testInterfaceLocal1(ExpandedModel* emrow,ExpandedModel* emcol);
+	void testInterfaceLocal2(ExpandedModel* emrow);
+	void testInterfaceLocal(ExpandedModel* root);
 
 private:
 	Sml();

@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
-#ifndef COMPDESCR
-#define COMPDESCR
+#ifndef COMPDESCR_H_
+#define COMPDESCR_H_
 
 #include <string>
 
@@ -31,8 +31,8 @@ using namespace std;
 class CompDescr{
  public:
   virtual ~CompDescr(){};
-  virtual std::string toString() const = 0;
+  virtual std::string toString() = 0;
   virtual void calculateMemoryUsage(unsigned long& size) = 0;
 };
 
-#endif
+#endif /* COMPDESCR_H_ */

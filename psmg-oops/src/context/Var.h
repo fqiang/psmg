@@ -1,39 +1,46 @@
 /*
  * Var.h
  *
- *  Created on: 11 Oct 2011
+ *  Created on: 25 Mar 2014
  *      Author: s0965328
  */
 
 #ifndef VAR_H_
 #define VAR_H_
 
-#include <ext/hash_map>
-#include <string>
-#include <limits>
+
+#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/random_access_index.hpp>
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/member.hpp>
+
+
+#include "VarSingle.h"
+#include "CompDescr.h"
+#include "../util/global_util_functions.h"
 
 using namespace std;
-using namespace __gnu_cxx;
+using namespace boost;
+using namespace boost::multi_index;
 
-#define D_POS_INFI std::numeric_limits<double>::infinity()
-#define D_NEG_INFI -std::numeric_limits<double>::infinity()
-#define D_NaN std::numeric_limits<double>::quiet_NaN()
-class Var {
+typedef multi_index_container<VarSingle,
+		indexed_by<
+			random_access<>,
+			hashed_unique<  member<VarSingle, string, &VarSingle::indicies> >
+		>
+> var_multi_map;
+
+typedef var_multi_map::nth_index<0>::type var_multi_map_by_order;
+typedef var_multi_map::nth_index<1>::type var_multi_map_by_indicies;
+
+class Var : public CompDescr {
 public:
-	string name;
-	int  card;
-	int numIndicies;  //number of indicies for this var declaration
-	double ub;
-	double lb;
-	vector<string> indicies;
-	vector<double> values;
-
-	Var(string name_,int card_, int numInd_, double ub_, double lb_);
+	Var(string&);
 	virtual ~Var();
 
-	void addVarValue(ostringstream& oss);
-	void addVarValue(vector<string>& ind);
-	int getCard();
+	string name;
+	var_multi_map varMultiMap;
+
 	string toString();
 	void calculateMemoryUsage(unsigned long& size);
 };
