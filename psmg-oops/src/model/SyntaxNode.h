@@ -170,7 +170,7 @@ public:
 
 	void calculatePartialConstraints(boost::unordered_map<int,SyntaxNode*>&);
 	SyntaxNode* moveConsToLeft();
-	AutoDiff::Node* createAutoDiffConsDAG(ExpandedModel* emrow,ExpandedModel* emcol);
+	AutoDiff::Node* buildAutoDiffDAG(ExpandedModel* emrow,ExpandedModel* emcol);
 
 	void calculateBaseValueVector(unsigned long& size);
 	virtual void calculateMemoryUsage(unsigned long& size);

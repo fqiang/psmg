@@ -1280,7 +1280,7 @@ AutoDiff::Node* SyntaxNode::createAutoDiffConIDREF(ModelContext* ctx)
 		}
 		else {
 			LOG("can't find AutoDiff var in ["<<var->name<<"] for varIndex["<<varIndex<<"]");
-			LOG("please check the model!")
+			LOG("please check the model!");
 		}
 	}
 	else {
@@ -1318,14 +1318,14 @@ AutoDiff::Node* SyntaxNode::createAutoDiffConIDREF(ModelContext* ctx)
 //	3.	Finally, the string name of dummy variable declared in the sum indexing expression should be the
 //		same as the string name of dummy variable used in the emcol's model index expression.
 //		This condition is placed intentionally so that the modeller will be able explictly enable this optimization routine.
-AutoDiff::Node* SyntaxNode::createAutoDiffConsDAG(ExpandedModel* emrow,ExpandedModel* emcol)
+AutoDiff::Node* SyntaxNode::buildAutoDiffDAG(ExpandedModel* emrow,ExpandedModel* emcol)
 {
 	LOG("enter - createAutoDiffConsDAG  - emrow["<<emrow->name<<"] emcol["<<emcol->name<<"] --- "<<this->print());
 	ModelContext* ctx = emrow->ctx;
 	AutoDiff::Node* con = NULL;
 	if(this->opCode==ASSIGN)
 	{
-		con = this->values[0]->createAutoDiffConsDAG(emrow,emcol);
+		con = this->values[0]->buildAutoDiffDAG(emrow,emcol);
 	}
 	else if(this->opCode == IDREF)
 	{
@@ -1365,7 +1365,7 @@ AutoDiff::Node* SyntaxNode::createAutoDiffConsDAG(ExpandedModel* emrow,ExpandedM
 		{
 			LOG("SUM over {"<<dummySum<<" in "<<compSum->name<<"} -- Emcol over {"<<dummyEmcol<<" in "<<compEmcol->name<<"}");
 			ctx->addDummyCompValueMapTemp(dummySum, compSum, (emcol->dummyValueMap.begin())->second);
-			con = this->values[1]->createAutoDiffConsDAG(emrow,emcol);
+			con = this->values[1]->buildAutoDiffDAG(emrow,emcol);
 			ctx->removeDummySetValueMapTemp(dummySum);
 		}
 		else
@@ -1402,7 +1402,7 @@ AutoDiff::Node* SyntaxNode::createAutoDiffConsDAG(ExpandedModel* emrow,ExpandedM
 				string value = *setv;
 				ModelComp* comp = iset->dummyCompMap.find(dummy)->second;
 				ctx->addDummyCompValueMapTemp(dummy, comp, value);
-				AutoDiff::Node* n = this->values[1]->createAutoDiffConsDAG(emrow,emcol);
+				AutoDiff::Node* n = this->values[1]->buildAutoDiffDAG(emrow,emcol);
 				assert(n!=NULL);
 				nodes.push(n);
 				ctx->removeDummySetValueMapTemp(dummy);
@@ -1439,14 +1439,14 @@ AutoDiff::Node* SyntaxNode::createAutoDiffConsDAG(ExpandedModel* emrow,ExpandedM
 		if(this->values.size()==1)
 		{
 			assert(this->values[0]!=NULL);
-			AutoDiff::Node* left = this->values[0]->createAutoDiffConsDAG(emrow,emcol);
+			AutoDiff::Node* left = this->values[0]->buildAutoDiffDAG(emrow,emcol);
 			con = create_uary_op_node(AutoDiff::OP_NEG,left);
 		}
 		else
 		{
 			assert(this->values.size()==2);
-			AutoDiff::Node* left = this->values[0]->createAutoDiffConsDAG(emrow,emcol);
-			AutoDiff::Node* right = this->values[1]->createAutoDiffConsDAG(emrow,emcol);
+			AutoDiff::Node* left = this->values[0]->buildAutoDiffDAG(emrow,emcol);
+			AutoDiff::Node* right = this->values[1]->buildAutoDiffDAG(emrow,emcol);
 			con = create_binary_op_node(AutoDiff::OP_MINUS,left,right);
 		}
 	}
@@ -1455,47 +1455,47 @@ AutoDiff::Node* SyntaxNode::createAutoDiffConsDAG(ExpandedModel* emrow,ExpandedM
 		if(this->values.size()==1)
 		{
 			assert(this->values[0]!=NULL);
-			con = this->values[0]->createAutoDiffConsDAG(emrow,emcol);
+			con = this->values[0]->buildAutoDiffDAG(emrow,emcol);
 		}
 		else
 		{
 			assert(this->values.size()==2);
-			AutoDiff::Node* left = this->values[0]->createAutoDiffConsDAG(emrow,emcol);
-			AutoDiff::Node* right = this->values[1]->createAutoDiffConsDAG(emrow,emcol);
+			AutoDiff::Node* left = this->values[0]->buildAutoDiffDAG(emrow,emcol);
+			AutoDiff::Node* right = this->values[1]->buildAutoDiffDAG(emrow,emcol);
 			con = create_binary_op_node(AutoDiff::OP_PLUS,left,right);
 		}
 	}
 	else if(this->opCode == TIMES)
 	{
 		assert(this->nchild()==2);
-		AutoDiff::Node* left = this->values[0]->createAutoDiffConsDAG(emrow,emcol);
-		AutoDiff::Node* right = this->values[1]->createAutoDiffConsDAG(emrow,emcol);
+		AutoDiff::Node* left = this->values[0]->buildAutoDiffDAG(emrow,emcol);
+		AutoDiff::Node* right = this->values[1]->buildAutoDiffDAG(emrow,emcol);
 		con = create_binary_op_node(AutoDiff::OP_TIMES,left,right);
 	}
 	else if(this->opCode == DIVID)
 	{
 		assert(this->nchild()==2);
-		AutoDiff::Node* left = this->values[0]->createAutoDiffConsDAG(emrow,emcol);
-		AutoDiff::Node* right = this->values[1]->createAutoDiffConsDAG(emrow,emcol);
+		AutoDiff::Node* left = this->values[0]->buildAutoDiffDAG(emrow,emcol);
+		AutoDiff::Node* right = this->values[1]->buildAutoDiffDAG(emrow,emcol);
 		con = create_binary_op_node(AutoDiff::OP_DIVID,left,right);
 	}
 	else if(this->opCode == POWER)
 	{
 		assert(this->nchild()==2);
-		AutoDiff::Node* left = this->values[0]->createAutoDiffConsDAG(emrow,emcol);
-		AutoDiff::Node* right = this->values[1]->createAutoDiffConsDAG(emrow,emcol);
+		AutoDiff::Node* left = this->values[0]->buildAutoDiffDAG(emrow,emcol);
+		AutoDiff::Node* right = this->values[1]->buildAutoDiffDAG(emrow,emcol);
 		con = AutoDiff::create_binary_op_node(AutoDiff::OP_POW,left,right);
 	}
 	else if(this->opCode == COS)
 	{
 		assert(this->nchild()==1);
-		AutoDiff::Node* left = this->values[0]->createAutoDiffConsDAG(emrow,emcol);
+		AutoDiff::Node* left = this->values[0]->buildAutoDiffDAG(emrow,emcol);
 		con = AutoDiff::create_uary_op_node(AutoDiff::OP_COS,left);
 	}
 	else if(this->opCode == SIN)
 	{
 		assert(this->nchild()==1);
-		AutoDiff::Node* left = this->values[0]->createAutoDiffConsDAG(emrow,emcol);
+		AutoDiff::Node* left = this->values[0]->buildAutoDiffDAG(emrow,emcol);
 		con = AutoDiff::create_uary_op_node(AutoDiff::OP_SIN,left);
 	}
 	else
