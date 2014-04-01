@@ -35,7 +35,7 @@ public:
 	boost::unordered_map<string,string> dummyValueMapTemp;
 
 	//! temporary IndexSet storage - mainly for sum{...} node
-	boost::unordered_map<string,IndexSet*> tempISetMap;
+	boost::unordered_map<SyntaxNode*,IndexSet*> tempISetMap;
 
 	ModelContext(ModelContext* par);
 	virtual ~ModelContext();
@@ -52,8 +52,8 @@ public:
 	void fillDummyValue(ostringstream&);
 
 
-	bool getCalcSumSet(string& hashKey,IndexSet** iset);
-	void addCalcSumSet(string& hashKey,IndexSet* iset);
+	bool getCalcSumSet(SyntaxNode*,IndexSet** iset);
+	void addCalcSumSet(SyntaxNode*,IndexSet* iset);
 
 	void calculateMemoryUsage(unsigned long& size);
 };

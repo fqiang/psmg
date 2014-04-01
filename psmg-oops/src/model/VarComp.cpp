@@ -68,6 +68,7 @@ void VarComp::calculateVarComp(ModelContext* ctx)
 			var->varMultiMap.push_back(VarSingle(*it,upper,lower,v));
 			ctx->removeDummySetValueMapTemp(dummy);
 		}
+		delete iset;
 	}
 	else
 	{

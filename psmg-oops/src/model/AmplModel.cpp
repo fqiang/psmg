@@ -103,7 +103,11 @@ void AmplModel::formulateConstraints()
 	for(vector<ConsComp*>::iterator it = con_comps.begin();it!=con_comps.end();it++)
 	{
 		assert((*it)->type==TCON);
-		(*it)->moveConsToLeft();
+
+		//this method is not yet tested
+		// to move the parameter to righ-hand-side and move variables to left-hand-side
+		// so the RHS can be evaluated as a constant upper-lower bound for the constraint
+		//(*it)->moveConsToLeft();
 
 		//for distribute Interface call - we will need to compuate the partial constraint according to each level of intersection model
 		//level -1 - indicate the constant only level;
