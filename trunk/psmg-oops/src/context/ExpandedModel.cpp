@@ -479,7 +479,7 @@ BlockCons* ExpandedModel::getConsBlockLocal(ExpandedModel* emcol)
 					LOG(" constraint - ["<<conName<<"]");
 					//now, build autodiff constraint
 					SyntaxNode* assgin_expr = attribute->findChildNode(ASSIGN);
-					Node* acon = assgin_expr->createAutoDiffConsDAG(this,emcol);
+					Node* acon = assgin_expr->buildAutoDiffDAG(this,emcol);
 					assert(acon!=NULL);
 					emb->cons.push_back(acon);
 					this->ctx->removeDummySetValueMapTemp(dummy);
@@ -493,7 +493,7 @@ BlockCons* ExpandedModel::getConsBlockLocal(ExpandedModel* emcol)
 				LOG(" constraint - ["<<conName<<"]");
 				//now, build autodiff constraint
 				SyntaxNode* assgin_expr = attribute->findChildNode(ASSIGN);
-				Node* acon = assgin_expr->createAutoDiffConsDAG(this,emcol);
+				Node* acon = assgin_expr->buildAutoDiffDAG(this,emcol);
 				assert(acon!=NULL);
 				emb->cons.push_back(acon);
 			}
@@ -539,7 +539,7 @@ BlockObj* ExpandedModel::getObjBlockLocal(ExpandedModel* emcol)
 		string conName = objcomp->name;
 		LOG(" constraint - ["<<conName<<"]");
 		//now, build autodiff constraint node for object constraint
-		Node* obj = attribute->createAutoDiffConsDAG(this,emcol);
+		Node* obj = attribute->buildAutoDiffDAG(this,emcol);
 		ob->objective = obj;
 
 		if(GV(debug)){
@@ -1083,7 +1083,7 @@ BlockCons* ExpandedModel::createConsBlockDistributed(ExpandedModel* emcol)
 				AutoDiff::Node* acon = NULL;
 				if(attribute!=NULL)
 				{
-					acon = attribute->createAutoDiffConsDAG(this,emcol);
+					acon = attribute->buildAutoDiffDAG(this,emcol);
 				}
 				emb->cons.push_back(acon);
 				this->ctx->removeDummySetValueMapTemp(dummy);
@@ -1099,7 +1099,7 @@ BlockCons* ExpandedModel::createConsBlockDistributed(ExpandedModel* emcol)
 			AutoDiff::Node* acon = NULL;
 			if(attribute!=NULL)
 			{
-				acon = attribute->createAutoDiffConsDAG(this,emcol);
+				acon = attribute->buildAutoDiffDAG(this,emcol);
 			}
 			emb->cons.push_back(acon);
 		}
