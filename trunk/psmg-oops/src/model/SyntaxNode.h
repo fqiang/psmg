@@ -141,6 +141,7 @@ public:
 //	void calculateParamValue(ModelContext* context,string&);
 	void calculateVarDimCard(ModelContext* ctx, uint& dim, uint& card);
 	void calculateVarBounds(ModelContext* ctx, double& upper, double& lower);
+	void calculateConsBounds(ModelContext* ctx, double& upper, double& lower);
 	void calculateConCard(ModelContext* ctx,int& card);
 	double evalRhs(ModelContext* context);
 //	double evalDiff(ModelContext* rowContext, ModelContext* colContext, ModelComp* varComp, string& varKey);
@@ -169,26 +170,26 @@ public:
 
 	void calculatePartialConstraints(boost::unordered_map<int,SyntaxNode*>&);
 	SyntaxNode* moveConsToLeft();
-	AutoDiff::Node* createAutoDiffConsDAG(ExpandedModel* emrow,ExpandedModel* emcol,int mode);
+	AutoDiff::Node* createAutoDiffConsDAG(ExpandedModel* emrow,ExpandedModel* emcol);
 
 	void calculateBaseValueVector(unsigned long& size);
 	virtual void calculateMemoryUsage(unsigned long& size);
 	//end Feng
 
+	SyntaxNode* findChildNode(int op);
 
-	static SyntaxNode *findKeywordinTree(SyntaxNode *root, int oc);
-	static SyntaxNode* find_var_ref_in_context(AmplModel* context, SyntaxNode *ref);
-	static SyntaxNode* find_var_ref_in_indexing(const std::string& name);
+//	static SyntaxNode *findKeywordinTree(SyntaxNode *root, int oc);
+//	static SyntaxNode* find_var_ref_in_context(AmplModel* context, SyntaxNode *ref);
+//	static SyntaxNode* find_var_ref_in_indexing(const std::string& name);
 
 private:
-	static SyntaxNode* findSyntaxNodeChild(SyntaxNode* node, int op);
 	bool isDepend(vector<ModelComp*> varComps);
 	void handleSum(ModelContext* rowContext, vector<double>& jcobs, ModelContext* colContext);
 	void foreachSetValue(vector<ModelComp*> comps, vector<string>& dummyVars, SetSimple* aSet, ModelContext* rowContext, vector<double>& jcobs, ModelContext* colContext);
 	void getIndiciesKey(ModelContext* ctx,string& varKey);
 	static bool isContainsInEm2(string& varKey, ExpandedModel* em);
 	AutoDiff::OPCODE opCodeTranslateToAutoDiffOp(int opCode);
-	AutoDiff::Node* createAutoDiffConIDREF(int mode, ModelContext* ctx);
+	AutoDiff::Node* createAutoDiffConIDREF(ModelContext* ctx);
 };
 
 

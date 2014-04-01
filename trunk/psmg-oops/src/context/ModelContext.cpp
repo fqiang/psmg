@@ -11,6 +11,7 @@
 #include "ModelContext.h"
 #include "ExpandedModel.h"
 #include "SetSimple.h"
+#include "../model/SyntaxNode.h"
 #include "../model/ModelComp.h"
 #include "../util/global_util_functions.h"
 
@@ -28,13 +29,19 @@ ModelContext::ModelContext(ModelContext* par):
 
 ModelContext::~ModelContext()
 {
-	if(!em){
-		LOG("Delete ModelContext[NULL]");
-	}
-	else
+	LOG("Delete ModelContext["<<em->name<<"]");
+
+	//must delete IndexSet before CompDescr* map
+	//because IndexSet only delete a Set if its name == "TMP_" , once the CompDescr* deleted
+	//it is not possible for IndexSet to test name=="TMP_" for the set already deleted
+	for(boost::unordered_map<SyntaxNode*,IndexSet*>::iterator it=tempISetMap.begin();it!=tempISetMap.end();it++)
 	{
-		LOG("Delete ModelContext["<<em->name<<"]");
+		LOG("Deleting -------  IndexSet in Context"<<this->getContextId()<<" -- ["<<(*it).first->print()<<"]");
+		delete it->second;
 	}
+	tempISetMap.clear();
+
+	//delete CompDescr* map after IndexSet map
 	for(boost::unordered_map<ModelComp*,CompDescr*>::iterator it=compValueMap.begin();it!=compValueMap.end();it++)
 	{
 		delete it->second;
@@ -42,12 +49,6 @@ ModelContext::~ModelContext()
 	compValueMap.clear();
 	dummyCompMapTemp.clear();
 	dummyValueMapTemp.clear();
-
-	for(boost::unordered_map<string,IndexSet*>::iterator it=tempISetMap.begin();it!=tempISetMap.end();it++)
-	{
-		delete it->second;
-	}
-	tempISetMap.clear();
 }
 
 string ModelContext::getContextId()
@@ -140,11 +141,11 @@ void ModelContext::addCompValueMap(ModelComp* comp,CompDescr* value)
 	assert(ret.second);
 }
 
-bool ModelContext::getCalcSumSet(string& hashKey,IndexSet** iset)
+bool ModelContext::getCalcSumSet(SyntaxNode* key,IndexSet** iset)
 {
 	bool rval = false;
-	LOG("getCalcTempSet -- look for hashKey["<<hashKey<<"] ");
-	boost::unordered_map<string,IndexSet* >::iterator it_iset = this->tempISetMap.find(hashKey);
+	LOG("getCalcTempSet -- look for hashKey["<<key->print()<<"] ");
+	boost::unordered_map<SyntaxNode*,IndexSet* >::iterator it_iset = this->tempISetMap.find(key);
 	if(it_iset!=this->tempISetMap.end())
 	{
 		rval = true;
@@ -154,14 +155,14 @@ bool ModelContext::getCalcSumSet(string& hashKey,IndexSet** iset)
 }
 
 //
-void ModelContext::addCalcSumSet(string& hashKey,IndexSet* iset)
+void ModelContext::addCalcSumSet(SyntaxNode* key,IndexSet* iset)
 {
-	LOG("addCalcSumSet  hashkey["<<hashKey<<"] -- set -- "+iset->toString());
+	LOG("addCalcSumSet  hashkey["<<key->print()<<"] -- set -- "+iset->toString());
 
-	boost::unordered_map<string,IndexSet* >::iterator it_mcs = this->tempISetMap.find(hashKey);
+	boost::unordered_map<SyntaxNode*,IndexSet* >::iterator it_mcs = this->tempISetMap.find(key);
 	assert(it_mcs==this->tempISetMap.end()); //must not already exist
 
-	this->tempISetMap[hashKey] = iset;
+	this->tempISetMap[key] = iset;
 }
 
 void ModelContext::fillDummyValue(vector<string>& index)
@@ -213,10 +214,9 @@ void ModelContext::calculateMemoryUsage(unsigned long& size)
 	}
 
 
-	for(boost::unordered_map<string,IndexSet*>::iterator it = tempISetMap.begin();it!=tempISetMap.end();it++)
+	for(boost::unordered_map<SyntaxNode*,IndexSet*>::iterator it = tempISetMap.begin();it!=tempISetMap.end();it++)
 	{
-		size += sizeof(pair<string,IndexSet*>);
-		size += (*it).first.size() + 1;
+		size += sizeof(pair<SyntaxNode*,IndexSet*>);
 		(*it).second->calculateMemoryUsage(size);
 	}
 }

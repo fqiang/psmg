@@ -17,6 +17,7 @@
 #include "VarSingle.h"
 #include "../model/ObjComp.h"
 #include "../parser/sml.tab.h"
+#include <boost/foreach.hpp>
 #include <cassert>
 #include <iomanip>
 #include <list>
@@ -146,7 +147,7 @@ void ExpandedModel::cons_jacobs_local(ExpandedModel *emcol, boost::numeric::ubla
 	uint currcol = 0;
 	BOOST_FOREACH(ExpandedModel* em, emb->block->ems)
 	{
-		LOG("em["<<em->name);
+		LOG("em["<<em->name<<"]");
 		if(em == emcol) {
 			colstart = currcol;
 		}
@@ -224,7 +225,7 @@ void ExpandedModel::cons_hess_local(ExpandedModel* emcol, boost::numeric::ublas:
 	uint currvar = 0;
 	BOOST_FOREACH(ExpandedModel* em, emb->block->ems)
 	{
-		LOG("em["<<em->name);
+		LOG("em["<<em->name<<"]");
 		if(em == emcol) {
 			colstart = currvar;
 		}
@@ -445,7 +446,7 @@ void ExpandedModel::obj_hess_local(ExpandedModel* emcol, boost::numeric::ublas::
 //of the emcol will be used for creating the computation graph.
 BlockCons* ExpandedModel::getConsBlockLocal(ExpandedModel* emcol)
 {
-	LOG("enter - createConsBlockLocal - this em["<<this->name<<"] x em["<<emcol->name<<"]");
+	LOG("enter - getConsBlockLocal - this em["<<this->name<<"] x em["<<emcol->name<<"]");
 	assert(this!=emcol || (this->model->level == emcol->model->level && this==emcol)); //the diagonal block
 	boost::unordered_map<ExpandedModel*,BlockCons* >::iterator it=cblockMap_lo.find(emcol);
 	BlockCons* emb = NULL;
@@ -477,11 +478,13 @@ BlockCons* ExpandedModel::getConsBlockLocal(ExpandedModel* emcol)
 					string conName = con->name + "_" + value;
 					LOG(" constraint - ["<<conName<<"]");
 					//now, build autodiff constraint
-					Node* acon = attribute->createAutoDiffConsDAG(this,emcol,1);
+					SyntaxNode* assgin_expr = attribute->findChildNode(ASSIGN);
+					Node* acon = assgin_expr->createAutoDiffConsDAG(this,emcol);
 					assert(acon!=NULL);
 					emb->cons.push_back(acon);
 					this->ctx->removeDummySetValueMapTemp(dummy);
 				}
+				delete iset;
 			}
 			else
 			{
@@ -489,7 +492,8 @@ BlockCons* ExpandedModel::getConsBlockLocal(ExpandedModel* emcol)
 				string conName = con->name + "_";
 				LOG(" constraint - ["<<conName<<"]");
 				//now, build autodiff constraint
-				Node* acon = attribute->createAutoDiffConsDAG(this,emcol,1);
+				SyntaxNode* assgin_expr = attribute->findChildNode(ASSIGN);
+				Node* acon = assgin_expr->createAutoDiffConsDAG(this,emcol);
 				assert(acon!=NULL);
 				emb->cons.push_back(acon);
 			}
@@ -507,7 +511,7 @@ BlockCons* ExpandedModel::getConsBlockLocal(ExpandedModel* emcol)
 		}
 		cblockMap_lo.insert(pair<ExpandedModel*,BlockCons*>(emcol,emb));
 	}
-	LOG("exit - createConsBlockLocal - row["<<this->name<<"] X col["<<emcol->name<<"] -- ncon["<<emb->cons.size()<<"] nvar["<<emcol->numLocalVars<<"]");
+	LOG("exit - getConsBlockLocal - row["<<this->name<<"] X col["<<emcol->name<<"] -- ncon["<<emb->cons.size()<<"] nvar["<<emcol->numLocalVars<<"]");
 	return emb;
 }
 
@@ -535,8 +539,7 @@ BlockObj* ExpandedModel::getObjBlockLocal(ExpandedModel* emcol)
 		string conName = objcomp->name;
 		LOG(" constraint - ["<<conName<<"]");
 		//now, build autodiff constraint node for object constraint
-		Node* obj = NULL;
-		obj = attribute->createAutoDiffConsDAG(this,emcol,1);
+		Node* obj = attribute->createAutoDiffConsDAG(this,emcol);
 		ob->objective = obj;
 
 		if(GV(debug)){
@@ -674,22 +677,38 @@ ExpandedModel::getRowBounds
  *  @param[out] upper
  *              The upper bounds on the constraints.
  *
- *  The method is simply a wrapper around NlFile::getRowBoundsAMPL().
+ *  TODO: purhapse to record the constraint bounds information in a Con , SinglCon classes.
+ *  Just like how we stores variables as Var, SingleVar class.
  */
 void ExpandedModel::get_local_cons_bounds(double *lower, double *upper)
 {
 	LOG("getRowBounds -- ["<<this->name<<"]");
-	assert(false);  // equality constraint only for now
-//	assert(rhss.size() == this->numLocalCons);
-//	std::vector<double>::iterator it = this->rhss.begin();
-//
-//	for(int i=0;it!=this->rhss.end();it++,i++)
-//	{
-//		lower[i]=*it;
-//		upper[i]=*it;
-//		LOG(i<<"th row lower=["<<lower[i]<<"] upper=["<<upper[i]<<"]");
-//	}
-//	rhss.clear();
+	uint i = 0;
+	BOOST_FOREACH(ConsComp* con, this->model->con_comps)
+	{
+		SyntaxNode* indexing = con->indexing;
+		if(indexing!=NULL)
+		{
+			IndexSet* iset = indexing->createIndexSet(ctx);
+			assert(iset->dummyCompMap.size()==1); // support one dim indexing set only
+			SetComp* setcomp = iset->dummyCompMap.begin()->second;
+			Set* indset = iset->dummySetMap.begin()->second;
+			string dummy = iset->dummySetMap.begin()->first;
+			BOOST_FOREACH(string& val, indset->setValues_data_order)
+			{
+				this->ctx->addDummyCompValueMapTemp(dummy,setcomp,val);
+				con->attributes->calculateConsBounds(ctx,lower[i],upper[i]);
+				this->ctx->removeDummySetValueMapTemp(dummy);
+				i++;
+			}
+			delete iset;
+		}
+		else
+		{
+			con->attributes->calculateConsBounds(ctx,lower[i],upper[i]);
+			i++;
+		}
+	}
 }
 
 void ExpandedModel::get_local_cons_names(std::vector<string>& names)
@@ -715,6 +734,7 @@ void ExpandedModel::get_local_cons_names(std::vector<string>& names)
 				oss<<"-"<<con->name<<"_"<<*itset;
 				names.push_back(oss.str());
 			}
+			delete iset;
 		}
 		else
 		{
@@ -1063,11 +1083,12 @@ BlockCons* ExpandedModel::createConsBlockDistributed(ExpandedModel* emcol)
 				AutoDiff::Node* acon = NULL;
 				if(attribute!=NULL)
 				{
-					acon = attribute->createAutoDiffConsDAG(this,emcol,0);
+					acon = attribute->createAutoDiffConsDAG(this,emcol);
 				}
 				emb->cons.push_back(acon);
 				this->ctx->removeDummySetValueMapTemp(dummy);
 			}
+			delete iset;
 		}
 		else
 		{
@@ -1078,7 +1099,7 @@ BlockCons* ExpandedModel::createConsBlockDistributed(ExpandedModel* emcol)
 			AutoDiff::Node* acon = NULL;
 			if(attribute!=NULL)
 			{
-				acon = attribute->createAutoDiffConsDAG(this,emcol,0);
+				acon = attribute->createAutoDiffConsDAG(this,emcol);
 			}
 			emb->cons.push_back(acon);
 		}

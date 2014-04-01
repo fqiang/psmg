@@ -5,9 +5,13 @@
  *      Author: s0965328
  */
 
+#include <boost/foreach.hpp>
 #include "ConsComp.h"
 #include "SyntaxNode.h"
 #include "AmplModel.h"
+
+//always include sml.tab.h at last
+#include "../parser/sml.tab.h"
 
 ConsComp::ConsComp(const string& id, SyntaxNode* index, SyntaxNode* attr): ModelComp(id,TCON,index, attr),card(0)
 //	moveUpLevel(0)
@@ -33,8 +37,16 @@ void ConsComp::calculateLocalCon(ModelContext* ctx)
 void ConsComp::moveConsToLeft()
 {
 	LOG("ConsComp::moveConsToLeft --name["<<name<< "] - indx["<<this->indexing->print()<<"]-- attr["<<this->attributes->print()<<"] - declared level["<<this->model->level<<"]");
-	SyntaxNode* ret = this->attributes->moveConsToLeft();
-	this->attributes = ret;
+	assert(this->attributes->opCode == COMMA);
+	int i = 0;
+	BOOST_FOREACH(SyntaxNode* attr, this->attributes->values)
+	{
+		if(attr->opCode == ASSIGN){
+			SyntaxNode* ret = this->attributes->moveConsToLeft();
+			this->attributes->values.at(i) = ret;
+		}
+		i++;
+	}
 }
 
 void ConsComp::calculatePartialConstraints()
