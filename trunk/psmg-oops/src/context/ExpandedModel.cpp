@@ -14,6 +14,7 @@
 #include "BlockCons.h"
 #include "BlockObj.h"
 #include "BlockHV.h"
+#include "BlockLP.h"
 #include "Var.h"
 #include "VarSingle.h"
 #include "Con.h"
@@ -52,6 +53,175 @@ ExpandedModel::~ExpandedModel() {
 		delete children.at(i);
 	}
 	this->children.clear();
+}
+
+uint ExpandedModel::nz_cons_jacobs(ExpandedModel* emcol)
+{
+	BlockLP* b = this->getBlockLP(emcol);
+	boost::unordered_set<AutoDiff::Node*> vSet;
+	emcol->copyVariables(vSet);
+	assert(vSet.size()==emcol->numLocalVars);
+	uint nz = 0;
+	BOOST_FOREACH(Con* con, b->cons)
+	{
+		BOOST_FOREACH(ConSingle* consingle, con->cons)
+		{
+			nz+=nzGrad(consingle->con,vSet);
+			LOG("nz now "<<nz);
+		}
+	}
+	LOG("row["<<name<<"] col["<<emcol->name<<"] - nz["<<nz<<"]");
+	return nz;
+}
+
+BlockLP* ExpandedModel::getBlockLP(ExpandedModel* emcol)
+{
+	BlockLP* rval = NULL;
+	boost::unordered_map<ExpandedModel*, BlockLP*>::iterator it = lpBlockMap.find(emcol);
+	if(it!=lpBlockMap.end())
+	{
+		rval =  it->second;
+	}
+	else
+	{
+		rval = new BlockLP(this,emcol);
+		std::vector<ExpandedModel*> ems;
+		ems.push_back(this);
+		ems.push_back(emcol);
+		for(std::vector<ExpandedModel*>::iterator it = ems.begin();it != ems.end();it++) {
+			(*it)->recursiveInitContext();
+		}
+		for(std::vector<ExpandedModel*>::iterator it = ems.begin();it != ems.end();it++) {
+			(*it)->model->calculateModelCompRecursive((*it)->ctx);
+		}
+		emcol->model->calculateLocalVar(emcol->ctx);
+
+		BOOST_FOREACH(ConsComp* con, this->model->con_comps)
+		{
+			//now build each constraint in autodiff format
+			LOG(" -- con [ "<<con->name<<"]");
+			Con* conset = new Con(con->name);
+			SyntaxNode* attribute = con->attributes;
+			SyntaxNode* indexing = con->indexing;
+			if(indexing!=NULL)
+			{
+				LOG(" -- con index["<<indexing->print()<<"]");
+				IndexSet* iset = indexing->createIndexSet(this->ctx);
+				assert(iset->dummySetMap.size()==1); //so far support only 1-demonsianl set
+				Set* set = iset->dummySetMap.begin()->second;
+				string dummy = iset->dummySetMap.begin()->first;
+				SetComp* setcomp = iset->dummyCompMap.begin()->second;
+				std::vector<string>::iterator itset = set->setValues_data_order.begin();
+				for(;itset!=set->setValues_data_order.end();itset++)
+				{
+					string value = *itset;
+					this->ctx->addDummyCompValueMapTemp(dummy,setcomp,value);
+					string conName = con->name + "_" + value;
+					LOG(" constraint - ["<<conName<<"]");
+					//now, build autodiff constraint
+					SyntaxNode* assgin_expr = attribute->findChildNode(ASSIGN);
+					Node* acon = assgin_expr->buildAutoDiffDAG(this,emcol,true);
+					assert(acon!=NULL);
+					double lower = NEG_INFINITY_D;
+					double upper = INFINITY_D;
+					con->attributes->calculateConsBounds(this->ctx,lower,upper);
+					ConSingle* consingle = new ConSingle(acon, lower, upper);
+					conset->cons.push_back(consingle);
+					this->ctx->removeDummySetValueMapTemp(dummy);
+				}
+				delete iset;
+			}
+			else
+			{
+				LOG(" -- con index is NULL - constraint - ["<<con->name<<"]");
+				//now, build autodiff constraint
+				double lower = NEG_INFINITY_D;
+				double upper = INFINITY_D;
+				SyntaxNode* assgin_expr = attribute->findChildNode(ASSIGN);
+				Node* acon = assgin_expr->buildAutoDiffDAG(this,emcol);
+				assert(acon!=NULL);
+				con->attributes->calculateConsBounds(ctx,lower,upper);
+				ConSingle* consingle = new ConSingle(acon, lower, upper);
+				conset->cons.push_back(consingle);
+			}
+			rval->cons.push_back(conset);
+		}
+		if(GV(logBlock)){
+			ostringstream oss;
+			oss<<GV(logdir);
+			this->getQaulifiedName(oss);
+			oss<<"-";
+			emcol->getQaulifiedName(oss);
+			oss<<".lpblk";
+			ofstream fout(oss.str().c_str());
+			rval->logBlock(this,emcol,fout);
+		}
+
+		lpBlockMap.insert(pair<ExpandedModel*,BlockLP*>(emcol,rval));
+	}
+	return rval;
+}
+
+void ExpandedModel::cons_jacobs(ExpandedModel* emcol,boost::numeric::ublas::compressed_matrix<double>& m)
+{
+	std::vector<AutoDiff::Node*> vnodes;
+	emcol->copyVariables(vnodes);
+	assert(emcol->getNLocalVars() == vnodes.size());
+//	LOG("vnode size -"<<vnodes.size());
+	m.resize(this->getNLocalCons(),emcol->getNLocalVars(),false);
+
+	BlockLP* b = this->getBlockLP(emcol);
+	int r = 0;
+	BOOST_FOREACH(Con* con, b->cons)
+	{
+
+		BOOST_FOREACH(ConSingle* singlecon, con->cons)
+		{
+//			typedef boost::numeric::ublas::matrix_row<boost::numeric::ublas::compressed_matrix<double> > compressed_matrx_row;
+//			compressed_matrx_row rgrad(m,r);
+			matrix_row<compressed_matrix<double> > rgrad(m,r);
+			assert(con!=NULL);
+			LOG("constraint expression  ---- ");
+			LOG("--- "<<AutoDiff::visit_tree(singlecon->con));
+			grad_reverse(singlecon->con,vnodes,rgrad);
+			r++;
+		}
+		LOG("row["<<name<<"] col["<<emcol->name<<"]");
+		LOG("jacobian now"<<m);
+	}
+	assert(r == this->getNLocalCons());
+//	LOG("Full Jacobian: "<<m);
+	assert(m.size1()==this->getNLocalCons());
+	assert(m.size2()==emcol->getNLocalVars());
+
+	Statistics::numConsJacLocalCall++;
+	LOG("end cons_jacobs_distribute - emrow["<<this->name<<"] emcol["<<emcol->name<<"]");
+}
+void ExpandedModel::obj_grad(ExpandedModel* emcol, double* vals)
+{
+	if(this->model->obj_comp!=NULL){
+
+		this->recursiveInitContext();
+		emcol->recursiveInitContext();
+		this->model->calculateModelCompRecursive(this->ctx);
+		emcol->model->calculateModelCompRecursive(emcol->ctx);
+		emcol->model->calculateLocalVar(emcol->ctx);
+
+		AutoDiff::Node* con = this->model->obj_comp->attributes->buildAutoDiffDAG(this,emcol,true);
+		assert(con!=NULL);
+		std::vector<AutoDiff::Node*> vnodes;
+		emcol->copyVariables(vnodes);
+
+		std::vector<double> grad;
+		LOG("objective expression  ---- ");
+		LOG("--- "<<visit_tree(con));
+		grad_reverse(con,vnodes,grad);
+
+		for(int i=0;i<grad.size();i++)
+		{
+			vals[i] = grad.at(i);
+		}
+	}
 }
 
 /*
@@ -125,7 +295,7 @@ uint ExpandedModel::nz_cons_jacobs_local(ExpandedModel *emcol)
 	uint nz = 0;
 	BOOST_FOREACH(AutoDiff::Node* con, emb->cons)
 	{
-		LOG("con \n"<<visit_tree(con)<<"");
+//		LOG("con \n"<<visit_tree(con)<<"");
 		nz+=nzGrad(con,vSet);
 		LOG("nz now "<<nz);
 	}
@@ -159,23 +329,24 @@ void ExpandedModel::cons_jacobs_local(ExpandedModel *emcol, boost::numeric::ubla
 		assert(vnodes.size() == currcol);
 	}
 //	LOG("vnode size -"<<vnodes.size());
-	boost::numeric::ublas::mapped_matrix<double> m(emb->cons.size(),vnodes.size());
+	compressed_matrix<double> m(emb->cons.size(),vnodes.size());
 	int r = 0;
 	BOOST_FOREACH(AutoDiff::Node* con, emb->cons)
 	{
-		typedef boost::numeric::ublas::matrix_row<boost::numeric::ublas::mapped_matrix<double> > mapped_matrx_row;
-		mapped_matrx_row rgrad(m,r);
+//		typedef boost::numeric::ublas::matrix_row<boost::numeric::ublas::compressed_matrix<double> > compressed_matrix_row;
+//		compressed_matrix_row rgrad(m,r);
+		matrix_row<compressed_matrix<double> > rgrad(m,r);
 		assert(con!=NULL);
 		LOG("constraint expression  ---- ");
 		LOG("--- "<<visit_tree(con));
-		grad_reverse(con,vnodes,rgrad);
+		AutoDiff::grad_reverse(con,vnodes,rgrad);
 		r++;
 //		LOG("jacobian now"<<m);
 	}
 //	LOG("Full Jacobian: "<<m);
 
 	int colrange = emcol->getNLocalVars() + colstart;
-	boost::numeric::ublas::matrix_range<boost::numeric::ublas::mapped_matrix<double> > mr(m,range(0,m.size1()),range(colstart,colrange));
+	matrix_range<compressed_matrix<double> > mr(m,range(0,m.size1()),range(colstart,colrange));
 	assert(mr.size2()==emcol->getNLocalVars());
 	assert(mr.size1()==this->getNLocalCons());
 	LOG("submatrix -- ["<<this->getNLocalCons()<<"] x ["<<emcol->getNLocalVars()<<"]");
@@ -987,7 +1158,7 @@ void ExpandedModel::get_local_cons_names(std::vector<string>& names)
 ///* -------------------------------------------------------------------------
 //ExpandedModel::update_primal_var_soln
 //-------------------------------------------------------------------------- */
-void ExpandedModel::update_primal_var_soln(double *elts)
+void ExpandedModel::update_primal_x(double *elts)
 {
 	LOG("update_primal_var_soln() -- ["<<this->name<<"] numOfLocalVar["<<numLocalVars<<"]");
 	uint index = 0;
@@ -1003,7 +1174,6 @@ void ExpandedModel::update_primal_var_soln(double *elts)
 			index++;
 			LOG("update_primal_var_soln - ["<<i->toString()<<"]");
 		}
-		assert(var->varMultiMap.size()==vc->card);
 	}
 	assert(index==this->getNLocalVars());
 }
@@ -1155,27 +1325,89 @@ void ExpandedModel::convertToColSparseMatrix(boost::numeric::ublas::compressed_m
 	assert(sm!=NULL);
 	boost::numeric::ublas::compressed_matrix<double>::iterator1 it1;
 	boost::numeric::ublas::compressed_matrix<double>::iterator2 it2;
-	int i = 0;
-	unsigned int col = 0;
+//	uint index =0;
+//	BOOST_FOREACH(uint i, m.index1_data())
+//	{
+//		LOG(" "<<i);
+//		sm->rownos[index] = i;
+//		index ++;
+//	}
+//	index =0;
+//	BOOST_FOREACH(uint i, m.index2_data())
+//	{
+//		LOG(" "<<i);
+//		sm->colstarts[index] = i;
+//		index++;
+//	}
+//	index=0;
+//	BOOST_FOREACH(double i, m.value_data())
+//	{
+//		LOG(" "<<i);
+//		sm->values[index] = i;
+//		index++;
+//	}
+
+	uint i = 0;
+	int prev_col = -1;
+	int curr_col = 0;
 	for(it2=m.begin2();it2!=m.end2();it2++)
 	{
-		while(col<=it2.index2()){
-			sm->colstarts[col] = i;
-			col++;
-		}
-		int len=0;
 		for(it1=it2.begin();it1!=it2.end();it1++)
 		{
-			LOG(it1.index1()<<","<<it1.index2()<<"="<<*it1);
-			sm->values[i] = *it1;
+			LOG(it1.index1()<<","<<it2.index2()<<"="<<*it1);
+			curr_col = it2.index2();
 			sm->rownos[i] = it1.index1();
+			sm->values[i] = *it1;
+			if(prev_col==-1) //for leading zero columns
+			{
+				for(prev_col=0;prev_col<=curr_col;prev_col++)
+				{
+					sm->colstarts[prev_col] = 0;
+					LOG("---- sm->colstarts[prev_col] "<<prev_col<<" - "<<sm->colstarts[prev_col]);
+				}
+			}
+			else
+			{
+				if(prev_col != curr_col)
+				{
+					for(prev_col=prev_col+1;prev_col<=curr_col;prev_col++) //for intermediate zero columns
+					{
+						sm->colstarts[prev_col] = i;
+						LOG("sm->colstarts[prev_col] "<<prev_col<<" - "<<sm->colstarts[prev_col]);
+					}
+				}
+			}
+			prev_col = curr_col;
 			i++;
-			len++;
-		}
-		if(sm->collen!=NULL){
-			sm->collen[col-1] = len;
 		}
 	}
+
+	for(curr_col=curr_col+1;curr_col<=m.size2();curr_col++) //for ending zero culumns
+	{
+		sm->colstarts[curr_col] = i;
+	}
+	assert(curr_col-1 == m.size2());
+
+	for(int j=0;j<i;j++)
+	{
+		LOG("rowno ["<<sm->rownos[j] <<" value["<<sm->values[j]);
+	}
+	for(int j=0;j<m.size2()+1;j++){
+		LOG("colstarts ["<<sm->colstarts[j]);
+	}
+
+	if(sm->collen!=NULL)
+	{
+		for(int j=0;j<m.size2();j++)
+		{
+			sm->collen[j] = sm->colstarts[j+1] - sm->colstarts[j];
+		}
+	}
+
+	for(int j=0;j<m.size2();j++){
+		LOG("collen ["<<sm->collen[j]);
+	}
+
 }
 
 void ExpandedModel::copyVariables(boost::unordered_set<AutoDiff::Node*>& vSet)
@@ -1191,7 +1423,6 @@ void ExpandedModel::copyVariables(boost::unordered_set<AutoDiff::Node*>& vSet)
 			vSet.insert(i->adv);
 //			LOG("copyVariables - ["<<v.toString()<<"]");
 		}
-		assert(var->varMultiMap.size()==vc->card);
 	}
 }
 
@@ -1208,7 +1439,6 @@ void ExpandedModel::copyVariables(std::vector<AutoDiff::Node*>& vSet)
 			vSet.push_back(i->adv);
 //			LOG("copyVariables - ["<<v.toString()<<"]");
 		}
-		assert(var->varMultiMap.size()==vc->card);
 	}
 }
 
@@ -1243,6 +1473,7 @@ ModelContext* ExpandedModel::locateCtx(AmplModel* model, string& dummyval)
 			if(rval!=NULL) break;
 		}
 	}
+	assert(rval != NULL);
 	return rval;
 }
 /*
@@ -1399,13 +1630,13 @@ void ExpandedModel::cons_jacobs_distribute(ExpandedModel *emcol, std::vector<boo
 		(*it)->copyVariables(vnodes);
 	}
 //	LOG("vnode size -"<<vnodes.size());
-	boost::numeric::ublas::mapped_matrix<double> m(emb->cons.size(),vnodes.size());
+	compressed_matrix<double> m(emb->cons.size(),vnodes.size());
 	int r = 0;
 	for(std::vector<AutoDiff::Node*>::iterator it=emb->cons.begin();it!=emb->cons.end();it++){
-		boost::numeric::ublas::matrix_row<boost::numeric::ublas::mapped_matrix<double> > rgrad (m,r);
+		matrix_row<compressed_matrix<double> > rgrad (m,r);
 		if(*it!=NULL){
 			LOG("con - \n"<<visit_tree(*it));
-			grad_reverse(*it,vnodes,rgrad);
+			AutoDiff::grad_reverse(*it,vnodes,rgrad);
 		}
 		r++;
 //		LOG("jacobian now"<<m);
@@ -1416,9 +1647,9 @@ void ExpandedModel::cons_jacobs_distribute(ExpandedModel *emcol, std::vector<boo
 	for(std::vector<ExpandedModel*>::iterator it=emb->block->ems.begin();it!=emb->block->ems.end();it++)
 	{
 		int num_c = (*it)->getNLocalVars() + prev_c;
-		boost::numeric::ublas::matrix_range<boost::numeric::ublas::mapped_matrix<double> > mr(m,range(0,m.size1()),range(prev_c,num_c));
+		matrix_range<compressed_matrix<double> > mr(m,range(0,m.size1()),range(prev_c,num_c));
 		LOG("submatrix -- nvar["<<(*it)->getNLocalVars()<<"] - level["<<(*it)->model->level<<"] em["<<(*it)->name<<"]");
-		boost::numeric::ublas::compressed_matrix<double> subm(mr);
+		compressed_matrix<double> subm(mr);
 		blocks.push_back(subm);
 		prev_c=num_c;
 	}
