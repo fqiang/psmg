@@ -17,7 +17,7 @@
 #include "../parser/sml.tab.h"
 
 VarComp::VarComp(const string& id, SyntaxNode* index, SyntaxNode* attr) : ModelComp(id,TVAR,index,attr),
-	dim(0), card(0)
+	dim(0)
 {
 	// TODO Auto-generated constructor stub
 
@@ -29,13 +29,13 @@ VarComp::~VarComp() {
 
 
 
-void VarComp::calculateVarDimCard(ModelContext* context) {
+void VarComp::calculateVarDimCard(ModelContext* context, uint& card) {
 	LOG( "calculateLocalVar -- in model["<<this->model->name<<"] id["<<this->name<<"]");
 	assert(this->type==TVAR);
-	this->card = 1;
+	card = 1;
 	this->dim = 0;
 	if (this->indexing!=NULL) {
-		this->indexing->calculateVarDimCard(context,this->dim,this->card);
+		this->indexing->calculateVarDimCard(context,this->dim,card);
 	}
 	LOG( "calculateLocalVar -- in model["<<this->model->name<<"] id["<<this->name<<"] -- varCard["<<card<<"] varDim["<<dim<<"]");
 }
@@ -83,8 +83,7 @@ void VarComp::calculateVarComp(ModelContext* ctx)
 	}
 
 	ctx->addCompValueMap(this,var);
-	assert(var->varMultiMap.size()==this->card);
-	LOG( "fillLocalVar -- model["<<this->model->name<<"] comp["<<this->name<<"] card["<<this->card<<"] dim["<<this->dim<<"]");
+	LOG( "fillLocalVar -- model["<<this->model->name<<"] comp["<<this->name<<"] card["<<var->varMultiMap.size()<<"] dim["<<this->dim<<"]");
 }
 
 /* ---------------------------------------------------------------------------

@@ -17,9 +17,11 @@ public:
 	virtual ~VarComp();
 
 	uint dim; //number of declared indicies
-	uint card; //number of variables for this declared varcomp
+	//bug - varcomp can't has card- because varcomp in difference instance(expanededmodel) can have
+	//different size depending on the indexing set.
+//	uint card; //number of variables for this declared varcomp
 	void calculateVarComp(ModelContext* ctx);
-	void calculateVarDimCard(ModelContext* context);
+	void calculateVarDimCard(ModelContext* context, uint& card);
 //	void fillLocalVarRecurive(ModelContext* context,Var* aVar,vector<ModelComp*>::iterator it,ostringstream& oss);
 
 

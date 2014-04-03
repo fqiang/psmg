@@ -161,7 +161,7 @@ public:
 
 	void calculatePartialConstraints(boost::unordered_map<int,SyntaxNode*>&);
 	SyntaxNode* moveConsToLeft();
-	AutoDiff::Node* buildAutoDiffDAG(ExpandedModel* emrow,ExpandedModel* emcol);
+	AutoDiff::Node* buildAutoDiffDAG(ExpandedModel* emrow,ExpandedModel* emcol, bool isLP=false);
 
 	void calculateBaseValueVector(unsigned long& size);
 	virtual void calculateMemoryUsage(unsigned long& size);
@@ -181,6 +181,7 @@ private:
 	static bool isContainsInEm2(string& varKey, ExpandedModel* em);
 	AutoDiff::OPCODE opCodeTranslateToAutoDiffOp(int opCode);
 	AutoDiff::Node* createAutoDiffConIDREF(ModelContext* ctx);
+	AutoDiff::Node* createAutoDiffConIDREFLP(ModelContext* rowctx, ModelContext* colctx);
 };
 
 

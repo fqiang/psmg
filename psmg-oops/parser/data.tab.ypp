@@ -306,6 +306,7 @@ param_def:	PARAM param_name DEFINE param_specs SEMICOLON {
                             for(;i!=params.end();i++,j++)
                             {
                                     tok=strtok(NULL,",");
+                                    YAC_DATA_LOG(tok);
                                  	ParamMult* p = static_cast<ParamMult*>(*i);
                                     ParamComp* pc = (*j);
                                     
@@ -317,7 +318,8 @@ param_def:	PARAM param_name DEFINE param_specs SEMICOLON {
                                     }
                                     else
                                     {
-                                    	pval = new PValueValue(atof(tok));
+                                    	double v = atof(tok);
+                                    	pval = new PValueValue(v);
                                     }
                                     p->addParamValue(oss.str(),pval);
                             }

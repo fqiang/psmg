@@ -208,9 +208,10 @@ ExpandedModel* AmplModel::createExpandedModel(string dummyVar,SetComp* comp,stri
 	{
 		VarComp* mc = *it;
 		assert(mc->type == TVAR);
-		mc->calculateVarDimCard(currCtx);
-		currEm2->numLocalVars += mc->card;
-		LOG("add vars -- EM["<<currEm2->name<<"] -- varcomp["<<mc->card<<"] numLocalVars["<<currEm2->numLocalVars<<"]");
+		uint card;
+		mc->calculateVarDimCard(currCtx, card);
+		currEm2->numLocalVars += card;
+		LOG("add vars -- EM["<<currEm2->name<<"] -- card["<<card<<"] numLocalVars["<<currEm2->numLocalVars<<"]");
 	}
 
 	//calculating con list

@@ -504,7 +504,7 @@ static const yytype_uint16 yyrline[] =
 {
        0,    82,    82,    83,    86,    87,    88,    93,   125,   130,
      134,   140,   144,   153,   160,   170,   173,   182,   205,   269,
-     332,   335,   344,   347,   356,   359,   362,   367,   372,   375
+     334,   337,   346,   349,   358,   361,   364,   369,   374,   377
 };
 #endif
 
@@ -1751,6 +1751,7 @@ yyreduce:
                             for(;i!=params.end();i++,j++)
                             {
                                     tok=strtok(NULL,",");
+                                    YAC_DATA_LOG(tok);
                                  	ParamMult* p = static_cast<ParamMult*>(*i);
                                     ParamComp* pc = (*j);
                                     
@@ -1762,7 +1763,8 @@ yyreduce:
                                     }
                                     else
                                     {
-                                    	pval = new PValueValue(atof(tok));
+                                    	double v = atof(tok);
+                                    	pval = new PValueValue(v);
                                     }
                                     p->addParamValue(oss.str(),pval);
                             }
@@ -1777,7 +1779,7 @@ yyreduce:
   case 20:
 
 /* Line 1806 of yacc.c  */
-#line 332 "data.tab.ypp"
+#line 334 "data.tab.ypp"
     {
 				(yyval.string) = (yyvsp[(1) - (1)].string);
 			}
@@ -1786,7 +1788,7 @@ yyreduce:
   case 21:
 
 /* Line 1806 of yacc.c  */
-#line 335 "data.tab.ypp"
+#line 337 "data.tab.ypp"
     {
 				ostringstream oss(ostringstream::out);
 				oss<<(yyvsp[(1) - (2)].string)<<','<<(yyvsp[(2) - (2)].string);  //each param_name(set_value) is on newline
@@ -1799,7 +1801,7 @@ yyreduce:
   case 22:
 
 /* Line 1806 of yacc.c  */
-#line 344 "data.tab.ypp"
+#line 346 "data.tab.ypp"
     {
 				(yyval.string) = (yyvsp[(1) - (1)].string);
 			}
@@ -1808,7 +1810,7 @@ yyreduce:
   case 23:
 
 /* Line 1806 of yacc.c  */
-#line 347 "data.tab.ypp"
+#line 349 "data.tab.ypp"
     {
 				ostringstream oss(ostringstream::out);
 				oss<<(yyvsp[(1) - (2)].string)<<','<<(yyvsp[(2) - (2)].string);  //each on newline
@@ -1821,7 +1823,7 @@ yyreduce:
   case 24:
 
 /* Line 1806 of yacc.c  */
-#line 356 "data.tab.ypp"
+#line 358 "data.tab.ypp"
     {
 				(yyval.string) = (yyvsp[(1) - (1)].string);
 			}
@@ -1830,7 +1832,7 @@ yyreduce:
   case 25:
 
 /* Line 1806 of yacc.c  */
-#line 359 "data.tab.ypp"
+#line 361 "data.tab.ypp"
     {
 				(yyval.string) = (yyvsp[(1) - (1)].string);
 			}
@@ -1839,7 +1841,7 @@ yyreduce:
   case 26:
 
 /* Line 1806 of yacc.c  */
-#line 362 "data.tab.ypp"
+#line 364 "data.tab.ypp"
     {
 				(yyval.string) = (yyvsp[(1) - (1)].string);
 			}
@@ -1848,7 +1850,7 @@ yyreduce:
   case 27:
 
 /* Line 1806 of yacc.c  */
-#line 367 "data.tab.ypp"
+#line 369 "data.tab.ypp"
     {
 				(yyval.string) = (yyvsp[(1) - (1)].string);
 			}
@@ -1857,7 +1859,7 @@ yyreduce:
   case 28:
 
 /* Line 1806 of yacc.c  */
-#line 372 "data.tab.ypp"
+#line 374 "data.tab.ypp"
     { 
 				(yyval.string) = (yyvsp[(1) - (1)].string);
 			}
@@ -1866,7 +1868,7 @@ yyreduce:
   case 29:
 
 /* Line 1806 of yacc.c  */
-#line 375 "data.tab.ypp"
+#line 377 "data.tab.ypp"
     {
 				(yyval.string) = (yyvsp[(1) - (1)].string);
 			}
@@ -1875,7 +1877,7 @@ yyreduce:
 
 
 /* Line 1806 of yacc.c  */
-#line 1879 "../src/parser/data.tab.cpp"
+#line 1881 "../src/parser/data.tab.cpp"
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -2106,7 +2108,7 @@ yyreturn:
 
 
 /* Line 2067 of yacc.c  */
-#line 380 "data.tab.ypp"
+#line 382 "data.tab.ypp"
 
 
 void dataerror(const char *s) {

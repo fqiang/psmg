@@ -335,7 +335,9 @@ int Sml::analyseOptions(int argc, char **argv)
 //	this->testInterfaceLocal1(root,root);
 //}
 
-void SML_OOPS_driver(ExpandedModel*);
+//oops properties
+FILE *globlog = NULL;
+FILE *printout = stdout;
 
 int main(int argc, char **argv)
 {
@@ -400,7 +402,7 @@ int main(int argc, char **argv)
 //	Sml::instance()->testInterfaceLocal(ExpandedModel::root);
 //	//Testing Section end
 
-	SML_OOPS_driver(ExpandedModel::root);
+	SML_OOPS_driver_LP(ExpandedModel::root);
 
 	if(GV(logEM)){
 		Sml::instance()->printEMStructure(GV(logdir)+"logEM.dat");

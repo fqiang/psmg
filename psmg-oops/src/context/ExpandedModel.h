@@ -10,6 +10,7 @@
 
 #include <boost/unordered_set.hpp>
 #include <boost/unordered_map.hpp>
+#include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/matrix_proxy.hpp>
 #include <boost/numeric/ublas/matrix_sparse.hpp>
 #include <boost/numeric/ublas/io.hpp>
@@ -26,6 +27,7 @@ class BlockCons;
 class BlockObj;
 class Block;
 class BlockHV;
+class BlockLP;
 
 class ExpandedModel
 {
@@ -50,6 +52,12 @@ public:
 	//  a ---> "A1"
 	boost::unordered_map<string,string> dummyValueMap;
 
+	//BlockLP for LP problem --
+	//the reason for storing the BlockLP for each different emcol is that:
+	// we will use the AutoDiff::Node* con saved in the BlockLP to compute nz_jacobian and jacobian of intersection
+	BlockLP* getBlockLP(ExpandedModel* emcol);
+	boost::unordered_map<ExpandedModel*, BlockLP*> lpBlockMap;
+
 	//Block Local Dependencies for Local Interface Calls
 	Block* block_lo;
 	boost::unordered_map<ExpandedModel*, BlockHV*> hvBlockMap_lo;
@@ -63,6 +71,12 @@ public:
 	ExpandedModel(AmplModel* _mod,ModelContext* _context);
 	virtual ~ExpandedModel();
 
+	//LP Interface
+	uint nz_cons_jacobs(ExpandedModel* emcol);
+	void cons_jacobs(ExpandedModel* emcol,boost::numeric::ublas::compressed_matrix<double>& m);
+	void obj_grad(ExpandedModel*, double*);
+
+	//NLP interface
 	/*
 	 * Location Interface Methods
 	 */
@@ -114,6 +128,15 @@ public:
 
 
 	/*
+	 * current point update
+	 * used in NLP interface only
+	 */
+	//! Setting the primal variable soln / the values for the local variables
+	void update_primal_x(double *elts);
+	//! Setting the lagrangian mulitpler for local constraints
+	void update_lag(double* elts);
+
+	/*
 	 * Common inteface methods for Both Local and Distributed Inteface calls
 	 */
 	//! Returns the vector of upper bounds for the local variables in this model
@@ -126,10 +149,6 @@ public:
 	void get_local_vars_names(vector<string>&);
 	//! Returns the names of local constraints
 	void get_local_cons_names(vector<string>&);
-	//! Setting the primal variable soln / the values for the local variables
-	void update_primal_var_soln(double *elts);
-	//! Setting the lagrangian mulitpler for local constraints
-	void update_lag(double* elts);
 	//! Returns the number of local variables
 	uint getNLocalCons();
 	//! Returns the names of local variables
