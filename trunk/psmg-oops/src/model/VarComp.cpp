@@ -64,7 +64,7 @@ void VarComp::calculateVarComp(ModelContext* ctx)
 			if(this->attributes != NULL){
 				this->attributes->calculateVarBounds(ctx,upper,lower);
 			}
-			AutoDiff::Node* v =  AutoDiff::create_var_node();
+			AutoDiff::Node* v =  AutoDiff::create_var_node(1.0);
 			var->varMultiMap.push_back(VarSingle(*it,upper,lower,v));
 			ctx->removeDummySetValueMapTemp(dummy);
 		}

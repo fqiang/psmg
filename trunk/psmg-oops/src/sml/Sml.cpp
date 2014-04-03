@@ -22,6 +22,7 @@
 #include "../model/AmplModel.h"
 #include "../context/ModelContext.h"
 #include "../context/Block.h"
+#include "../oops/sml-oops.h"
 #include "mpi.h"
 #include <iostream>
 #include <sys/types.h>
@@ -334,7 +335,7 @@ int Sml::analyseOptions(int argc, char **argv)
 //	this->testInterfaceLocal1(root,root);
 //}
 
-extern void SML_OOPS_driver(ExpandedModel*);
+void SML_OOPS_driver(ExpandedModel*);
 
 int main(int argc, char **argv)
 {
