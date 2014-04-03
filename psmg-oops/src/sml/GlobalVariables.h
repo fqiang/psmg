@@ -22,9 +22,9 @@
 #include <string>
 #include <limits>
 
-#define D_POS_INFI std::numeric_limits<double>::infinity()
-#define D_NEG_INFI -std::numeric_limits<double>::infinity()
-#define D_NaN std::numeric_limits<double>::quiet_NaN()
+#define INFINITY_D std::numeric_limits<double>::infinity()
+#define NEG_INFINITY_D -std::numeric_limits<double>::infinity()
+#define NaN_D std::numeric_limits<double>::quiet_NaN()
 
 /** @class GlobalVariables 
  *  This class provides some static global variables.
@@ -55,6 +55,9 @@ class GlobalVariables{
 
 	static string executable;
 
+	static string logdir;
+	static bool logEM;
+	static bool logBlock;
 	static bool logParseModel; //!< Controls if the model parser should log
 
 	static bool debug;
@@ -65,7 +68,6 @@ class GlobalVariables{
 
 	static bool solve;
 
-	static string logdir;
 
 	static void printAll();
 };

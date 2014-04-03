@@ -31,14 +31,13 @@ class ExpandedModel;
  *  of variable indices from the NlFile that should be used and indicate
  *  In which positions these should appear in the block
  */
+class PDProblem;
+
 class OOPSBlock {
  public:
   ExpandedModel *emrow;    //!< Expanded Model giving row information
   ExpandedModel *emcol;    //!< Expanded Model giving col information
-
-  int ncon;             //!< number of rows in this block
-  int nvar;             //!< number of columns in this block
-  //  int *lvar;            //!< list of indices into the NlFile (-1 if not decl)
+//  PDProblem* prob;
   // --------------------------- methods -----------------------------------
   /** constrct an OOPS block from the cross section of two ExpandedModelInterface's
    *  @param rowmod       The model giving the row information

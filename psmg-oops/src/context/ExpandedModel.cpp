@@ -13,8 +13,11 @@
 #include "Block.h"
 #include "BlockCons.h"
 #include "BlockObj.h"
+#include "BlockHV.h"
 #include "Var.h"
 #include "VarSingle.h"
+#include "Con.h"
+#include "ConSingle.h"
 #include "../model/ObjComp.h"
 #include "../parser/sml.tab.h"
 #include <boost/foreach.hpp>
@@ -182,6 +185,144 @@ void ExpandedModel::cons_jacobs_local(ExpandedModel *emcol, boost::numeric::ubla
 	LOG("end cons_jacobs_distribute - emrow["<<this->name<<"] emcol["<<emcol->name<<"]");
 }
 
+uint ExpandedModel::nz_lag_hess_local(ExpandedModel* emcol)
+{
+	LOG("enter nz_cons_hess_local called -- this["<<this->name<<"] emcol["<<emcol->name<<"]");
+	assert(this!=emcol || (this->model->level == emcol->model->level && this==emcol)); //the diagonal block
+	BlockHV* emb = this->getHVBlockLocal(emcol);
+	//get the nonlinear edges from all constraints in the block
+	AutoDiff::EdgeSet edgeSet;
+
+	BOOST_FOREACH(ExpandedModel* em, emb->block->ems)
+	{
+		BOOST_FOREACH(ConsComp* con , em->model->con_comps)
+		{
+			Con* conset = static_cast<Con*>(em->ctx->getCompValue(con));
+			BOOST_FOREACH(ConSingle* consingle, conset->cons)
+			{
+				AutoDiff::Node* acon = consingle->con;
+				assert(acon!=NULL);
+				LOG("constraint expression  ---- ");
+				LOG("-- "<<visit_tree(acon));
+				nonlinearEdges(acon,edgeSet);
+			}
+		}
+	}
+	if(emb->obj!=NULL)
+	{
+		LOG("objective expression  ---- ");
+		LOG("-- "<<visit_tree(emb->obj));
+		nonlinearEdges(emb->obj,edgeSet);
+	}
+	LOG("nonlinearEdges - now: -- "<<edgeSet.size());
+	//create variable map for emcol and emrow
+	boost::unordered_set<Node*> colvSet;
+	emcol->copyVariables(colvSet);
+	boost::unordered_set<Node*> rowvSet;
+	this->copyVariables(rowvSet);
+	LOG("rowvSet size["<<rowvSet.size()<<"]  -- colvSet size["<<colvSet.size()<<"]");
+
+	uint nz = nzHess(edgeSet,colvSet,rowvSet);
+	LOG("nonlinearEdges - removed other edges - -"<<edgeSet.toString());
+	LOG("end nz_cons_hess_local -- this["<<this->name<<"] emcol["<<emcol->name<<"]  - Num of Nonzero["<<nz<<"]");
+	Statistics::numNZConsHessLocalCall++;
+	return nz;
+}
+
+void ExpandedModel::lag_hess_local(ExpandedModel* emcol,boost::numeric::ublas::compressed_matrix<double>& block)
+{
+	LOG("enter lag_hess_local - emrow["<<this->name<<"] emcol"<<emcol->name<<"]");
+	assert(block.size1() == 0 && block.size2() == 0);
+	assert(this!=emcol || (this->model->level == emcol->model->level && this==emcol)); //the diagonal block
+	BlockHV* emb = this->getHVBlockLocal(emcol);
+
+	uint colstart = 0;
+	uint rowstart = 0;
+	uint currvar = 0;
+	std::vector<AutoDiff::Node*> vnodes;
+	BOOST_FOREACH(ExpandedModel* em, emb->block->ems)
+	{
+		LOG("em["<<em->name<<"]");
+		if(em == emcol) {
+			colstart = currvar;
+		}
+		if(em == this) {
+			rowstart = currvar;
+		}
+		em->copyVariables(vnodes);
+		currvar += em->numLocalVars;
+		assert(vnodes.size() == currvar);
+	}
+
+	boost::numeric::ublas::compressed_matrix<double> fullhess(vnodes.size(),vnodes.size());
+	BOOST_FOREACH(ExpandedModel* em, emb->block->ems)
+	{
+		BOOST_FOREACH(ConsComp* con, em->model->con_comps)
+		{
+			Con* conset = static_cast<Con*>(em->ctx->getCompValue(con));
+			assert(conset!=NULL);
+			BOOST_FOREACH(ConSingle* consingle, conset->cons)
+			{
+				boost::numeric::ublas::compressed_matrix<double> m(vnodes.size(),vnodes.size());
+				for(uint c = 0;c<vnodes.size();c++)
+				{
+					//initialize the weight for computing column c of Hessian m
+					//this is required by Autodiff_library
+					BOOST_FOREACH(AutoDiff::Node* v, vnodes)
+					{
+						static_cast<AutoDiff::VNode*>(v)->u = 0;
+					}
+					static_cast<AutoDiff::VNode*>(vnodes[c])->u = 1; //set weight = 1 for column c varible only, rest are 0
+
+					//calculate the column c for Hessian m
+					typedef boost::numeric::ublas::matrix_column<boost::numeric::ublas::compressed_matrix<double> > compressed_matrix_col;
+					compressed_matrix_col chess(m,c);
+					assert(consingle->con!=NULL);
+					hess_reverse(consingle->con,vnodes,chess);
+					c++;
+				}
+				fullhess = fullhess + consingle->y*m;
+			}
+		}
+	}
+
+	if(emb->obj!=NULL)
+	{
+		boost::numeric::ublas::compressed_matrix<double> m(vnodes.size(),vnodes.size());
+		for(uint c = 0;c<vnodes.size();c++)
+		{
+			//initialize the weight for computing column c of Hessian m
+			//this is required by Autodiff_library
+			BOOST_FOREACH(AutoDiff::Node* v, vnodes)
+			{
+				static_cast<AutoDiff::VNode*>(v)->u = 0;
+			}
+			static_cast<AutoDiff::VNode*>(vnodes[c])->u = 1; //set weight = 1 for column c varible only, rest are 0
+
+			//calculate the column c for Hessian m
+			typedef boost::numeric::ublas::matrix_column<boost::numeric::ublas::compressed_matrix<double> > compressed_matrix_col;
+			compressed_matrix_col chess(m,c);
+			hess_reverse(emb->obj,vnodes,chess);
+			c++;
+		}
+		fullhess = fullhess + m;
+	}
+
+//	LOG("Full hessian: "<<fullhess);
+	typedef boost::numeric::ublas::matrix_range<boost::numeric::ublas::compressed_matrix<double> > compressed_matrix_range;
+	uint colrange = colstart + emcol->numLocalVars;
+	uint rowrange = rowstart + this->numLocalVars;
+	compressed_matrix_range mr(fullhess,range(rowstart,rowrange),range(colstart,colrange));
+	block = mr;
+	assert(mr.size1()==this->getNLocalVars());
+	assert(mr.size2()==emcol->getNLocalVars());
+	LOG("submatrix -- ["<<this->getNLocalVars()<<"] x ["<<emcol->getNLocalVars()<<"]");
+	block = mr;
+
+	Statistics::numConsHessLocalCall++;
+	LOG("end lag_hess_local - emrow["<<this->name<<"] emcol"<<emcol->name<<"]");
+}
+
 uint ExpandedModel::nz_cons_hess_local(ExpandedModel *emcol)
 {
 	LOG("enter nz_cons_hess_local called -- this["<<this->name<<"] emcol["<<emcol->name<<"]");
@@ -283,7 +424,7 @@ double& ExpandedModel::obj_feval_local(double& oval)
 	if(this->model->obj_comp == NULL)
 	{
 		LOG("no objective declared at -- this["<<this->name<<"]");
-		oval = D_NaN;
+		oval = NaN_D;
 	}
 	else
 	{
@@ -313,7 +454,7 @@ void ExpandedModel::obj_grad_local(ExpandedModel* emcol, std::vector<double>& og
 
 	if(this->model->obj_comp==NULL)
 	{
-		ograd.resize(emcol->getNLocalVars(),D_NaN);
+		ograd.resize(emcol->getNLocalVars(),NaN_D);
 	}
 	else{
 		BlockObj* ob = this->getObjBlockLocal(emcol);
@@ -439,6 +580,104 @@ void ExpandedModel::obj_hess_local(ExpandedModel* emcol, boost::numeric::ublas::
 	LOG("end obj_hess_local - emrow["<<this->name<<"] emcol"<<emcol->name<<"]");
 }
 
+BlockHV* ExpandedModel::getHVBlockLocal(ExpandedModel* emcol)
+{
+	LOG("enter - getHVBlockLocal - this em["<<this->name<<"] x em["<<emcol->name<<"]");
+	assert(this!=emcol || (this->model->level == emcol->model->level && this==emcol)); //the diagonal block
+	boost::unordered_map<ExpandedModel*,BlockHV* >::iterator it=hvBlockMap_lo.find(emcol);
+	BlockHV* emb = NULL;
+	if(it!=hvBlockMap_lo.end()){
+		LOG("createConsBlockLocal -- already in Map");
+		emb = (*it).second;
+	}
+	else
+	{
+		Block* b = this->getBlockLocal();
+		emb = new BlockHV(b);
+		BOOST_FOREACH(ExpandedModel* em, emb->block->ems)
+		{
+			BOOST_FOREACH(ConsComp* con, em->model->con_comps)
+			{
+				if(em->ctx->getCompValue(con) == NULL)
+				{
+					//now build each constraint in autodiff format
+					LOG(" -- con [ "<<con->name<<"]");
+					Con* conset = new Con(con->name);
+					SyntaxNode* attribute = con->attributes;
+					SyntaxNode* indexing = con->indexing;
+					if(indexing!=NULL)
+					{
+						LOG(" -- con index["<<indexing->print()<<"]");
+						IndexSet* iset = indexing->createIndexSet(ctx);
+						assert(iset->dummySetMap.size()==1); //so far support only 1-demonsianl set
+						Set* set = iset->dummySetMap.begin()->second;
+						string dummy = iset->dummySetMap.begin()->first;
+						SetComp* setcomp = iset->dummyCompMap.begin()->second;
+						std::vector<string>::iterator itset = set->setValues_data_order.begin();
+						for(;itset!=set->setValues_data_order.end();itset++)
+						{
+							string value = *itset;
+							this->ctx->addDummyCompValueMapTemp(dummy,setcomp,value);
+							string conName = con->name + "_" + value;
+							LOG(" constraint - ["<<conName<<"]");
+							//now, build autodiff constraint
+							SyntaxNode* assgin_expr = attribute->findChildNode(ASSIGN);
+							Node* acon = assgin_expr->buildAutoDiffDAG(this,emcol);
+							assert(acon!=NULL);
+							double lower = NEG_INFINITY_D;
+							double upper = INFINITY_D;
+							con->attributes->calculateConsBounds(ctx,lower,upper);
+							ConSingle* consingle = new ConSingle(acon, lower, upper);
+							conset->cons.push_back(consingle);
+							this->ctx->removeDummySetValueMapTemp(dummy);
+						}
+						delete iset;
+					}
+					else
+					{
+						LOG(" -- con index is NULL - constraint - ["<<con->name<<"]");
+						//now, build autodiff constraint
+						double lower = NEG_INFINITY_D;
+						double upper = INFINITY_D;
+						SyntaxNode* assgin_expr = attribute->findChildNode(ASSIGN);
+						Node* acon = assgin_expr->buildAutoDiffDAG(this,emcol);
+						assert(acon!=NULL);
+						con->attributes->calculateConsBounds(ctx,lower,upper);
+						ConSingle* consingle = new ConSingle(acon, lower, upper);
+						conset->cons.push_back(consingle);
+					}
+					em->ctx->addCompValueMap(con,conset);
+				}
+				assert(em->ctx->getCompValue(con)!=NULL);
+			}
+		}
+		//add the objective into the HVBlock
+		//limitation objective function cannot has variables decalared in other level
+		//objective declared at difference level will be summed as the total objective
+		//this is currently a limitation in the implemenation.
+		if(this->model->obj_comp!=NULL)
+		{
+			SyntaxNode* attribute = this->model->obj_comp->attributes;
+			Node* acon = attribute->buildAutoDiffDAG(this,emcol);
+			assert(acon!=NULL);
+			emb->obj = acon;
+		}
+		if(GV(logBlock)){
+			ostringstream oss;
+			oss<<GV(logdir);
+			this->getQaulifiedName(oss);
+			oss<<"-";
+			emcol->getQaulifiedName(oss);
+			oss<<".lhvblk";
+			ofstream fout(oss.str().c_str());
+			emb->logBlock(this,emcol,fout);
+		}
+		hvBlockMap_lo.insert(pair<ExpandedModel*,BlockHV*>(emcol,emb));
+	}
+	LOG("exit - getHVBlockLocal - row["<<this->name<<"] X col["<<emcol->name<<"] nvar["<<emcol->numLocalVars<<"]");
+	return emb;
+}
+
 //createConsBlockLocal
 //emcol is passed for the purpose of sum{i in COMM} hack only
 //eg. when this is declares the parent level of emcol, and the sum index can be the same of the model index of emcol.
@@ -499,7 +738,7 @@ BlockCons* ExpandedModel::getConsBlockLocal(ExpandedModel* emcol)
 			}
 		}
 
-		if(GV(debug)){
+		if(GV(logBlock)){
 			ostringstream oss;
 			oss<<GV(logdir);
 			this->getQaulifiedName(oss);
@@ -542,7 +781,7 @@ BlockObj* ExpandedModel::getObjBlockLocal(ExpandedModel* emcol)
 		Node* obj = attribute->buildAutoDiffDAG(this,emcol);
 		ob->objective = obj;
 
-		if(GV(debug)){
+		if(GV(logBlock)){
 			ostringstream oss;
 			oss<<GV(logdir);
 			this->getQaulifiedName(oss);
@@ -686,6 +925,7 @@ void ExpandedModel::get_local_cons_bounds(double *lower, double *upper)
 	uint i = 0;
 	BOOST_FOREACH(ConsComp* con, this->model->con_comps)
 	{
+		//can be retrieved from context
 		SyntaxNode* indexing = con->indexing;
 		if(indexing!=NULL)
 		{
@@ -766,6 +1006,23 @@ void ExpandedModel::update_primal_var_soln(double *elts)
 		assert(var->varMultiMap.size()==vc->card);
 	}
 	assert(index==this->getNLocalVars());
+}
+
+void ExpandedModel::update_lag(double* elts)
+{
+	LOG("update_lag() -- ["<<this->name<<"] numOfLocalVar["<<numLocalVars<<"]");
+	uint i = 0;
+	BOOST_FOREACH(ConsComp* con, this->model->con_comps)
+	{
+		Con* conset = static_cast<Con*>(this->ctx->getCompValue(con));
+		assert(conset!=NULL);
+		BOOST_FOREACH(ConSingle* consingle, conset->cons)
+		{
+			consingle->y = elts[i];
+			i++;
+		}
+	}
+	assert(i = this->getNLocalCons());
 }
 
 
@@ -892,12 +1149,12 @@ void ExpandedModel::getParentEM(std::vector<ExpandedModel*>& ems)
 	}
 }
 
-void ExpandedModel::convertToColSparseMatrix(boost::numeric::ublas::matrix_range<boost::numeric::ublas::mapped_matrix<double> >& m,ColSparseMatrix* sm)
+void ExpandedModel::convertToColSparseMatrix(boost::numeric::ublas::compressed_matrix<double>& m,ColSparseMatrix* sm)
 {
 	LOG("convertToColSparseMatrix - "<<m);
 	assert(sm!=NULL);
-	boost::numeric::ublas::matrix_range<boost::numeric::ublas::mapped_matrix<double> >::iterator1 it1;
-	boost::numeric::ublas::matrix_range<boost::numeric::ublas::mapped_matrix<double> >::iterator2 it2;
+	boost::numeric::ublas::compressed_matrix<double>::iterator1 it1;
+	boost::numeric::ublas::compressed_matrix<double>::iterator2 it2;
 	int i = 0;
 	unsigned int col = 0;
 	for(it2=m.begin2();it2!=m.end2();it2++)
@@ -1107,7 +1364,7 @@ BlockCons* ExpandedModel::createConsBlockDistributed(ExpandedModel* emcol)
 
 	assert(this->getNLocalCons()==emb->cons.size());
 
-	if(GV(debug)){
+	if(GV(logBlock)){
 		ostringstream oss;
 		oss<<GV(logdir);
 		this->getQaulifiedName(oss);

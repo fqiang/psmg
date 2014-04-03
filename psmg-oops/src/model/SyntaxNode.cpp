@@ -594,7 +594,7 @@ Set* SyntaxNode::calculateSetValue(ModelContext* context) {
 		for(int i = start;i <= end;i++) {
 			ostringstream oss;
 			oss << i;
-			rval->addSetValue(oss);
+			rval->addSetValue(oss.str());
 		}
 	}
 	else if (this->opCode == SETOF){
@@ -771,7 +771,7 @@ void SyntaxNode::evalTerm(ModelContext* context, PValue** rval) {
 		for(;it != aSet->setValues_data_order.end();it++) {
 			string value = (*it);
 			context->addDummyCompValueMapTemp(dummy, refNode->ref, value);
-			PValue* tmp = new PValueValue();
+			PValue* tmp = NULL;
 			this->values[1]->evalTerm(context,&tmp);
 			sum->accumulate(tmp);
 			context->removeDummySetValueMapTemp(dummy);

@@ -13,9 +13,6 @@
 #include "../sml/GlobalVariables.h"
 #include "PValueValue.h"
 
-PValueValue::PValueValue() : PValue(), value(D_NEG_INFI){
-	// TODO Auto-generated constructor stub
-}
 PValueValue::PValueValue(double v) : PValue(), value(v){
 	// TODO Auto-generated constructor stub
 }

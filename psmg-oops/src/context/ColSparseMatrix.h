@@ -11,6 +11,8 @@
 class ColSparseMatrix {
 
 public:
+	ColSparseMatrix(double* val, int* row, int* col, int* len):
+		values(val),rownos(row),colstarts(col),collen(len) {};
 	double* values;
 	int* rownos;
 	int* colstarts;

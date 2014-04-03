@@ -25,6 +25,7 @@ class VarComp;
 class BlockCons;
 class BlockObj;
 class Block;
+class BlockHV;
 
 class ExpandedModel
 {
@@ -51,6 +52,7 @@ public:
 
 	//Block Local Dependencies for Local Interface Calls
 	Block* block_lo;
+	boost::unordered_map<ExpandedModel*, BlockHV*> hvBlockMap_lo;
 	boost::unordered_map<ExpandedModel*, BlockCons*> cblockMap_lo;
 	boost::unordered_map<ExpandedModel*, BlockObj*> oblockMap_lo;
 	//Block Distributed Dependencies for Distributed Interface Calls
@@ -70,6 +72,7 @@ public:
 	//! Return Constraint Block defined by (constraints in this) X (variables in emcol)
 	//! Creat one if this is not already created
 	BlockCons* getConsBlockLocal(ExpandedModel* emcol);
+	BlockHV* getHVBlockLocal(ExpandedModel* emcol);
 	//! Return Obj Block (objective in this) X (variables in emcol)
 	//! Creat one if this is not already created
 	BlockObj* getObjBlockLocal(ExpandedModel* emcol);
@@ -81,6 +84,8 @@ public:
 	void cons_jacobs_local(ExpandedModel *emcol, boost::numeric::ublas::compressed_matrix<double>&);
 	uint nz_cons_hess_local(ExpandedModel* emcol);
 	void cons_hess_local(ExpandedModel* emcol, boost::numeric::ublas::compressed_matrix<double>&);
+	uint nz_lag_hess_local(ExpandedModel* emcol);
+	void lag_hess_local(ExpandedModel* emcol,boost::numeric::ublas::compressed_matrix<double>&);
 	//
 	double& obj_feval_local(double& oval);
 	//! Returns the objective gradient for the local model w.r.t. local vars
@@ -123,6 +128,8 @@ public:
 	void get_local_cons_names(vector<string>&);
 	//! Setting the primal variable soln / the values for the local variables
 	void update_primal_var_soln(double *elts);
+	//! Setting the lagrangian mulitpler for local constraints
+	void update_lag(double* elts);
 	//! Returns the number of local variables
 	uint getNLocalCons();
 	//! Returns the names of local variables
@@ -137,6 +144,7 @@ public:
 	void addChildren(ExpandedModel* em2);
 	void clearAllContextTreeKeepRoot();
 	void levelTraversal(vector<ExpandedModel*>& em2List,int level);
+	static void convertToColSparseMatrix(boost::numeric::ublas::compressed_matrix<double>& m,ColSparseMatrix* sm);
 
 	/*
 	 * Utility methods
@@ -149,7 +157,6 @@ private:
 	ModelContext* recursiveInitContext();
 	void copyVariables(boost::unordered_set<AutoDiff::Node*>&);
 	void copyVariables(std::vector<AutoDiff::Node*>&);
-	void convertToColSparseMatrix(boost::numeric::ublas::matrix_range<boost::numeric::ublas::mapped_matrix<double> >& m,ColSparseMatrix* sm);
 };
 
 #endif /* EXPANDEDMODEL_H_ */

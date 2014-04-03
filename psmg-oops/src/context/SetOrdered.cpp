@@ -35,26 +35,23 @@ void SetOrdered::copyFromSet(Set* src)
 	}
 }
 
-void SetOrdered::addSetValue(string& value)
+void SetOrdered::addSetValue(const string& value)
 {
-	card++;
-	this->setValues_data_order.push_back(value);
-	this->setOrders.insert(pair<string,int>(value,card));
-	this->setKeys.insert(pair<int,string>(card,value));
-	LOG("OrderedSet -- "<<this->toString());
+	if(!this->contains(value))
+	{
+		card++;
+		LOG("SetOrdered - addSetValue index["<<card<<"] ["<<value<<"]");
+		this->setValues_data_order.push_back(value);
+		this->setOrders.insert(pair<string,int>(value,card));
+		this->setKeys.insert(pair<int,string>(card,value));
+	}
+	else{
+		LOG("OrderedSet --- already has ["<<value<<"]");
+	}
+	LOG("OrderedSet --addSetValue- set contains "<<this->toString());
 }
 
-
-void SetOrdered::addSetValue(ostringstream& oss)
-{
-	card++;
-	this->setValues_data_order.push_back(oss.str());
-	this->setOrders.insert(pair<string,int>(oss.str(),card));
-	this->setKeys.insert(pair<int,string>(card,oss.str()));
-	LOG("addSetValue -- set contains -- "<<this->toString());
-}
-
-bool SetOrdered::contains(string& key)
+bool SetOrdered::contains(const string& key)
 {
 	boost::unordered_map<string,int>::iterator it = this->setOrders.find(key);
 	if(it!=this->setOrders.end())

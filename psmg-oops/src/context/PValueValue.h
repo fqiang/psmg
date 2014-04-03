@@ -14,7 +14,6 @@ class PValueValue : public PValue {
 public:
 	double value;
 
-	PValueValue();
 	PValueValue(double);
 	PValueValue(PValueValue&);
 	virtual ~PValueValue();

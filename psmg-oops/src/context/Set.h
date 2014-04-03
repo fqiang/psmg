@@ -32,12 +32,11 @@ public:
 	virtual void setCross(Set* other, Set* rval);
 	virtual void setUnion(Set* other, Set* rval);
 	virtual void calculateMemoryUsage(unsigned long& size);
+	virtual bool contains(const string&);
 
 	virtual void copyFromSet(Set* src) = 0;
-	virtual void addSetValue(string& key) = 0;
-	virtual void addSetValue(ostringstream& oss) = 0;
+	virtual void addSetValue(const string& key) = 0;
 	virtual string toString() = 0;
-	virtual bool contains(string&) = 0;
 };
 
 #endif /* SET_H_ */
