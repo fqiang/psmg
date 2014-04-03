@@ -322,7 +322,7 @@ void SyntaxNode::calculateConsBounds(ModelContext* ctx, double& upper, double& l
 	{
 		PValue* pval = NULL;
 		if(attr->opCode == ASSIGN) {
-			assert(nchild()==2);
+			assert(attr->nchild()==2);
 			attr->values[1]->evalTerm(ctx,&pval);
 			assert(typeid(*pval)==typeid(PValueValue));
 			lower = static_cast<PValueValue*>(pval)->value;
@@ -662,6 +662,7 @@ IndexSet* SyntaxNode::createIndexSet(ModelContext* context)
 		ModelComp* comp = static_cast<SyntaxNodeIDREF*>(setexpr_list->values[0]->values[1])->ref;
 		assert(comp->type == TSET);
 		Set* aSet = static_cast<Set*>(context->getCompValue(comp));
+		assert(aSet!=NULL);
 		Set* set = NULL;
 		if(cond!=NULL)
 		{

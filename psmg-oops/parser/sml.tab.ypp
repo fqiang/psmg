@@ -539,7 +539,12 @@ consattributes: consattribute
 			}
 			;
 			
-consattribute: expr ASSIGN expr  { $$ = new SyntaxNode(ASSIGN, $1, $3); }
+consattribute: expr ASSIGN expr  
+			{ 
+				assert($1!=NULL);
+				assert($3!=NULL);
+				$$ = new SyntaxNode(ASSIGN, $1, $3);  
+			}
 			|  LT expr  { $$ = new SyntaxNode(LT, $2); }
 			|  LE expr  { $$ = new SyntaxNode(LE, $2); }
 			|  GT expr  { $$ = new SyntaxNode(GT, $2); }

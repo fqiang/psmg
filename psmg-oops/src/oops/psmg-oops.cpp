@@ -21,7 +21,7 @@
 #include <cstdlib> // for exit()
 #include "mpi.h"
 #include "../sml/Sml.h"
-#include "../interface/sml-oops.h"
+#include "../oops/sml-oops.h"
 #include "../util/global_util_functions.h"
 #include "../sml/GlobalVariables.h"
 #include "../metric/Statistics.h"

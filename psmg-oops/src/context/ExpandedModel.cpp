@@ -608,7 +608,7 @@ BlockHV* ExpandedModel::getHVBlockLocal(ExpandedModel* emcol)
 					if(indexing!=NULL)
 					{
 						LOG(" -- con index["<<indexing->print()<<"]");
-						IndexSet* iset = indexing->createIndexSet(ctx);
+						IndexSet* iset = indexing->createIndexSet(em->ctx);
 						assert(iset->dummySetMap.size()==1); //so far support only 1-demonsianl set
 						Set* set = iset->dummySetMap.begin()->second;
 						string dummy = iset->dummySetMap.begin()->first;
@@ -617,19 +617,19 @@ BlockHV* ExpandedModel::getHVBlockLocal(ExpandedModel* emcol)
 						for(;itset!=set->setValues_data_order.end();itset++)
 						{
 							string value = *itset;
-							this->ctx->addDummyCompValueMapTemp(dummy,setcomp,value);
+							em->ctx->addDummyCompValueMapTemp(dummy,setcomp,value);
 							string conName = con->name + "_" + value;
 							LOG(" constraint - ["<<conName<<"]");
 							//now, build autodiff constraint
 							SyntaxNode* assgin_expr = attribute->findChildNode(ASSIGN);
-							Node* acon = assgin_expr->buildAutoDiffDAG(this,emcol);
+							Node* acon = assgin_expr->buildAutoDiffDAG(em,emcol);
 							assert(acon!=NULL);
 							double lower = NEG_INFINITY_D;
 							double upper = INFINITY_D;
-							con->attributes->calculateConsBounds(ctx,lower,upper);
+							con->attributes->calculateConsBounds(em->ctx,lower,upper);
 							ConSingle* consingle = new ConSingle(acon, lower, upper);
 							conset->cons.push_back(consingle);
-							this->ctx->removeDummySetValueMapTemp(dummy);
+							em->ctx->removeDummySetValueMapTemp(dummy);
 						}
 						delete iset;
 					}
@@ -640,7 +640,7 @@ BlockHV* ExpandedModel::getHVBlockLocal(ExpandedModel* emcol)
 						double lower = NEG_INFINITY_D;
 						double upper = INFINITY_D;
 						SyntaxNode* assgin_expr = attribute->findChildNode(ASSIGN);
-						Node* acon = assgin_expr->buildAutoDiffDAG(this,emcol);
+						Node* acon = assgin_expr->buildAutoDiffDAG(em,emcol);
 						assert(acon!=NULL);
 						con->attributes->calculateConsBounds(ctx,lower,upper);
 						ConSingle* consingle = new ConSingle(acon, lower, upper);
