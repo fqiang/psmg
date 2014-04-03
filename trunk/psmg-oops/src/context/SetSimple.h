@@ -18,9 +18,7 @@ class SetSimple: public Set{
 
 		virtual string toString();
 		virtual void copyFromSet(Set* src);
-		virtual void addSetValue(string& key);
-		virtual void addSetValue(ostringstream& oss);
-		virtual bool contains(string&);
+		virtual void addSetValue(const string& key);
 		virtual void calculateMemoryUsage(unsigned long& size);
 	private:
 };

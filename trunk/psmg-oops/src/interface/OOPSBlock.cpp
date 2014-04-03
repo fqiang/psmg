@@ -31,22 +31,7 @@ using namespace std;
 /* ----------------------------------------------------------------------------
 OOPSBlock::OOPSBlock(ExpandedModelInterface*, list<string>*)
 ---------------------------------------------------------------------------- */
-OOPSBlock::OOPSBlock(ExpandedModel *rowmod, ExpandedModel *colmod)
+OOPSBlock::OOPSBlock(ExpandedModel *rowmod, ExpandedModel *colmod):emrow(rowmod),emcol(colmod)
 {
-  /* We need to:
-      - take the list of variable names from colmod (colmod->listOfVarNames)
-      - compare them against the variables defined by the NlFile attached
-        to rowmod (rowmod->name+".col")
-      - colmod->listOfVarNames will give the number of columns in this block
-      - need a list of indices into the NlFile for these columns
-   */
-  
-//  if (GlobalVariables::prtLvl >= PRINT_INFO) {
   LOG("OOPSBlock: col: " << colmod->name << "/ row: " << rowmod->name <<" -- (" << rowmod->getNLocalCons() << "x" << colmod->getNLocalVars() << ")");
-
-
-  this->emrow = rowmod;
-  this->emcol = colmod;
-  this->nvar = colmod->getNLocalVars();
-  this->ncon = rowmod->getNLocalCons();
 }

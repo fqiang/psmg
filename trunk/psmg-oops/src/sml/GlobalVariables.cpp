@@ -17,7 +17,6 @@ string GlobalVariables::modelfilename = "";
 string GlobalVariables::datafilename = "";
 string GlobalVariables::outfilename = "";
 string GlobalVariables::amplcommand = "/home/s0965328/research/ampl-student/ampl";
-bool GlobalVariables::logParseModel = true;
 #ifdef DEBUG
 bool GlobalVariables::debug = true;
 #else
@@ -28,7 +27,11 @@ bool GlobalVariables::writeMatlab = false;
 bool GlobalVariables::solve = false;
 string GlobalVariables::hostname = "";
 string GlobalVariables::executable = "";
+
 string GlobalVariables::logdir = "./log/";
+bool GlobalVariables::logParseModel = true;
+bool GV(logEM) = true;
+bool GV(logBlock) = true;
 
 void GlobalVariables::printAll()
 {
@@ -42,8 +45,10 @@ void GlobalVariables::printAll()
 	LOG("AmplCommand: ["<<GlobalVariables::amplcommand<<"]");
 	LOG("write matlab ["<<GlobalVariables::writeMatlab<<"]");
 	LOG("write MPS ["<<GlobalVariables::writeMPS<<"]");
-	LOG("logParseModel ["<<GlobalVariables::logParseModel<<"]");
 	LOG("solve ["<<GlobalVariables::solve<<"]");
+	LOG("logEM["<<GV(logEM)<<"]");
+	LOG("logBlock["<<GV(logBlock)<<"]");
+	LOG("logParseModel ["<<GlobalVariables::logParseModel<<"]");
 	LOG("logdir ["<<GlobalVariables::logdir<<"]");
 }
 

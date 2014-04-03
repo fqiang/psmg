@@ -109,7 +109,7 @@ set_def:	SET set_name DEFINE member SEMICOLON {
 					tokenNum++;
 					if(tokenNum%setValue->dim == 0)
 					{
-						setValue->addSetValue(oss);
+						setValue->addSetValue(oss.str());
 						oss.str("");
 						oss.clear();
 					}
@@ -196,8 +196,7 @@ param_def:	PARAM param_name DEFINE param_specs SEMICOLON {
 				}
 				else
 				{
-					pval = new PValueValue();
-					static_cast<PValueValue*>(pval)->value = atof($4);
+					pval = new PValueValue(atof($4));
 	            }
 	            static_cast<ParamSingle*>(param)->setParamValue(pval);
 	            assert(param->card == 1);
@@ -242,7 +241,7 @@ param_def:	PARAM param_name DEFINE param_specs SEMICOLON {
                     ++curr_index;
 					if(curr_index == numIndicies)
                     {
-                    		setValue->addSetValue(oss);
+                    		setValue->addSetValue(oss.str());
                     		vector<Param*>::iterator i=params.begin();
                     		vector<ParamComp*>::iterator j=paramModels.begin();
                     		for(;i!=params.end();i++,j++)
@@ -257,8 +256,7 @@ param_def:	PARAM param_name DEFINE param_specs SEMICOLON {
                             			pval = new PValueSym(v);
                             		}
                             		else {
-                            			pval = new PValueValue();
-                            			static_cast<PValueValue*>(pval)->value = atof(tok);
+                            			pval = new PValueValue(atof(tok));
                             		}
                             		p->addParamValue(oss.str(),pval);
                             }

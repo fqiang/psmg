@@ -73,7 +73,7 @@ void Set::setCross(Set* other, Set* rval)
 		{
 			oss<<*i;
 			oss<<*j;
-			rval->addSetValue(oss);
+			rval->addSetValue(oss.str());
 			oss.str("");
 			oss.clear();
 		}
@@ -84,16 +84,25 @@ void Set::setUnion(Set* other, Set* rval)
 {
 	LOG("setUnion - ["<<this->name<<"  UNION  "<<other->name<<"]");
 	rval->copyFromSet(this);
-	ostringstream oss;
 	for(vector<string>::iterator i= other->setValues_data_order.begin();i!=other->setValues_data_order.end();i++)
 	{
-		oss<<*i;
-		rval->addSetValue(oss);
-		oss.str("");
-		oss.clear();
+		rval->addSetValue(*i);
 	}
 }
 
+
+bool Set::contains(const string& value)
+{
+	vector<string>::iterator it = this->setValues_data_order.begin();
+	for(;it!=this->setValues_data_order.end();it++)
+	{
+		if((*it).compare(value)==0)
+		{
+			return true;
+		}
+	}
+	return false;
+}
 
 void Set::calculateMemoryUsage(unsigned long& size)
 {

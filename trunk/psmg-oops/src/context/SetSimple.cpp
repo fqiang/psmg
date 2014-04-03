@@ -58,21 +58,19 @@ SetSimple::~SetSimple()
 	this->setValues_data_order.clear();
 }
 
-void SetSimple::addSetValue(string& value)
+void SetSimple::addSetValue(const string& value)
 {
-	card++;
-	LOG("Add SetValue index["<<card<<"] ["<<value<<"]");
-	this->setValues_data_order.push_back(value);
-	LOG("addSetValue -- "<<this->toString());
-}
-
-
-void SetSimple::addSetValue(ostringstream& oss)
-{
-	card++;
-	LOG("Add SetValue oss index["<<card<<"] ["<<oss.str()<<"]");
-	this->setValues_data_order.push_back(oss.str());
-	LOG("addSetValue -- set contains -- "<<this->toString());
+	if(!this->contains(value))
+	{
+		card++;
+		LOG("Add SetValue index["<<card<<"] ["<<value<<"]");
+		this->setValues_data_order.push_back(value);
+	}
+	else
+	{
+		LOG("SetSimple -- already has["<<value<<"]");
+	}
+	LOG("addSetValue --  set contains "<<this->toString());
 }
 
 string SetSimple::toString()
@@ -85,19 +83,6 @@ string SetSimple::toString()
 		oss<<(*i)<<"|";
 	}
 	return oss.str();
-}
-
-bool SetSimple::contains(string& value)
-{
-	vector<string>::iterator it = this->setValues_data_order.begin();
-	for(;it!=this->setValues_data_order.end();it++)
-	{
-		if((*it).compare(value)==0)
-		{
-			return true;
-		}
-	}
-	return false;
 }
 
 void SetSimple::copyFromSet(Set* src)

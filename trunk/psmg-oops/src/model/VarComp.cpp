@@ -59,8 +59,8 @@ void VarComp::calculateVarComp(ModelContext* ctx)
 		{
 			ctx->addDummyCompValueMapTemp(dummy,comp,*it);
 			//compute variable bounds
-			double upper = D_POS_INFI;
-			double lower = D_NEG_INFI;
+			double upper = INFINITY_D;
+			double lower = NEG_INFINITY_D;
 			if(this->attributes != NULL){
 				this->attributes->calculateVarBounds(ctx,upper,lower);
 			}
@@ -72,8 +72,8 @@ void VarComp::calculateVarComp(ModelContext* ctx)
 	}
 	else
 	{
-		double upper = D_POS_INFI;
-		double lower = D_NEG_INFI;
+		double upper = INFINITY_D;
+		double lower = NEG_INFINITY_D;
 		if(this->attributes != NULL){
 			this->attributes->calculateVarBounds(ctx,upper,lower);
 		}

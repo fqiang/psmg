@@ -29,6 +29,7 @@
 #include <time.h>
 #include <vector>
 #include <string>
+#include "oops/parutil.h"
 
 using namespace std;
 
@@ -232,110 +233,118 @@ int Sml::analyseOptions(int argc, char **argv)
 	}
 	return 0;
 }
+//
+//void Sml::testInterfaceLocal2(ExpandedModel* emrow)
+//{
+//	Block* block = emrow->getBlockLocal();
+//
+//	BOOST_FOREACH(ExpandedModel* em, block->ems)
+//	{
+//		uint numPriVar = em->getNLocalVars();
+//		double elts[numPriVar];
+//		for(uint i=0;i<numPriVar;i++)
+//		{
+//			elts[i] = 0.1*i+0.1;
+//		}
+//		em->update_primal_var_soln(elts);
+//	}
+//}
+//
+//void Sml::testInterfaceLocal1(ExpandedModel* emrow,ExpandedModel* emcol )
+//{
+//	//update local/primal variable values before calling Local Interface methods
+//	this->testInterfaceLocal2(emrow);
+//
+//	uint nr, nc, nz;
+//	//for emrow x emcol block  -- normal matrix block
+//	nr = emrow->getNLocalCons();
+//	nc = emcol->getNLocalVars();
+//
+//	//Objective gradient declared by (objective from emrow) X (variables from emcol) ~ ie. [either 1 X emcol.numLocalVar] or [0 X emcol.numLocalVar]
+//	vector<double> ograd;
+//	emrow->obj_grad_local(emcol,ograd);
+//	assert(emrow->model->obj_comp==NULL || ograd.size() == nc);
+//	LOG("Objective gradient vector  -- ograd size["<<ograd.size()<<"]   ------ ["<<emrow->name<<"] X ["<<emcol->name<<"]");
+//
+//	//Objective Hessian declared by (variables from emrow) X (variables from emcol)
+//	nz = emrow->nz_obj_hess_local(emcol);
+//	boost::numeric::ublas::compressed_matrix<double> objhess;
+//	emrow->obj_hess_local(emcol,objhess);
+//	assert(objhess.size1()==emrow->getNLocalVars() && objhess.size2() == nc);
+//	LOG("Objective Hessian block  -- ["<<objhess.size1()<<" X "<<objhess.size2()<<"]   -- nz["<<nz<<"]  -------  ["<<emrow->name<<"] X ["<<emcol->name<<"]");
+//	objhess.clear();
+//
+//	//Constraints Jacobian submatrix declared by (constraints from emrow) X (variables from emcol)
+//	nz = emrow->nz_cons_jacobs_local(emcol);
+//	boost::numeric::ublas::compressed_matrix<double> consjac;
+//	emrow->cons_jacobs_local(emcol,consjac);
+//	assert(consjac.size1()==nr && consjac.size2() == nc);
+//	LOG("Jacobian block  -- ["<<consjac.size1()<<" X "<<consjac.size2()<<"]   -- nz["<<nz<<"]  ------ ["<<emrow->name<<"] X ["<<emcol->name<<"]");
+//	consjac.clear();
+//
+//	//Constraints Hessian submatrix declared by (variables from emrow) X (variables from emcol)
+//	nz = emrow->nz_cons_hess_local(emcol);
+//	boost::numeric::ublas::compressed_matrix<double> conshess;
+//	emrow->cons_hess_local(emcol,conshess);
+//	assert(conshess.size1()==emrow->numLocalVars && conshess.size2() == nc);  //hessian is square matrix
+//	LOG("Hessian block  -- ["<<conshess.size1()<<" X "<<conshess.size2()<<"]   -- nz["<<nz<<"]  -------  ["<<emrow->name<<"] X ["<<emcol->name<<"]");
+//	conshess.clear();
+//}
+//
+//void Sml::testInterfaceLocal0(ExpandedModel* root,ExpandedModel* curr)
+//{
+//	this->testInterfaceLocal1(root,curr);
+//	this->testInterfaceLocal1(curr,root);
+//	vector<ExpandedModel*>::iterator it = curr->children.begin();
+//	for(it = curr->children.begin();it != curr->children.end();it++) {
+//		this->testInterfaceLocal0(root, *it);
+//	}
+//}
+//
+//void Sml::testInterfaceLocal(ExpandedModel* root)
+//{
+//	vector<ExpandedModel*>::iterator it = root->children.begin();
+//	for(;it!=root->children.end();it++)
+//	{
+//		this->testInterfaceLocal0(root,(*it));
+//		this->testInterfaceLocal(*it);
+//	}
+//
+//	//update local/primal variable values before calling Local Interface methods
+//	this->testInterfaceLocal2(root);
+//
+//	//Object and Constraint Evaluation Local Inteface calls
+//	uint nr, nc;
+//	nr = root->getNLocalCons();
+//	nc = root->getNLocalVars();
+//
+//	//for diagonal blocks
+//	double oval;
+//	root->obj_feval_local(oval);
+//	LOG("Objective Eval -- ["<<"< oval["<<oval<<"]  ------ ["<<root->name<<"] X ["<<root->name<<"]");
+//	assert(root->model->obj_comp!=NULL || (isnan(oval) && root->model->obj_comp == NULL));
+//
+//	vector<double> fval;
+//	root->cons_feval_local(fval);
+//	assert(fval.size()==nr);
+//	LOG("Constraint Eval -- ["<<"<fval size ["<<fval.size()<<"]  ------ ["<<root->name<<"] X ["<<root->name<<"]");
+//	fval.clear();
+//
+//	//calling Local inteface calls for Gradient and Hessian of the diagonal block
+//	this->testInterfaceLocal1(root,root);
+//}
 
-void Sml::testInterfaceLocal2(ExpandedModel* emrow)
-{
-	Block* block = emrow->getBlockLocal();
-
-	BOOST_FOREACH(ExpandedModel* em, block->ems)
-	{
-		uint numPriVar = em->getNLocalVars();
-		double elts[numPriVar];
-		for(uint i=0;i<numPriVar;i++)
-		{
-			elts[i] = 0.1*i+0.1;
-		}
-		em->update_primal_var_soln(elts);
-	}
-}
-
-void Sml::testInterfaceLocal1(ExpandedModel* emrow,ExpandedModel* emcol )
-{
-	//update local/primal variable values before calling Local Interface methods
-	this->testInterfaceLocal2(emrow);
-
-	uint nr, nc, nz;
-	//for emrow x emcol block  -- normal matrix block
-	nr = emrow->getNLocalCons();
-	nc = emcol->getNLocalVars();
-
-	//Objective gradient declared by (objective from emrow) X (variables from emcol) ~ ie. [either 1 X emcol.numLocalVar] or [0 X emcol.numLocalVar]
-	vector<double> ograd;
-	emrow->obj_grad_local(emcol,ograd);
-	assert(emrow->model->obj_comp==NULL || ograd.size() == nc);
-	LOG("Objective gradient vector  -- ograd size["<<ograd.size()<<"]   ------ ["<<emrow->name<<"] X ["<<emcol->name<<"]");
-
-	//Objective Hessian declared by (variables from emrow) X (variables from emcol)
-	nz = emrow->nz_obj_hess_local(emcol);
-	boost::numeric::ublas::compressed_matrix<double> objhess;
-	emrow->obj_hess_local(emcol,objhess);
-	assert(objhess.size1()==emrow->getNLocalVars() && objhess.size2() == nc);
-	LOG("Objective Hessian block  -- ["<<objhess.size1()<<" X "<<objhess.size2()<<"]   -- nz["<<nz<<"]  -------  ["<<emrow->name<<"] X ["<<emcol->name<<"]");
-	objhess.clear();
-
-	//Constraints Jacobian submatrix declared by (constraints from emrow) X (variables from emcol)
-	nz = emrow->nz_cons_jacobs_local(emcol);
-	boost::numeric::ublas::compressed_matrix<double> consjac;
-	emrow->cons_jacobs_local(emcol,consjac);
-	assert(consjac.size1()==nr && consjac.size2() == nc);
-	LOG("Jacobian block  -- ["<<consjac.size1()<<" X "<<consjac.size2()<<"]   -- nz["<<nz<<"]  ------ ["<<emrow->name<<"] X ["<<emcol->name<<"]");
-	consjac.clear();
-
-	//Constraints Hessian submatrix declared by (variables from emrow) X (variables from emcol)
-	nz = emrow->nz_cons_hess_local(emcol);
-	boost::numeric::ublas::compressed_matrix<double> conshess;
-	emrow->cons_hess_local(emcol,conshess);
-	assert(conshess.size1()==emrow->numLocalVars && conshess.size2() == nc);  //hessian is square matrix
-	LOG("Hessian block  -- ["<<conshess.size1()<<" X "<<conshess.size2()<<"]   -- nz["<<nz<<"]  -------  ["<<emrow->name<<"] X ["<<emcol->name<<"]");
-	conshess.clear();
-}
-
-void Sml::testInterfaceLocal0(ExpandedModel* root,ExpandedModel* curr)
-{
-	this->testInterfaceLocal1(root,curr);
-	this->testInterfaceLocal1(curr,root);
-	vector<ExpandedModel*>::iterator it = curr->children.begin();
-	for(it = curr->children.begin();it != curr->children.end();it++) {
-		this->testInterfaceLocal0(root, *it);
-	}
-}
-
-void Sml::testInterfaceLocal(ExpandedModel* root)
-{
-	vector<ExpandedModel*>::iterator it = root->children.begin();
-	for(;it!=root->children.end();it++)
-	{
-		this->testInterfaceLocal0(root,(*it));
-		this->testInterfaceLocal(*it);
-	}
-
-	//update local/primal variable values before calling Local Interface methods
-	this->testInterfaceLocal2(root);
-
-	//Object and Constraint Evaluation Local Inteface calls
-	uint nr, nc;
-	nr = root->getNLocalCons();
-	nc = root->getNLocalVars();
-
-	//for diagonal blocks
-	double oval;
-	root->obj_feval_local(oval);
-	LOG("Objective Eval -- ["<<"< oval["<<oval<<"]  ------ ["<<root->name<<"] X ["<<root->name<<"]");
-	assert(root->model->obj_comp!=NULL || (isnan(oval) && root->model->obj_comp == NULL));
-
-	vector<double> fval;
-	root->cons_feval_local(fval);
-	assert(fval.size()==nr);
-	LOG("Constraint Eval -- ["<<"<fval size ["<<fval.size()<<"]  ------ ["<<root->name<<"] X ["<<root->name<<"]");
-	fval.clear();
-
-	//calling Local inteface calls for Gradient and Hessian of the diagonal block
-	this->testInterfaceLocal1(root,root);
-}
+extern void SML_OOPS_driver(ExpandedModel*);
 
 int main(int argc, char **argv)
 {
-	MPI::Init();
+	int parstatus = InitLippPar(argc, argv);
+	if (parstatus != MPI_SUCCESS)
+	{
+		cerr<<"Could not Initialize MPI..."<<endl;
+		exit(1);
+	}
+
 	MPI::Intercomm comm;
 	comm = MPI::COMM_WORLD;
 	char hostname[128];
@@ -386,11 +395,15 @@ int main(int argc, char **argv)
 
 	assert(ExpandedModel::root != NULL);
 
-	//Testing Section start
-	Sml::instance()->testInterfaceLocal(ExpandedModel::root);
-	//Testing Section end
+//	//Testing Section start
+//	Sml::instance()->testInterfaceLocal(ExpandedModel::root);
+//	//Testing Section end
 
-	Sml::instance()->printEMStructure(GV(logdir)+"logEM.dat");
+	SML_OOPS_driver(ExpandedModel::root);
+
+	if(GV(logEM)){
+		Sml::instance()->printEMStructure(GV(logdir)+"logEM.dat");
+	}
 
 	mem_size_em2=0;
 	mem_size_ctx=0;

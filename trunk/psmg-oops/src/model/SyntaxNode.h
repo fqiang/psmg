@@ -78,13 +78,15 @@ public:
 	SyntaxNode* operator[](int i) const {
 		return values[i];
 	}
-
 	/** Clear the child list */
 	virtual void clear() {
 		opCode = 0;
 		values.clear();
 	}
-
+	/** Retrieve the number of children */
+	virtual int nchild() const {
+		return values.size();
+	}
 public:
 
 	/** ID CODE of this node (a list can be found in ampl.tab.h) */
@@ -110,19 +112,8 @@ public:
 	/** Destructor */
 	virtual ~SyntaxNode();
 
-	/** Retrieve the number of children */
-	virtual int nchild() const {
-		return values.size();
-	}
-
 	/** Recursive printing of expression */
 	std::string print() ;
-
-	/** Return the value of this node as a string */
-	virtual std::string getName() const {
-		throw std::exception();
-		return "(fail)";
-	}
 
 	virtual std::ostream& put(std::ostream& s);
 	virtual SyntaxNode *push_back(SyntaxNode *newitem);

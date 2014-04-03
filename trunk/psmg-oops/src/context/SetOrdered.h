@@ -24,12 +24,11 @@ public:
 
 	int setOrder(string& key);
 
-	virtual void addSetValue(string& key);
-	virtual void addSetValue(ostringstream& oss);
+	virtual void addSetValue(const string& key);
 	virtual string toString();
 
 	virtual void copyFromSet(Set* src);
-	virtual bool contains(string&);
+	virtual bool contains(const string&);
 	virtual void calculateMemoryUsage(unsigned long& size);
 };
 
