@@ -402,7 +402,7 @@ int main(int argc, char **argv)
 //	Sml::instance()->testInterfaceLocal(ExpandedModel::root);
 //	//Testing Section end
 
-	SML_OOPS_driver_LP(ExpandedModel::root);
+	SML_OOPS_driver_NLP(ExpandedModel::root);
 
 	if(GV(logEM)){
 		Sml::instance()->printEMStructure(GV(logdir)+"logEM.dat");
