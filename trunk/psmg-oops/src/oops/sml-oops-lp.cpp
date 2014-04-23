@@ -426,12 +426,12 @@ void SMLCallBack(CallBackInterfaceType *cbi) {
 
 	if (cbi->row_nbs == NULL) {
 		LOG("get nz_cons_jacobs --- ");
-		cbi->nz = obl->emrow->nz_cons_jacobs(obl->emcol);
+		cbi->nz = obl->emrow->nz_cons_jacobs_lp(obl->emcol);
 		cout<<cbi->nz<<endl;
 	} else {
 		LOG("jacobs - want to fill in matrices");
 		compressed_matrix block;
-		obl->emrow->cons_jacobs(obl->emcol, block);
+		obl->emrow->cons_jacobs_lp(obl->emcol, block);
 		cout<<block<<endl;
 		ColSparseMatrix m(cbi->element,cbi->row_nbs,cbi->col_beg,cbi->col_len);
 		ExpandedModel::convertToColSparseMatrix(block,&m);
@@ -472,7 +472,7 @@ void FillObjVector(Vector *vc) {
 
 	assert(obl->emcol->numLocalVars == T->end - T->begin);
 
-	obl->emrow->obj_grad(obl->emrow, dense->elts);
+	obl->emrow->obj_grad_lp(obl->emrow, dense->elts);
 }
 
 /* ---------------------------------------------------------------------------

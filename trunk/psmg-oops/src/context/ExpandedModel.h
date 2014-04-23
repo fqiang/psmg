@@ -72,9 +72,9 @@ public:
 	virtual ~ExpandedModel();
 
 	//LP Interface
-	uint nz_cons_jacobs(ExpandedModel* emcol);
-	void cons_jacobs(ExpandedModel* emcol,boost::numeric::ublas::compressed_matrix<double>& m);
-	void obj_grad(ExpandedModel*, double*);
+	uint nz_cons_jacobs_lp(ExpandedModel* emcol);
+	void cons_jacobs_lp(ExpandedModel* emcol,boost::numeric::ublas::compressed_matrix<double>& m);
+	void obj_grad_lp(ExpandedModel*, double*);
 
 	//NLP interface
 	/*
