@@ -21,6 +21,7 @@
     #include <stdio.h>
     #include <stdlib.h>
     #include <assert.h>
+    #include <typeinfo>
     #include <iostream>
     #include "../model/ObjComp.h"
     #include "../model/ModelComp.h" 
@@ -31,10 +32,9 @@
     #include "../model/SyntaxNodeValue.h"
     #include "../model/SyntaxNodeIDREF.h"
     #include "../model/SyntaxNodeIDREFM.h"
-//    #include "../st_model/StochModel.h"
+    #include "../st_model/StochModel.h"
 //    #include "../st_model/StochModelComp.h"
    
-    #include "../sml/GlobalVariables.h"
     #include "../util/global_util_functions.h"
     
     using namespace std;
@@ -43,10 +43,8 @@
     void record_dummy_var();
     void restore_dummy_var();
  
-    void begin_model(const string& name, SyntaxNode *indexing);
+    void begin_model(const string& name, SyntaxNode *indexing, SyntaxNode* stochsets=NULL);
     void end_model(const string& name);
-    void begin_smodel(const string& name, SyntaxNode *indexing, SyntaxNode *stochsets);
-    void end_smodel(const string& name);
 
     extern int yylineno;
     int yylex(void);
@@ -60,12 +58,10 @@
 	bool isDummyVar(string&);
 	                                                
     /* ---------------- stochastic global variables:------------------------ */
-    static bool is_stoch_model;      /* true if inside stochastic model def */
-    /* these are set by global stocastic modifier commands */
-    static bool is_deterministic_glo;
-    static SyntaxNode *stages_glo;
+    static SyntaxNode *curr_stage_indexset;
     extern FILE *yyin;
 
+	bool isInStochModel();
     void addStochInfo(ModelComp *newmc, SyntaxNode*);
 %}
 
@@ -110,7 +106,7 @@
 %token SUFFIX BLOCK
 %token USING DETERMINISTIC EXPECTATION STOCHASTIC STAGES
 %token ANCESTOR
-%token IDREF IDREFM VALUE LIST INDEX DVAR DOT STAGE NODE
+%token IDREF IDREFM VALUE LIST INDEX DVAR DOT STAGE NODE STRING
 
 
 %nonassoc ASSIGN
@@ -133,9 +129,17 @@ statements: /* empty */
           | statements statement 
           ;
 
+statement:  setdef 
+         |  paramdef
+	     |  vardef
+	     |  consdef
+	     | 	objdef
+ 	     |  block
+      	 |  stageblock
+         ;
+			         
 block:   stochblock
      |   blockblock
-     |   stageblock
      ;
          
 /* -------------------------------------------------------------------- 
@@ -168,9 +172,6 @@ where
   PROB{NODES}: conditional probability of reaching this node from parent
   STAGES: set of time stages 
 
-  The whole block is repeated over all STAGES (actually over all NODES). 
-  Entities marked 'deterministic' are only repeated over STAGES
-
 -------------------------------------------------------------------- */
 stochblock: BLOCK ID
 			{
@@ -178,14 +179,10 @@ stochblock: BLOCK ID
 				record_dummy_var();
 			} indexing_opt STOCHASTIC USING LBRACKET indexing_setexpr_list RBRACKET COLON 
 			{
-				is_stoch_model = true;
-				assert(false); //$8 is already included in the the indexing
-				begin_smodel((char*)$2, $4, $8);
+				begin_model($2, $4, $8);
     	    } LBRACE statements RBRACE 
     	    {
-               end_smodel((char*)$2);
-               
-               is_stoch_model = false;
+               end_model($2); 
 	           restore_dummy_var();
                YAC_MODEL_LOG("vardef: -- end -- "<<$2);
             }
@@ -197,13 +194,13 @@ stochblock: BLOCK ID
 
 stageblock: STAGES
 			{
-				assert(is_stoch_model == true);
+				assert(isInStochModel() == true);
 				record_dummy_var();		
 			} indexing_set COLON 
 			{    
-				stages_glo = $3;
+				curr_stage_indexset = $3;
 	        } LBRACE statements RBRACE {
-                stages_glo = NULL;
+                curr_stage_indexset = NULL;
 				restore_dummy_var();            	
             }
           	;
@@ -211,12 +208,12 @@ stageblock: STAGES
 stochattr_opt: /* empty */ {$$ = NULL;}
              |	DETERMINISTIC 
              	{
-                	assert(is_stoch_model==true);
+                	assert(isInStochModel()==true);
                   	$$ = new SyntaxNode(DETERMINISTIC);
              	}
              | 	STAGES
              	{
-                	assert(is_stoch_model==true);
+                	assert(isInStochModel()==true);
              		record_dummy_var();
              	} indexing_set 
              	{
@@ -225,17 +222,6 @@ stochattr_opt: /* empty */ {$$ = NULL;}
                	}
              ;
 
-/* -------------------------------------------------------------------- 
-  ``Standard'' AMPL
-------------------------------------------------------------------------- */
-
-statement:  setdef 
-         |  paramdef
-	     |  vardef
-	     |  consdef
-	     | 	objdef
- 	     |  block
-         ;
 
 /****************************************************************************/
 // Indexing 
@@ -266,7 +252,10 @@ indexing_condition_opt: /* empty */ { $$=NULL; }
 				  		;
 		
 
-indexing_setexpr_list:  indexing_setexpr_item {  $$ = new SyntaxNode(COMMA,$1); }
+indexing_setexpr_list:  indexing_setexpr_item 
+			{  
+				$$ = new SyntaxNode(COMMA,$1); 
+			}
             |  indexing_setexpr_list COMMA indexing_setexpr_item
             {
                   assert($1->opCode == COMMA);
@@ -291,7 +280,8 @@ indexing_setexpr_item:	identifier
 			           	| expr DOTDOT expr
 			           	{
 			           		$$ = new SyntaxNode(DOTDOT, $1, $3);
-			           	}            
+			           	}
+			           	;           
 
 indexing_dummy_list:ID 
 					{ 
@@ -334,13 +324,9 @@ setdef:	SET ID
             YAC_MODEL_LOG("indexing_opt=["<<$4<<"]");
             YAC_MODEL_LOG("stochattr_opt=["<<$5<<"]");
             YAC_MODEL_LOG("setattributes_opt=["<<$6<<"]");
-            ModelComp *newmc;
-            if (is_stoch_model){
-            	assert(false); //TODO: stochastic fix
- //              newmc = new StochModelComp($2, TSET, $4, $6);
- //              addStochInfo(newmc, $5);
-            }else{
-               newmc = new SetComp($2, $4, $6);
+            ModelComp *newmc = new SetComp($2, $4, $6,current_model);
+            if (isInStochModel()){
+            	addStochInfo(newmc, $5);
             }
             current_model->addComp(newmc);
            	
@@ -399,17 +385,12 @@ paramdef:  	PARAM ID
 				YAC_MODEL_LOG("paramdef: -- start -- "<<$2);
 				record_dummy_var();
 			} indexing_opt stochattr_opt paramattributes_opt SEMICOLON {
-			   	ModelComp *newmc;
-			   	if (is_stoch_model){
-			   		YAC_MODEL_LOG("paramdef: -- stochInfo --"<<$5);
-			   		assert(false); //TODO: stochastic fix
-//			      	StochModelComp *newmcs = new StochModelComp($2,TPARAM,$4,$6);
-//			      	addStochInfo(newmcs, $5);
-//			      	newmc = newmcs;
-			   	}else{
-			   		newmc = new ParamComp($2, $4, $6);
+			   	ModelComp *newmc = new ParamComp($2,$4,$6,current_model);
+			   	if (isInStochModel())
+			   	{
+			      	addStochInfo(newmc, $5);
 			   	}
-               	current_model->addComp(newmc);
+			   	current_model->addComp(newmc);
                	
                	restore_dummy_var();
                	YAC_MODEL_LOG("paramdef: -- end -- "<<$2);
@@ -460,15 +441,10 @@ vardef: VAR ID
 			YAC_MODEL_LOG("vardef: -- start -- "<<$2);
 			record_dummy_var();
 		}indexing_opt stochattr_opt varattributes_opt SEMICOLON {
-            ModelComp *newmc;
-            if (is_stoch_model){
-            	assert(false); //TODO: stochastic fix
-//               	newmc = new StochModelComp($2, TVAR, $4, $6);
-//               	addStochInfo(newmc, $5);
-            }else{
-               newmc = new VarComp($2, $4, $6);
+            ModelComp *newmc = new VarComp($2, $4, $6,current_model);
+            if (isInStochModel()){
+            	addStochInfo(newmc, $5);
             }
-
             current_model->addComp(newmc);
           	restore_dummy_var();
           	YAC_MODEL_LOG("vardef: -- end -- "<<$2);
@@ -512,13 +488,9 @@ consdef:	SUBJECTTO ID
 			} indexing_opt stochattr_opt COLON consattributes SEMICOLON
 			{
 				YAC_MODEL_LOG("consdef: -- indexing -- "<<$4);
-				ModelComp *newmc;
-	            if (is_stoch_model){
-					assert(false); //TODO: stochastic fix
-//	               newmc = new StochModelComp($2, $4, $7);
-//	               addStochInfo(newmc, $5);
-	            }else{
-	               newmc = new ConsComp($2, $4, $7);
+				ModelComp *newmc = new ConsComp($2, $4, $7,current_model);
+	            if (isInStochModel()){
+					addStochInfo(newmc, $5);
 	            }
 	            current_model->addComp(newmc);
 	            
@@ -556,16 +528,12 @@ objdef def statement
 objdef: objdef_type ID stochattr_opt COLON expr SEMICOLON
 		{
 			YAC_MODEL_LOG("objdef: -- "<<$2);
-			ModelComp *newmc;
-            if (is_stoch_model){
-	            assert(false); //TODO: stochastic fix
-//               newmc = new StochModelComp($2, $1, NULL, $5); //as NULL for indexing
-//               addStochInfo(newmc, $5);
-            }else{
-               newmc = new ObjComp($2, $1, $5);
+			ModelComp *newmc = new ObjComp($2, $1, $5,current_model);
+            if (isInStochModel()){
+	           addStochInfo(newmc, $3);
             }
-            current_model->addComp(newmc);
             
+            current_model->addComp(newmc);
             YAC_MODEL_LOG("objdef: -- end -- "<<$2);
 		}
 		;
@@ -582,6 +550,10 @@ setexpression: 	indexing_set
 					YAC_MODEL_LOG("setexpression: indexing -- "<<$1);
 					$$= $1;
 				}
+				| expr DOTDOT expr
+	           	{
+	           		$$ = new SyntaxNode(DOTDOT, $1, $3);
+	           	} 
 			 	| identifier 
 			 	{
 		     		YAC_MODEL_LOG("setexpression: identifier -- rule matched -- "<<$1);
@@ -672,23 +644,29 @@ identifier: ID
 			   	}
 			   	else
 			   	{
-			   		ModelComp* 	ref = current_model->findModelComp(key);
+			   		// a better implementation will be findModelComp below and above current model according to 
+			   		// different cases: 1. a dot notation. ie. identifier.identifier[index] or 2. just a simple identifier.
+			   		// for case 1: first identifier should reference to a model below current model
+			   		// for case 2: identifier should be anything above or at current model.
+			   		ModelComp* 	ref = current_model->findModelComp(key); 
 			   		if(ref->type == TMODEL){
-			   		   	$$ = new SyntaxNodeIDREFM(IDREFM,new SyntaxNodeID($1),static_cast<AmplModel*>(ref));
+			   		   	$$ = new SyntaxNodeIDREFM(new SyntaxNodeID($1),static_cast<AmplModel*>(ref));
 				   	}
 				   	else
 				   	{
-				   	   	$$ = new SyntaxNodeIDREF(IDREF,new SyntaxNodeID($1),ref);
+				   	   	$$ = new SyntaxNodeIDREF(new SyntaxNodeID($1),ref);
 				   	}
 			   	}
             }
           | ANCESTOR LBRACKET INT_VAL RBRACKET DOT identifier
           	{
-          		assert(is_stoch_model==true);
-	            $$ = new SyntaxNode(ANCESTOR, new SyntaxNodeValue(*$3), $6);
+				assert(isInStochModel()==true);
+	            assert($6->opCode == IDREF);
+				$$ = new SyntaxNode(ANCESTOR, new SyntaxNodeValue(*$3), $6);
           	}
           | identifier LSBRACKET expr_list RSBRACKET
           	{
+				assert($1->opCode == IDREF || $1->opCode == IDREFM);
           		$1->push_back($3);
           		$$ = $1;
           	}    
@@ -699,9 +677,9 @@ identifier: ID
           		current_model = static_cast<SyntaxNodeIDREFM*>($1)->ref;
 			}
 			identifier
-			{
-				 $$ = new SyntaxNode(DOT, $1, $4); 
-				 current_model = $<model>3;
+			{ 
+				$$ = new SyntaxNode(DOT, $1, $4); 
+				current_model = $<model>3;
 			}
           ;
 
@@ -802,47 +780,24 @@ int yywrap(void) {
 /* ----------------------------------------------------------------------------
 begin_model
 ---------------------------------------------------------------------------- */
-void begin_model(const string& name, SyntaxNode *indexing) 
+void begin_model(const string& name, SyntaxNode *indexing, SyntaxNode* stochsets) 
 {
-	YAC_MODEL_LOG("begin_model  ["<< name <<"] indexing["<<indexing->print()<<"] -- curr model["<<current_model->name<<"]");
-	AmplModel *new_mod = new AmplModel(name,current_model,indexing);
-	
-	current_model->addComp(new_mod);
-	  
-	/* and change current model */
+	YAC_MODEL_LOG("begin_model  ["<< name <<"] indexing["<<indexing<<"] -- in current model["<<current_model->name<<"]");
+	AmplModel* new_mod = NULL;
+	if(stochsets!=NULL)
+	{
+		assert(indexing==NULL); // stochmodel has indexing=NULL
+		assert(stochsets!=NULL && stochsets->nchild()==4);
+		YAC_MODEL_LOG(" model ["<<name<<"] is stochastic block!" );
+		new_mod = new StochModel(name, stochsets, current_model);
+	}
+	else
+	{
+		new_mod = new AmplModel(name,indexing,current_model);
+	}
+	current_model->addComp(new_mod);  
 	current_model = new_mod;
 	YAC_MODEL_LOG("     current model now "<<current_model->name);
-}
-
-/* ----------------------------------------------------------------------------
-begin_smodel
----------------------------------------------------------------------------- */
-void begin_smodel(const string& name, SyntaxNode *indexing, SyntaxNode *stochsets) 
-{
-	assert(false); // TODO fix stocahstic!
-   LOG_SM("Start Stochastic Model: " << name <<"indexing ["<<indexing->print()<<"]");
-   if (!stochsets || stochsets->nchild()!=4){
-      cerr << "Syntax error in Stochastic Block definition: \n";
-      cerr << " 'USING' needs 4 parameters \n";
-      exit(1);
-   }
-
-   SyntaxNode::iterator i = stochsets->begin();
-   SyntaxNode *nodes = *i;
-   SyntaxNode *anc = *(++i);
-   SyntaxNode *prob = *(++i);
-   SyntaxNode *stages = *(++i);
-   LOG("   anc = [" << anc << endl << "]   prob = [" << prob<<"]"<< "   stages = [" << stages<<"]");
- //  StochModel* new_mod = new StochModel(name, stages, nodes, anc, prob, current_model);
-  
- //  ModelComp* newmc = new ModelComp(name, TMODEL, indexing, NULL);
- //  newmc->other = new_mod;
-
- //  new_mod->node = newmc;            /* add pointer-to-node to the model */
- //  current_model->addComp(newmc);
- 
-   /* and change current model */
- //  current_model = new_mod;
 }
 
 /* ----------------------------------------------------------------------------
@@ -850,49 +805,33 @@ end_model
 ---------------------------------------------------------------------------- */
 void end_model(const string& name) 
 {
-	YAC_MODEL_LOG("end_model -- ["<<current_model->name<<"]");
+	YAC_MODEL_LOG("end_model -- ["<<current_model->name<<"] -- isStoch["<<isInStochModel()<<"]");
 	// Check end block name matches block name
-	if (string(name) != current_model->name) {
-		cerr << "end block '" << name << "' encountered in block '" << 
-		current_model->name << "'" << endl;
+	if (name.compare(current_model->name)!=0) {
+		cerr << "end model '" << name << "' encountered in model '" << current_model->name << "'" << endl;
 		exit(1);
 	}
 	current_model = current_model->parent;
 	assert(current_model!=NULL);
 }
 
-/* ----------------------------------------------------------------------------
-end_smodel
+
+/* ---------------------------------------------------------------------------
+Stochastic model helper functions
 ---------------------------------------------------------------------------- */
-void end_smodel(const string& name){
-  // current_model is a StochModel -> convert this into a tree a FlatModels
-  YAC_MODEL_LOG("end_smodel -- ["<<current_model->name<<"]");
-  assert(false); //TODO fix stochastic
-  // Check end block name matches block name
-  if (name != current_model->name) {
-    cerr << "end stochastic block '" << name << "' encountered in stochastic "
-      "block '" << current_model->name << "'" << endl;
-    exit(1);
-  }
-
-  // this is the ModelComp pointing to the StochModel
- // ModelComp *mc = current_model->node; 
-  
-  // point that to the expanded flat model tree
- // mc->other = current_model->expandToFlatModel();
-
-  // and change the name of the ModelComp of this model to the name of the 
-  // new (AmplModel) model. 
-  // (this is a concatenation of the StochModel name and the name of the 
-  // first stage)
-//  mc->id = mc->other->name;
-
-  // and go back to the parent 
-  current_model = current_model->parent;
-  is_stoch_model = false;
-  
-  assert(AmplModel::root == current_model);
-  //AmplModel::root->isStochastic = true;
+void addStochInfo(ModelComp *newmcs, SyntaxNode *stochopt) {
+	assert(isInStochModel() == true);
+ 	assert(stochopt==NULL); //component wised stochast option not yet implementated!
+ 	  
+    newmcs->stage = curr_stage_indexset;
+}
+bool isInStochModel()
+{
+	if(typeid(StochModel) == typeid(*current_model))
+	{
+		return true;
+	}
+	return false;
 }
 
 /* ------------------------------------------------------------------------
@@ -940,35 +879,19 @@ bool isDummyVar(string& v)
 	return false;
 }
 
-
-/* ---------------------------------------------------------------------------
-Stochastic model helper functions
----------------------------------------------------------------------------- */
-void addStochInfo(ModelComp *newmcs, SyntaxNode *stochopt) {
-   if(stochopt) {
-     bool isDet = stochopt->opCode == DETERMINISTIC;
-     YAC_MODEL_LOG("isDet["<<isDet<<"] is_deterministic_glo["<<is_deterministic_glo<<"]");
-     newmcs->setDeterministic(isDet || is_deterministic_glo);
-     newmcs->setStageSetNode(isDet ? stages_glo : stochopt);
-   } else {
-      newmcs->setDeterministic(is_deterministic_glo);
-      newmcs->setStageSetNode(stages_glo);
-   }
-}
-
 //yyin opened,and readable
 int parse_model() 
 {
 	int errcode = 0;
-	yyin = fopen(GlobalVariables::modelfilename.c_str(),"r");
+	yyin = fopen(Config::modelfilename.c_str(),"r");
 	assert(errcode==0);
 	string name = "root";
-	
+	//creating the root level - as always the case 
    	AmplModel::root = new AmplModel(name,NULL,NULL);
    	current_model = AmplModel::root;
-   	is_stoch_model = false;
-   	is_deterministic_glo = false;
-   	stages_glo = NULL;
+   	
+   	//stochastic model related initialization
+   	curr_stage_indexset = NULL;
 
 	YAC_MODEL_LOG("starting model parser.... ");
    	errcode = yyparse();

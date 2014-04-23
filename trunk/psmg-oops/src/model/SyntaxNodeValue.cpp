@@ -16,7 +16,16 @@ SyntaxNodeValue::SyntaxNodeValue(double val) : SyntaxNode(VALUE), val(val)
 }
 
 SyntaxNodeValue::~SyntaxNodeValue() {
+}
 
+SyntaxNodeValue::SyntaxNodeValue(const SyntaxNodeValue& src):SyntaxNode(src)
+{
+	val = src.val;
+}
+
+SyntaxNodeValue* SyntaxNodeValue::clone()
+{
+	return new SyntaxNodeValue(*this);
 }
 
 string SyntaxNodeValue::value() const {

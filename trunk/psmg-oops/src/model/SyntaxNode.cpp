@@ -13,10 +13,12 @@
 #include "SyntaxNodeIDREF.h"
 #include "SyntaxNodeIDREFM.h"
 #include "SyntaxNodeValue.h"
+#include "SyntaxNodeString.h"
 #include "SyntaxNodeID.h"
 #include "SyntaxNodeOP.h"
 #include "SetComp.h"
 #include "AmplModel.h"
+#include "../st_model/StochCtx.h"
 #include "ParamComp.h"
 #include "../context/SetSimple.h"
 #include "../context/SetOrdered.h"
@@ -33,23 +35,10 @@
 #include "../context/ExpandedModel.h"
 #include "../parser/sml.tab.h"
 
-//#include "../st_model/StochModel.h"
-
-/** Add an item to the back */
 using namespace std;
 
 SyntaxNode *SyntaxNode::push_back(SyntaxNode *newitem) {
 	values.push_back(newitem);
-	return this;
-}
-
-/** Add an item to the front */
-SyntaxNode *SyntaxNode::push_front(SyntaxNode *newitem) {
-	int nval = values.size();
-	values.resize(++nval);
-	for(int i = nval;--i > 0;)
-		values[i] = values[i - 1];
-	values[0] = newitem;
 	return this;
 }
 
@@ -62,8 +51,56 @@ string SyntaxNode::print() {
 /* ==========================================================================
  SyntaxNode Methods to follow
  ============================================================================*/
-SyntaxNode::SyntaxNode(const SyntaxNode &src) :opCode(src.opCode), values(src.values) {
-	LOG("Creating syntaxNode opCode["<<src.opCode<<"]");
+SyntaxNode::SyntaxNode(const SyntaxNode &src) :opCode(src.opCode) {
+	LOG("calling SyntaxNode copy constructor ..");
+	for(SyntaxNode::iterator it = src.begin();it!=src.end();it++)
+	{
+		SyntaxNode* node = (*it)->clone();
+		this->values.push_back(node);
+	}
+}
+
+SyntaxNode* SyntaxNode::clone(){
+	SyntaxNode* rval = NULL;
+	if(opCode==ANCESTOR)
+	{//need to convert to a IDREF node to the correct model
+		assert(this->nchild()==2); // must be 2 children: int value node and idref node.
+		assert(values[1]->opCode == IDREF && values[0]->opCode == VALUE);
+		StochCtx* record_sctx = SCTX::currCtx;
+		int labove = static_cast<SyntaxNodeValue*>(this->values[0])->val;
+		for(int i=0;i<labove;i++) SCTX::currCtx = SCTX::currCtx->parent;
+
+		rval = this->values[1]->clone();
+		//restore backup SCTX
+		SCTX::currCtx = record_sctx;
+	}
+	else if(opCode == EXPECTATION)
+	{//replace Exp[expr] ===> sum{n1 in NODES: Parent[n1]=n0} ( Prob[n1] * sum{n2 in NODES: Parent[n2]=n1}( Prob[n2]* almSTAGE1[n1].almSTAGE[n2].expr ) )
+		assert(nchild()==1);
+		rval = values[0]->clone();
+		for(StochCtx* i = SCTX::currCtx;i!=SCTX::rootCtx;i=i->parent)
+		{
+			rval = rval->appendDOTNotation(i);
+			SyntaxNodeIDREF* probn = new SyntaxNodeIDREF(new SyntaxNodeID(SCTX::pbSetComp->name),SCTX::pbSetComp);
+			SyntaxNode* probn_expr_list = new SyntaxNode(COMMA,new SyntaxNodeID(i->model_dummy));
+			probn->push_back(probn_expr_list);
+			SyntaxNode* sum_expr = new SyntaxNodeOP(TIMES,probn,rval);
+
+			SyntaxNodeIDREF* parn = new SyntaxNodeIDREF(new SyntaxNodeID(SCTX::paSetComp->name),SCTX::paSetComp);
+			SyntaxNode* par_expr_list = new SyntaxNode(COMMA,new SyntaxNodeID(i->model_dummy));
+			parn->push_back(par_expr_list);
+			SyntaxNode* condn = new SyntaxNode(EQ,parn,new SyntaxNodeID(i->parent->model_dummy));
+			SyntaxNodeIDREF* noden = new SyntaxNodeIDREF(new SyntaxNodeID(SCTX::ndSetComp->name),SCTX::ndSetComp);
+			SyntaxNode* index_list = new SyntaxNode(IN, new SyntaxNode(COMMA,new SyntaxNodeID(i->model_dummy)),noden);
+			SyntaxNode* sum_index_set = new SyntaxNode(LBRACE,new SyntaxNode(COLON,index_list,condn));
+
+			rval = new SyntaxNode(SUM,sum_index_set,sum_expr);
+		}
+		LOG("clone :: EXPECTATION convert to ["<<rval->print()<<"]");
+	}
+	else
+		rval = new SyntaxNode(*this);
+	return rval;
 }
 
 SyntaxNode::SyntaxNode(int code, SyntaxNode *val1, SyntaxNode *val2, SyntaxNode* val3) :opCode(code) {
@@ -244,6 +281,14 @@ ostream& SyntaxNode::put(ostream&s) {
 		case SIN:
 			s<<" sin(";
 			s<<**i;
+			s<<")";
+			break;
+		case ANCESTOR:
+			s<<" ancestor(";
+			s<<**i;
+			s<<",";
+			if (this->nchild() == 2)
+				s << **(++i);
 			s<<")";
 			break;
 		default:
@@ -707,6 +752,11 @@ IndexSet* SyntaxNode::createIndexSet(ModelContext* context)
 	return iset;
 }
 
+/*
+ * Precondition: *rval == NULL.
+ * Postcondition: *rval point to memory on heap, therefore caller need to call delete explicitly after
+ * 				assigning it's value
+ */
 void SyntaxNode::evalTerm(ModelContext* context, PValue** rval) {
 	LOG("evalTerm  ---  opCode["<<this->opCode<<"]  "<<this->print());
 	assert(*rval == NULL);
@@ -757,6 +807,11 @@ void SyntaxNode::evalTerm(ModelContext* context, PValue** rval) {
 	{
 		SyntaxNodeID* idn = static_cast<SyntaxNodeID*>(this);
 		string val = context->getDummyValue(idn->id);
+		*rval = new PValueSym(val);
+	}
+	else if(this->opCode == STRING)
+	{
+		string val = (static_cast<SyntaxNodeString*>(this))->val;
 		*rval = new PValueSym(val);
 	}
 	else if (this->opCode == SUM) {
@@ -930,15 +985,88 @@ bool SyntaxNode::evalBool(ModelContext* context) {
 
 SyntaxNode* SyntaxNode::findChildNode( int op) {
 	SyntaxNode* ret = NULL;
-	BOOST_FOREACH(SyntaxNode* node, this->values)
+	for(SyntaxNode::iterator i=this->begin();i!=end();i++)
 	{
-		if(op == node->opCode)
+		if(op == (*i)->opCode)
 		{
-			ret = node; break;
+			ret = (*i); break;
 		}
 	}
 	return ret;
 }
+
+void SyntaxNode::calcStageSet(ModelContext* ctx, boost::unordered_set<string>* stageset)
+{
+	assert(this->opCode == LBRACE);
+	SyntaxNode* set_expr = this->values[0]->values[0]->values[0];
+	if(set_expr->opCode == VALUE)
+	{
+		LOG("calcStageSet -- VALUE -- "<<set_expr->print());
+		ostringstream oss;
+		oss << (int)(static_cast<SyntaxNodeValue*>(set_expr)->val);
+		stageset->insert(oss.str());
+	}
+	else if(set_expr->opCode == IDREF)
+	{
+		SyntaxNodeIDREF* refn = static_cast<SyntaxNodeIDREF*>(set_expr);
+		assert(refn->ref->type == TPARAM);
+		ParamSingle* aParam = static_cast<ParamSingle*>(ctx->getCompValue(refn->ref));
+		assert(aParam->card == 1);
+		PValue* pval = aParam->value;
+		assert(typeid(*pval)==typeid(PValueValue));
+		ostringstream oss; oss<<(int)(static_cast<PValueValue*>(pval)->value);
+		stageset->insert(oss.str());
+	}
+	else if(set_expr->opCode == DOTDOT)
+	{
+		LOG("calcStageSet -- DOTDOT -- "<<set_expr->print());
+		int start;
+		int end;
+		if (set_expr->values[0]->opCode == VALUE) {
+			SyntaxNodeValue* valn = static_cast<SyntaxNodeValue*>(set_expr->values[0]);
+			start = valn->val;
+			LOG("set starting ["<<start<<"]");
+		}
+		else
+		{
+			LOG("["<<set_expr->opCode<<"]not yet supported!");
+			assert(false);
+		}
+
+		if (set_expr->values[1]->opCode == VALUE) {
+			LOG(set_expr->values[1]->opCode);
+			SyntaxNodeValue* valn = static_cast<SyntaxNodeValue*>(set_expr->values[1]);
+			end = valn->val;
+			LOG("set ending ["<<end<<"]");
+		}
+		else if (set_expr->values[1]->opCode == IDREF) {
+			SyntaxNodeIDREF* refn = static_cast<SyntaxNodeIDREF*>(set_expr->values[1]);
+			assert(refn->ref->type == TPARAM);
+			ParamSingle* aParam = static_cast<ParamSingle*>(ctx->getCompValue(refn->ref));
+			assert(aParam->card == 1);
+			PValue* pval = aParam->value;
+			assert(typeid(*pval)==typeid(PValueValue));
+			end = static_cast<PValueValue*>(pval)->value;
+			LOG("set end ["<<end<<"]");
+		}
+		else {
+			LOG("case not yet implmented.");
+			assert(false);
+		}
+
+		for(int i = start;i <= end;i++) {
+			ostringstream oss;
+			oss << i;
+			stageset->insert(oss.str());
+		}
+	}
+	else
+	{
+		LOG("calcStageSet-- opCode["<<opCode<<"] not yet implementated!");
+		assert(false);
+	}
+}
+
 
 bool SyntaxNode::isDepend(vector<ModelComp*> varComps) {
 	LOG("isDepend -- "<<this->print());
@@ -966,7 +1094,7 @@ bool SyntaxNode::isDepend(vector<ModelComp*> varComps) {
 }
 
 void SyntaxNode::getIndiciesKey(ModelContext* ctx, string& idxkey)
-{
+{//this should be an expr_list
 	assert(this->opCode == COMMA);
 	assert(this->nchild()>=1);
 	ostringstream oss;
@@ -980,18 +1108,36 @@ void SyntaxNode::getIndiciesKey(ModelContext* ctx, string& idxkey)
 	idxkey = oss.str();
 }
 
-string SyntaxNode::printVector(vector<double>& v) {
-	ostringstream oss;
-	vector<double>::iterator it = v.begin();
-	oss << "[";
-	for(;it != v.end();it++) {
-		oss << *it << " ";
+bool SyntaxNode::hasExp()
+{
+	bool rval = false;
+	if(this->opCode == EXPECTATION)
+	{
+		rval = true;
 	}
-	oss << "]";
-	return oss.str();
+	else
+	{
+		for(SyntaxNode::iterator i=this->begin();i!=this->end();i++)
+		{
+			rval = (*i)->hasExp();
+			if(rval == true)	break;
+		}
+	}
+	return rval;
 }
 
-
+/*
+ * this method to perform the move up operation for expecation node
+ */
+SyntaxNode* SyntaxNode::appendDOTNotation(StochCtx* sctx)
+{
+	for(uint i=0;i<values.size();i++)
+	{
+		SyntaxNode* rval = values[i]->appendDOTNotation(sctx);
+		if(rval!=values[i]) values[i] = rval;
+	}
+	return this;
+}
 
 double SyntaxNode::evalRhs(ModelContext* context) {
 	PValue* rval = NULL;
@@ -1264,13 +1410,17 @@ void SyntaxNode::calculatePartialConstraints(boost::unordered_map<int,SyntaxNode
 //model dummy variable indicies are stored in rowctx;
 AutoDiff::Node* SyntaxNode::createAutoDiffConIDREFLP(ModelContext* rowctx, ModelContext* colctx)
 {
-	LOG("enter createAutoDiffConIDREF   ["<<this->print()<<"]");
+	LOG("enter createAutoDiffConIDREFLP   ["<<this->print()<<"]");
 	AutoDiff::Node* con = NULL;
 	SyntaxNodeIDREF* refn = static_cast<SyntaxNodeIDREF*>(this);
 	ModelComp* comp = refn->ref;
 	assert(comp->type == TVAR || comp->type == TPARAM);
 	if (comp->type == TVAR) {
-		Var* var = static_cast<Var*>(colctx->getCompValue(comp));
+		Var* var = NULL;
+		if(comp->model == colctx->em->model) //only for local constraint defined in colctx, because of LP
+		{
+			var = static_cast<Var*>(colctx->getCompValue(comp));
+		}
 		if(var!=NULL)
 		{
 			string varIndex = "";
@@ -1278,7 +1428,7 @@ AutoDiff::Node* SyntaxNode::createAutoDiffConIDREFLP(ModelContext* rowctx, Model
 				refn->values[1]->getIndiciesKey(rowctx, varIndex);
 			}
 			else
-				assert(refn->nchild() == 1);
+				assert(refn->nchild() == 1); //just a var declared with no indexing
 			var_multi_map_by_indicies::iterator it = var->varMultiMap.get<1>().find(varIndex);
 			if (it != var->varMultiMap.get<1>().end()) {
 				con = it->adv;
@@ -1309,14 +1459,14 @@ AutoDiff::Node* SyntaxNode::createAutoDiffConIDREFLP(ModelContext* rowctx, Model
 			double pval = static_cast<PValueValue*>(theParam->findParamValue(key))->value;
 			con = AutoDiff::create_param_node(pval);
 		}
-		else {
+		else { //just a parameter declared with no indexing
 			assert(typeid(*compdescr) == typeid(ParamSingle));
 			double pval = static_cast<PValueValue*>(static_cast<ParamSingle*>(compdescr)->value)->value;
 			con = AutoDiff::create_param_node(pval);
 		}
 	}
 	assert(con != NULL);
-	LOG("exit createAutoDiffConIDREF ["<<this->print()<<"]----->AutoDiff:["<<con->toString(0)<<"]");
+	LOG("exit createAutoDiffConIDREFLP ["<<this->print()<<"]----->AutoDiff:["<<con->toString(0)<<"]");
 	return con;
 }
 

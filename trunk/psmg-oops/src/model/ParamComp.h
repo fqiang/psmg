@@ -17,13 +17,12 @@ class SetComp;
 
 class ParamComp : public ModelComp {
 public:
-	ParamComp(const string& id, SyntaxNode* index, SyntaxNode* attr);
+	ParamComp(const string& id, SyntaxNode* index, SyntaxNode* attr, AmplModel* owner);
 	virtual ~ParamComp();
 
 	int numIndicies;
 	bool isSym;
 	void setParamIndicies();
-	int getNumSetIndices();
 	void calculateParamModelComp(ModelContext* context);
 	void calculateParamModelComp(ModelContext* context,
 				vector<string>& dumVars,vector<SetComp*>& comps,vector<Set*>& sets, int curr, ParamMult* param);

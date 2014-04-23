@@ -15,7 +15,7 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 /** 
-\mainpage Structured Modelling Language for OOPS 
+\mainpage Parallel Structured Modelling Generator
 
 This is the doxygen documentation for the \ref language "Structured Modelling Language (SML)"
 Interface to OOPS.

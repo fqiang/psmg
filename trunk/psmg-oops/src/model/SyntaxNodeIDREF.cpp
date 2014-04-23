@@ -6,30 +6,56 @@
  */
 
 #include "SyntaxNodeIDREF.h"
+#include "SyntaxNodeIDREFM.h"
 #include "SyntaxNodeID.h"
 
 #include "ObjComp.h"
+#include "../st_model/StochModel.h"
+#include "../st_model/StochCtx.h"
 #include "../parser/sml.tab.h"
 
 /* --------------------------------------------------------------------------
  SyntaxNodeIDREF::SyntaxNodeIDREF(ModelComp *r)
  ---------------------------------------------------------------------------- */
-SyntaxNodeIDREF::SyntaxNodeIDREF(int opCode, SyntaxNode *val1, ModelComp *comp) :
-		SyntaxNode(IDREF, val1), ref(comp), stochparent(0)
+SyntaxNodeIDREF::SyntaxNodeIDREF(SyntaxNode *val1, ModelComp *comp) :
+		SyntaxNode(IDREF, val1), ref(comp)
 {
 	assert(comp!=NULL);
-	assert(opCode == IDREF);
-}
-
-SyntaxNodeIDREF::SyntaxNodeIDREF(int opCode_, ModelComp *comp) :
-		SyntaxNode(opCode_), ref(comp), stochparent(0) {
-	assert(opCode==IDREF);
-	assert(comp!=NULL);
-	LOG("SyntaxNodeIDREF constructor called -- opCode["<<opCode_<<"] ModelComp["<<comp->name<<"]");
+	assert(val1->opCode == ID);
 }
 
 SyntaxNodeIDREF::~SyntaxNodeIDREF() {
-	LOG("SyntaxNodeIDREF destructor -- ");
+}
+
+SyntaxNodeIDREF::SyntaxNodeIDREF(const SyntaxNodeIDREF& src):SyntaxNode(src)
+{
+	ref = src.ref;
+}
+
+SyntaxNodeIDREF* SyntaxNodeIDREF::clone()
+{
+	assert(nchild()<=2);
+	//make a copy, then
+	SyntaxNodeIDREF* refn = new SyntaxNodeIDREF(*this);
+	//update reference refn->ref
+	string refname = static_cast<SyntaxNodeID*>(this->values[0])->id;
+	refn->ref = SCTX::currCtx->model->findModelComp(refname);
+	assert(refn->ref!=NULL);
+	return refn;
+}
+
+SyntaxNode* SyntaxNodeIDREF::appendDOTNotation(StochCtx* sctx)
+{
+	SyntaxNode* rval = this;
+	if(sctx->model == ref->model)
+	{
+		SyntaxNodeIDREFM* refm = new SyntaxNodeIDREFM(new SyntaxNodeID(sctx->model->name),sctx->model);
+		SyntaxNode* expr_list = new SyntaxNode(COMMA,new SyntaxNodeID(sctx->model_dummy));
+		refm->push_back(expr_list);
+		SyntaxNode* dotn = new SyntaxNode(DOT,refm,this);
+		rval = dotn;
+	}
+	return rval;
 }
 
 ostream& SyntaxNodeIDREF::put(ostream& s) {
@@ -42,6 +68,10 @@ ostream& SyntaxNodeIDREF::put(ostream& s) {
 		assert(values[1]->opCode == COMMA);
 		s<<"["<<values[1]<<"]";
 	}
+	else if(nchild()>2)
+	{
+		assert(false); //should never research here.
+	}
 	return s;
 }
 
@@ -50,38 +80,3 @@ void SyntaxNodeIDREF::calculateMemoryUsage(unsigned long& size) {
 	//ref is counted in ampl model's component
 	this->calculateBaseValueVector(size);
 }
-
-
-
-//legacy!!
-
-////--------------------------------------------------------------
-//
-///* --------------------------------------------------------------------------
-// SyntaxNodeIDREF *SyntaxNodeIDREF::deep_copy()
-// ---------------------------------------------------------------------------- */
-//SyntaxNodeIDREF* SyntaxNodeIDREF::deep_copy() {
-//	SyntaxNodeIDREF *newn = new SyntaxNodeIDREF(opCode, ref);
-//
-//	newn->values.resize(nchild());
-//	for (int i = 0; i < nchild(); ++i)
-//		newn->values[i] = values[i]->deep_copy();
-//	newn->stochparent = stochparent;
-//
-//	return newn;
-//}
-//
-///* --------------------------------------------------------------------------
-// SyntaxNodeIDREF *SyntaxNodeIDREF::clone()
-// ---------------------------------------------------------------------------- */
-//SyntaxNodeIDREF * SyntaxNodeIDREF::clone() {
-//	LOG("enter SyntaxNodeIDREF::clone -- ");
-//	SyntaxNodeIDREF *newn = new SyntaxNodeIDREF(opCode, ref);
-//
-//	newn->values = values;
-//	newn->stochparent = stochparent;
-//	LOG("exit SyntaxNodeIDREF::clone -- ");
-//	return newn;
-//}
-
-

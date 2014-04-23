@@ -1,603 +1,284 @@
-///* (c) 2008,2009 Jonathan Hogg and Andreas Grothey, University of Edinburgh
-// *
-// * This file is part of SML.
-// *
-// * SML is free software: you can redistribute it and/or modify it under the
-// * terms of the GNU Lesser General Public License as published by the Free
-// * Software Foundation, using version 3 of the License.
-// *
-// * SML is distributed in the hope that it will be useful, but WITHOUT ANY
-// * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-// * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
-// * details.
-// *
-// * You should have received a copy of the GNU Lesser General Public License
-// * along with this program. If not, see http://www.gnu.org/licenses/.
-// */
-//
-//#include "StochModel.h"
-//#include "../sml/GlobalVariables.h"
-//#include "../util/global_util_functions.h"
-//#include "../model/SyntaxNode.h"
-//#include "../model/SyntaxNodeIx.h"
-//#include "../model/IDNode.h"
-//#include "../model/OpNode.h"
-//#include "../model/SyntaxNodeIDREF.h"
-//#include "StageNodeNode.h"
-//#include "../parser/sml.tab.h"
-//#include "StochModelComp.h"
-//#include <cstdlib>
-//#include <cstring>
-//#include <fstream>
-//#include <iostream>
-//
-//using namespace std;
-//
-//vector<string> StochModel::STAGE_LIST;
-//
-///* ---------------------------------------------------------------------------
-// StochModel::StochModel()
-// ---------------------------------------------------------------------------- */
-///** Constructor */
-//StochModel::StochModel(const string& name, SyntaxNode *onStages, SyntaxNode *onNodes,
-//		SyntaxNode *onAncs, SyntaxNode *onProb, AmplModel *par) :
-//		AmplModel(name,par), is_symbolic_stages(false)
-//{
-//	LOG("create StochModel -- onStages["<<onStages<<"] noNodes["<<onNodes<<"] onAncs["<<onAncs<<"] onProb["<<onProb<<"] prnt["<<par->name<<"]");
-//	/* Split up possible indexing expressions for params */
-//	StochModel::splitIn(onStages, &stagedummy, &stageset);
-//	StochModel::splitIn(onNodes, &nodedummy, &nodeset);
-//	IDNode *baddummy;
-//	StochModel::splitIn(onAncs, &baddummy, &anc);
-//	if (baddummy)
-//	{
-//		cerr << "Dummy index '" << baddummy << "' on set " << anc
-//				<< " not allowed" << endl;
-//		exit(1);
-//	}
-//	StochModel::splitIn(onProb, &baddummy, &prob);
-//	if (baddummy)
-//	{
-//		cerr << "Dummy index '" << baddummy << "' on set " << anc
-//				<< " not allowed" << endl;
-//		exit(1);
-//	}
-//	LOG("end create StochModel -- ");
-//}
-//
-//extern void parse_data(ModelContext* rootContext);
-//
-///* ---------------------------------------------------------------------------
-// StochModel::expandStages()
-// ---------------------------------------------------------------------------- */
-///** Expand the STAGES set into the actual elements to be stored in stagenames.
-// *
-// *  An AMPL model file and correspoding script file is created that
-// *  when executed writes the components of the set to disk. This routine
-// *  also reads in that file and stores the set members in the
-// *  StochModel::stagenames list.
-// */
-//
-//void StochModel::expandStages()
-//{
-//	LOG("enter expandStages -- ");
-//	list<ModelComp*> ref;
-//	stageset->findIDREF(ref);
-//	assert(ref.size()==1);
-//	ModelComp* stageComp = ref.front();
-//
-//	ModelContext* rootCtx = new ModelContext(NULL);
-//	parse_data(rootCtx);
-//	AmplModel::root->calculateModelComp(rootCtx);
-//
-//	Set* aSet = static_cast<Set*>(rootCtx->getCompValue(stageComp));
-//	assert(aSet!=NULL);
-//	vector<string>::iterator it = aSet->setValues_data_order.begin();
-//	for(;it!=aSet->setValues_data_order.end();it++)
-//	{
-//		assert(aSet->dim==1);
-//		StochModel::STAGE_LIST.push_back((*it));
-//		LOG("add stagename -  ["<<*it<<"]");
-//	}
-//	delete rootCtx;
-//	rootCtx = NULL;
-//	LOG("end expandStages --- ");
-//}
-//
-//
-///* ---------------------------------------------------------------------------
-// StochModel::expandStagesOfComp()
-// ---------------------------------------------------------------------------- */
-///** Expand the STAGES sets of all StochModelComps in this model.
-// *
-// *
-// *  This is a StochModel method rather than a StochModelComp method in
-// *  order to gather all expansions into a single call to AMPL.
-// */
-//
-//void StochModel::expandStagesOfComp()
-//{
-//	LOG("starting expandStageOfComp -- ["<<this->name<<"]");
-//	////////////////////////////////////////////////load data
-//	LOG("loading data again for stage set");
-//	//AmplModel::root->updateCurrLevelModelComp(); -- already updated in StochModel constructor
-//	ModelContext* rootCtx = new ModelContext(NULL);
-//	parse_data(rootCtx);
-//	AmplModel::root->calculateModelComp(rootCtx);
-//	////////////////////////////////////////////////load data
-//	vector<ModelComp*>::iterator p;
-//	for (p = all_comps.begin(); p != all_comps.end(); ++p)
-//	{
-//		ModelComp *smc = *p;
-//		LOG("smc["<<smc->id<<"]");
-//		SyntaxNode *stageSet = smc->getStageSetNode();
-//		if (stageSet)
-//		{
-//			Set* aSet = stageSet->calculateSetValue(rootCtx);
-//			LOG("ModelComp["<<smc->id<<"] "<<aSet->toString());
-//			vector<string>::iterator it;
-//			it = aSet->setValues_data_order.begin();
-//			for(;it!=aSet->setValues_data_order.end();it++)
-//			{
-//				assert(aSet->dim == 1);
-//				smc->addStageName((*it));
-//			}
-//		}
-//	}
-//	delete rootCtx;
-//	LOG("end expandStageOfComp -- ");
-//}
-//
-//
-///* ---------------------------------------------------------------------------
-// StochModel::expandToFlatModel()
-// ---------------------------------------------------------------------------- */
-///* Processing of StochModel:
-// for the (normal) AmplModels processing proceeds in three steps:
-// - write submodel AMPL files
-// - write script
-// - create ExpandedModel tree
-// How would these steps work for the StochModel?
-//
-// a) convert StochModel into a tree of AmplModel (one for each stage).
-// Need to know:
-// - number of stages (Stages set would need to be expanded)
-//
-// Can we write down what the nested AmplModel tree for the ALM problem
-// would look like?
-// (Note that this model is never built in practice, but all the information
-// - in particular the description of the indexing sets - need to be held
-// in the AmplModel objects).
-// */
-//
-///** Expand the StochModel to a nested set of flat models.
-// *
-// *  This routine works in two passes:
-// *  -# In the first pass the chain of AmplModel's is built. The StochModelComp
-// *     components are just copied (references are copied), but dependencies
-// *     are not resolved with respect to the new model chain.
-// *     The chain of AmplModels is built from the leaves up
-// *  -# In the second pass the StochModelComp components are transcribed into
-// *     ModelComp's and their dependencies are resolved with respect to the
-// *     new model chain. This pass is executed from root down to the leaves.
-// */
-//AmplModel* StochModel::expandToFlatModel()
-//{
-//	LOG("-----------  enter expandToFlatModel: -- ["<<this->name<<"]");
-//
-//	//----------------------------------------------------------------------------------------------------------------------
-//	//update setdim param dim before loading the data
-//	for(vector<ModelComp*>::iterator i=AmplModel::root->set_comps.begin();i!=AmplModel::root->set_comps.end();i++)
-//	{
-//		assert((*i)->type==TSET);
-//		(*i)->setSetDim();
-//		LOG("updateModelComp for set - id["<<(*i)->id<<"] dim["<<(*i)->setDim<<"] -- "<<*i);
-//	}
-//	for(vector<ModelComp*>::iterator i=AmplModel::root->param_comps.begin();i!=AmplModel::root->param_comps.end();i++)
-//	{
-//		assert((*i)->type==TPARAM);
-//		(*i)->setParamIndicies();
-//		LOG("updateModelComp for param - id["<<(*i)->id<<"] numParamIndicies["<<(*i)->getNumParamIndicies()<<"] -- "<<*i);
-//	}
-//	expandStages();
-//	/* expand the stages set for all the StochModelComp entities in this model */
-//	expandStagesOfComp();
-//
-//	//once data loaded and decarded , reset all comp data and dim card = 0
-//	for(vector<ModelComp*>::iterator i=AmplModel::root->set_comps.begin();i!=AmplModel::root->set_comps.end();i++)
-//	{
-//		(*i)->setCard = 0;
-//		(*i)->setDim = 0;
-//		LOG("updateModelComp for set - id["<<(*i)->id<<"] dim["<<(*i)->setDim<<"] -- "<<*i);
-//	}
-//	for(vector<ModelComp*>::iterator i=AmplModel::root->param_comps.begin();i!=AmplModel::root->param_comps.end();i++)
-//	{
-//		assert((*i)->type==TPARAM);
-//		(*i)->paramIndiciesComp.clear();
-//		(*i)->paramIndiciesDummy.clear();
-//		(*i)->paramIndiciesMap.clear();
-//		LOG("updateModelComp for param - id["<<(*i)->id<<"] numParamIndicies["<<(*i)->getNumParamIndicies()<<"] -- "<<*i);
-//	}
-//	//----------------------------------------------------------------------------------------------------------------------
-//
-//	AmplModel *model_above = NULL;
-//	AmplModel *am;
-//	int stgcnt;
-//	/* Now create a FlatModel (AmplModel) for each element of the overall
-//	 stages set and put in it all entities that either have no stageset
-//	 defined, or whose stageset includes the current stage */
-//
-//	// loop over all stages and create an AmplModel for every stage
-//	stgcnt = StochModel::STAGE_LIST.size() - 1;
-//	for (vector<string>::reverse_iterator st = StochModel::STAGE_LIST.rbegin();st != StochModel::STAGE_LIST.rend(); st++, stgcnt--)
-//	{
-//		string stageName = *st;
-//		string modelName = (stgcnt == 0) ? name + stageName : stageName;
-//
-//		am = new AmplModel(modelName,NULL);
-//		LOG("Creating amplModel for stage-count["<<stgcnt<<"]: stageName["<<stageName<<"]  amname["<<modelName<<"] level["<<am->level<<"] -- level is wrong !!");
-//
-//		// loop over all components of the StochModel
-//		for (vector<ModelComp*>::iterator p = all_comps.begin(); p != all_comps.end();p++)
-//		{
-//			ModelComp *comp = *p;
-//			if (comp->type == TMODEL)
-//			{//the case for submodel inside a stochastic block
-//				cerr<< "Not quite sure what to do for submodels within Stochastic Blocks" << endl;
-//				exit(1);
-//			}
-//
-//			// check if this component should be included in the current stage
-//			bool inc=true;
-//			if (comp->getStageSetNode())
-//			{
-//				inc = false;
-//				for (vector<string>::const_iterator sname = comp->getStageNames().begin();sname != comp->getStageNames().end(); ++sname)
-//				{
-//					if (stageName.compare(*sname)==0)
-//					{
-//						inc = true;
-//						break;
-//					}
-//				}
-//			}
-//
-//			// if this component should be included in the current stage
-//			if (inc)
-//			{
-//				/* I presume this is all that is needed? */
-//				/** @bug: NO! need to translate all references to ModelComp (IDREF)
-//				 * that will currently refer to ModelComps of the StochModel
-//				 * into ModelComps of the appropriate FlatModel on the FlatModel tree.
-//				 * This might be modified by any (-1;...) expressions that refer
-//				 * to parents in the FlatModel tree
-//				 * I guess also need to do something with the Exp(...) expression
-//				 */
-//
-//				/* In the first pass we just copy the original reference */
-//
-//				// need to clone so that pointers to ->model, ->next are setup
-//				// correctly
-//				LOG("modelComp["<<comp->id<<"] is in amplModel["<<am->name<<"]");
-//				ModelComp* copied = comp->clone();
-//				//comp = smc->transcribeToModelComp(am);
-//
-//				am->addComp(copied);
-//				// this will change comp->model. If the original pointer to StochModel
-//				// needs to be retained, that should be stored in a stochmodel
-//				// entry in StochModelComp?
-//			}
-//			else
-//			{
-//				LOG("modelComp["<<comp->id<<"] is not in amplModel["<<am->name<<"]");
-//			}
-//
-//		} // end loop over model components
-//
-//		{
-//			/* FIXME: need to add indexing to this model  */
-//			/*
-//			 The indexing expression should look something like
-//			 "all children of current node": {i in NODES: A[i]==nd}
-//			 where nd is the current node. I guess we have to build the SyntaxNode
-//			 representation of this expression by hand.
-//
-//			 so this should really read
-//			 set indS1 := {i in NODES: A[i] in indS0_sub}
-//			 and use indS1 as the indexing set
-//
-//			 */
-//
-//			/* so this is a set definition ModelComp with a SyntaxNode tree
-//			 describing the indexing set
-//			 */
-//
-//			// start with the "i in NODES" bit
-//			SyntaxNode *on1, *on2, *on_iinN, *onai, *on3;
-//			StochModelComp *smctmp;
-//			// NODES is a reference to the NODES set that is part of the
-//			// smodel description
-//
-//			if (stgcnt == 0) //root stage
-//			{
-//				LOG("stage-count is 0 -- implies rootstage");
-//				/* add this for the zeroth (root) stage to identify the name of
-//				 the root node */
-//				// set rootset := {this_nd in NODES:Parent[this_nd] == "null"};
-//				// on_iinn: this_nd in NODES
-//				on_iinN = new OpNode(IN, new IDNode("this_nd"), nodeset->clone());
-//				// onai: A[this_nd]
-//				onai = new SyntaxNode(LSBRACKET, anc->clone(),new SyntaxNode(COMMA, new IDNode("this_nd")));
-//				// on2: A[this_nd]=="null"
-//				on2 = new OpNode(EQ, onai, new IDNode("\"null\""));
-//				// on1: :={this_nd in NODES:Parent[this_nd] == "null"};
-//				on1 = new OpNode(DEFINED,new SyntaxNode(LBRACE,new SyntaxNode(COLON, on_iinN, on2)));
-//				// and add this to the model
-//				string compId = "rootset";
-//				smctmp = new StochModelComp(compId, TSET, NULL, on1, this);
-//				am->addComp(smctmp);
-//			}
-//			/* EITHER we can set this up as an ID node with name NODES and do a
-//			 search for it by calling find_var_ref_in_context
-//			 BUT: find_var_ref_in_context needs the context set up and that
-//			 wont be the case?
-//			 OR directly set up the IDREF node (for this we have to know where
-//			 the definition statement of this model components (NODES) is
-//			 to be found */
-//
-//			on1 = nodeset->clone(); // does this work?
-//			// this is going to be the dummy variable i (just an ID node?)
-//			on2 = new IDNode("this_nd");
-//			/** @bug 'this_nd' is a reserved variable now */
-//			on_iinN = new OpNode(IN, on2, on1);
-//			//printf("Test first part of expression: %s\n",on_iinN->print());
-//			// set up the 'A[i] in indS0' part now
-//
-//			// this is the A[i] part: just clone the corresponding anc node and add
-//			// a comma separated list consisting of only i (IDREF) to it?
-//			on1 = anc->clone();
-//			// this is the comma separated list
-//			/* I think that  dummy variable is just left as a ID */
-//			on2 = new SyntaxNode(COMMA, new IDNode("this_nd"));
-//			// this is A[i]
-//			onai = new SyntaxNode(LSBRACKET, on1, on2);
-//			// this is the A[i] in indSO
-//			//printf("Test second part of expression: %s\n",onai->print());
-//
-//			/* this is a reference to indS0 which is the indexing set of the
-//			 model below (or root if there is none below)
-//			 Trouble is that the model below has not been set up yet... */
-//			if (stgcnt > 0)
-//			{
-//				LOG("stage-count greater than 0 is ["<<stgcnt<<"] -- non rootstage");
-//				ostringstream oss(ostringstream::out);
-//				oss << "ix" << (stgcnt - 1);
-//				on3 = new IDNode(oss.str().c_str());
-//				on2 = new OpNode(EQ, onai, on3);
-//				LOG("end non rootstage handling");
-//			}
-//			else
-//			{
-//				/* No, the first indexing set is not over the nodes that have "root"
-//				 as parent (this would require the root node to be always named
-//				 "root"), but rather "root" is the set of nodes (should be only one)
-//				 that have "null/none" as parent. The first indexing set is the nodes
-//				 that have this node as parent:
-//
-//				 set rootset := {this_nd in NODES:Parent[this_nd] = "null"};
-//				 set alm0_ind0 := {this_nd in NODES: Parent[this_nd] in rootset};
-//				 */
-//
-//				//on3 = new SyntaxNode(ID, strdup("\"root\"")); //??? this root is a literal not an ID!
-//				//on3 = new SyntaxNode(ID, strdup("rootset"));
-//				on3 = new SyntaxNodeIDREF(smctmp);
-//				on2 = new OpNode(IN, onai, on3);
-//				LOG("end rootstage handling");
-//			}
-//
-//			// and build everything
-//			on1 = new SyntaxNode(COLON, on_iinN, on2);
-//			// and add curly brackets to it
-//			on3 = new SyntaxNode(LBRACE, on1);
-//			// and the :=
-//			on1 = new OpNode(DEFINED, on3);
-//			//printf("Test all of expression: %s\n",on1->print());
-//
-//			// so we've got a SyntaxNode to '{i in NODES:A[i] in indS0}'
-//
-//			/* Add this as a model component defining a set? */
-//			string compId = "ind" + *st;
-//			StochModelComp *smc = new StochModelComp(compId, TSET, NULL,on1, this);
-////			LOG("StochModelComp created -- ["smc->);
-////			smc->print();
-////			LOG("                           ]");
-//			am->addComp(smc);
-//
-//			if (model_above)
-//			{
-//				LOG("model_above is ["<<model_above->name<<"] -- creating ix over");
-//				// create a dummy variable
-//				ostringstream oss(ostringstream::out);
-//				oss << "ix" << stgcnt;
-//				string dummy_var = oss.str();
-//
-//				// add a submodel component that points to the model above
-//				// need to create an indexing expression for the model above
-//				//on1 = new SyntaxNode(ID, strdup(buf)); //indset
-//				on1 = new SyntaxNodeIDREF(smc); //indset
-//				on_iinN = new OpNode(IN, new IDNode(dummy_var.c_str()), on1); // i in N
-//				on2 = new SyntaxNode(LBRACE, on_iinN); // {i in N}
-//				//printf("Indexing Expression: %s\n",on2->print());
-//
-//				ModelComp *newmc = new ModelComp(model_above->name, TMODEL,new SyntaxNodeIx(on2), NULL);
-//				//ModelComp *newmc = new ModelComp(((*st)++), TMODEL,
-//				//                                   new SyntaxNodeIx(on2), NULL);
-//				newmc->other = model_above;
-////				LOG("ModelComp created -- [");
-////				newmc->print();
-////				LOG("                      ]");
-//				am->addComp(newmc);
-//				model_above->node = newmc;
-//			}
-//			model_above = am;
-//		}
-//	} // end loop over stages
-//
-//	am->parent = parent;
-//	am->node = node;
-//	LOG("setting up parent -- ampleModel["<<am->name<<"]'s parent -->["<<parent->name<<"]");
-//	LOG("setting up root ModelComp -- ampleModel["<<am->name<<"]'s modelComp -->["<<node->id<<"] indexing["<<node->indexing->print()<<"]");
-//
-//	LOG("-----------------------------------------------------------\n");
-//	LOG(" StochModel::expandToFlatModel: Finished Pass 1: ");
-//	LOG("printing FlatModel tree:");
-//	LOG("\n-----------------------------------------------------------\n");
-//	if (GlobalVariables::debug)
-//	{
-//		am->print();
-//	}
-//
-//	/* =========================== PASS 2 ================================== */
-//	LOG("Start pass 2 in StochModel -");
-//	/* recursively work on all the ModelComps in the model tree and
-//	 convert them to version whose IDREF nodes are resolved with
-//	 respect to the new AmplModel tree */
-//
-//	transcribeComponents(am, 0);
-//	// and tidy up changes
-//	AmplModel::applyChanges();
-//	am->reassignDependencies();
-//	am->reassignModelIndexDependencies();
-//
-//	LOG("-----------------------------------------------------------\n");
-//	LOG(" StochModel::expandToFlatModel: Finished converting: ");
-//	LOG("printing FlatModel tree:");
-//	LOG("\n-----------------------------------------------------------\n");
-//	if (GlobalVariables::debug)
-//	{
-//		am->print();
-//		LOG("-----------------------------------------------------------\n");
-//	}
-//
-//	LOG(" exit expandToFlatModel:\n");
-//	return am;
-//}
-//
-///*-----------------------------------------------------------------------------
-// StochModel::transcribeComponents(AmplModel *current, int level)
-// -----------------------------------------------------------------------------*/
-///** Call recursively StochModelComp::transcribeToModelComp() for all components
-// *  of this StochModel.
-// *
-// *  It sets SyntaxNode::stage and SyntaxNode::node to the correct values
-// *  for each new AmplModel encountered in the recursion.
-// *
-// *  @param current
-// *         The AmplModel that is currently worked on. I.e. in the current
-// *         level of the recursion the routine is working on AmplModel current
-// *         within this StochModel.
-// *  @param lev
-// *         The recursion level (to work out the correct way to resolve the
-// *         'stage' and 'node' keywords and 'ancestor' references).
-// */
-//void StochModel::transcribeComponents(AmplModel *current, int lev)
-//{
-//
-//	// need to set stage and node for the current model
-//	/* What should we do here: I think use quotation marks if the set of stages
-//	 is symbolic. otherwise don't use quotation marks */
-//	LOG("start  transcribeComponents -- in current["<<current->name<<"]"<<" lev["<<lev<<"]");
-//	if (is_symbolic_stages)
-//	{
-//		StageNodeNode::stage = "\"" + StochModel::STAGE_LIST.at(lev) + "\"";
-//	}
-//	else
-//	{
-//		StageNodeNode::stage = StochModel::STAGE_LIST.at(lev);
-//	}
-//
-//	if (lev == 0)
-//	{
-//		StageNodeNode::node = "\"root\"";
-//	}
-//	else
-//	{
-//		SyntaxNodeIx *cnix = current->node->indexing;
-//		list<SyntaxNode*> dv = cnix->getListDummyVars();
-//		StageNodeNode::node = (dv.front())->print();
-//	}
-//	LOG("stage["<<StageNodeNode::stage<<"] node["<<StageNodeNode::node<<"]");
-//
-//	vector<ModelComp*> newcomps;
-//	// loop through all the entities in this model
-//	for (vector<ModelComp*>::iterator p = current->all_comps.begin();p != current->all_comps.end(); p++)
-//	{
-//		ModelComp *mc = *p;
-//		if (mc->type == TMODEL)
-//		{
-//			LOG("mc["<<mc->id<<"] type is TMODEL");
-//			transcribeComponents(mc->other, lev + 1);
-//			newcomps.push_back(mc);
-//		}
-//		else
-//		{
-//			LOG("mc["<<mc->id<<"] type is ["<<mc->type<<"]");
-//			/* The component in question is just a pointer to the original
-//			 StochModelComp: need to resolve this with respect to the current
-//			 setting */
-//			StochModelComp *smc = dynamic_cast<StochModelComp*>(mc);
-//			ModelComp* mcnew;
-//			if (smc)
-//			{
-//				string ndname = nodedummy ? nodedummy->id() : "__INVALID__";
-//				string stname = stagedummy ? stagedummy->id() : "__INVALID__";
-//				mcnew = smc->transcribeToModelComp(current, ndname, stname,lev);
-//				newcomps.push_back(mcnew);
-//			}
-//			else
-//			{
-//				// This is not a StochModelComp: this should be an indexing set
-//				// definition for a submodel.
-//				cerr<< "ERROR: StochModel::_transcribeComponents: unwritten branch executed.\n";
-//				exit(1);
-//			}
-//		}
-//	}
-//
-//	current->removeAllComps();
-//	for(vector<ModelComp*>::iterator it=newcomps.begin();it!=newcomps.end();it++)
-//	{
-//		current->addComp(*it);
-//	}
-//	LOG("end _transcribeComponents -- lev["<<lev<<"] current["<<current->name<<"]");
-//}
-//
-//void StochModel::addComp(ModelComp *comp)
-//{
-//	AmplModel::addComp(comp);
-//	comp->setStochModel(this);
-//}
-//
-//SyntaxNodeIDREF* StochModel::createIdrefNode(IDNode *ref)
-//{
-//	if ((stagedummy && ref->id() == stagedummy->id())
-//			|| (nodedummy && ref->id() == nodedummy->id()))
-//		return NULL; // but don't generate an error
-//	return AmplModel::createIdrefNode(ref);
-//}
-//
-//
-//void StochModel::splitIn(SyntaxNode* expr, IDNode **dummy, SyntaxNode **set)
-//{
-//	if (expr->opCode == IN)
-//	{
-//		SyntaxNode::iterator i = expr->begin();
-//		*dummy = static_cast<IDNode *>(*i);
-//		*set = *(++i);
-//	}
-//	else
-//	{
-//		*dummy = NULL;
-//		*set = expr;
-//	}
-//}
+/* (c) 2008,2009 Jonathan Hogg and Andreas Grothey, University of Edinburgh
+ *
+ * This file is part of SML.
+ *
+ * SML is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, using version 3 of the License.
+ *
+ * SML is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program. If not, see http://www.gnu.org/licenses/.
+ */
+
+#include "../util/global_util_functions.h"
+#include "../sml/Config.h"
+#include "StochCtx.h"
+#include "StochModel.h"
+#include "../model/SyntaxNode.h"
+#include "../model/SyntaxNodeOP.h"
+#include "../model/SyntaxNodeID.h"
+#include "../model/SyntaxNodeIDREF.h"
+#include "../model/SyntaxNodeString.h"
+#include "../parser/sml.tab.h"
+#include <boost/foreach.hpp>
+#include <cstdlib>
+#include <stdio.h>
+#include <stdlib.h>
+#include <cstring>
+#include <fstream>
+#include <iostream>
+
+using namespace std;
+
+
+/* ---------------------------------------------------------------------------
+ StochModel::StochModel()
+ ---------------------------------------------------------------------------- */
+/** Constructor */
+StochModel::StochModel(const string& name, SyntaxNode *stochsets, AmplModel *par) : AmplModel(name,NULL,par)
+{
+	LOG("StochModel -- name["<<name<<"] parent["<<par->name<<"]");
+	assert(stochsets!=NULL && stochsets->nchild()==4);
+	SyntaxNode::iterator i = stochsets->begin();
+	this->nodeset = *i; i++;
+	this->ancestor = *i; i++;
+	this->probs = *i; i++;
+	this->stageset = *i;
+
+	LOG("end StochModel constructor-- ");
+}
+
+StochModel::~StochModel()
+{
+	LOG("StochModel ~ Desctructor ");
+	delete nodeset;
+	delete ancestor;
+	delete probs;
+	delete stageset;
+	for(boost::unordered_map<SyntaxNode*,boost::unordered_set<string>* >::iterator i=stageSetMap.begin();
+			i!=stageSetMap.end();i++)
+	{
+		delete i->second;
+	}
+	stageSetMap.clear();
+}
+
+ExpandedModel* StochModel::createExpandedModel(string dummyVar,SetComp* comp,string value,ModelContext* parent)
+{
+	//this is break the OO-Design, a better implementation is to considering the ModelComp and StochModel
+	//a StochModel will first need to conver to amplmodel then, create the expanded model tree using
+	//method in AmplModel class
+	assert(false); //this should never called
+	return NULL;
+}
+
+AmplModel* StochModel::convertToAmplModel(ModelContext* parCtx)
+{
+	SCTX::reset(); //reseting static values;
+	StochCtx* curr_sctx = new StochCtx(NULL);
+
+	if(this->nodeset->opCode == IDREF)
+	{
+		SCTX::ndSetComp = static_cast<SyntaxNodeIDREF*>(this->nodeset)->ref;
+	}
+	else
+	{
+		SCTX::ndSetComp = static_cast<SyntaxNodeIDREF*>(this->nodeset->values[1])->ref;
+		SCTX::nd = static_cast<SyntaxNodeID*>(this->nodeset->values[0]->values[0])->id;
+	}
+	assert(this->ancestor->opCode == IDREF);
+	SCTX::paSetComp = static_cast<SyntaxNodeIDREF*>(this->ancestor)->ref;
+	assert(this->probs->opCode == IDREF);
+	SCTX::pbSetComp = static_cast<SyntaxNodeIDREF*>(this->probs)->ref;
+	if(this->stageset->opCode == IDREF)
+	{
+		SCTX::stSetComp = static_cast<SyntaxNodeIDREF*>(this->stageset)->ref;
+	}
+	else
+	{
+		SCTX::stSetComp = static_cast<SyntaxNodeIDREF*>(this->stageset->values[1])->ref;
+		SCTX::st = static_cast<SyntaxNodeID*>(this->stageset->values[0]->values[0])->id;
+	}
+
+	AmplModel* prev_model = parent; //the ample model above
+	Set* stset = static_cast<Set*>(parCtx->getCompValue(SCTX::stSetComp));
+	for(uint i = 0; i < stset->setValues_data_order.size(); i++)
+	{
+		//create node set in prev_model that the current stage model is repeated on.
+		curr_sctx->stagename = stset->setValues_data_order[i];
+		curr_sctx->stage_level  = i;
+		curr_sctx->model_dummy = GV(node_dummy_prefix) + curr_sctx->stagename;
+
+		string model_set_name = "model_set" + curr_sctx->stagename;
+		//NODES
+		SyntaxNode* node_idref = new SyntaxNodeIDREF(new SyntaxNodeID(SCTX::ndSetComp->name),SCTX::ndSetComp);
+		//n0 in NODES
+		SyntaxNode* node_set_index_list = new SyntaxNode(COMMA,new SyntaxNode(IN, new SyntaxNode(COMMA, new SyntaxNodeID(curr_sctx->model_dummy)),node_idref));
+		//Parent
+		SyntaxNode* node_paref = new SyntaxNodeIDREF(new SyntaxNodeID(SCTX::paSetComp->name),SCTX::paSetComp);
+		node_paref->push_back(new SyntaxNode(COMMA,new SyntaxNodeID(curr_sctx->model_dummy)));  //Parent[n0]
+		SyntaxNode* prev_model_dummy = NULL;
+		if(i == 0){
+			prev_model_dummy = new SyntaxNodeString(GV(root_stage_parent_name));
+		}
+		else{
+			prev_model_dummy = new SyntaxNodeID(curr_sctx->parent->model_dummy);
+		}
+		SyntaxNode* node_set_cond = new SyntaxNode(EQ,node_paref,prev_model_dummy); // Parent[n0] == "null"
+		SyntaxNode* node_set = new SyntaxNode(LBRACE,new SyntaxNode(COLON,node_set_index_list,node_set_cond)); //{n0 in NODES: Parent[n0] == "null" }
+		SyntaxNode* node_set_attr = new SyntaxNode(ASSIGN, node_set); // = {n0 in NODES: Parent[n0] == "null"}
+		SyntaxNode* node_set_attributes = new SyntaxNode(COMMA,node_set_attr);
+		SetComp* model_set = new SetComp(model_set_name,NULL, node_set_attributes,prev_model);
+		prev_model->addComp(model_set);
+
+		//create indexing for curr_model
+		SyntaxNode* model_set_ref = new SyntaxNodeIDREF(new SyntaxNodeID(model_set->name),model_set);
+		SyntaxNode* model_index_list = new SyntaxNode(COMMA, new SyntaxNode(IN, new SyntaxNode(COMMA, new SyntaxNodeID(curr_sctx->model_dummy)), model_set_ref));
+		SyntaxNode* model_index = new SyntaxNode(LBRACE,new SyntaxNode(COLON, model_index_list, NULL));
+
+		//create the curr_model for current stage
+		string model_name = this->name + "STAGE" + curr_sctx->stagename;
+		curr_sctx->model = new AmplModel(model_name, model_index ,prev_model);
+
+		if(i==0) {
+			SCTX::rootCtx = curr_sctx;
+		}
+
+		//now scan ModelComps and add model comp belong to current stage into the current model.
+		BOOST_FOREACH(SetComp* setcomp , this->set_comps)
+		{
+			if(this->isInCurrentStage(setcomp->stage,curr_sctx->stagename,parCtx))
+			{
+				LOG("setcomp ["<<setcomp->name<<"] is in model["<<curr_sctx->model->name<<"]");
+				SyntaxNode* index = setcomp->indexing==NULL? NULL :setcomp->indexing->clone();
+				SyntaxNode* attr = setcomp->attributes==NULL? NULL :setcomp->attributes->clone();
+				SetComp* nsetcomp = new SetComp(setcomp->name,index,attr,curr_sctx->model);
+				curr_sctx->model->addComp(nsetcomp);
+			}
+		}
+		BOOST_FOREACH(ParamComp* paramcomp , this->param_comps)
+		{
+			if(this->isInCurrentStage(paramcomp->stage,curr_sctx->stagename,parCtx))
+			{
+				LOG("paramcomp ["<<paramcomp->name<<"] is in model["<<curr_sctx->model->name<<"]");
+				SyntaxNode* index = paramcomp->indexing==NULL? NULL : paramcomp->indexing->clone();
+				SyntaxNode* attr = paramcomp->attributes==NULL? NULL :paramcomp->attributes->clone();
+				ParamComp* paramcomp = new ParamComp(paramcomp->name,index,attr,curr_sctx->model);
+				curr_sctx->model->addComp(paramcomp);
+			}
+		}
+		BOOST_FOREACH(VarComp* varcomp , this->var_comps)
+		{
+			if(this->isInCurrentStage(varcomp->stage,curr_sctx->stagename,parCtx))
+			{
+				LOG("varcomp ["<<varcomp->name<<"] is in model["<<curr_sctx->model->name<<"]");
+				SyntaxNode* index = varcomp->indexing==NULL? NULL : varcomp->indexing->clone();
+				SyntaxNode* attr = varcomp->attributes==NULL? NULL : varcomp->attributes->clone();
+				VarComp* nvarcomp = new VarComp(varcomp->name,index,attr,curr_sctx->model);
+				curr_sctx->model->addComp(nvarcomp);
+			}
+		}
+
+		BOOST_FOREACH(ConsComp* concomp , this->con_comps)
+		{
+			if(this->isInCurrentStage(concomp->stage,curr_sctx->stagename,parCtx))
+			{
+				LOG("concomp ["<<concomp->name<<"] is in model["<<curr_sctx->model->name<<"]");
+				//handling Exp operator:
+				//if there is Exp in constraint, need to move this constraint to stage 0
+				//create stage level sets and sum over the weight expr involved in the Exp
+				//this again will make a separable constraints over multiple child scenarios
+				//should update into a DOT operator in SyntaxNodeIDREFM
+
+				//handling Ancestor operator:
+				//convert ancestor node into a IDREF node that reference to the correct model comp at correct model level
+				bool exp = concomp->attributes->hasExp();
+				if(exp == true)
+				{
+					//clone will: replace Exp[expr] ===> sum{n1 in NODES: Parent[n1]=n0} ( Prob[n1] * sum{n2 in NODES: Parent[n2]=n1}( Prob[n2]*almSTAGE1[n1].almSTAGE2[n2].expr ) )
+					//if expectation expr in stage 2 as an example.
+					//Dot notation also appended if necessary to convert the IDREF node into DOT node with IDREFM node. (ie. the dot notation to reference a comp below).
+					SyntaxNode* attr = concomp->attributes->clone();
+					//need to move this constraint to stochroot level
+					SyntaxNode* index = concomp->indexing==NULL?NULL:concomp->indexing->clone();
+					string nconname = concomp->name + "_EXP" + curr_sctx->stagename;
+					//create the constraint comp in stoch root model.
+					ConsComp* nconcomp = new ConsComp(nconname,index,attr,SCTX::rootCtx->model);
+					SCTX::rootCtx->model->addComp(nconcomp);
+				}
+				else
+				{
+					SyntaxNode* index = concomp->indexing==NULL? NULL :concomp->indexing->clone();
+					SyntaxNode* attr = concomp->attributes==NULL? NULL : concomp->attributes->clone();
+					ConsComp* nconcomp = new ConsComp(concomp->name,index,attr,curr_sctx->model);
+					curr_sctx->model->addComp(nconcomp);
+				}
+			}
+		}
+		if(obj_comp!=NULL)
+		{
+			if(this->isInCurrentStage(obj_comp->stage,curr_sctx->stagename,parCtx))
+			{
+				LOG("obj_comp ["<<obj_comp->name<<"] is in model["<<curr_sctx->model->name<<"]");
+				assert(obj_comp->indexing == NULL);  //single objective no indexing
+				bool exp = obj_comp->attributes->hasExp();
+				assert(exp == false); //obj can't has expectation opcode, because objective in always weighted by the probs reach it's stage
+				assert(i == stset->setValues_data_order.size()-1); //obj has to be defined only in the final stage
+				SyntaxNode* attr = obj_comp->attributes->clone();
+				//now need to weight the obj attribute by probs reach it
+				for(uint j = 1; j <= i; j++)
+				{//starting from stage 1 to curr stage, because stage 0 is only root node
+					string pddummy = GV(node_dummy_prefix) + stset->setValues_data_order[j]; //pddummy must be one of the model_dummy_name
+					SyntaxNodeIDREF* pdrefn = new SyntaxNodeIDREF(new SyntaxNodeID(SCTX::pbSetComp->name),SCTX::pbSetComp);
+					pdrefn->push_back(new SyntaxNode(COMMA,new SyntaxNodeID(pddummy)));
+					attr = new SyntaxNodeOP(TIMES,attr,pdrefn);
+				}
+				ObjComp* nobjcomp = new ObjComp(obj_comp->name,obj_comp->otype,attr,curr_sctx->model);
+				curr_sctx->model->addComp(nobjcomp);
+			}
+		}
+		assert(this->subm_comps.size() == 0); //not yet know how to deal with submodels in stochastic model
+
+		//adding the new created ampl model to model tree
+		assert((curr_sctx->parent==NULL && prev_model==parent) || prev_model == curr_sctx->parent->model);
+		prev_model->addComp(curr_sctx->model);
+		prev_model = curr_sctx->model;
+		curr_sctx = new StochCtx(curr_sctx);
+	}
+
+	if(GV(logModel)){
+		string mfile = GV(logdir)+GV(logModelFile)+"_stoch";
+		AmplModel::root->logModel(mfile.c_str());
+	}
+	return SCTX::rootCtx->model;
+}
+
+
+/*
+ * Is the stagename in the stage represented by stage expression in stage
+ */
+bool StochModel::isInCurrentStage(SyntaxNode* stage, string& stagename, ModelContext* ctx)
+{
+	if(stage == NULL) return true; //by default if in stochastic model, and no stage related to a model comp, then it belong to all stages
+	boost::unordered_map<SyntaxNode*,boost::unordered_set<string>* >::iterator it = this->stageSetMap.find(stage);
+	boost::unordered_set<string>* stageset = NULL;
+	if(it == this->stageSetMap.end())
+	{//now compute the stage set
+		stageset = new boost::unordered_set<string>();
+		stage->calcStageSet(ctx,stageset);
+		this->stageSetMap.insert(pair<SyntaxNode*,boost::unordered_set<string>* >(stage,stageset));
+	}
+	else
+	{
+		stageset = it->second;
+	}
+	boost::unordered_set<string>::iterator s = stageset->find(stagename);
+	if(s!=stageset->end()) return true;
+	return false;
+}
+

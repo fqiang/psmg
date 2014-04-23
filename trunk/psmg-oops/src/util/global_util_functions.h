@@ -16,8 +16,10 @@
 #include <inttypes.h>
 #include <unistd.h>
 #include <fstream>
+#include "../metric/Stat.h"
+#include "../metric/TimeStamp.h"
+#include "../sml/Config.h"
 #include "CompilerMarco.h"
-#include "../sml/GlobalVariables.h"
 
 void print_mem_usage(std::string name);
 

@@ -16,6 +16,7 @@ CPP_SRCS += \
 ../src/model/SyntaxNodeIDREF.cpp \
 ../src/model/SyntaxNodeIDREFM.cpp \
 ../src/model/SyntaxNodeOP.cpp \
+../src/model/SyntaxNodeString.cpp \
 ../src/model/SyntaxNodeValue.cpp \
 ../src/model/VarComp.cpp 
 
@@ -32,6 +33,7 @@ OBJS += \
 ./src/model/SyntaxNodeIDREF.o \
 ./src/model/SyntaxNodeIDREFM.o \
 ./src/model/SyntaxNodeOP.o \
+./src/model/SyntaxNodeString.o \
 ./src/model/SyntaxNodeValue.o \
 ./src/model/VarComp.o 
 
@@ -48,6 +50,7 @@ CPP_DEPS += \
 ./src/model/SyntaxNodeIDREF.d \
 ./src/model/SyntaxNodeIDREFM.d \
 ./src/model/SyntaxNodeOP.d \
+./src/model/SyntaxNodeString.d \
 ./src/model/SyntaxNodeValue.d \
 ./src/model/VarComp.d 
 
@@ -56,7 +59,7 @@ CPP_DEPS += \
 src/model/%.o: ../src/model/%.cpp
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
-	mpic++ -DDEBUG -I/usr/include/mpi -I/home/s0965328/workspace/autodiff/autodiff_library/include -I/home/s0965328/workspace/oops/include -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	mpic++ -DDEBUG -I/usr/include/mpi -I/home/s0965328/workspace/pugixml/src -I/home/s0965328/workspace/autodiff/autodiff_library/include -I/home/s0965328/workspace/oops/oops_agr/oops/include -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

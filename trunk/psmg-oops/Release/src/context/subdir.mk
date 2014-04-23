@@ -7,6 +7,7 @@ CPP_SRCS += \
 ../src/context/Block.cpp \
 ../src/context/BlockCons.cpp \
 ../src/context/BlockHV.cpp \
+../src/context/BlockLP.cpp \
 ../src/context/BlockObj.cpp \
 ../src/context/Con.cpp \
 ../src/context/ConSingle.cpp \
@@ -29,6 +30,7 @@ OBJS += \
 ./src/context/Block.o \
 ./src/context/BlockCons.o \
 ./src/context/BlockHV.o \
+./src/context/BlockLP.o \
 ./src/context/BlockObj.o \
 ./src/context/Con.o \
 ./src/context/ConSingle.o \
@@ -51,6 +53,7 @@ CPP_DEPS += \
 ./src/context/Block.d \
 ./src/context/BlockCons.d \
 ./src/context/BlockHV.d \
+./src/context/BlockLP.d \
 ./src/context/BlockObj.d \
 ./src/context/Con.d \
 ./src/context/ConSingle.d \

@@ -19,10 +19,9 @@
 #include <iomanip>
 #include <fstream>
 #include <string>
+#include "../util/global_util_functions.h"
 #include "OOPSBlock.h"
 #include "../context/ExpandedModel.h"
-#include "../sml/GlobalVariables.h"
-#include "../util/global_util_functions.h"
 
 using namespace std;
 

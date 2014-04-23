@@ -15,7 +15,7 @@ using namespace std;
 class PValue {
 public:
 	PValue();
-	PValue(PValue&);
+	PValue(const PValue&);
 	virtual ~PValue();
 
 	virtual PValue* clone() = 0;

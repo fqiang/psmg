@@ -18,7 +18,6 @@
 %debug
 %{
  	#include "../util/global_util_functions.h"
-   	#include "../sml/GlobalVariables.h"
    	#include "../context/Set.h"
 	#include "../context/ModelContext.h"
 	#include "../context/PValueSym.h"
@@ -188,7 +187,7 @@ param_def:	PARAM param_name DEFINE param_specs SEMICOLON {
 				Param* param = NULL;
 				
 				param = new ParamSingle(paramComp);
-				assert(paramComp->getNumSetIndices() == 0);
+				assert(paramComp->numIndicies == 0);
 				PValue* pval = NULL;
 				if(paramComp->isSym){
 					string v($4);
@@ -227,7 +226,7 @@ param_def:	PARAM param_name DEFINE param_specs SEMICOLON {
 					paramModels.push_back(paramComp);
 					params.push_back(param);
 					rootContext->addCompValueMap(paramComp,param);		
-					assert(numIndicies = paramComp->getNumSetIndices() || numIndicies == 0);
+					assert(numIndicies = paramComp->numIndicies || numIndicies == 0);
 					tok = strtok(NULL,",");
 				}
 				
@@ -285,7 +284,7 @@ param_def:	PARAM param_name DEFINE param_specs SEMICOLON {
 					params.push_back(paramValue);
 					rootContext->addCompValueMap(paramComp,paramValue);
 					
-					numIndicies = paramComp->getNumSetIndices();
+					numIndicies = paramComp->numIndicies;
 					if(numIndicies_init == -1) numIndicies_init = numIndicies;
 					assert(numIndicies_init==numIndicies);
 					
@@ -389,12 +388,12 @@ void dataerror(const char *s) {
 void parse_data(ModelContext* context) {
        
 	YAC_DATA_LOG("===============================================================");
-	YAC_DATA_LOG(" Start parsing data file: " << GlobalVariables::datafilename);
+	YAC_DATA_LOG(" Start parsing data file: " << Config::datafilename);
 	YAC_DATA_LOG("===============================================================");
 	rootContext = context;
-  	datain = fopen(GlobalVariables::datafilename.c_str(), "r");
+  	datain = fopen(Config::datafilename.c_str(), "r");
   	if (datain==NULL){
-    	printf("ERROR: Data file '%s' error:%s \n",GlobalVariables::datafilename.c_str(),strerror(errno));
+    	printf("ERROR: Data file '%s' error:%s \n",Config::datafilename.c_str(),strerror(errno));
     	exit(1);
   	}
           

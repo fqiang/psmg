@@ -30,14 +30,11 @@ public:
 	static Sml* instance();
 	static void deleteInstance();
 
-	void writeHelp(ostream& out);
-	int analyseOptions(int argc, char **argv);
-
 	void processModelfile();
 	void generateExpandedModel();
 	void resetContextTree();
 	void formulateConstraints();
-	void printEMStructure(string filename);
+	void logEM(string filename);
 	void testInterfaceLocal0(ExpandedModel* root,ExpandedModel* other);
 	void testInterfaceLocal1(ExpandedModel* emrow,ExpandedModel* emcol);
 	void testInterfaceLocal2(ExpandedModel* emrow);

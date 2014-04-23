@@ -42,6 +42,7 @@
 #include <iostream>
 #include <boost/unordered_map.hpp>
 
+#include "../st_model/StochCtx.h"
 #include "ModelComp.h"
 #include "autodiff.h"
 #include "../context/ModelContext.h"
@@ -109,6 +110,8 @@ public:
 	/** Copy constructor */
 	SyntaxNode(const SyntaxNode &src);
 
+	virtual SyntaxNode *clone();
+
 	/** Destructor */
 	virtual ~SyntaxNode();
 
@@ -117,7 +120,6 @@ public:
 
 	virtual std::ostream& put(std::ostream& s);
 	virtual SyntaxNode *push_back(SyntaxNode *newitem);
-	virtual SyntaxNode *push_front(SyntaxNode *newitem);
 
 	//Feng
 	int calculateSetDim();
@@ -149,7 +151,8 @@ public:
 	bool evalBool(ModelContext* context);
 	void evalTerm(ModelContext* context,PValue**);
 	IndexSet* createIndexSet(ModelContext* context);
-	string printVector(vector<double>&v);
+	bool hasExp();
+	virtual SyntaxNode* appendDOTNotation(StochCtx*);
 //	void evalTerm(ModelContext* context,string&);
 
 //	void calcVarDefinedLevels(set<int>& levels);
@@ -168,6 +171,7 @@ public:
 	//end Feng
 
 	SyntaxNode* findChildNode(int op);
+	void calcStageSet(ModelContext*, boost::unordered_set<string>*);
 
 //	static SyntaxNode *findKeywordinTree(SyntaxNode *root, int oc);
 //	static SyntaxNode* find_var_ref_in_context(AmplModel* context, SyntaxNode *ref);
@@ -230,5 +234,4 @@ std::ostream& operator<<(std::ostream& s, SyntaxNode *node);
 //	 */
 //	virtual SyntaxNode *deep_copy();
 //
-//	/** Creates a copy of the node, reusing the pointer in the current node */
-//	virtual SyntaxNode *clone();
+

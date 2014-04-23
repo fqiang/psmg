@@ -165,11 +165,12 @@
      DOT = 383,
      STAGE = 384,
      NODE = 385,
-     ASSIGN = 386,
-     MINUS = 387,
-     PLUS = 388,
-     DIVID = 389,
-     TIMES = 390
+     STRING = 386,
+     ASSIGN = 387,
+     MINUS = 388,
+     PLUS = 389,
+     DIVID = 390,
+     TIMES = 391
    };
 #endif
 /* Tokens.  */
@@ -301,11 +302,12 @@
 #define DOT 383
 #define STAGE 384
 #define NODE 385
-#define ASSIGN 386
-#define MINUS 387
-#define PLUS 388
-#define DIVID 389
-#define TIMES 390
+#define STRING 386
+#define ASSIGN 387
+#define MINUS 388
+#define PLUS 389
+#define DIVID 390
+#define TIMES 391
 
 
 
@@ -315,7 +317,7 @@ typedef union YYSTYPE
 {
 
 /* Line 2068 of yacc.c  */
-#line 73 "sml.tab.ypp"
+#line 69 "sml.tab.ypp"
 
   int optype;
   objType otype;
@@ -328,7 +330,7 @@ typedef union YYSTYPE
 
 
 /* Line 2068 of yacc.c  */
-#line 332 "../src/parser/sml.tab.hpp"
+#line 334 "../src/parser/sml.tab.hpp"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

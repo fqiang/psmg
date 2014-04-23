@@ -30,8 +30,9 @@
 								<option id="gnu.cpp.compiler.exe.debug.option.debugging.level.704175475" name="Debug Level" superClass="gnu.cpp.compiler.exe.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.1290521049" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="/usr/include/mpi"/>
+									<listOptionValue builtIn="false" value="/home/s0965328/workspace/pugixml/src"/>
 									<listOptionValue builtIn="false" value="/home/s0965328/workspace/autodiff/autodiff_library/include"/>
-									<listOptionValue builtIn="false" value="/home/s0965328/workspace/oops/include"/>
+									<listOptionValue builtIn="false" value="/home/s0965328/workspace/oops/oops_agr/oops/include"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.812162509" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="DEBUG"/>
@@ -43,8 +44,9 @@
 								<option id="gnu.c.compiler.exe.debug.option.debugging.level.1934064035" name="Debug Level" superClass="gnu.c.compiler.exe.debug.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.include.paths.1212322864" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="/usr/include/mpi"/>
+									<listOptionValue builtIn="false" value="/home/s0965328/workspace/pugixml/src"/>
 									<listOptionValue builtIn="false" value="/home/s0965328/workspace/autodiff/autodiff_library/include"/>
-									<listOptionValue builtIn="false" value="/home/s0965328/workspace/oops/include"/>
+									<listOptionValue builtIn="false" value="/home/s0965328/workspace/oops/oops_agr/oops/include"/>
 								</option>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.11160656" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="DEBUG"/>
@@ -55,6 +57,7 @@
 							<tool command="mpic++" id="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.425835934" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug">
 								<option id="gnu.cpp.link.option.libs.94339336" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="paroops"/>
+									<listOptionValue builtIn="false" value="pugixml"/>
 									<listOptionValue builtIn="false" value="autodiff_library"/>
 									<listOptionValue builtIn="false" value="lapack"/>
 									<listOptionValue builtIn="false" value="metis"/>
@@ -63,7 +66,8 @@
 									<listOptionValue builtIn="false" value="dl"/>
 								</option>
 								<option id="gnu.cpp.link.option.paths.2146280542" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
-									<listOptionValue builtIn="false" value="/home/s0965328/workspace/oops/lib/parallel"/>
+									<listOptionValue builtIn="false" value="/home/s0965328/workspace/oops/oops_agr/oops/lib/parallel"/>
+									<listOptionValue builtIn="false" value="/home/s0965328/workspace/pugixml/lib"/>
 									<listOptionValue builtIn="false" value="/home/s0965328/workspace/autodiff/autodiff_library/Debug"/>
 									<listOptionValue builtIn="false" value="/home/s0965328/research/metis-4.0.3"/>
 								</option>
@@ -91,6 +95,9 @@
 		</cconfiguration>
 		<cconfiguration id="cdt.managedbuild.config.gnu.exe.debug.1427478878.658116758">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.exe.debug.1427478878.658116758" moduleId="org.eclipse.cdt.core.settings" name="Release">
+				<macros>
+					<stringMacro name="BOOST_FOREACH(a,b)" type="VALUE_TEXT" value="for(a:b)"/>
+				</macros>
 				<externalSettings/>
 				<extensions>
 					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
@@ -177,23 +184,24 @@
 	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.debug.1427478878.658116758;cdt.managedbuild.config.gnu.exe.debug.1427478878.658116758.;cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.2106771300;cdt.managedbuild.tool.gnu.cpp.compiler.input.405175459">
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.release.440360664;cdt.managedbuild.config.gnu.exe.release.440360664.;cdt.managedbuild.tool.gnu.cpp.compiler.exe.release.1797162538;cdt.managedbuild.tool.gnu.cpp.compiler.input.1257783747">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.release.440360664;cdt.managedbuild.config.gnu.exe.release.440360664.;cdt.managedbuild.tool.gnu.cpp.compiler.exe.release.1797162538;cdt.managedbuild.tool.gnu.cpp.compiler.input.1257783747">
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.debug.1427478878.658116758;cdt.managedbuild.config.gnu.exe.debug.1427478878.658116758.;cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.2106771300;cdt.managedbuild.tool.gnu.cpp.compiler.input.405175459">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.debug.1427478878;cdt.managedbuild.config.gnu.exe.debug.1427478878.;cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.1577126745;cdt.managedbuild.tool.gnu.cpp.compiler.input.2027211315">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.debug.1427478878.658116758;cdt.managedbuild.config.gnu.exe.debug.1427478878.658116758.;cdt.managedbuild.tool.gnu.c.compiler.exe.debug.1823474744;cdt.managedbuild.tool.gnu.c.compiler.input.1278182479">
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.debug.1427478878;cdt.managedbuild.config.gnu.exe.debug.1427478878.;cdt.managedbuild.tool.gnu.c.compiler.exe.debug.1639065015;cdt.managedbuild.tool.gnu.c.compiler.input.1391473255">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.debug.1427478878;cdt.managedbuild.config.gnu.exe.debug.1427478878.;cdt.managedbuild.tool.gnu.c.compiler.exe.debug.1639065015;cdt.managedbuild.tool.gnu.c.compiler.input.1391473255">
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.debug.1427478878.658116758;cdt.managedbuild.config.gnu.exe.debug.1427478878.658116758.;cdt.managedbuild.tool.gnu.c.compiler.exe.debug.1823474744;cdt.managedbuild.tool.gnu.c.compiler.input.1278182479">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.release.440360664;cdt.managedbuild.config.gnu.exe.release.440360664.;cdt.managedbuild.tool.gnu.c.compiler.exe.release.65297894;cdt.managedbuild.tool.gnu.c.compiler.input.2136326286">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
 </cproject>

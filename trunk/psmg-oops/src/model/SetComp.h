@@ -14,7 +14,7 @@ class ModelContext;
 
 class SetComp : public ModelComp {
 public:
-	SetComp(const string& id, SyntaxNode* index, SyntaxNode* attr);
+	SetComp(const string& id, SyntaxNode* index, SyntaxNode* attr, AmplModel* owner);
 	virtual ~SetComp();
 
 	int setDim; //belong to set

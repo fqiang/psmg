@@ -17,16 +17,16 @@
 class SyntaxNodeValue : public SyntaxNode
 {
   public:
-   const double val;
+   double val;
 
   public:
    SyntaxNodeValue(double new_value);
+   SyntaxNodeValue(const SyntaxNodeValue& src);
+   virtual SyntaxNodeValue* clone();
    virtual ~SyntaxNodeValue();
    std::string value() const;
 
-   std::ostream& put(std::ostream&s) { return s << this->val; }
-   SyntaxNode *deep_copy() { return new SyntaxNodeValue(val); }
-   SyntaxNode *clone() { return deep_copy(); }
+   virtual std::ostream& put(std::ostream&s) { return s << this->val; }
    virtual void calculateMemoryUsage(unsigned long& size);
 };
 

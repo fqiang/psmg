@@ -8,7 +8,11 @@
 #ifndef COLSPARSEMATRIX_H_
 #define COLSPARSEMATRIX_H_
 
+/*
+ * The compressed column stroage for a sparse matrix
+ */
 class ColSparseMatrix {
+
 
 public:
 	ColSparseMatrix(double* val, int* row, int* col, int* len):

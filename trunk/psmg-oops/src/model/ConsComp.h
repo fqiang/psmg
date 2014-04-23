@@ -18,7 +18,7 @@ class SyntaxNode;
 class ConsComp : public ModelComp {
 public:
 
-	ConsComp(const string& id, SyntaxNode* index, SyntaxNode* attr);
+	ConsComp(const string& id, SyntaxNode* index, SyntaxNode* attr,AmplModel* owner);
 	virtual ~ConsComp();
 
 	int card;

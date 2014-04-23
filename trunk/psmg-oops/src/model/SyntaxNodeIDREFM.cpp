@@ -7,19 +7,44 @@
 
 #include "SyntaxNodeIDREFM.h"
 #include "SyntaxNodeID.h"
-
+#include "AmplModel.h"
 #include "ObjComp.h"
 #include "../parser/sml.tab.h"
 
-SyntaxNodeIDREFM::SyntaxNodeIDREFM(int opCode, SyntaxNode* id, AmplModel* model):
+SyntaxNodeIDREFM::SyntaxNodeIDREFM(SyntaxNode* id, AmplModel* model):
 	SyntaxNode(IDREFM,id),ref(model)
 {
 	assert(model!=NULL);
+	assert(id->opCode == ID);
 	assert(opCode == IDREFM);
 }
 
 SyntaxNodeIDREFM::~SyntaxNodeIDREFM() {
 	// TODO Auto-generated destructor stub
+}
+
+SyntaxNodeIDREFM::SyntaxNodeIDREFM(const SyntaxNodeIDREFM& src):SyntaxNode(src)
+{
+	ref = src.ref;
+}
+
+SyntaxNodeIDREFM* SyntaxNodeIDREFM::clone(){
+	assert(false); //will not be called, because stoch model don't use REFM notation in model file.
+	return new SyntaxNodeIDREFM(*this);
+}
+
+SyntaxNode* SyntaxNodeIDREFM::appendDOTNotation(StochCtx* sctx)
+{
+	SyntaxNode* rval = this;
+	if(sctx->model == ref->model)
+	{
+		SyntaxNodeIDREFM* refm = new SyntaxNodeIDREFM(new SyntaxNodeID(sctx->model->name),sctx->model);
+		SyntaxNode* expr_list = new SyntaxNode(COMMA,new SyntaxNodeID(sctx->model_dummy));
+		refm->push_back(expr_list);
+		SyntaxNode* dotn = new SyntaxNode(DOT,refm,this);
+		rval = dotn;
+	}
+	return rval;
 }
 
 ostream& SyntaxNodeIDREFM::put(ostream& s)

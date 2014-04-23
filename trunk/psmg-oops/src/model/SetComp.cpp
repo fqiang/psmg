@@ -5,17 +5,28 @@
  *      Author: s0965328
  */
 
+#include <typeinfo>
 #include "SetComp.h"
+#include "../context/SetOrdered.h"
 #include "SyntaxNode.h"
-
 #include "ObjComp.h"
 #include "../parser/sml.tab.h"
 
-SetComp::SetComp(const string& id, SyntaxNode* index, SyntaxNode* attr):ModelComp(id, TSET, index,attr),
-	setDim(0),setCard(0), isOrdered(false)
+SetComp::SetComp(const string& id, SyntaxNode* index, SyntaxNode* attr,AmplModel* owner):ModelComp(id, TSET, index,attr,owner),
+	setDim(0),setCard(0)
 {
-
-
+	isOrdered = false;
+	if(this->attributes!=NULL)
+	{
+		for(SyntaxNode::iterator it=this->attributes->begin();it!=this->attributes->end();it++)
+		{
+			if((*it)->opCode == ORDERED)
+			{
+				isOrdered = true;
+				break;
+			}
+		}
+	}
 }
 
 SetComp::~SetComp() {
@@ -56,10 +67,6 @@ void SetComp::setSetDim() {
 			{
 				assign = *it;
 			}
-			else if((*it)->opCode == ORDERED)
-			{
-				isOrdered = true;
-			}
 			else if((*it)->opCode == WITHIN)
 			{
 				within = *it;
@@ -87,8 +94,8 @@ void SetComp::calculateSetModelComp(ModelContext* context) {
 
 	assert(this->attributes->opCode == COMMA);
 	Set* theSet = Set::createSet(this);
+	assert(this->isOrdered == false || typeid(*theSet) == typeid(SetOrdered));
 	SyntaxNode* within = NULL;
-	SyntaxNode* ordered = NULL;
 	for(SyntaxNode::iterator i=this->attributes->begin();i!=this->attributes->end();i++)
 	{
 		if((*i)->opCode == ASSIGN){
@@ -98,11 +105,6 @@ void SetComp::calculateSetModelComp(ModelContext* context) {
 		else if((*i)->opCode == WITHIN){
 			LOG("WITHIN ... "<<this->attributes);
 			within = *i;
-		}
-		else if((*i)->opCode == ORDERED)
-		{
-			assert(this->isOrdered == false); //not support creating ordered set
-			ordered = *i;
 		}
 	}
 

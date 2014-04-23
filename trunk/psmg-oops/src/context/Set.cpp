@@ -21,7 +21,7 @@ Set::Set(SetComp* comp):dim(comp->setDim),name(comp->name),card(0) {
 }
 
 Set::~Set() {
-	LOG("Set::~Set --- Delete Set -- ----------------------"<<this->name);
+	LOG("Set::~Set --- Delete Set -- --------["<<this->name<<"] ["<<this<<"]");
 }
 
 void Set::deleteSet(Set* set)

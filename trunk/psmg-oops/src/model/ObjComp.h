@@ -17,7 +17,7 @@ public:
 	objType otype;
 	boost::unordered_map<int,SyntaxNode*> partial;
 
-	ObjComp(const string& id, objType t, SyntaxNode* attr);
+	ObjComp(const string& id, objType t, SyntaxNode* attr,AmplModel* owner);
 	virtual ~ObjComp();
 
 	void calculatePartialConstraints();

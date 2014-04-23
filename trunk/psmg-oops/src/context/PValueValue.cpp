@@ -9,14 +9,13 @@
 #include <typeinfo>
 #include <cmath>
 #include <sstream>
-#include "../util/CompilerMarco.h"
-#include "../sml/GlobalVariables.h"
+#include "../util/global_util_functions.h"
 #include "PValueValue.h"
 
 PValueValue::PValueValue(double v) : PValue(), value(v){
 	// TODO Auto-generated constructor stub
 }
-PValueValue::PValueValue(PValueValue& other) : PValue(other), value(other.value)
+PValueValue::PValueValue(const PValueValue& other) : PValue(other), value(other.value)
 {
 	LOG("PValueVaule copy "<<this->toString());
 }

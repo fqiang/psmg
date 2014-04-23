@@ -15,7 +15,7 @@ public:
 	string value;
 
 	PValueSym(string&);
-	PValueSym(PValueSym& other);
+	PValueSym(const PValueSym& other);
 	virtual ~PValueSym();
 
 	virtual PValueSym* clone();

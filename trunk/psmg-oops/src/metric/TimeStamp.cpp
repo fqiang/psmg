@@ -7,7 +7,6 @@
 
 #include "TimeStamp.h"
 #include "../util/global_util_functions.h"
-#include "../sml/GlobalVariables.h"
 #include <assert.h>
 #include <sstream>
 
@@ -42,7 +41,7 @@ TimeStamp::TimeStamp(string name) {
 void TimeStamp::start() {
 //	time(&this->startTime );
 	this->startTime = clock();
-	cout<<"["<<GlobalVariables::rank<<"/"<<GlobalVariables::size<<"] TimeStamp:["<<name<<"] START@:["<<startTime<<"]"<<endl;
+	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"] TimeStamp:["<<name<<"] START@:["<<startTime<<"]"<<endl;
 }
 
 void TimeStamp::stop() {
@@ -50,7 +49,7 @@ void TimeStamp::stop() {
 	this->stopTime = clock();
 //	time_t elapse = stopTime - startTime;
 	clock_t elapse = stopTime - startTime;
-	cout<<"["<<GlobalVariables::rank<<"/"<<GlobalVariables::size<<"] TimeStamp:["<<name<<"] STOP@:["<<stopTime<<"] Elapse[ "<<elapse<<" ]"<<endl;
+	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"] TimeStamp:["<<name<<"] STOP@:["<<stopTime<<"] Elapse[ "<<elapse<<" ]"<<endl;
 }
 
 string TimeStamp::toString() const{
@@ -63,24 +62,24 @@ string TimeStamp::toString() const{
 
 void TimeStamp::List()
 {
-	cout<<"["<<GlobalVariables::rank<<"/"<<GlobalVariables::size<<"] == TimeStamp List["<<timeStamps.size()<<"] =="<<endl;
+	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"] == TimeStamp List["<<timeStamps.size()<<"] =="<<endl;
 	map<string,TimeStamp*>::iterator it;
 	it = timeStamps.begin();
 	while(timeStamps.size()!=0&&it!=timeStamps.end())
 	{
-		cout<<"["<<GlobalVariables::rank<<"/"<<GlobalVariables::size<<"] TimeStamp:["<<(*it).first<<"]"<<(*it).second->toString()<<endl;
+		cout<<"["<<GV(rank)<<"/"<<GV(size)<<"] TimeStamp:["<<(*it).first<<"]"<<(*it).second->toString()<<endl;
 		it++;
 	}
-	cout<<"["<<GlobalVariables::rank<<"/"<<GlobalVariables::size<<"] == TimeStamp List =="<<endl;
+	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"] == TimeStamp List =="<<endl;
 }
 
 void TimeStamp::Reset() {
-	cout<<"["<<GlobalVariables::rank<<"/"<<GlobalVariables::size<<"] TimeStamp RESET@:["<<time(NULL)<<"]"<<endl;
+	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"] TimeStamp RESET@:["<<time(NULL)<<"]"<<endl;
 	map<string,TimeStamp*>::iterator it;
 	it = timeStamps.begin();
 	while(it!=timeStamps.end())
 	{
-		cout<<"["<<GlobalVariables::rank<<"/"<<GlobalVariables::size<<"] Clear TimeStamp:["<<(*it).first<<"]"<<endl;
+		cout<<"["<<GV(rank)<<"/"<<GV(size)<<"] Clear TimeStamp:["<<(*it).first<<"]"<<endl;
 		delete (*it).second;
 		it++;
 	}
