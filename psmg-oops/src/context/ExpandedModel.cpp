@@ -142,7 +142,7 @@ BlockLP* ExpandedModel::getBlockLP(ExpandedModel* emcol)
 	return rval;
 }
 
-uint ExpandedModel::nz_cons_jacobs(ExpandedModel* emcol)
+uint ExpandedModel::nz_cons_jacobs_lp(ExpandedModel* emcol)
 {
 	BlockLP* b = this->getBlockLP(emcol);
 	boost::unordered_set<AutoDiff::Node*> vSet;
@@ -161,7 +161,7 @@ uint ExpandedModel::nz_cons_jacobs(ExpandedModel* emcol)
 	return nz;
 }
 
-void ExpandedModel::cons_jacobs(ExpandedModel* emcol,boost::numeric::ublas::compressed_matrix<double>& m)
+void ExpandedModel::cons_jacobs_lp(ExpandedModel* emcol,boost::numeric::ublas::compressed_matrix<double>& m)
 {
 	std::vector<AutoDiff::Node*> vnodes;
 	emcol->copyVariables(vnodes);
@@ -194,7 +194,7 @@ void ExpandedModel::cons_jacobs(ExpandedModel* emcol,boost::numeric::ublas::comp
 	Stat::numConsJacLocalCall++;
 	LOG("end cons_jacobs_distribute - emrow["<<this->name<<"] emcol["<<emcol->name<<"]");
 }
-void ExpandedModel::obj_grad(ExpandedModel* emcol, double* vals)
+void ExpandedModel::obj_grad_lp(ExpandedModel* emcol, double* vals)
 {
 	if(this->model->obj_comp!=NULL){
 
