@@ -6,27 +6,45 @@
  */
 
 #include "SyntaxNodeID.h"
-
+#include "SyntaxNodeString.h"
 #include "ObjComp.h"
+#include "../st_model/StochCtx.h"
 #include "../parser/sml.tab.h"
 #include <sstream>
 
 using namespace  std;
 
 
-SyntaxNodeID::SyntaxNodeID(string _id, long _stochparent) :
-   SyntaxNode(ID), id(_id), stochparent(_stochparent) {
+SyntaxNodeID::SyntaxNodeID(string i) :
+   SyntaxNode(ID), id(i){
 
 	LOG("SyntaxNodeID constructor called  - opCode["<<ID<<"] ID["<<id<<"]");
 }
 
-void SyntaxNodeID::findOpCode(int oc, list<SyntaxNode*> *lnd) {
-   if(oc==ID) lnd->push_back(this);
+SyntaxNodeID::~SyntaxNodeID()
+{
 }
 
-SyntaxNode* SyntaxNodeID::deep_copy()
+SyntaxNodeID::SyntaxNodeID(const SyntaxNodeID& src):SyntaxNode(src)
 {
-	return new SyntaxNodeID(id.c_str(), stochparent);
+	id = src.id;
+}
+SyntaxNode*  SyntaxNodeID::clone()
+{
+	SyntaxNode* newnode = NULL;
+	if(id.compare(SCTX::currCtx->nd) == 0)
+	{
+		newnode = new SyntaxNodeID(SCTX::currCtx->model_dummy);
+	}
+	else if(id.compare(SCTX::currCtx->st) == 0)
+	{
+		newnode = new SyntaxNodeString(SCTX::currCtx->stagename);
+	}
+	else
+	{
+		newnode =  new SyntaxNodeID(*this);
+	}
+	return newnode;
 }
 
 void SyntaxNodeID::calculateMemoryUsage(unsigned long& size)

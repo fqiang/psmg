@@ -36,7 +36,7 @@ ModelContext::~ModelContext()
 	//it is not possible for IndexSet to test name=="TMP_" for the set already deleted
 	for(boost::unordered_map<SyntaxNode*,IndexSet*>::iterator it=tempISetMap.begin();it!=tempISetMap.end();it++)
 	{
-		LOG("Deleting -------  IndexSet in Context"<<this->getContextId()<<" -- ["<<(*it).first->print()<<"]");
+		LOG("Deleting -------  IndexSet in Context "<<this->getContextId()<<" -- ["<<(*it).first->print()<<"]");
 		delete it->second;
 	}
 	tempISetMap.clear();

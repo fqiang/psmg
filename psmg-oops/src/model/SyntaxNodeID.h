@@ -20,28 +20,17 @@ SyntaxNodeID
  */
 class SyntaxNodeID : public SyntaxNode {
 
- private:
-   long stochparent;
-
   public:
    string id;
-   SyntaxNodeID(string id, long stochparent=0);
-   void findIDREF(std::list<ModelComp*> &lmc) { return; }
-   void findIDREF(std::list<SyntaxNode*> *lnd) { return; }
-   // We never search for ID:
-   void findOpCode(int oc, std::list<SyntaxNode*> *lnd);
-   SyntaxNode *deep_copy();
+   SyntaxNodeID(string i);
+   SyntaxNodeID(const SyntaxNodeID& src);
+   ~SyntaxNodeID();
+   virtual SyntaxNode* clone();
+
    std::ostream& put(std::ostream& s) {
       return s << id;
    }
 
-   void setStochParent(long parent) {
-     stochparent = parent;
-   }
-
-   long getStochParent() const {
-     return stochparent;
-   }
    virtual void calculateMemoryUsage(unsigned long& size);
 };
 

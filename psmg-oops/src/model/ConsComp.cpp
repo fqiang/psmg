@@ -13,15 +13,14 @@
 //always include sml.tab.h at last
 #include "../parser/sml.tab.h"
 
-ConsComp::ConsComp(const string& id, SyntaxNode* index, SyntaxNode* attr): ModelComp(id,TCON,index, attr),card(0)
-//	moveUpLevel(0)
+ConsComp::ConsComp(const string& id, SyntaxNode* index, SyntaxNode* attr,AmplModel* owner): ModelComp(id,TCON,index, attr,owner)
+	,card(0)
 {
-	// TODO Auto-generated constructor stub
 
 }
 
 ConsComp::~ConsComp() {
-	// TODO Auto-generated destructor stub
+
 }
 
 void ConsComp::calculateLocalCon(ModelContext* ctx)

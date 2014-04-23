@@ -12,7 +12,7 @@ PValue::PValue() {
 
 }
 
-PValue::PValue(PValue& other)
+PValue::PValue(const PValue& other)
 {
 
 }

@@ -23,7 +23,6 @@
 #include <iostream>
 #include <sstream>
 #include "../parser/data.tab.h"
-#include "../sml/GlobalVariables.h"
 #include "../util/global_util_functions.h"
 #include "../model/ParamComp.h"
 

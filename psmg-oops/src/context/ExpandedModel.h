@@ -169,7 +169,7 @@ public:
 	 * Utility methods
 	 */
 	ModelContext* locateCtx(AmplModel* model, string& dummyval);
-	void printEMRecursive(string& line,ostream&);
+	void logEMRecursive(string& line,ostream&);
 	void calculateMemoryUsage(unsigned long& size_str,unsigned long& size_data);
 private:
 	void getQaulifiedName(ostringstream& oss);

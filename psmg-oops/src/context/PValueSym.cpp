@@ -8,15 +8,14 @@
 #include <cassert>
 #include <typeinfo>
 #include <sstream>
-#include "../util/CompilerMarco.h"
-#include "../sml/GlobalVariables.h"
+#include "../util/global_util_functions.h"
 #include "PValueSym.h"
 
 PValueSym::PValueSym(string& v) : PValue(), value(v){
 	// TODO Auto-generated constructor stub
 }
 
-PValueSym::PValueSym(PValueSym& other) : PValue(other), value(other.value)
+PValueSym::PValueSym(const PValueSym& other) : PValue(other), value(other.value)
 {
 	LOG("PValueSym copy "<<this->toString());
 }

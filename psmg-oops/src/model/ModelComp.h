@@ -55,19 +55,24 @@ class ModelComp{
 	/** Type of the component */
 	compType type;
 
-	/** A tree of specifications (which includes :=, within, default, >=) */
-	SyntaxNode *attributes;
-
 	/**  Indexing expression */
 	SyntaxNode *indexing;
+
+	/** A tree of specifications (which includes :=, within, default, >=) */
+	SyntaxNode *attributes;
 
 	/** The model this component belongs to */
 	AmplModel *model; //owner of this comp
 
-//	string hashKey;
+	/** The stage information for Stochastic Model
+	 *  Note: this break the OO-Design a better implementation
+	 *  will be inheritance for each model comp type
+	 *  for stage!=NULL the model has to be a Stochastic Model
+	 *  */
+	SyntaxNode* stage;
 
 	/** Constructor */
-	ModelComp(const string& _id, compType type, SyntaxNode *_indexing, SyntaxNode *_attribute);
+	ModelComp(const string& id, compType type, SyntaxNode *indexing, SyntaxNode *attribute, AmplModel* owner);
 
 	/** Destructor */
 	virtual ~ModelComp();
@@ -78,68 +83,6 @@ class ModelComp{
 
 //	string& getHashKey();
 	void calculateMemoryUsage(unsigned long& size);
-
-
-//legacy!!
-
-
-//  /** Default constructor */
-//  ModelComp(string id);
-//
-//  /** Duplicate the object: shallow copy */
-//   virtual ModelComp *clone() const;
-//
-//   /** Duplicate the object: deep copy */
-//   ModelComp *deep_copy() const;
-//   // Virtual methods implemented only for stochastic models
-//
-//     virtual void setStochModel(StochModel *stoch) { throw; }
-     virtual void setStageSetNode(SyntaxNode *stageSet) { throw; }
-     virtual void setDeterministic(bool det) { throw; }
-//     virtual SyntaxNode* getStageSetNode() const { throw; }
-//     virtual void addStageName(const std::string& name) { throw; }
-//     virtual const std::vector<std::string>& getStageNames() const { throw; }
-//     virtual ModelComp* transcribeToModelComp(AmplModel *current_model,
-//                                              const std::string& nodedummy,
-//                                              const std::string& stagedummy,
-//                                              const int level) { throw; }
-
-
-  //for TCON
-  //  hash_map<int,set<int> > varDeps; //belong to TCON -- map separability of variable declared in level -> set of levels
-  //  void analyseVarDepLevelsInCons();
-  //  Node* constructAutoDiffCons(ModelContext* ctx, Block* emb,ExpandedModel* emcol);
-
-  //  /** Set up list of dependencies for this component */
-  //  void setUpDependencies();
-   //end TCON
-
-
- protected:
-
-//  /** List of all entities that this model component depends on.
-//   *
-//   *  This lists all model components used in the definition of this component.
-//   */
-//  std::list<ModelComp*> dependencies;
-
-  /** Components can be tagged by the tagDependencies method which sets
-   *  this tag for this components and everything that it depends on
-   *  (i.e. everything listed in the dependencies list).                 */
-  //bool tag;            //!< true if part of the current 'needed' set
-
-  /** For sets and parameters, this points to an object that gives the
-   *  values and further specific information (Set for sets)
-   */
-  //CompDescr *compDescr;
-
-  //  /** Recalculate dependency list and re-resolve IDREF nodes */
-  //  void reassignDependencies();
-
- private:
-
-//  /** Find dependencies for this component */
-//  void findDependencies(const SyntaxNode *nd);
 
 };
 

@@ -30,7 +30,7 @@
 #include "oops/BlockDiagSimpleAlg.h"
 
 #include "../context/ExpandedModel.h"
-#include "../sml/GlobalVariables.h"
+#include "../util/global_util_functions.h"
 #include "../sml/Sml.h"
 
 #include "OOPSBlock.h"
@@ -98,9 +98,9 @@ void SML_OOPS_driver_NLP(ExpandedModel *root) {
 	vu->fillCallBack(FillUpBndVector);
 	vl->fillCallBack(FillLowBndVector);
 
-	if (GlobalVariables::writeMatlab) {
-		LOG("Writing matlab file:mat.m");
-		string mfile = GV(logdir)+ "mat.m";
+	if (Config::writeMatlab) {
+		LOG("Writing matlab file: "<<GV(matlabFile));
+		string mfile = GV(logdir)+ GV(matlabFile);
 		FILE *mout = fopen(mfile.c_str(), "w");
 		PrintMatrixMatlab(mout, A, "A");
 		PrintMatrixMatlab(mout, Q, "Q");
@@ -111,9 +111,9 @@ void SML_OOPS_driver_NLP(ExpandedModel *root) {
 		fclose(mout);
 	}
 
-	if (GlobalVariables::writeMPS) {
-		LOG("Writing mps file:mat.m");
-		string mfile = GV(logdir)+"test.mps";
+	if (Config::writeMPS) {
+		LOG("Writing mps file:"<<GV(mpsFile));
+		string mfile = GV(logdir)+GV(mpsFile);
 		FILE *mps_file = fopen(mfile.c_str(), "w");
 		Write_MpsFile(mps_file, AlgAug, vb, vc, vu, vl, 1, NULL, NULL);
 		fclose(mps_file);
@@ -130,7 +130,7 @@ void SML_OOPS_driver_NLP(ExpandedModel *root) {
 	PDProblem Prob(AlgAug, vb, vc, vl, vu, vx, vy, vz);
 	prob_ptr = &Prob;
 	assert(prob_ptr!=NULL);
-	if (GlobalVariables::solve) {
+	if (Config::solve) {
 		cout << "Calling OOPS..." << endl;
 		Prob.solve(stdout);
 	}

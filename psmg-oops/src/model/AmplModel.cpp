@@ -20,12 +20,12 @@
 #include "SyntaxNode.h"
 #include "SyntaxNodeID.h"
 #include "SyntaxNodeIDREF.h"
-#include "changeitem.h"
-#include "../context/ExpandedModel.h"
-#include "../sml/GlobalVariables.h"
+#include "../st_model/StochModel.h"
 #include "../util/global_util_functions.h"
+#include "../context/ExpandedModel.h"
 #include "../parser/sml.tab.h"
 #include <cassert>
+#include <typeinfo>
 #include <cctype>
 #include <cstdlib>
 #include <cstring>
@@ -46,7 +46,7 @@ int AmplModel::MAX_LEVEL = 0;
 AmplModel::AmplModel()
 ---------------------------------------------------------------------------- */
 /** Constructor */
-AmplModel::AmplModel(const string& id, AmplModel *par, SyntaxNode* index) : ModelComp(id,TMODEL,index,NULL),
+AmplModel::AmplModel(const string& id, SyntaxNode* index,AmplModel *par) : ModelComp(id,TMODEL,index,NULL,par),
   parent(par),
   n_vars(0),
   n_cons(0),
@@ -65,10 +65,24 @@ AmplModel::AmplModel(const string& id, AmplModel *par, SyntaxNode* index) : Mode
 AmplModel::~AmplModel()
 {
 	LOG("AmplModel destructor called...["<<this->name<<"]");
-	for (vector<ModelComp*>::iterator it = this->all_comps.begin(); it != all_comps.end(); it++)
-	{
-		ModelComp* mc = *it;
-		delete mc;
+	for(vector<SetComp*>::const_iterator p = set_comps.begin();p != set_comps.end();++p) {
+		delete *p;
+	}
+	for (vector<ParamComp*>::const_iterator p = param_comps.begin();p != param_comps.end(); ++p) {
+		delete *p;
+	}
+	for (vector<ConsComp*>::const_iterator p = con_comps.begin();p != con_comps.end(); ++p) {
+		delete *p;
+	}
+	for (vector<VarComp*>::const_iterator p = var_comps.begin();p != var_comps.end(); ++p) {
+		delete *p;
+	}
+	if( obj_comp!=NULL) {
+		delete obj_comp;
+	}
+
+	for(vector<AmplModel*>::const_iterator p = subm_comps.begin();p != subm_comps.end();++p) {
+		delete *p;
 	}
 
 	set_comps.clear();
@@ -77,9 +91,6 @@ AmplModel::~AmplModel()
 	con_comps.clear();
 	subm_comps.clear();
 	obj_comp =  NULL;
-
-//	changes.clear();
-
 }
 
 void AmplModel::settingUpLevels(int lev)
@@ -132,7 +143,7 @@ void AmplModel::formulateConstraints()
 /* ---------------------------------------------------------------------------
 AmplModel::createExpandedModel
 ---------------------------------------------------------------------------- */
-ExpandedModel* AmplModel::createExpandedModel(string dummyVar,SetComp* comp,string value,ModelContext* parent)
+ExpandedModel* AmplModel::createExpandedModel(string dummyVar,SetComp* comp,string value,ModelContext* parCtx)
 {
 	if(comp!=NULL){
 		LOG("createExpandedModel- Model["<<this->name<<"]--level["<<this->level<<"] -- set["<<comp->name<<"] -- dummy["<<dummyVar<<"="<<value<<"]");
@@ -141,7 +152,7 @@ ExpandedModel* AmplModel::createExpandedModel(string dummyVar,SetComp* comp,stri
 	{
 		LOG("createExpandedModel- Model["<<this->name<<"]--level["<<this->level<<"] -- only one in this level");
 	}
-	ModelContext* currCtx = new ModelContext(parent);
+	ModelContext* currCtx = new ModelContext(parCtx);
 	ExpandedModel *currEm2 = NULL;
 	if(this==AmplModel::root){
 		//for root node
@@ -167,7 +178,7 @@ ExpandedModel* AmplModel::createExpandedModel(string dummyVar,SetComp* comp,stri
 	{
 		assert((*i)->type==TPARAM);
 		(*i)->setParamIndicies();
-		LOG("updateModelComp for param - id["<<(*i)->name<<"] numParamIndicies["<<(*i)->getNumSetIndices()<<"] - isSym["<<(*i)->isSym<<"]"<<*i);
+		LOG("updateModelComp for param - id["<<(*i)->name<<"] numParamIndicies["<<(*i)->numIndicies<<"] - isSym["<<(*i)->isSym<<"]"<<*i);
 	}
 
 	if(this==AmplModel::root)
@@ -228,12 +239,56 @@ ExpandedModel* AmplModel::createExpandedModel(string dummyVar,SetComp* comp,stri
 	{
 		assert(obj_comp->type == TOBJ);
 	}
-	//create sub expanded models
+
+	/*
+	 * For Stochastic Model below this model
+	 */
+	//first convert any stochModel into an AmplModel
+	StochModel* smodel = NULL;
+	for(vector<AmplModel*>::iterator it=subm_comps.begin();it!=subm_comps.end();)
+	{
+		if(typeid(**it)==typeid(StochModel))
+		{//need to conver to AmplModel first
+			assert(smodel == NULL); //only support one stochmodel under root model for now!
+			smodel = static_cast<StochModel*>(*it);
+			//erease *it from this model and add newmodel to this
+			it = subm_comps.erase(it);
+		}
+		else
+		{
+			it++;
+		}
+	}
+	//now the AmplModel::root is all valid, invalid StochModel is pushed on toConvert vector
+	//
+	//the newly converted model is attached to the model tree as well to ensure at
+	//anytime the AmplModel::root point to a valid up-to-date model tree
+	if(smodel!=NULL) {
+		AmplModel* stochroot = smodel->convertToAmplModel(currCtx);
+		//calculate root node set
+		ModelComp* comp = static_cast<SyntaxNodeIDREF*>(stochroot->indexing->values[0]->values[0]->values[0]->values[1])->ref;
+		assert(comp->type==TSET);
+		SetComp* rootset = static_cast<SetComp*>(comp);
+		assert(currCtx->getCompValue(rootset) == NULL);
+		LOG("stoch root set   SET comp["<<rootset->name<<"] -- "<<rootset);
+		rootset->setSetDim();
+		rootset->calculateSetModelComp(currCtx);
+		LOG("end calculateSetModelComp   -- ["<<rootset->name<<"] -- "<<rootset);
+		assert(currCtx->getCompValue(rootset)!=NULL);
+		delete smodel;
+		smodel = NULL;
+	}
+	assert(smodel== NULL); //ensure the smodel is delete and not avalible anymore at this point.
+	/*
+	 * End Stochastic model pre-processing
+	 */
+
+	//Then, create sub expanded models
 	for(vector<AmplModel*>::iterator it = subm_comps.begin();it!=subm_comps.end();it++)
 	{
 		AmplModel* subm = *it;
 		assert(subm->type == TMODEL);
-		LOG(" START submodel["<<subm->name<<"] -----   OF  ["<<name<<"]");
+		LOG(" START submodel["<<subm->name<<"] -----   in model["<<name<<"]");
 		if(subm->indexing!=NULL)
 		{
 			LOG("Indexing over: ["<<subm->indexing->print()<<"]");
@@ -271,7 +326,8 @@ ExpandedModel* AmplModel::createExpandedModel(string dummyVar,SetComp* comp,stri
 
 void AmplModel::addComp(ModelComp *comp)
 {
-	LOG("-- In addComp  -- this model:["<<this->name<<"] level["<<level<<"] add type[" << comp->type<<"] ["<<comp<<"]");
+	LOG("-- In addComp  -- this model:["<<this->name<<"] level["<<level<<"] add type[" << comp->type<<"] ["<<comp->name<<"]");
+	assert(comp->model == this);
 	switch (comp->type)
 	{
 		case TVAR:
@@ -304,32 +360,75 @@ void AmplModel::addComp(ModelComp *comp)
 			exit(1);
 	}
 	n_total++;
-	comp->model = this;  //set parent AmplModel
-	all_comps.push_back(comp);
 
 	LOG("-- End AddComp [current:"<<this->name<<"]  n_total["<<n_total<<"]");
 }
 
-////Feng- my methods starts here  //////////////////////////////////////////////////
-
-ModelComp* AmplModel::findModelComp(string& id)
+ModelComp* AmplModel::findModelCompThisModel(string& id)
 {
 	ModelComp* rval = NULL;
-	for(vector<ModelComp*>::iterator i=all_comps.begin();i!=all_comps.end();i++)
-	{
-		//LOG("findModelComp -- model["<<this->name<<"] -- search_for["<<id<<"] at "<<(*i)->id);
-		if((*i)->name.compare(id)==0)
+	for(vector<SetComp*>::const_iterator p = set_comps.begin();p != set_comps.end();++p) {
+		if((*p)->name.compare(id)==0)
 		{
-			rval = *i;
-			break;
+			rval = *p;
+			goto found;
+		}
+	}
+	for (vector<ParamComp*>::const_iterator p = param_comps.begin();p != param_comps.end(); ++p) {
+		if((*p)->name.compare(id)==0)
+		{
+			rval = *p;
+			goto found;
+		}
+	}
+	for (vector<VarComp*>::const_iterator p = var_comps.begin();p != var_comps.end(); ++p) {
+		if((*p)->name.compare(id)==0)
+		{
+			rval = *p;
+			goto found;
 		}
 	}
 
+	found:
+	LOG("findModelComp -- model["<<this->name<<"] -- id["<<id<<"] - rval["<<rval<<"]");
+	return rval;
+}
+
+/*
+ * Recursively findModelComp that has the name matches id
+ */
+ModelComp* AmplModel::findModelComp(string& id)
+{
+	ModelComp* rval = NULL;
+	//first finding anything in this current model
+	for(vector<SetComp*>::const_iterator p = set_comps.begin();p != set_comps.end();++p) {
+		if((*p)->name.compare(id)==0)
+		{
+			rval = *p;
+			goto found;
+		}
+	}
+	for (vector<ParamComp*>::const_iterator p = param_comps.begin();p != param_comps.end(); ++p) {
+		if((*p)->name.compare(id)==0)
+		{
+			rval = *p;
+			goto found;
+		}
+	}
+	for (vector<VarComp*>::const_iterator p = var_comps.begin();p != var_comps.end(); ++p) {
+		if((*p)->name.compare(id)==0)
+		{
+			rval = *p;
+			goto found;
+		}
+	}
+	// if first failed , now find in parent
 	if(rval == NULL)
 	{
 		rval = parent==NULL? NULL:parent->findModelComp(id);
-
 	}
+
+	found:
 	LOG("findModelComp -- model["<<this->name<<"] -- id["<<id<<"] - rval["<<rval<<"]");
 	return rval;
 }
@@ -445,14 +544,30 @@ void AmplModel::calculateMemoryUsage(unsigned long& size)
 	LOG("AmplModel::calculateMemoryUsage -- model["<<this->name<<"]");
 	size += sizeof(AmplModel);
 	size += this->name.size() + 1;
-	for(vector<ModelComp*>::iterator it=all_comps.begin();it!=all_comps.end();it++)
-	{
-		size += sizeof(ModelComp*);
-		(*it)->calculateMemoryUsage(size);
-		if((*it)->type==TMODEL)
-		{
-			static_cast<AmplModel*>(*it)->calculateMemoryUsage(size);
-		}
+
+	for(vector<SetComp*>::const_iterator p = set_comps.begin();p != set_comps.end();++p) {
+		size += sizeof(SetComp*);
+		(*p)->calculateMemoryUsage(size);;
+	}
+	for (vector<ParamComp*>::const_iterator p = param_comps.begin();p != param_comps.end(); ++p) {
+		size += sizeof(ParamComp*);
+		(*p)->calculateMemoryUsage(size);
+	}
+	for (vector<ConsComp*>::const_iterator p = con_comps.begin();p != con_comps.end(); ++p) {
+		size += sizeof(ConsComp*);
+		(*p)->calculateMemoryUsage(size);
+	}
+	for (vector<VarComp*>::const_iterator p = var_comps.begin();p != var_comps.end(); ++p) {
+		size += sizeof(VarComp*);
+		(*p)->calculateMemoryUsage(size);
+	}
+	if( obj_comp!=NULL) {
+		obj_comp->calculateMemoryUsage(size);
+	}
+
+	for(vector<AmplModel*>::const_iterator p = subm_comps.begin();p != subm_comps.end();++p) {
+		size += sizeof(AmplModel*);
+		(*p)->calculateMemoryUsage(size);
 	}
 }
 
@@ -461,254 +576,52 @@ AmplModel::dump(const char *filename)
 ---------------------------------------------------------------------------- */
 void AmplModel::logModel(const char *filename){
   ofstream fout(filename);
-  this->dump(fout, 0);
+  this->dump(fout,0);
 }
 
 /* ---------------------------------------------------------------------------
 AmplModel::dump(ostream &fout)
 ---------------------------------------------------------------------------- */
-void AmplModel::dump(ostream& fout, int counter){
+void AmplModel::dump(ostream& fout, int count){
 	fout << "AM: ----------------------------------------------------------\n";
 	fout << "AM: This is AmplModel (" << (void *) this << "): " << name << "\n";
 	fout << "AM: level: " << level << "\n";
 	fout << "AM: parent: " << (parent ? parent->name : "NULL") << "\n";
-	fout << "AM: Nb submodels  : " << n_submodels << "\n";
 	fout << "AM: Nb sets       : " << n_sets << "\n";
 	fout << "AM: Nb parameters : " << n_params << "\n";
-	fout << "AM: Nb objectives : " << n_objs << "\n";
 	fout << "AM: Nb variables  : " << n_vars << "\n";
 	fout << "AM: Nb constraints: " << n_cons << "\n";
+	fout << "AM: Nb objectives : " << n_objs << "\n";
+	fout << "AM: Nb submodels  : " << n_submodels << "\n";
 	fout << "AM: List components:\n";
 
-	for(vector<ModelComp*>::const_iterator p = all_comps.begin();p != all_comps.end();++p) {
-		(*p)->dump(fout, counter);
-		++counter;
+	count = 0; //ignor the count passed in and reset counter to 0
+	for(vector<SetComp*>::const_iterator p = set_comps.begin();p != set_comps.end();++p) {
+		(*p)->dump(fout,count);
+		++count;
+	}
+	for (vector<ParamComp*>::const_iterator p = param_comps.begin();p != param_comps.end(); ++p) {
+		(*p)->dump(fout, count);
+		++count;
+	}
+	for (vector<ConsComp*>::const_iterator p = con_comps.begin();p != con_comps.end(); ++p) {
+		(*p)->dump(fout, count);
+		++count;
+	}
+	for (vector<VarComp*>::const_iterator p = var_comps.begin();p != var_comps.end(); ++p) {
+		(*p)->dump(fout, count);
+		++count;
+	}
+	if( obj_comp!=NULL) {
+		obj_comp->dump(fout, count);
+		++count;
 	}
 
-	if (n_submodels > 0)
-		fout << "AM: now list the submodels:\n";
 	for(vector<AmplModel*>::const_iterator p = subm_comps.begin();p != subm_comps.end();++p) {
 		AmplModel *mc = *p;
-		mc->dump(fout,counter);
+		mc->dump(fout,count);
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//legacy !!!
-
-/* --------------------------------------------------------------------------
-//AmplModel::removeComp()
-//---------------------------------------------------------------------------- */
-//void AmplModel::removeComp(ModelComp *comp)
-//{
-//	LOG("enter removeComp - name["<<this->id<<"] comp["<<comp->id<<"]");
-//	bool found = false;
-//	for(vector<ModelComp*>::iterator p = all_comps.begin();p!=all_comps.end();p++)
-//	{
-//		if ((*p)->id.compare(comp->id)==0)
-//		{
-//			all_comps.erase(p); // this invalidates the iterator => break from loop
-//			n_total--;
-//			found = true;
-//			break;
-//		}
-//	}
-//	if(found == false)
-//	{
-//		LOG("try to remove comp"[<<comp->id<<"] not in this model["<<this->id<<"]");
-//		assert(false);
-//	}
-//
-//	switch(comp->type){
-//	case TVAR:
-//		this->removeComp(var_comps,comp);
-//		n_vars--;
-//		break;
-//	case TCON:
-//		this->removeComp(con_comps,comp);
-//		n_cons--;
-//		break;
-//	case TPARAM:
-//		this->removeComp(param_comps,comp);
-//		n_params--;
-//	  	break;
-//	case TSET:
-//		this->removeComp(set_comps,comp);
-//		n_sets--;
-//		break;
-//	case TOBJ:
-//		obj_comp = NULL;
-//		n_objs--;
-//		break;
-//	case TMODEL:
-//		this->removeComp(subm_comps,comp);
-//		n_submodels--;
-//		break;
-//	default:
-//	  cerr << "removeComp: type " << comp->type << "unrecognised\n";
-//	  exit(1);
-//	}
-//}
-//
-///* --------------------------------------------------------------------------
-//AmplModel::removeComp()
-//---------------------------------------------------------------------------- */
-//template<typename T>
-//void AmplModel::removeComp(vector<T*> comps, ModelComp* comp)
-//{
-//	for(vector<ModelComp*>::iterator it=comps.begin();it!=comps.end();it++)
-//	{
-//		if((*it)->id.compare(comp->id))
-//		{
-//			comps.erase(it);
-//			break;
-//		}
-//	}
-//}
-//
-//
-//
-///* --------------------------------------------------------------------------
-//AmplModel::applyChanges()
-//---------------------------------------------------------------------------- */
-//void
-//AmplModel::applyChanges()
-//{
-//  for (list<changeitem>::iterator p = changes.begin();
-//       p != changes.end(); ++p) {
-//    changeitem& ch = *p;
-//    if (ch.action == CHANGE_REM)
-//      ch.model->removeComp(ch.comp);
-//    if (ch.action == CHANGE_ADD)
-//      ch.model->addComp(ch.comp);
-//  }
-//  changes.clear();
-//}
-//
-///* --------------------------------------------------------------------------
-//AmplModel::reassignDependencies()
-//---------------------------------------------------------------------------- */
-///** Recursively recalculate dependency list and re-resolve IDREF nodes.
-// *
-// *  In the process of building the AmplModel tree from the StochModelTree
-// *  some of the IDREF dependency nodes still point to the StochModelComp
-// *  nodes from the StochModel tree (or the intermediate tree)
-// *
-// *  This routine goes through all components and makes sure that IDREF
-// *  nodes are resolved with respect to the correct ModelComp and that
-// *  the dependency lists are in order.
-// *  Recursively follows down submodels.
-// */
-//void
-//AmplModel::reassignDependencies()
-//{
-//	//1. reassigned depenencies for it's ModelComp
-////	LOG("reassignDependencies -- at Model["<<this->name<<"]");
-////	for (vector<ModelComp*>::iterator p = all_comps.begin(); p != all_comps.end(); p++)
-////	{
-////		if ((*p)->type == TMODEL)
-////		{
-////			AmplModel *submodel = (*p)->other;
-////			submodel->reassignDependencies();
-////		}
-////		else
-////		{
-////			(*p)->reassignDependencies();
-////		}
-////	}
-//}
-//
-//void AmplModel::reassignModelIndexDependencies()
-//{
-//	LOG("reassignModelIndexDependencies -- at Model["<<id<<"]");
-//	//2. then reassign dependencies for this model's index to point to its own modelComp
-////	if (this->node->indexing)
-////	{
-////		assert(this->parent!=NULL);
-////		LOG("reassignDependencies in indexing -- "<<this->node->indexing->print());
-////		list<SyntaxNode*> refns;
-////		this->node->indexing->findIDREF(&refns);
-////		for(list<SyntaxNode*>::iterator it=refns.begin();it!=refns.end();it++)
-////		{
-////			SyntaxNodeIDREF* refn = static_cast<SyntaxNodeIDREF*>(*it);
-////			string id = refn->ref->id;
-////			for(vector<ModelComp*>::iterator it2=this->parent->all_comps.begin();it2!=this->parent->all_comps.end();it2++)
-////			{
-////				LOG("ModelComp["<<(*it2)->id);
-////				if((*it2)->id.compare(id)==0)
-////				{
-////					LOG("reassignDependencies for TMODEL["<<this->name<<"] indexing["<<this->node->indexing->print()<<"]");
-////					refn->ref = *it2;
-////					break;
-////				}
-////			}
-////		}
-////		this->node->indexing->resetSplitExpression();
-////		this->node->indexing->splitExpression();
-////	}
-////	else
-////	{
-////		LOG("no indexing for this Model ["<<name<<"]");
-////	}
-////
-////	for (vector<ModelComp*>::iterator it = all_comps.begin(); it != all_comps.end(); it++)
-////	{
-////		if((*it)->type == TMODEL)
-////		{
-////			(*it)->other->reassignModelIndexDependencies();
-////		}
-////	}
-//}
-//
-//
-//SyntaxNodeIDREF* AmplModel::createIdrefNode(SyntaxNodeID *ref)
-//{
-//	for(vector<ModelComp*>::iterator p=all_comps.begin(); p!=all_comps.end(); ++p){
-//		ModelComp *thismc = *p;
-//		if (ref->id() == thismc->id) { //matched
-//			LOG("Found Match: " << ref->id() << " refers to ");
-//			LOG("             "<<ModelComp::nameTypes[thismc->type]);
-//			LOG("             "<< thismc->id);
-//			if (thismc->indexing)
-//				LOG("             "<<*(thismc->indexing));
-//			if (thismc->attributes)
-//				LOG("             "<< *(thismc->attributes));
-//
-//			SyntaxNodeIDREF *ret;
-//			if(thismc->type==TMODEL) {
-//				ret = new SyntaxNodeIDREF(IDREFM, thismc);
-//			}
-//			else {
-//				ret = new SyntaxNodeIDREF(IDREF, thismc);
-//			}
-//			return ret;
-//		}
-//	}
-//
-//	/* need also to look through parent model */
-//	if (parent) return parent->createIdrefNode(ref);
-//
-//	/* need also to look through list of local variables */
-//
-//	cerr << "ERROR: Could not find ref '" << ref->id() << "' in context\n";
-//	exit(1);
-//}
-
 
 /*
  * calculating variable depended levels for each constraint modelcomp in this amplmodel

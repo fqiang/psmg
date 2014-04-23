@@ -13,7 +13,7 @@
 
 class VarComp : public ModelComp {
 public:
-	VarComp(const string& id, SyntaxNode* index, SyntaxNode* attr);
+	VarComp(const string& id, SyntaxNode* index, SyntaxNode* attr, AmplModel* owner);
 	virtual ~VarComp();
 
 	uint dim; //number of declared indicies

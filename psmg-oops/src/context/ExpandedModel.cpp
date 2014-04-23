@@ -8,7 +8,6 @@
 #include "ExpandedModel.h"
 #include "../model/SyntaxNodeIDREF.h"
 #include "../model/SyntaxNodeID.h"
-#include "../metric/Statistics.h"
 #include "../model/AmplModel.h"
 #include "Block.h"
 #include "BlockCons.h"
@@ -53,25 +52,6 @@ ExpandedModel::~ExpandedModel() {
 		delete children.at(i);
 	}
 	this->children.clear();
-}
-
-uint ExpandedModel::nz_cons_jacobs(ExpandedModel* emcol)
-{
-	BlockLP* b = this->getBlockLP(emcol);
-	boost::unordered_set<AutoDiff::Node*> vSet;
-	emcol->copyVariables(vSet);
-	assert(vSet.size()==emcol->numLocalVars);
-	uint nz = 0;
-	BOOST_FOREACH(Con* con, b->cons)
-	{
-		BOOST_FOREACH(ConSingle* consingle, con->cons)
-		{
-			nz+=nzGrad(consingle->con,vSet);
-			LOG("nz now "<<nz);
-		}
-	}
-	LOG("row["<<name<<"] col["<<emcol->name<<"] - nz["<<nz<<"]");
-	return nz;
 }
 
 BlockLP* ExpandedModel::getBlockLP(ExpandedModel* emcol)
@@ -138,7 +118,7 @@ BlockLP* ExpandedModel::getBlockLP(ExpandedModel* emcol)
 				double lower = NEG_INFINITY_D;
 				double upper = INFINITY_D;
 				SyntaxNode* assgin_expr = attribute->findChildNode(ASSIGN);
-				Node* acon = assgin_expr->buildAutoDiffDAG(this,emcol);
+				Node* acon = assgin_expr->buildAutoDiffDAG(this,emcol,true);
 				assert(acon!=NULL);
 				con->attributes->calculateConsBounds(ctx,lower,upper);
 				ConSingle* consingle = new ConSingle(acon, lower, upper);
@@ -162,6 +142,25 @@ BlockLP* ExpandedModel::getBlockLP(ExpandedModel* emcol)
 	return rval;
 }
 
+uint ExpandedModel::nz_cons_jacobs(ExpandedModel* emcol)
+{
+	BlockLP* b = this->getBlockLP(emcol);
+	boost::unordered_set<AutoDiff::Node*> vSet;
+	emcol->copyVariables(vSet);
+	assert(vSet.size()==emcol->numLocalVars);
+	uint nz = 0;
+	BOOST_FOREACH(Con* con, b->cons)
+	{
+		BOOST_FOREACH(ConSingle* consingle, con->cons)
+		{
+			nz+=nzGrad(consingle->con,vSet);
+			LOG("nz now "<<nz);
+		}
+	}
+	LOG("row["<<name<<"] col["<<emcol->name<<"] - nz["<<nz<<"]");
+	return nz;
+}
+
 void ExpandedModel::cons_jacobs(ExpandedModel* emcol,boost::numeric::ublas::compressed_matrix<double>& m)
 {
 	std::vector<AutoDiff::Node*> vnodes;
@@ -177,12 +176,10 @@ void ExpandedModel::cons_jacobs(ExpandedModel* emcol,boost::numeric::ublas::comp
 
 		BOOST_FOREACH(ConSingle* singlecon, con->cons)
 		{
-//			typedef boost::numeric::ublas::matrix_row<boost::numeric::ublas::compressed_matrix<double> > compressed_matrx_row;
-//			compressed_matrx_row rgrad(m,r);
 			matrix_row<compressed_matrix<double> > rgrad(m,r);
 			assert(con!=NULL);
-			LOG("constraint expression  ---- ");
-			LOG("--- "<<AutoDiff::visit_tree(singlecon->con));
+//			LOG("constraint expression  ---- ");
+//			LOG("--- "<<AutoDiff::visit_tree(singlecon->con));
 			grad_reverse(singlecon->con,vnodes,rgrad);
 			r++;
 		}
@@ -194,7 +191,7 @@ void ExpandedModel::cons_jacobs(ExpandedModel* emcol,boost::numeric::ublas::comp
 	assert(m.size1()==this->getNLocalCons());
 	assert(m.size2()==emcol->getNLocalVars());
 
-	Statistics::numConsJacLocalCall++;
+	Stat::numConsJacLocalCall++;
 	LOG("end cons_jacobs_distribute - emrow["<<this->name<<"] emcol["<<emcol->name<<"]");
 }
 void ExpandedModel::obj_grad(ExpandedModel* emcol, double* vals)
@@ -262,7 +259,7 @@ void ExpandedModel::cons_feval_local(std::vector<double>& fvals){
 		fvals.push_back(eval_function(con));
 	}
 	LOG("end cons_feval_local - this["<<this->name<<"] emcol["<<this->name<<"] - fvals size["<<fvals.size()<<"]");
-	Statistics::numConsEvalLocalCall++;
+	Stat::numConsEvalLocalCall++;
 	assert(fvals.size()==this->getNLocalCons());
 }
 
@@ -301,7 +298,7 @@ uint ExpandedModel::nz_cons_jacobs_local(ExpandedModel *emcol)
 	}
 
 	LOG("end nz_cons_jacobs_local -- this["<<this->name<<"] emcol["<<emcol->name<<"]  - Num of Nonzero["<<nz<<"]");
-	Statistics::numNZConsJacLocalCall++;
+	Stat::numNZConsJacLocalCall++;
 	return nz;
 }
 
@@ -352,7 +349,7 @@ void ExpandedModel::cons_jacobs_local(ExpandedModel *emcol, boost::numeric::ubla
 	LOG("submatrix -- ["<<this->getNLocalCons()<<"] x ["<<emcol->getNLocalVars()<<"]");
 	block = mr;
 
-	Statistics::numConsJacLocalCall++;
+	Stat::numConsJacLocalCall++;
 	LOG("end cons_jacobs_distribute - emrow["<<this->name<<"] emcol["<<emcol->name<<"]");
 }
 
@@ -396,7 +393,7 @@ uint ExpandedModel::nz_lag_hess_local(ExpandedModel* emcol)
 	uint nz = nzHess(edgeSet,colvSet,rowvSet);
 	LOG("nonlinearEdges - removed other edges - -"<<edgeSet.toString());
 	LOG("end nz_cons_hess_local -- this["<<this->name<<"] emcol["<<emcol->name<<"]  - Num of Nonzero["<<nz<<"]");
-	Statistics::numNZConsHessLocalCall++;
+	Stat::numNZConsHessLocalCall++;
 	return nz;
 }
 
@@ -490,7 +487,7 @@ void ExpandedModel::lag_hess_local(ExpandedModel* emcol,boost::numeric::ublas::c
 	LOG("submatrix -- ["<<this->getNLocalVars()<<"] x ["<<emcol->getNLocalVars()<<"]");
 	block = mr;
 
-	Statistics::numConsHessLocalCall++;
+	Stat::numConsHessLocalCall++;
 	LOG("end lag_hess_local - emrow["<<this->name<<"] emcol"<<emcol->name<<"]");
 }
 
@@ -520,7 +517,7 @@ uint ExpandedModel::nz_cons_hess_local(ExpandedModel *emcol)
 	uint nz = nzHess(edgeSet,colvSet,rowvSet);
 	LOG("nonlinearEdges - removed other edges - -"<<edgeSet.toString());
 	LOG("end nz_cons_hess_local -- this["<<this->name<<"] emcol["<<emcol->name<<"]  - Num of Nonzero["<<nz<<"]");
-	Statistics::numNZConsHessLocalCall++;
+	Stat::numNZConsHessLocalCall++;
 	return nz;
 }
 
@@ -584,7 +581,7 @@ void ExpandedModel::cons_hess_local(ExpandedModel* emcol, boost::numeric::ublas:
 	LOG("submatrix -- ["<<this->getNLocalVars()<<"] x ["<<emcol->getNLocalVars()<<"]");
 	block = mr;
 
-	Statistics::numConsHessLocalCall++;
+	Stat::numConsHessLocalCall++;
 	LOG("end cons_hess_local - emrow["<<this->name<<"] emcol"<<emcol->name<<"]");
 }
 
@@ -605,7 +602,7 @@ double& ExpandedModel::obj_feval_local(double& oval)
 		assert(!isnan(oval));
 	}
 	LOG("end obj_feval_local - this["<<this->name<<"] emcol["<<this->name<<"] - oval["<<oval<<"]");
-	Statistics::numObjEvalLocalCall++;
+	Stat::numObjEvalLocalCall++;
 	return oval;
 }
 
@@ -653,7 +650,7 @@ void ExpandedModel::obj_grad_local(ExpandedModel* emcol, std::vector<double>& og
 		ograd.assign(grad.begin()+colstart,grad.begin()+colrange);
 	}
 	assert(ograd.size() == emcol->getNLocalVars());
-	Statistics::numObjGradLocalCall++;
+	Stat::numObjGradLocalCall++;
 	LOG("end obj_grad_local - this["<<this->name<<"] x emcol["<<emcol->name<<"] -- ograd size["<<ograd.size()<<"]");
 }
 
@@ -685,7 +682,7 @@ uint ExpandedModel::nz_obj_hess_local(ExpandedModel* emcol)
 		}
 	}
 	LOG("end nz_obj_hess_local -- this["<<this->name<<"] emcol["<<emcol->name<<"]  - Num of Nonzero["<<nz<<"]");
-	Statistics::numNZObjHessLocalCall++;
+	Stat::numNZObjHessLocalCall++;
 	return nz;
 }
 
@@ -747,7 +744,7 @@ void ExpandedModel::obj_hess_local(ExpandedModel* emcol, boost::numeric::ublas::
 	}
 	assert(block.size1()==this->getNLocalVars());
 	assert(block.size2()==emcol->getNLocalVars());
-	Statistics::numObjHessLocalCall++;
+	Stat::numObjHessLocalCall++;
 	LOG("end obj_hess_local - emrow["<<this->name<<"] emcol"<<emcol->name<<"]");
 }
 
@@ -1264,7 +1261,7 @@ ModelContext* ExpandedModel::recursiveInitContext()
 	return this->ctx;
 }
 
-void ExpandedModel::printEMRecursive(string& line, ostream& out)
+void ExpandedModel::logEMRecursive(string& line, ostream& out)
 {
 	string header;
 	if(this==ExpandedModel::root)
@@ -1294,7 +1291,7 @@ void ExpandedModel::printEMRecursive(string& line, ostream& out)
 	line += "\t";
 	for(std::vector<ExpandedModel*>::iterator it=this->children.begin();it!=this->children.end();it++)
 	{
-		(*it)->printEMRecursive(line,out);
+		(*it)->logEMRecursive(line,out);
 	}
 	line = pre;
 }
@@ -1451,6 +1448,10 @@ void ExpandedModel::getQaulifiedName(ostringstream& oss)
 	}
 }
 
+/*
+ * Finding the sub-context from it's children problem, so that
+ * the dummy varaibles value equals to dummyval
+ */
 ModelContext* ExpandedModel::locateCtx(AmplModel* model, string& dummyval)
 {
 	ModelContext* rval = NULL;

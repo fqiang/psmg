@@ -51,6 +51,6 @@ void print_mem_usage(string name)
    long page_size_kb = sysconf(_SC_PAGE_SIZE) / 1024; // in case x86-64 is configured to use 2MB pages
    vm_usage     = vsize / 1024.0;
    resident_set = rss * page_size_kb;
-   cout<<"["<<GlobalVariables::rank<<"/"<<GlobalVariables::size<<"] LOG_SYS_MEM["<<name<<"]"<<" Pid["<<pid<<"]"<<" VM[ "<<vm_usage<<" ] RSS[ "<<resident_set<<" ]"<<endl;
+   cout<<"["<<GV(rank)<<"/"<<GV(size)<<"] LOG_SYS_MEM["<<name<<"]"<<" Pid["<<pid<<"]"<<" VM[ "<<vm_usage<<" ] RSS[ "<<resident_set<<" ]"<<endl;
 
 }

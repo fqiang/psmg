@@ -15,7 +15,7 @@ public:
 	double value;
 
 	PValueValue(double);
-	PValueValue(PValueValue&);
+	PValueValue(const PValueValue&);
 	virtual ~PValueValue();
 
 	virtual PValueValue* clone();

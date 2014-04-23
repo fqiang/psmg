@@ -14,10 +14,13 @@ class SyntaxNodeIDREFM : public SyntaxNode {
 public:
 	AmplModel* ref;
 
-	SyntaxNodeIDREFM(int opCode, SyntaxNode* id, AmplModel* model);
+	SyntaxNodeIDREFM(SyntaxNode* id, AmplModel* model);
 	virtual ~SyntaxNodeIDREFM();
+	SyntaxNodeIDREFM(const SyntaxNodeIDREFM& src);
+	virtual SyntaxNodeIDREFM* clone();
+	virtual SyntaxNode* appendDOTNotation(StochCtx*);
 
-	std::ostream& put(std::ostream& s);
+	virtual std::ostream& put(std::ostream& s);
 	void calculateMemoryUsage(unsigned long& size);
 };
 

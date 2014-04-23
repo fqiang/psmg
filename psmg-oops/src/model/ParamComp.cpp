@@ -16,13 +16,16 @@
 #include "../parser/sml.tab.h"
 
 
-ParamComp::ParamComp(const string& id, SyntaxNode* index, SyntaxNode* attr): ModelComp(id,TPARAM,index,attr),numIndicies(-1),isSym(false)
+ParamComp::ParamComp(const string& id, SyntaxNode* index, SyntaxNode* attr,AmplModel* owner): ModelComp(id,TPARAM,index,attr,owner),numIndicies(-1)
 {
-
+	if(this->attributes != NULL)
+	{
+		this->isSym = this->attributes->isParamSymbolic();
+	}
 }
 
 ParamComp::~ParamComp() {
-	// TODO Auto-generated destructor stub
+
 }
 
 // param related operations
@@ -32,17 +35,7 @@ void ParamComp::setParamIndicies() {
 	if (this->indexing != NULL) {
 		this->numIndicies = this->indexing->calculateParamSetIndicies();
 	}
-
-	if(this->attributes != NULL)
-	{
-		this->isSym = this->attributes->isParamSymbolic();
-	}
 	assert(this->numIndicies>=0);
-}
-
-int ParamComp::getNumSetIndices() {
-	assert(this->type==TPARAM);
-	return this->numIndicies;
 }
 
 void ParamComp::calculateParamModelComp(ModelContext* context) {
@@ -57,7 +50,7 @@ void ParamComp::calculateParamModelComp(ModelContext* context) {
 		assert(paramIndiciesDummy.size()==paramIndiciesComp.size());
 
 		vector<Set*> sets;
-		for(int i=0;i<paramIndiciesComp.size();i++)
+		for(uint i=0;i<paramIndiciesComp.size();i++)
 		{
 			Set* aSet = static_cast<Set*>(context->getCompValue(paramIndiciesComp[i]));
 			sets.push_back(aSet);
@@ -117,6 +110,7 @@ void ParamComp::evalParamValue(ModelContext* ctx,PValue** rval)
 	assert(define->nchild()==1);
 	define->values[0]->evalTerm(ctx,rval);
 
+	//error type check!
 	assert(*rval!=NULL);
 	if(isSym)
 	{

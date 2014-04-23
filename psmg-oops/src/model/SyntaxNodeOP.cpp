@@ -12,82 +12,65 @@
 #include "../parser/sml.tab.h"
 
 
-SyntaxNodeOP::SyntaxNodeOP(int opCode_, SyntaxNode *op1, SyntaxNode *op2) :
-  SyntaxNode(opCode_, op1, op2), left(NULL)
+SyntaxNodeOP::SyntaxNodeOP(int opCode, SyntaxNode *op1, SyntaxNode *op2) :
+  SyntaxNode(opCode, op1, op2)
 {
-	LOG("OpNode constructor called -- opCode["<<opCode_<<"]");
-	assert(op1);
-	if(!op2) {
-		// Unary operation eg -1, op sign sits to left of operand
-		right = op1;
-	} else {
-	// Binary operation
-		left = op1;
-		right = op2;
-	}
+	LOG("OpNode constructor called -- opCode["<<opCode<<"]");
+	assert(op1!=NULL);
 }
 
-ostream& SyntaxNodeOP::put(ostream &s) {
-  if(left)
+SyntaxNodeOP::~SyntaxNodeOP()
+{
+}
+
+SyntaxNodeOP::SyntaxNodeOP(const SyntaxNodeOP& src):SyntaxNode(src)
+{
+}
+
+SyntaxNodeOP* SyntaxNodeOP::clone()
+{
+	return new SyntaxNodeOP(*this);
+}
+
+ostream& SyntaxNodeOP::put(ostream &s)
+{
+	SyntaxNode* left = this->values[0];
+	SyntaxNode* right= this->nchild()==2? this->values[1]: NULL;
+	if(left)
 	  s << left << " ";
 
-  switch(opCode) {
-    case PLUS:
-    	s << "+";
-    	break;
-    case MINUS:
-    	s << "-";
-    	break;
-    case TIMES:
-    	s << "*";
-    	break;
-    case DIVID:
-       s << "/";
-       break;
-    case ASSIGN:  s << "=";   break;
-    case GE:      s << ">=";  break;
-    case GT:      s << ">";   break;
-    case LE:      s << "<=";  break;
-    case LT:      s << "<";   break;
-    case EQ:      s << "==";  break;
-    case NE:      s << "!=";  break;
-    case IN:      s << "in";  break;
-    case DEFINED: s << ":=";  break;
-    case POWER:   s << "^";  break;
-    case COS:	  s << "cos"; break;
-    case SIN:	s<<"sin"; break;
-    default:
-      cerr << "Unknown opCode for OpNode: " << opCode << endl;
-      assert(false);
-  }
+	switch(opCode) {
+	case PLUS:
+		s << "+";
+		break;
+	case MINUS:
+		s << "-";
+		break;
+	case TIMES:
+		s << "*";
+		break;
+	case DIVID:
+	   s << "/";
+	   break;
+	case ASSIGN:  s << "=";   break;
+	case GE:      s << ">=";  break;
+	case GT:      s << ">";   break;
+	case LE:      s << "<=";  break;
+	case LT:      s << "<";   break;
+	case EQ:      s << "==";  break;
+	case NE:      s << "!=";  break;
+	case IN:      s << "in";  break;
+	case DEFINED: s << ":=";  break;
+	case POWER:   s << "^";  break;
+	case COS:	  s << "cos"; break;
+	case SIN:	s<<"sin"; break;
+	default:
+	  cerr << "Unknown opCode for OpNode: " << opCode << endl;
+	  assert(false);
+	}
 
-  if(right)
+	if(right)
 	  s << " " << right;
 
-  return s;
+	return s;
 }
-
-void SyntaxNodeOP::calculateMemoryUsage(unsigned long& size)
-{
-	size += sizeof(SyntaxNodeOP);
-	this->calculateBaseValueVector(size);
-}
-
-
-//legacy !!
-//OpNode *OpNode::deep_copy() {
-//   if(left) {
-//      return new OpNode(opCode, left->deep_copy(), right->deep_copy());
-//   } else {
-//      return new OpNode(opCode, right->deep_copy());
-//   }
-//}
-//
-//OpNode *OpNode::clone() {
-//   if(left) {
-//      return new OpNode(opCode, left, right);
-//   } else {
-//      return new OpNode(opCode, right);
-//   }
-//}
-

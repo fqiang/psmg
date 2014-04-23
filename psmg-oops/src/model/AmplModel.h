@@ -65,7 +65,6 @@ public:
 	int level;       //!< level of this model on the flat model tree (root=0)
 
 	/** The list of components of this model */
-	vector<ModelComp*> all_comps;
 	vector<SetComp*> set_comps;
 	vector<ParamComp*> param_comps;
 	vector<VarComp*> var_comps;
@@ -75,25 +74,25 @@ public:
 
 	// -------------------------- methods ----------------------------------
 	/** Constructor */
-	AmplModel(const string& name, AmplModel *par, SyntaxNode* index);
+	AmplModel(const string& name, SyntaxNode* index, AmplModel *par);
 
 	/** Destructor */
 	virtual ~AmplModel();
 
 	/** Add a model component to the model */
-	virtual void addComp(ModelComp *comp);
+	void addComp(ModelComp *comp);
 
 	/** Recursive detailed debugging output */
 	void logModel(const char *filename);
 
 	//find the ModelComp to fill the CompDescr.
 	ModelComp* findModelComp(string& id);
+	ModelComp* findModelCompThisModel(string& id);
 	ParamComp* findParamComp(string& id);
 	SetComp* findSetComp(string& id);
 	void calculateModelComp(ModelContext* context);
 	void calculateModelCompRecursive(ModelContext* context);
-	ExpandedModel* createExpandedModel(string dummyVar,SetComp* comp,string value,ModelContext* parent);
-	void reassignModelIndexDependencies();
+	virtual ExpandedModel* createExpandedModel(string dummyVar,SetComp* comp,string value,ModelContext* parent);
 	void settingUpLevels(int);
 
 	void formulateConstraints();
@@ -101,21 +100,7 @@ public:
 	void calculateMemoryUsage(unsigned long& size);
 
 
-	void dump(std::ostream& fout,int);
-
-
-//legacy!
-//	virtual SyntaxNodeIDREF* createIdrefNode(SyntaxNodeID *ref);
-//	static void applyChanges(); //< apply the model changes stored in Q
-//	// Virtual methods implemented only for stochastic models
-//	virtual AmplModel* expandToFlatModel() { throw; }
-//	/** Remove a model component from the model */
-//	void removeComp(ModelComp *comp);
-//	template<typename T> void removeComp(vector<T*> comps, ModelComp* comp);
-//	/** List of changes that should be applied to the models */
-//	static std::list<changeitem> changes;
-//	/** Recursively recalculate dependency list and re-resolve IDREF nodes */
-//	void reassignDependencies();
+	void dump(std::ostream& fout, int);
 };
 
 #endif

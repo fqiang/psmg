@@ -8,10 +8,9 @@
 #include "ObjComp.h"
 #include "SyntaxNode.h"
 #include "AmplModel.h"
-#include "../util/CompilerMarco.h"
-#include "../sml/GlobalVariables.h"
+#include "../util/global_util_functions.h"
 
-ObjComp::ObjComp(const string& id, objType t, SyntaxNode* attr): ModelComp(id,TOBJ,NULL,attr),otype(t)
+ObjComp::ObjComp(const string& id, objType t, SyntaxNode* attr,AmplModel* owner): ModelComp(id,TOBJ,NULL,attr,owner),otype(t)
 {
 }
 

@@ -30,7 +30,7 @@
 #include "oops/BlockDiagSimpleAlg.h"
 
 #include "../context/ExpandedModel.h"
-#include "../sml/GlobalVariables.h"
+#include "../util/global_util_functions.h"
 #include "../sml/Sml.h"
 
 #include "OOPSBlock.h"
@@ -81,7 +81,7 @@ void SML_OOPS_driver_LP(ExpandedModel *root) {
 	vu->fillCallBack(FillUpBndVector);
 	vl->fillCallBack(FillLowBndVector);
 
-	if (GlobalVariables::writeMatlab) {
+	if (Config::writeMatlab) {
 		LOG("Writing matlab file:mat.m");
 		string mfile = GV(logdir)+ "mat.m";
 		FILE *mout = fopen(mfile.c_str(), "w");
@@ -94,7 +94,7 @@ void SML_OOPS_driver_LP(ExpandedModel *root) {
 		fclose(mout);
 	}
 
-	if (GlobalVariables::writeMPS) {
+	if (Config::writeMPS) {
 		LOG("Writing mps file:mat.m");
 		string mfile = GV(logdir)+"test.mps";
 		FILE *mps_file = fopen(mfile.c_str(), "w");
@@ -113,7 +113,7 @@ void SML_OOPS_driver_LP(ExpandedModel *root) {
 	PDProblem Prob(AlgAug, vb, vc, vl, vu, vx, vy, vz);
 	prob_ptr = &Prob;
 
-	if (GlobalVariables::solve) {
+	if (Config::solve) {
 		cout << "Calling OOPS..." << endl;
 		Prob.solve(stdout);
 	}
@@ -483,10 +483,8 @@ void FillUpBndVector(Vector *vu) {
 	DenseVector *dense = GetDenseVectorFromVector(vu);
 
 	Algebra *A = (Algebra *) T->nodeOfAlg; // the diagonal node that spawned this tree
-	//NodeId *id = (NodeId*)A->id;        // and its id structure
 	OOPSBlock *obl = (OOPSBlock*) A->id;        // and its id structure
 	assert(obl->emrow == obl->emcol); // this should be a diagonal block
-	//NlFile *nlf = obl->emrow->nlfile;
 	ExpandedModel *emrow = obl->emrow;
 
 	assert(obl->emcol->numLocalVars == T->end - T->begin);
@@ -505,9 +503,6 @@ void FillRhsVector(Vector *vb) {
 	Algebra *A = (Algebra*) T->nodeOfAlg; // the diagonal node that spawned this tree
 	OOPSBlock *obl = (OOPSBlock*) A->id; // and its id structure
 	ExpandedModel *emrow = obl->emrow;
-
-	// FIXME: should the id structure include information on the ExpandedModelInterface
-	//        as well? That way we could do some more sanity checks
 
 	emrow->get_local_cons_bounds(dense->elts, checkub);
 

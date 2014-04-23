@@ -4,15 +4,15 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
-../src/metric/Statistics.cpp \
+../src/metric/Stat.cpp \
 ../src/metric/TimeStamp.cpp 
 
 OBJS += \
-./src/metric/Statistics.o \
+./src/metric/Stat.o \
 ./src/metric/TimeStamp.o 
 
 CPP_DEPS += \
-./src/metric/Statistics.d \
+./src/metric/Stat.d \
 ./src/metric/TimeStamp.d 
 
 

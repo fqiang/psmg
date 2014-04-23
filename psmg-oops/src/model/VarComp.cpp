@@ -16,18 +16,15 @@
 #include "ObjComp.h"
 #include "../parser/sml.tab.h"
 
-VarComp::VarComp(const string& id, SyntaxNode* index, SyntaxNode* attr) : ModelComp(id,TVAR,index,attr),
+VarComp::VarComp(const string& id, SyntaxNode* index, SyntaxNode* attr, AmplModel* owner) : ModelComp(id,TVAR,index,attr,owner),
 	dim(0)
 {
-	// TODO Auto-generated constructor stub
 
 }
 
 VarComp::~VarComp() {
 	// TODO Auto-generated destructor stub
 }
-
-
 
 void VarComp::calculateVarDimCard(ModelContext* context, uint& card) {
 	LOG( "calculateLocalVar -- in model["<<this->model->name<<"] id["<<this->name<<"]");
@@ -78,12 +75,12 @@ void VarComp::calculateVarComp(ModelContext* ctx)
 			this->attributes->calculateVarBounds(ctx,upper,lower);
 		}
 		string varkey = "";
-		AutoDiff::Node* v =  AutoDiff::create_var_node();
+		AutoDiff::Node* v =  AutoDiff::create_var_node(1.0);
 		var->varMultiMap.push_back(VarSingle(varkey,upper,lower,v));
 	}
 
 	ctx->addCompValueMap(this,var);
-	LOG( "fillLocalVar -- model["<<this->model->name<<"] comp["<<this->name<<"] card["<<var->varMultiMap.size()<<"] dim["<<this->dim<<"]");
+	LOG("fillLocalVar -- model["<<this->model->name<<"] comp["<<this->name<<"] card["<<var->varMultiMap.size()<<"] dim["<<this->dim<<"]");
 }
 
 /* ---------------------------------------------------------------------------
