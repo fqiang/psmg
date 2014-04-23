@@ -213,10 +213,10 @@ void ExpandedModel::obj_grad(ExpandedModel* emcol, double* vals)
 		LOG("objective expression  ---- ");
 		LOG("--- "<<visit_tree(con));
 		grad_reverse(con,vnodes,grad);
-
-		for(int i=0;i<grad.size();i++)
+		for(uint i=0;i<grad.size();i++)
 		{
-			vals[i] = grad.at(i);
+			//set to 0 if variable is not in the objective expression
+			vals[i] = isnan(grad[i])?0:grad[i];
 		}
 	}
 }
