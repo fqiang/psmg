@@ -174,7 +174,7 @@ AmplModel* StochModel::convertToAmplModel(ModelContext* parCtx)
 		}
 		BOOST_FOREACH(VarComp* varcomp , this->var_comps)
 		{
-			if(varcomp->stage!=NULL && varcomp->stage->opCode == DETERMINISTIC && this->isInCurrentStage(varcomp->stage,curr_sctx->stagename,parCtx))
+			if(varcomp->isDet == true && this->isInCurrentStage(varcomp->stage,curr_sctx->stagename,parCtx))
 			{ //deterministic var comp -- only one for each valid time stage in stageset - therefore need to create this varcomp in stoch root model
 				//ie. var A deterministic
 				LOG("varcomp ["<<varcomp->name<<"] is in DETERMINISTRIC");
