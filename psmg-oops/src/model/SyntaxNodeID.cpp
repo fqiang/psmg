@@ -32,6 +32,7 @@ SyntaxNodeID::SyntaxNodeID(const SyntaxNodeID& src):SyntaxNode(src)
 SyntaxNode*  SyntaxNodeID::clone()
 {
 	SyntaxNode* newnode = NULL;
+	//translate the node dummy and stage dummy if necessary
 	if(id.compare(SCTX::currCtx->nd) == 0)
 	{
 		newnode = new SyntaxNodeID(SCTX::currCtx->model_dummy);

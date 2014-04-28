@@ -35,12 +35,11 @@ void ObjComp::calculatePartialConstraints()
  ---------------------------------------------------------------------------- */
 void ObjComp::dump(ostream& fout,int counter)
 {
-	fout << "ObjComp:  ("<<counter<<"------------------------------------------------------\n";
-	fout << "ObjComp: " << name << " (" << (void *) this << ")"<<endl;
-	fout << "ObjComp: " << type<<endl;
-	fout << "ObjComp:"	<< otype<<endl;
+	fout << "ObjComp:  ("<<counter<<")\n";
+	fout << "\t"<< name << " (" << (void *) this << ")"<<endl;
+	fout << "\t"<< otype<<endl;
 	if (attributes) {
-		fout << "    attr: " << attributes << '\n';
+		fout <<"\t"<<"attr: " << attributes << '\n';
 	}
 	assert(indexing== NULL);
 }

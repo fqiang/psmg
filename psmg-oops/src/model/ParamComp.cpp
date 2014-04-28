@@ -129,12 +129,12 @@ void ParamComp::evalParamValue(ModelContext* ctx,PValue** rval)
  ---------------------------------------------------------------------------- */
 void ParamComp::dump(ostream& fout,int counter)
 {
-	fout << "ParamComp:  ("<<counter<<"------------------------------------------------------\n";
-	fout << "ParamComp: " << name << " (" << (void *) this << ")\n";
+	fout << "ParamComp:  counter ("<<counter<<")\n";
+	fout << "\t" << name << " (" << (void *) this << ")\n";
 	if (attributes) {
-		fout << "    attr: " << attributes << '\n';
+		fout <<"\t"<<"attr: " << attributes << "\n";
 	}
 	if (indexing) {
-		fout << "    indexing: " << indexing << "\n";
+		fout <<"\t"<<"indexing: " << indexing << "\n";
 	}
 }

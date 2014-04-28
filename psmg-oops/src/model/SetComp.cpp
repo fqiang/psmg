@@ -38,13 +38,13 @@ SetComp::~SetComp() {
  ---------------------------------------------------------------------------- */
 void SetComp::dump(ostream& fout,int counter)
 {
-	fout << "SetComp:  ("<<counter<<"------------------------------------------------------\n";
-	fout << "SetComp: " << name << " (" << (void *) this << ")\n";
+	fout << "SetComp:  counter ("<<counter<<")\n";
+	fout << "\t"<< name << " (" << (void *) this << ")\n";
 	if (attributes) {
-		fout << "    attr: " << attributes << '\n';
+		fout << "\t"<<"attr: " << attributes << '\n';
 	}
 	if (indexing) {
-		fout << "    indexing: " << indexing << "\n";
+		fout <<"\t"<<"indexing: " << indexing << "\n";
 	}
 }
 

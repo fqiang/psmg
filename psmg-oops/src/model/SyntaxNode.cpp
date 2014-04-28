@@ -70,9 +70,15 @@ SyntaxNode* SyntaxNode::clone(){
 		assert(values[1]->opCode == IDREF && values[0]->opCode == VALUE);
 		StochCtx* record_sctx = SCTX::currCtx;
 		int labove = static_cast<SyntaxNodeValue*>(this->values[0])->val;
+		//now update the currCtx in Stoch Context
 		for(int i=0;i<labove;i++) SCTX::currCtx = SCTX::currCtx->parent;
-
 		rval = this->values[1]->clone();
+
+		//must be in the same level, because currCtx is mean to update the the model that owns this comp
+		//ie. ancestor(1).comp , the ancestor(1) will first processed and upate the SCTX::currCtx to the context that owned this
+		//model comp -- sanity check!
+		assert(static_cast<SyntaxNodeIDREF*>(rval)->ref!=NULL && static_cast<SyntaxNodeIDREF*>(rval)->ref->model == SCTX::currCtx->model);
+
 		//restore backup SCTX
 		SCTX::currCtx = record_sctx;
 	}
@@ -166,7 +172,7 @@ ostream& SyntaxNode::put(ostream&s) {
 			break;
 		case SUM:
 			s << "sum " << **i;
-			s << **(++i);
+			s << "(" << **(++i) <<")";
 			break;
 		case MAX:
 			s << "max " << **i;
@@ -1022,7 +1028,8 @@ SyntaxNode* SyntaxNode::findChildNode( int op) {
 
 void SyntaxNode::calcStageSet(ModelContext* ctx, boost::unordered_set<string>* stageset)
 {
-	assert(this->opCode == LBRACE);
+	assert(this->opCode == LBRACE && this->nchild()==1 && this->values[0]->opCode == COLON);
+	assert(this->values[0]->values[0]->nchild()==1);//only 1 setexpr in setexpr_list
 	SyntaxNode* set_expr = this->values[0]->values[0]->values[0];
 	if(set_expr->opCode == VALUE)
 	{

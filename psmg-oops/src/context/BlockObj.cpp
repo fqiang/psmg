@@ -22,7 +22,7 @@ void BlockObj::logBlock(ExpandedModel* emrow, ExpandedModel* emcol,ostream& out)
 {
 	out<<"Objective Block"<<endl;
 	out<<"Objective Declared/Row Model: "<<emrow->name<<"\t\t Size:"<<(emrow->model->obj_comp==NULL?"NULL":"1")<<endl;
-	out<<"Variables Declared/Col Model: "<<emcol->name<<"\t\t Size:"<<emcol->getNLocalVars()<<endl;
+	out<<"Variables Declared/Col Model: "<<emcol->name<<"\t\t Size:"<<emcol->numLocalVars<<endl;
 	out<<endl;
 	out<<endl<<"Local Variables:"<<endl;
 	vector<string> conNames, varNames;

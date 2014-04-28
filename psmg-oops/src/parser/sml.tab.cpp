@@ -758,8 +758,8 @@ static const yytype_uint16 yyprhs[] =
 static const yytype_int16 yyrhs[] =
 {
      139,     0,    -1,    -1,   139,   140,    -1,   160,    -1,   166,
-      -1,   172,    -1,   177,    -1,   181,    -1,   141,    -1,   148,
-      -1,   145,    -1,   142,    -1,    -1,    -1,   115,     3,   143,
+      -1,   172,    -1,   177,    -1,   181,    -1,   141,    -1,   145,
+      -1,   142,    -1,   148,    -1,    -1,    -1,   115,     3,   143,
      153,   110,   144,   104,   139,   105,    -1,    -1,    -1,   115,
        3,   146,   153,   119,   116,   111,   156,   112,   110,   147,
      104,   139,   105,    -1,    -1,    -1,   120,   149,   154,   110,
@@ -809,7 +809,7 @@ static const yytype_int16 yyrhs[] =
 static const yytype_uint16 yyrline[] =
 {
        0,   128,   128,   129,   132,   133,   134,   135,   136,   137,
-     138,   141,   142,   149,   152,   148,   177,   181,   176,   196,
+     140,   141,   142,   149,   152,   148,   177,   181,   176,   196,
      200,   195,   208,   209,   215,   214,   233,   234,   237,   247,
      248,   255,   259,   267,   271,   276,   280,   286,   292,   298,
      304,   319,   318,   338,   339,   345,   349,   357,   362,   361,
@@ -892,7 +892,7 @@ static const yytype_uint16 yytoknum[] =
 static const yytype_uint8 yyr1[] =
 {
        0,   138,   139,   139,   140,   140,   140,   140,   140,   140,
-     140,   141,   141,   143,   144,   142,   146,   147,   145,   149,
+     141,   141,   141,   143,   144,   142,   146,   147,   145,   149,
      150,   148,   151,   151,   152,   151,   153,   153,   154,   155,
      155,   156,   156,   157,   157,   157,   157,   158,   158,   159,
      159,   161,   160,   162,   162,   163,   163,   164,   165,   164,
@@ -936,7 +936,7 @@ static const yytype_uint8 yyr2[] =
 static const yytype_uint8 yydefact[] =
 {
        2,     0,     1,     0,     0,     0,    94,    95,     0,     0,
-      19,     3,     9,    12,    11,    10,     4,     5,     6,     7,
+      19,     3,     9,    11,    10,    12,     4,     5,     6,     7,
        8,     0,    70,    52,    41,    84,    13,     0,    22,    26,
       26,    26,    26,    26,    26,     0,     0,    23,    24,     0,
       22,    27,    22,    22,    22,     0,     0,   122,   152,   153,
@@ -3586,11 +3586,25 @@ void end_model(const string& name)
 /* ---------------------------------------------------------------------------
 Stochastic model helper functions
 ---------------------------------------------------------------------------- */
-void addStochInfo(ModelComp *newmcs, SyntaxNode *stochopt) {
+void addStochInfo(ModelComp *newmc, SyntaxNode *stochopt) {
 	assert(isInStochModel() == true);
- 	assert(stochopt==NULL); //component wised stochast option not yet implementated!
- 	  
-    newmcs->stage = curr_stage_indexset;
+	if(curr_stage_indexset != NULL)
+	{
+		if(stochopt!=NULL && stochopt->opCode == DETERMINISTIC) {
+			assert(newmc->type == TVAR);   //DETERMINISTIC only meaningful for var comp
+			static_cast<VarComp*>(newmc)->isDet = true;
+		}
+		else if(stochopt!=NULL)
+		{
+			cerr<<"ambiguous stage set declaration in side a stageblock!"<<endl;
+	 		assert(false);
+	 		exit(1);
+		}
+		newmc->stage = curr_stage_indexset;
+	}
+	else {
+		newmc->stage = stochopt;
+	}
 }
 bool isInStochModel()
 {

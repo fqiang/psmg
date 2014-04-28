@@ -161,7 +161,7 @@ Algebra* createA(ExpandedModel *em) {
 		LOG("creatA leaf node: ");
 		OOPSBlock *obl = new OOPSBlock(em, em);
 		obl->prob = prob_ptr; obl->i = 0;
-		Alg = NewAlgebraSparse(em->getNLocalCons(), em->getNLocalVars(),
+		Alg = NewAlgebraSparse(em->numLocalCons, em->numLocalVars,
 				(em->name + ":" + em->name).c_str(),
 				(CallBackFunction) SMLCallBack, obl);
 	}
@@ -172,7 +172,7 @@ Algebra* createA(ExpandedModel *em) {
 		 - Off-diagonals with *.nl file from children and col file from parent
 		 - bottom from this *.nl file and col from the children              */
 
-		LOG("PSMG - Create complex node:["<< em->getNLocalCons()<<"] x ["<< em->getNLocalVars() << "] nchd = " <<em->children.size());
+		LOG("PSMG - Create complex node:["<< em->numLocalCons<<"] x ["<< em->numLocalVars << "] nchd = " <<em->children.size());
 
 		/* every child is a diagonal block */
 		Algebra **D, **B, **R;
@@ -197,7 +197,7 @@ Algebra* createA(ExpandedModel *em) {
 		// I suspect we can just copy in the code from the leaf node case above
 		OOPSBlock *obl = new OOPSBlock(em, em);
 		obl->prob = prob_ptr; obl->i = 0;
-		D[nblk] = NewAlgebraSparse(em->getNLocalCons(), em->getNLocalVars(),
+		D[nblk] = NewAlgebraSparse(em->numLocalCons, em->numLocalVars,
 				(em->name + ":" + em->name).c_str(),
 				(CallBackFunction) SMLCallBack, obl);
 
@@ -216,7 +216,7 @@ Algebra* createBottomBord(ExpandedModel *emrow, ExpandedModel *emcol) {
 		LOG("createBottom leaf node ");
 		OOPSBlock *obl = new OOPSBlock(emrow, emcol);
 		obl->prob = prob_ptr; obl->i = 0;
-		Alg = NewAlgebraSparse(emrow->getNLocalCons(), emcol->getNLocalVars(),
+		Alg = NewAlgebraSparse(emrow->numLocalCons, emcol->numLocalVars,
 				(emrow->name + ":" + emcol->name).c_str(),
 				(CallBackFunction) SMLCallBack, obl);
 	}
@@ -232,8 +232,8 @@ Algebra* createBottomBord(ExpandedModel *emrow, ExpandedModel *emcol) {
 
 		OOPSBlock *obl = new OOPSBlock(emrow, emcol);
 		obl->prob = prob_ptr; obl->i = 0;
-		B[nblk] = NewAlgebraSparse(emrow->getNLocalCons(),
-				emcol->getNLocalVars(),
+		B[nblk] = NewAlgebraSparse(emrow->numLocalCons,
+				emcol->numLocalVars,
 				(emrow->name + ":" + emcol->name).c_str(),
 				(CallBackFunction) SMLCallBack, obl);
 		Alg = NewAlgebraBlockDense(1, nblk + 1, B,
@@ -249,7 +249,7 @@ Algebra* createRHSBord(ExpandedModel *emrow, ExpandedModel *emcol) {
 		LOG("createRhs leaf node ");
 		OOPSBlock *obl = new OOPSBlock(emrow, emcol);
 		obl->prob = prob_ptr; obl->i = 0;
-		Alg = NewAlgebraSparse(emrow->getNLocalCons(), emcol->getNLocalVars(),
+		Alg = NewAlgebraSparse(emrow->numLocalCons, emcol->numLocalVars,
 				(emrow->name + ":" + emcol->name).c_str(),
 				(CallBackFunction) SMLCallBack, obl);
 
@@ -267,8 +267,8 @@ Algebra* createRHSBord(ExpandedModel *emrow, ExpandedModel *emcol) {
 		// defined in diag
 		OOPSBlock *obl = new OOPSBlock(emrow, emcol);
 		obl->prob = prob_ptr; obl->i = 0;
-		B[nblk] = NewAlgebraSparse(emrow->getNLocalCons(),
-				emcol->getNLocalVars(),
+		B[nblk] = NewAlgebraSparse(emrow->numLocalCons,
+				emcol->numLocalVars,
 				(emrow->name + ":" + emcol->name).c_str(),
 				(CallBackFunction) SMLCallBack, obl);
 		Alg = NewAlgebraBlockDense(nblk + 1, 1, B,
@@ -292,7 +292,7 @@ createQ(ExpandedModel *em) {
 		OOPSBlock *obl = new OOPSBlock(em, em);
 		obl->prob = prob_ptr; obl->i = 0;
 
-		Alg = NewAlgebraSparse(em->getNLocalVars(), em->getNLocalVars(),
+		Alg = NewAlgebraSparse(em->numLocalVars, em->numLocalVars,
 				("Q" + em->name + ":" + em->name).c_str(),
 				(CallBackFunction) SMLCallBackQ, obl);
 	} else {
@@ -306,7 +306,7 @@ createQ(ExpandedModel *em) {
 				 - Diagonals from children (call createA again)
 				 - Off-diagonals with *.nl file from children and col file from parent
 				 - bottom from this *.nl file and col from the children              */
-		LOG("PSMG - Create complex node:["<< em->getNLocalVars()<<"] x ["<< em->getNLocalVars() << "] nchd = " <<em->children.size());
+		LOG("PSMG - Create complex node:["<< em->numLocalVars<<"] x ["<< em->numLocalVars << "] nchd = " <<em->children.size());
 
 		/* every child is a diagonal block */
 		Algebra **D, **B, **R;
@@ -328,7 +328,7 @@ createQ(ExpandedModel *em) {
 		OOPSBlock *obl = new OOPSBlock(em, em);
 		obl->prob = prob_ptr; obl->i = 0;
 
-		D[nblk] = NewAlgebraSparse(em->getNLocalVars(), em->getNLocalVars(),
+		D[nblk] = NewAlgebraSparse(em->numLocalVars, em->numLocalVars,
 				("Q"+em->name + ":" + em->name).c_str(),
 				(CallBackFunction) SMLCallBackQ, obl);
 
@@ -352,7 +352,7 @@ Algebra* createBottmBordQ(ExpandedModel *emrow, ExpandedModel *emcol) {
 		OOPSBlock *obl = new OOPSBlock(emrow, emcol);
 		obl->prob = prob_ptr; obl->i = 0;
 
-		Alg = NewAlgebraSparse(emrow->getNLocalVars(), emcol->getNLocalVars(),
+		Alg = NewAlgebraSparse(emrow->numLocalVars, emcol->numLocalVars,
 				("Q"+emrow->name + ":" + emcol->name).c_str(),
 				(CallBackFunction) SMLCallBackQ, obl);
 	}
@@ -369,7 +369,7 @@ Algebra* createBottmBordQ(ExpandedModel *emrow, ExpandedModel *emcol) {
 		OOPSBlock *obl = new OOPSBlock(emrow, emcol);
 		obl->prob = prob_ptr; obl->i = 0;
 
-		B[nblk] = NewAlgebraSparse(emrow->getNLocalVars(),emcol->getNLocalVars(),
+		B[nblk] = NewAlgebraSparse(emrow->numLocalVars,emcol->numLocalVars,
 				("Q"+emrow->name + ":" + emcol->name).c_str(),
 				(CallBackFunction) SMLCallBackQ, obl);
 		Alg = NewAlgebraBlockDense(1, nblk + 1, B,
@@ -386,7 +386,7 @@ Algebra* createRHSBordQ(ExpandedModel *emrow, ExpandedModel *emcol) {
 		OOPSBlock *obl = new OOPSBlock(emrow, emcol);
 		obl->prob = prob_ptr; obl->i = 0;
 
-		Alg = NewAlgebraSparse(emrow->getNLocalVars(), emcol->getNLocalVars(),
+		Alg = NewAlgebraSparse(emrow->numLocalVars, emcol->numLocalVars,
 				("Q"+emrow->name + ":" + emcol->name).c_str(),
 				(CallBackFunction) SMLCallBackQ, obl);
 	}
@@ -402,8 +402,8 @@ Algebra* createRHSBordQ(ExpandedModel *emrow, ExpandedModel *emcol) {
 		OOPSBlock *obl = new OOPSBlock(emrow, emcol);
 		obl->prob = prob_ptr; obl->i = 0;
 
-		B[nblk] = NewAlgebraSparse(emrow->getNLocalVars(),
-				emcol->getNLocalVars(),
+		B[nblk] = NewAlgebraSparse(emrow->numLocalVars,
+				emcol->numLocalVars,
 				("Q"+emrow->name + ":" + emcol->name).c_str(),
 				(CallBackFunction) SMLCallBackQ, obl);
 		Alg = NewAlgebraBlockDense(nblk + 1, 1, B,
@@ -570,7 +570,7 @@ void OOPS_update_sol_x_all_bellow(ExpandedModel* em, Vector *vx)
 	if(nchild==0)
 	{
 		DenseVector *dx = GetDenseVectorFromVector(vx);
-		assert(dx->dim == em->getNLocalVars());
+		assert(dx->dim == em->numLocalVars);
 		em->update_primal_x(dx->elts);
 	}
 	else
@@ -579,7 +579,7 @@ void OOPS_update_sol_x_all_bellow(ExpandedModel* em, Vector *vx)
 		// the vxs is stored at index = nchild
 		Vector* vxs = SubVector(vx,nchild);
 		DenseVector* dx = GetDenseVectorFromVector(vxs);
-		assert(dx->dim == em->getNLocalVars());
+		assert(dx->dim == em->numLocalVars);
 		em->update_primal_x(dx->elts);
 		for(int i=0;i<nchild;i++){
 			ExpandedModel* child = em->children.at(i);
@@ -634,7 +634,7 @@ void OOPS_update_sol_y_all_bellow(ExpandedModel* em, Vector *vy)
 	if(nchild==0)
 	{
 		DenseVector *dy = GetDenseVectorFromVector(vy);
-		assert(dy->dim == em->getNLocalCons());
+		assert(dy->dim == em->numLocalCons);
 		em->update_primal_x(dy->elts);
 	}
 	else
@@ -643,7 +643,7 @@ void OOPS_update_sol_y_all_bellow(ExpandedModel* em, Vector *vy)
 		// the vxs is stored at index = nchild
 		Vector* vys = SubVector(vy,nchild);
 		DenseVector* dy = GetDenseVectorFromVector(vys);
-		assert(dy->dim == em->getNLocalCons());
+		assert(dy->dim == em->numLocalCons);
 		em->update_lag(dy->elts);
 		for(int i=0;i<nchild;i++){
 			ExpandedModel* child = em->children.at(i);
@@ -794,8 +794,8 @@ SML_OOPS_upload_sol
 //		DenseVector *dy = GetDenseVectorFromVector(vys);
 //		DenseVector *dz = GetDenseVectorFromVector(vzs);
 //
-//		assert(dx->dim == em->getNLocalVars());
-//		assert(dy->dim == em->getNLocalCons());
+//		assert(dx->dim == em->numLocalVars);
+//		assert(dy->dim == em->numLocalCons);
 //
 //		em->setPrimalSolColumns(dx->elts);
 //		em->setDualSolColumns(dz->elts);
@@ -824,8 +824,8 @@ SML_OOPS_upload_sol
 //		DenseVector *dy = GetDenseVectorFromVector(vy);
 //		DenseVector *dz = GetDenseVectorFromVector(vz);
 //
-//		assert(dx->dim == em->getNLocalVars());
-//		assert(dy->dim == em->getNLocalCons());
+//		assert(dx->dim == em->numLocalVars);
+//		assert(dy->dim == em->numLocalCons);
 //
 //		em->setPrimalSolColumns(dx->elts);
 //		em->setDualSolColumns(dz->elts);

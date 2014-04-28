@@ -165,9 +165,9 @@ void ExpandedModel::cons_jacobs_lp(ExpandedModel* emcol,boost::numeric::ublas::c
 {
 	std::vector<AutoDiff::Node*> vnodes;
 	emcol->copyVariables(vnodes);
-	assert(emcol->getNLocalVars() == vnodes.size());
+	assert(emcol->numLocalVars == vnodes.size());
 //	LOG("vnode size -"<<vnodes.size());
-	m.resize(this->getNLocalCons(),emcol->getNLocalVars(),false);
+	m.resize(this->numLocalCons,emcol->numLocalVars,false);
 
 	BlockLP* b = this->getBlockLP(emcol);
 	int r = 0;
@@ -186,10 +186,10 @@ void ExpandedModel::cons_jacobs_lp(ExpandedModel* emcol,boost::numeric::ublas::c
 		LOG("row["<<name<<"] col["<<emcol->name<<"]");
 		LOG("jacobian now"<<m);
 	}
-	assert(r == this->getNLocalCons());
+	assert(r == this->numLocalCons);
 //	LOG("Full Jacobian: "<<m);
-	assert(m.size1()==this->getNLocalCons());
-	assert(m.size2()==emcol->getNLocalVars());
+	assert(m.size1()==this->numLocalCons);
+	assert(m.size2()==emcol->numLocalVars);
 
 	Stat::numConsJacLocalCall++;
 	LOG("end cons_jacobs_distribute - emrow["<<this->name<<"] emcol["<<emcol->name<<"]");
@@ -260,7 +260,7 @@ void ExpandedModel::cons_feval_local(std::vector<double>& fvals){
 	}
 	LOG("end cons_feval_local - this["<<this->name<<"] emcol["<<this->name<<"] - fvals size["<<fvals.size()<<"]");
 	Stat::numConsEvalLocalCall++;
-	assert(fvals.size()==this->getNLocalCons());
+	assert(fvals.size()==this->numLocalCons);
 }
 
 /* ----------------------------------------------------------------------------
@@ -342,11 +342,11 @@ void ExpandedModel::cons_jacobs_local(ExpandedModel *emcol, boost::numeric::ubla
 	}
 //	LOG("Full Jacobian: "<<m);
 
-	int colrange = emcol->getNLocalVars() + colstart;
+	int colrange = emcol->numLocalVars + colstart;
 	matrix_range<compressed_matrix<double> > mr(m,range(0,m.size1()),range(colstart,colrange));
-	assert(mr.size2()==emcol->getNLocalVars());
-	assert(mr.size1()==this->getNLocalCons());
-	LOG("submatrix -- ["<<this->getNLocalCons()<<"] x ["<<emcol->getNLocalVars()<<"]");
+	assert(mr.size2()==emcol->numLocalVars);
+	assert(mr.size1()==this->numLocalCons);
+	LOG("submatrix -- ["<<this->numLocalCons<<"] x ["<<emcol->numLocalVars<<"]");
 	block = mr;
 
 	Stat::numConsJacLocalCall++;
@@ -482,9 +482,9 @@ void ExpandedModel::lag_hess_local(ExpandedModel* emcol,boost::numeric::ublas::c
 	uint rowrange = rowstart + this->numLocalVars;
 	compressed_matrix_range mr(fullhess,range(rowstart,rowrange),range(colstart,colrange));
 	block = mr;
-	assert(mr.size1()==this->getNLocalVars());
-	assert(mr.size2()==emcol->getNLocalVars());
-	LOG("submatrix -- ["<<this->getNLocalVars()<<"] x ["<<emcol->getNLocalVars()<<"]");
+	assert(mr.size1()==this->numLocalVars);
+	assert(mr.size2()==emcol->numLocalVars);
+	LOG("submatrix -- ["<<this->numLocalVars<<"] x ["<<emcol->numLocalVars<<"]");
 	block = mr;
 
 	Stat::numConsHessLocalCall++;
@@ -576,9 +576,9 @@ void ExpandedModel::cons_hess_local(ExpandedModel* emcol, boost::numeric::ublas:
 	uint rowrange = rowstart + this->numLocalVars;
 	compressed_matrix_range mr(fullhess,range(rowstart,rowrange),range(colstart,colrange));
 	block = mr;
-	assert(mr.size1()==this->getNLocalVars());
-	assert(mr.size2()==emcol->getNLocalVars());
-	LOG("submatrix -- ["<<this->getNLocalVars()<<"] x ["<<emcol->getNLocalVars()<<"]");
+	assert(mr.size1()==this->numLocalVars);
+	assert(mr.size2()==emcol->numLocalVars);
+	LOG("submatrix -- ["<<this->numLocalVars<<"] x ["<<emcol->numLocalVars<<"]");
 	block = mr;
 
 	Stat::numConsHessLocalCall++;
@@ -622,7 +622,7 @@ void ExpandedModel::obj_grad_local(ExpandedModel* emcol, std::vector<double>& og
 
 	if(this->model->obj_comp==NULL)
 	{
-		ograd.resize(emcol->getNLocalVars(),NaN_D);
+		ograd.resize(emcol->numLocalVars,NaN_D);
 	}
 	else{
 		BlockObj* ob = this->getObjBlockLocal(emcol);
@@ -646,10 +646,10 @@ void ExpandedModel::obj_grad_local(ExpandedModel* emcol, std::vector<double>& og
 		grad_reverse(ob->objective,vnodes,grad);
 		assert(vnodes.size()==grad.size());
 		//take sub-vector of those variables declared in emcol
-		uint colrange = colstart + emcol->getNLocalVars();
+		uint colrange = colstart + emcol->numLocalVars;
 		ograd.assign(grad.begin()+colstart,grad.begin()+colrange);
 	}
-	assert(ograd.size() == emcol->getNLocalVars());
+	assert(ograd.size() == emcol->numLocalVars);
 	Stat::numObjGradLocalCall++;
 	LOG("end obj_grad_local - this["<<this->name<<"] x emcol["<<emcol->name<<"] -- ograd size["<<ograd.size()<<"]");
 }
@@ -740,10 +740,10 @@ void ExpandedModel::obj_hess_local(ExpandedModel* emcol, boost::numeric::ublas::
 		uint rowrange = rowstart + this->numLocalVars;
 		compressed_matrix_range mr(fullhess,range(rowstart,rowrange),range(colstart,colrange));
 		block = mr;
-		LOG("submatrix -- ["<<this->getNLocalVars()<<"] x ["<<emcol->getNLocalVars()<<"]");
+		LOG("submatrix -- ["<<this->numLocalVars<<"] x ["<<emcol->numLocalVars<<"]");
 	}
-	assert(block.size1()==this->getNLocalVars());
-	assert(block.size2()==emcol->getNLocalVars());
+	assert(block.size1()==this->numLocalVars);
+	assert(block.size2()==emcol->numLocalVars);
 	Stat::numObjHessLocalCall++;
 	LOG("end obj_hess_local - emrow["<<this->name<<"] emcol"<<emcol->name<<"]");
 }
@@ -1174,7 +1174,7 @@ void ExpandedModel::update_primal_x(double *elts)
 			LOG("update_primal_var_soln - ["<<varsingle->toString()<<"]");
 		}
 	}
-	assert(index==this->getNLocalVars());
+	assert(index==this->numLocalVars);
 }
 
 void ExpandedModel::update_lag(double* elts)
@@ -1191,18 +1191,9 @@ void ExpandedModel::update_lag(double* elts)
 			i++;
 		}
 	}
-	assert(i = this->getNLocalCons());
+	assert(i = this->numLocalCons);
 }
 
-
-uint ExpandedModel::getNLocalCons()
-{
-	return this->numLocalCons;
-}
-uint ExpandedModel::getNLocalVars()
-{
-	return this->numLocalVars;
-}
 
 /*
  * End of common interface methods for both Local and Distribute
@@ -1452,8 +1443,8 @@ void ExpandedModel::getQaulifiedName(ostringstream& oss)
 
 /*
  * Finding the sub-context from it's children problem, so that
- * the dummy varaibles value equals to dummyval
- * Linear case: the ctx returned can be null, for LP problem only context initialized is the ancestor of emrow or emcol.
+ * the dummy variables value equals to dummyval
+ * Linear case: the ctx returned can be null, for LP problem only context initialised is the ancestor of emrow or emcol.
  */
 ModelContext* ExpandedModel::locateCtx(AmplModel* model, string& dummyval)
 {
@@ -1469,14 +1460,6 @@ ModelContext* ExpandedModel::locateCtx(AmplModel* model, string& dummyval)
 			}
 		}
 	}
-	//if not found
-	if(rval == NULL){
-		BOOST_FOREACH(ExpandedModel* em, this->children)
-		{
-			rval = em->locateCtx(model,dummyval);
-			if(rval!=NULL) break;
-		}
-	}
 	return rval;
 }
 /*
@@ -1484,313 +1467,10 @@ ModelContext* ExpandedModel::locateCtx(AmplModel* model, string& dummyval)
  * ******************************************************************************************
  */
 
-
-
-/* * ******************************************************************************************
- * Distribute interface implemenation
- * 		createConsBlockDistributed
- *
- * 		cons_feval_distribute
- * 		cons_nz_jacobs_distribute
- * 		cons_nz_hessian_distribute
- * 		cons_jacobs_distribute
- * 		cons_hessian_distribute
- * 		obj_grad_distribute
- * 		obj_nz_hessian_distribute
- * 		obj_hessian_distribute
- *
-*/
-
-Block* ExpandedModel::getBlockDistributed(ExpandedModel* emcol)
-{
-	LOG("getBlockDistributed - this["<<this->name<<"] - emcol["<<emcol->name<<"]");
-	Block* block = NULL;
-	boost::unordered_map<ExpandedModel*,Block*>::iterator it = this->block_ds.find(emcol);
-	if(it == this->block_ds.end())
-	{
-		block = new Block();
-		//involve emcol's parent and ancestors
-		emcol->getParentEM(block->ems);
-		//involve emcol itself
-		block->ems.push_back(emcol);
-
-		std::vector<ExpandedModel*>& ems = block->ems;
-		for(std::vector<ExpandedModel*>::iterator it = ems.begin();it != ems.end();it++) {
-			(*it)->recursiveInitContext();
-		}
-		for(std::vector<ExpandedModel*>::iterator it = ems.begin();it != ems.end();it++) {
-			(*it)->model->calculateModelCompRecursive((*it)->ctx);
-		}
-		for(std::vector<ExpandedModel*>::iterator it = ems.begin();it != ems.end();it++) {
-			(*it)->model->calculateLocalVar((*it)->ctx);
-		}
-		this->block_ds.insert(pair<ExpandedModel*,Block*>(emcol,block));
-	}
-	else
-	{
-		LOG("getBlockDistributed -- already initilized ");
-		block = it->second;
-	}
-	return block;
-}
-
-BlockCons* ExpandedModel::createConsBlockDistributed(ExpandedModel* emcol)
-{
-	LOG("createEMBlockDistributed - row["<<this->name<<"] col["<<emcol->name<<"]");
-	Block* block_ds = this->getBlockDistributed(emcol);
-	BlockCons* emb = new BlockCons(block_ds);
-
-	int col_level = emcol->model->level;
-	std::vector<ConsComp*>::iterator it = this->model->con_comps.begin();
-	for(;it!=this->model->con_comps.end();it++)
-	{  //now build each constraint in autodiff format
-		ConsComp* con = *it;
-		LOG(" -- con [ "<<con->name<<"]");
-		boost::unordered_map<int,SyntaxNode*>::iterator pcon = con->partial.find(col_level);
-		SyntaxNode* attribute = NULL;
-		if(pcon!=con->partial.end())
-		{
-			attribute = (*pcon).second;
-			LOG(" -- partial attribute ["<<attribute->print()<<"]");
-		}
-
-		SyntaxNode* indexing = con->indexing;
-		if(indexing!=NULL)
-		{
-			LOG(" -- con index["<<indexing->print()<<"]");
-			IndexSet* iset = indexing->createIndexSet(ctx);
-			assert(iset->dummyCompMap.size()==1); //so far support only 1-demonsianl set
-			ModelComp* setcomp = iset->dummyCompMap.begin()->second;
-			Set* indset = iset->dummySetMap.begin()->second;
-			string dummy = iset->dummyCompMap.begin()->first;
-			std::vector<string>::iterator itset = indset->setValues_data_order.begin();
-			for(;itset!=indset->setValues_data_order.end();itset++)
-			{
-				string value = *itset;
-				this->ctx->addDummyCompValueMapTemp(dummy,setcomp,value);
-				string conName = con->name + "_" + value;
-				LOG(" constraint - ["<<conName<<"]");
-				//now, build autodiff constraint
-				AutoDiff::Node* acon = NULL;
-				if(attribute!=NULL)
-				{
-					acon = attribute->buildAutoDiffDAG(this,emcol);
-				}
-				emb->cons.push_back(acon);
-				this->ctx->removeDummySetValueMapTemp(dummy);
-			}
-			delete iset;
-		}
-		else
-		{
-			LOG(" -- con index is NULL");
-			string conName = con->name + "_";
-			LOG(" constraint - ["<<conName<<"]");
-			//now, build autodiff constraint
-			AutoDiff::Node* acon = NULL;
-			if(attribute!=NULL)
-			{
-				acon = attribute->buildAutoDiffDAG(this,emcol);
-			}
-			emb->cons.push_back(acon);
-		}
-	}
-
-	assert(this->getNLocalCons()==emb->cons.size());
-
-	if(GV(logBlock)){
-		ostringstream oss;
-		oss<<GV(logdir);
-		this->getQaulifiedName(oss);
-		emcol->getQaulifiedName(oss);
-		oss<<".dblk";
-		ofstream fout(oss.str().c_str());
-		emb->logBlock(this,emcol,fout);
-	}
-	LOG("createEMBlockDistributed - row["<<this->name<<"] col["<<emcol->name<<"] -- ncon["<<emb->cons.size()<<"] nvar["<<emcol->numLocalVars<<"]");
-	return emb;
-}
-
-void ExpandedModel::cons_jacobs_distribute(ExpandedModel *emcol, std::vector<boost::numeric::ublas::compressed_matrix<double> >& blocks)
-{
-	LOG("enter cons_jacobs_distribute - emrow["<<this->name<<"] emcol["<<emcol->name<<"]");
-	//will need to check the current emrow/emcol level, more than one nz block will be returned
-
-	boost::unordered_map<ExpandedModel*,BlockCons* >::iterator it=cblockMap_ds.find(emcol);
-	BlockCons* emb = NULL;
-	if(it==cblockMap_ds.end()){
-		emb = this->createConsBlockDistributed(emcol);
-		cblockMap_ds.insert(pair<ExpandedModel*,BlockCons*>(emcol,emb));
-	}
-	else{
-		emb = (*it).second;
-	}
-
-	std::vector<AutoDiff::Node*> vnodes;
-	for(std::vector<ExpandedModel*>::iterator it=emb->block->ems.begin();it!=emb->block->ems.end();it++)
-	{
-		LOG("em["<<(*it)->name);
-		(*it)->copyVariables(vnodes);
-	}
-//	LOG("vnode size -"<<vnodes.size());
-	compressed_matrix<double> m(emb->cons.size(),vnodes.size());
-	int r = 0;
-	for(std::vector<AutoDiff::Node*>::iterator it=emb->cons.begin();it!=emb->cons.end();it++){
-		matrix_row<compressed_matrix<double> > rgrad (m,r);
-		if(*it!=NULL){
-			LOG("con - \n"<<visit_tree(*it));
-			AutoDiff::grad_reverse(*it,vnodes,rgrad);
-		}
-		r++;
-//		LOG("jacobian now"<<m);
-	}
-//	LOG("Full Jacobian: "<<m);
-
-	int prev_c  = 0;
-	for(std::vector<ExpandedModel*>::iterator it=emb->block->ems.begin();it!=emb->block->ems.end();it++)
-	{
-		int num_c = (*it)->getNLocalVars() + prev_c;
-		matrix_range<compressed_matrix<double> > mr(m,range(0,m.size1()),range(prev_c,num_c));
-		LOG("submatrix -- nvar["<<(*it)->getNLocalVars()<<"] - level["<<(*it)->model->level<<"] em["<<(*it)->name<<"]");
-		compressed_matrix<double> subm(mr);
-		blocks.push_back(subm);
-		prev_c=num_c;
-	}
-	assert(emcol->model->level+1 == blocks.size());
-	assert(blocks.size()==emb->block->ems.size());
-	LOG("end cons_jacobs_distribute");
-}
-
-void ExpandedModel::cons_hessian_distribute(ExpandedModel* emcol, std::vector<boost::numeric::ublas::compressed_matrix<double> >& blocks)
-{
-	LOG("enter cons_hessian_distribute - emrow["<<this->name<<"] emcol"<<emcol->name<<"]");
-	int nb = (emcol->model->level+2)*(emcol->model->level+1)/2;
-	LOG("number of block - "<<nb);
-
-	boost::unordered_map<ExpandedModel*,BlockCons* >::iterator it=cblockMap_ds.find(emcol);
-	BlockCons* emb = NULL;
-	if(it==cblockMap_ds.end()){
-		emb = this->createConsBlockDistributed(emcol);
-		cblockMap_ds.insert(pair<ExpandedModel*,BlockCons*>(emcol,emb));
-	}
-	else{
-		emb = (*it).second;
-	}
-
-	std::vector<AutoDiff::Node*> vnodes;
-	for(std::vector<ExpandedModel*>::iterator it=emb->block->ems.begin();it!=emb->block->ems.end();it++)
-	{
-		LOG("em["<<(*it)->name);
-		(*it)->copyVariables(vnodes);
-	}
-
-	boost::numeric::ublas::compressed_matrix<double> fullhess(vnodes.size(),vnodes.size());
-	for(std::vector<AutoDiff::Node*>::iterator cit=emb->cons.begin();cit!=emb->cons.end();cit++){
-		boost::numeric::ublas::compressed_matrix<double> m(vnodes.size(),vnodes.size());
-		for(std::vector<AutoDiff::Node*>::iterator nit=vnodes.begin();nit!=vnodes.end();nit++){
-			int c = 0;
-			boost::numeric::ublas::matrix_column<boost::numeric::ublas::compressed_matrix<double> > chess(m,c);
-			if(*cit!=NULL){
-				hess_reverse(*cit,vnodes,chess);
-			}
-			c++;
-		}
-//		LOG("hessian curr"<<m);
-		fullhess = fullhess + m;
-//		LOG("full hess now"<<fullhess);
-	}
-//	LOG("Full hessian: "<<fullhess);
-
-	int pre_r = 0;
-	for(uint i=0;i<emb->block->ems.size();i++)
-	{
-		int pre_c = pre_r;
-		int num_r = pre_r + emb->block->ems.at(i)->getNLocalVars();
-		for(uint j=i;j<emb->block->ems.size();j++)
-		{
-			int num_c = pre_c + emb->block->ems.at(j)->getNLocalVars();
-			boost::numeric::ublas::matrix_range<boost::numeric::ublas::compressed_matrix<double> > mr(fullhess,range(pre_r,num_r),range(pre_c,num_c));
-//			LOG("row block:"<<mr);
-			boost::numeric::ublas::compressed_matrix<double> subm(mr);
-			blocks.push_back(mr);
-			pre_c = num_c;
-		}
-		pre_r = num_r;
-	}
-}
-
-void ExpandedModel::cons_feval_distribute(ExpandedModel *emcol, std::vector<double>& fvals)
-{
-	LOG("enter cons_feval_distribute - this["<<this->name<<"] emcol["<<emcol->name<<"]");
-	assert(fvals.empty());
-	boost::unordered_map<ExpandedModel*,BlockCons* >::iterator it=cblockMap_ds.find(emcol);
-	BlockCons* emb = NULL;
-	if(it==cblockMap_ds.end()){
-		emb = this->createConsBlockDistributed(emcol);
-		cblockMap_ds.insert(pair<ExpandedModel*,BlockCons*>(emcol,emb));
-	}
-	else{
-		emb = (*it).second;
-	}
-
-	int i=0;
-	for(std::vector<AutoDiff::Node*>::iterator it=emb->cons.begin();it!=emb->cons.end();it++){
-		if(*it==NULL){
-			fvals.push_back(0);
-		}
-		else{
-			fvals.push_back(eval_function(*it));
-		}
-		LOG("fvals["<<i<<"]="<<fvals.at(fvals.size()-1));
-		i++;
-	}
-	LOG("end cons_feval_distribute - this["<<this->name<<"] emcol["<<emcol->name<<"]");
-	assert(fvals.size()==this->getNLocalCons());
-}
-
-int ExpandedModel::nz_jacobs_distribute(ExpandedModel* emcol, std::vector<unsigned int>& nzs)
-{
-	LOG("enter nz_jacobs_distribute - emrow["<<this->name<<"] emcol"<<emcol->name<<"]");
-	//will need to check the current emrow/emcol level, more than one nz block will be returned
-	LOG("number of block - "<<emcol->model->level+1);
-
-	boost::unordered_map<ExpandedModel*,BlockCons* >::iterator it=cblockMap_ds.find(emcol);
-	BlockCons* emb = NULL;
-	if(it==cblockMap_ds.end()){
-		emb = this->createConsBlockDistributed(emcol);
-		cblockMap_ds.insert(pair<ExpandedModel*,BlockCons*>(emcol,emb));
-	}
-	else{
-		emb = (*it).second;
-	}
-
-	for(std::vector<ExpandedModel*>::iterator it=emb->block->ems.begin();it!=emb->block->ems.end();it++)
-	{
-		boost::unordered_set<Node*> vSet;
-		(*it)->copyVariables(vSet);
-		unsigned int nz=0;
-		for(std::vector<AutoDiff::Node*>::iterator cit=emb->cons.begin();cit!=emb->cons.end();cit++){
-			if(*cit!=NULL){
-				nz+=nzGrad(*cit,vSet);
-			}
-		}
-		LOG("Nz for block - "<<nz);
-		nzs.push_back(nz);
-	}
-	assert(emcol->model->level+1 == nzs.size());
-	LOG("end nz_jacobs_distribute");
-	return nzs.size();
-}
-
-/* End of Distribute Interface Implemenation
- **********************************************************************************************
- * */
-
-
-/* * ******************************************************************************************
- * Statistics
- *
- *  calculateMemoryUsage
+ /*
+  * Statistics
+  *
+  *  calculateMemoryUsage
  */
 void ExpandedModel::calculateMemoryUsage(unsigned long& size_str,unsigned long& size_data)
 {
@@ -1921,18 +1601,307 @@ void ExpandedModel::calculateMemoryUsage(unsigned long& size_str,unsigned long& 
 
 
 //
-//void ExpandedModel::levelTraversal(std::vector<ExpandedModel*>& em2List,int level)
+//
+///* * ******************************************************************************************
+// * Distribute interface implemenation
+// * 		createConsBlockDistributed
+// *
+// * 		cons_feval_distribute
+// * 		cons_nz_jacobs_distribute
+// * 		cons_nz_hessian_distribute
+// * 		cons_jacobs_distribute
+// * 		cons_hessian_distribute
+// * 		obj_grad_distribute
+// * 		obj_nz_hessian_distribute
+// * 		obj_hessian_distribute
+// *
+//*/
+//
+//Block* ExpandedModel::getBlockDistributed(ExpandedModel* emcol)
 //{
-//	if(level==0)
+//	LOG("getBlockDistributed - this["<<this->name<<"] - emcol["<<emcol->name<<"]");
+//	Block* block = NULL;
+//	boost::unordered_map<ExpandedModel*,Block*>::iterator it = this->block_ds.find(emcol);
+//	if(it == this->block_ds.end())
 //	{
-//		em2List.push_back(this);
+//		block = new Block();
+//		//involve emcol's parent and ancestors
+//		emcol->getParentEM(block->ems);
+//		//involve emcol itself
+//		block->ems.push_back(emcol);
+//
+//		std::vector<ExpandedModel*>& ems = block->ems;
+//		for(std::vector<ExpandedModel*>::iterator it = ems.begin();it != ems.end();it++) {
+//			(*it)->recursiveInitContext();
+//		}
+//		for(std::vector<ExpandedModel*>::iterator it = ems.begin();it != ems.end();it++) {
+//			(*it)->model->calculateModelCompRecursive((*it)->ctx);
+//		}
+//		for(std::vector<ExpandedModel*>::iterator it = ems.begin();it != ems.end();it++) {
+//			(*it)->model->calculateLocalVar((*it)->ctx);
+//		}
+//		this->block_ds.insert(pair<ExpandedModel*,Block*>(emcol,block));
 //	}
 //	else
 //	{
-//		for(std::vector<ExpandedModel*>::iterator it=this->children.begin();it!=this->children.end();it++)
+//		LOG("getBlockDistributed -- already initilized ");
+//		block = it->second;
+//	}
+//	return block;
+//}
+//
+//BlockCons* ExpandedModel::createConsBlockDistributed(ExpandedModel* emcol)
+//{
+//	LOG("createEMBlockDistributed - row["<<this->name<<"] col["<<emcol->name<<"]");
+//	Block* block_ds = this->getBlockDistributed(emcol);
+//	BlockCons* emb = new BlockCons(block_ds);
+//
+//	int col_level = emcol->model->level;
+//	std::vector<ConsComp*>::iterator it = this->model->con_comps.begin();
+//	for(;it!=this->model->con_comps.end();it++)
+//	{  //now build each constraint in autodiff format
+//		ConsComp* con = *it;
+//		LOG(" -- con [ "<<con->name<<"]");
+//		boost::unordered_map<int,SyntaxNode*>::iterator pcon = con->partial.find(col_level);
+//		SyntaxNode* attribute = NULL;
+//		if(pcon!=con->partial.end())
 //		{
-//			ExpandedModel* childEm2 = (*it);
-//			childEm2->levelTraversal(em2List,level-1);
+//			attribute = (*pcon).second;
+//			LOG(" -- partial attribute ["<<attribute->print()<<"]");
+//		}
+//
+//		SyntaxNode* indexing = con->indexing;
+//		if(indexing!=NULL)
+//		{
+//			LOG(" -- con index["<<indexing->print()<<"]");
+//			IndexSet* iset = indexing->createIndexSet(ctx);
+//			assert(iset->dummyCompMap.size()==1); //so far support only 1-demonsianl set
+//			ModelComp* setcomp = iset->dummyCompMap.begin()->second;
+//			Set* indset = iset->dummySetMap.begin()->second;
+//			string dummy = iset->dummyCompMap.begin()->first;
+//			std::vector<string>::iterator itset = indset->setValues_data_order.begin();
+//			for(;itset!=indset->setValues_data_order.end();itset++)
+//			{
+//				string value = *itset;
+//				this->ctx->addDummyCompValueMapTemp(dummy,setcomp,value);
+//				string conName = con->name + "_" + value;
+//				LOG(" constraint - ["<<conName<<"]");
+//				//now, build autodiff constraint
+//				AutoDiff::Node* acon = NULL;
+//				if(attribute!=NULL)
+//				{
+//					acon = attribute->buildAutoDiffDAG(this,emcol);
+//				}
+//				emb->cons.push_back(acon);
+//				this->ctx->removeDummySetValueMapTemp(dummy);
+//			}
+//			delete iset;
+//		}
+//		else
+//		{
+//			LOG(" -- con index is NULL");
+//			string conName = con->name + "_";
+//			LOG(" constraint - ["<<conName<<"]");
+//			//now, build autodiff constraint
+//			AutoDiff::Node* acon = NULL;
+//			if(attribute!=NULL)
+//			{
+//				acon = attribute->buildAutoDiffDAG(this,emcol);
+//			}
+//			emb->cons.push_back(acon);
 //		}
 //	}
+//
+//	assert(this->numLocalCons==emb->cons.size());
+//
+//	if(GV(logBlock)){
+//		ostringstream oss;
+//		oss<<GV(logdir);
+//		this->getQaulifiedName(oss);
+//		emcol->getQaulifiedName(oss);
+//		oss<<".dblk";
+//		ofstream fout(oss.str().c_str());
+//		emb->logBlock(this,emcol,fout);
+//	}
+//	LOG("createEMBlockDistributed - row["<<this->name<<"] col["<<emcol->name<<"] -- ncon["<<emb->cons.size()<<"] nvar["<<emcol->numLocalVars<<"]");
+//	return emb;
 //}
+//
+//void ExpandedModel::cons_jacobs_distribute(ExpandedModel *emcol, std::vector<boost::numeric::ublas::compressed_matrix<double> >& blocks)
+//{
+//	LOG("enter cons_jacobs_distribute - emrow["<<this->name<<"] emcol["<<emcol->name<<"]");
+//	//will need to check the current emrow/emcol level, more than one nz block will be returned
+//
+//	boost::unordered_map<ExpandedModel*,BlockCons* >::iterator it=cblockMap_ds.find(emcol);
+//	BlockCons* emb = NULL;
+//	if(it==cblockMap_ds.end()){
+//		emb = this->createConsBlockDistributed(emcol);
+//		cblockMap_ds.insert(pair<ExpandedModel*,BlockCons*>(emcol,emb));
+//	}
+//	else{
+//		emb = (*it).second;
+//	}
+//
+//	std::vector<AutoDiff::Node*> vnodes;
+//	for(std::vector<ExpandedModel*>::iterator it=emb->block->ems.begin();it!=emb->block->ems.end();it++)
+//	{
+//		LOG("em["<<(*it)->name);
+//		(*it)->copyVariables(vnodes);
+//	}
+////	LOG("vnode size -"<<vnodes.size());
+//	compressed_matrix<double> m(emb->cons.size(),vnodes.size());
+//	int r = 0;
+//	for(std::vector<AutoDiff::Node*>::iterator it=emb->cons.begin();it!=emb->cons.end();it++){
+//		matrix_row<compressed_matrix<double> > rgrad (m,r);
+//		if(*it!=NULL){
+//			LOG("con - \n"<<visit_tree(*it));
+//			AutoDiff::grad_reverse(*it,vnodes,rgrad);
+//		}
+//		r++;
+////		LOG("jacobian now"<<m);
+//	}
+////	LOG("Full Jacobian: "<<m);
+//
+//	int prev_c  = 0;
+//	for(std::vector<ExpandedModel*>::iterator it=emb->block->ems.begin();it!=emb->block->ems.end();it++)
+//	{
+//		int num_c = (*it)->numLocalVars + prev_c;
+//		matrix_range<compressed_matrix<double> > mr(m,range(0,m.size1()),range(prev_c,num_c));
+//		LOG("submatrix -- nvar["<<(*it)->numLocalVars<<"] - level["<<(*it)->model->level<<"] em["<<(*it)->name<<"]");
+//		compressed_matrix<double> subm(mr);
+//		blocks.push_back(subm);
+//		prev_c=num_c;
+//	}
+//	assert(emcol->model->level+1 == blocks.size());
+//	assert(blocks.size()==emb->block->ems.size());
+//	LOG("end cons_jacobs_distribute");
+//}
+//
+//void ExpandedModel::cons_hessian_distribute(ExpandedModel* emcol, std::vector<boost::numeric::ublas::compressed_matrix<double> >& blocks)
+//{
+//	LOG("enter cons_hessian_distribute - emrow["<<this->name<<"] emcol"<<emcol->name<<"]");
+//	int nb = (emcol->model->level+2)*(emcol->model->level+1)/2;
+//	LOG("number of block - "<<nb);
+//
+//	boost::unordered_map<ExpandedModel*,BlockCons* >::iterator it=cblockMap_ds.find(emcol);
+//	BlockCons* emb = NULL;
+//	if(it==cblockMap_ds.end()){
+//		emb = this->createConsBlockDistributed(emcol);
+//		cblockMap_ds.insert(pair<ExpandedModel*,BlockCons*>(emcol,emb));
+//	}
+//	else{
+//		emb = (*it).second;
+//	}
+//
+//	std::vector<AutoDiff::Node*> vnodes;
+//	for(std::vector<ExpandedModel*>::iterator it=emb->block->ems.begin();it!=emb->block->ems.end();it++)
+//	{
+//		LOG("em["<<(*it)->name);
+//		(*it)->copyVariables(vnodes);
+//	}
+//
+//	boost::numeric::ublas::compressed_matrix<double> fullhess(vnodes.size(),vnodes.size());
+//	for(std::vector<AutoDiff::Node*>::iterator cit=emb->cons.begin();cit!=emb->cons.end();cit++){
+//		boost::numeric::ublas::compressed_matrix<double> m(vnodes.size(),vnodes.size());
+//		for(std::vector<AutoDiff::Node*>::iterator nit=vnodes.begin();nit!=vnodes.end();nit++){
+//			int c = 0;
+//			boost::numeric::ublas::matrix_column<boost::numeric::ublas::compressed_matrix<double> > chess(m,c);
+//			if(*cit!=NULL){
+//				hess_reverse(*cit,vnodes,chess);
+//			}
+//			c++;
+//		}
+////		LOG("hessian curr"<<m);
+//		fullhess = fullhess + m;
+////		LOG("full hess now"<<fullhess);
+//	}
+////	LOG("Full hessian: "<<fullhess);
+//
+//	int pre_r = 0;
+//	for(uint i=0;i<emb->block->ems.size();i++)
+//	{
+//		int pre_c = pre_r;
+//		int num_r = pre_r + emb->block->ems.at(i)->numLocalVars;
+//		for(uint j=i;j<emb->block->ems.size();j++)
+//		{
+//			int num_c = pre_c + emb->block->ems.at(j)->numLocalVars;
+//			boost::numeric::ublas::matrix_range<boost::numeric::ublas::compressed_matrix<double> > mr(fullhess,range(pre_r,num_r),range(pre_c,num_c));
+////			LOG("row block:"<<mr);
+//			boost::numeric::ublas::compressed_matrix<double> subm(mr);
+//			blocks.push_back(mr);
+//			pre_c = num_c;
+//		}
+//		pre_r = num_r;
+//	}
+//}
+//
+//void ExpandedModel::cons_feval_distribute(ExpandedModel *emcol, std::vector<double>& fvals)
+//{
+//	LOG("enter cons_feval_distribute - this["<<this->name<<"] emcol["<<emcol->name<<"]");
+//	assert(fvals.empty());
+//	boost::unordered_map<ExpandedModel*,BlockCons* >::iterator it=cblockMap_ds.find(emcol);
+//	BlockCons* emb = NULL;
+//	if(it==cblockMap_ds.end()){
+//		emb = this->createConsBlockDistributed(emcol);
+//		cblockMap_ds.insert(pair<ExpandedModel*,BlockCons*>(emcol,emb));
+//	}
+//	else{
+//		emb = (*it).second;
+//	}
+//
+//	int i=0;
+//	for(std::vector<AutoDiff::Node*>::iterator it=emb->cons.begin();it!=emb->cons.end();it++){
+//		if(*it==NULL){
+//			fvals.push_back(0);
+//		}
+//		else{
+//			fvals.push_back(eval_function(*it));
+//		}
+//		LOG("fvals["<<i<<"]="<<fvals.at(fvals.size()-1));
+//		i++;
+//	}
+//	LOG("end cons_feval_distribute - this["<<this->name<<"] emcol["<<emcol->name<<"]");
+//	assert(fvals.size()==this->numLocalCons);
+//}
+//
+//int ExpandedModel::nz_jacobs_distribute(ExpandedModel* emcol, std::vector<unsigned int>& nzs)
+//{
+//	LOG("enter nz_jacobs_distribute - emrow["<<this->name<<"] emcol"<<emcol->name<<"]");
+//	//will need to check the current emrow/emcol level, more than one nz block will be returned
+//	LOG("number of block - "<<emcol->model->level+1);
+//
+//	boost::unordered_map<ExpandedModel*,BlockCons* >::iterator it=cblockMap_ds.find(emcol);
+//	BlockCons* emb = NULL;
+//	if(it==cblockMap_ds.end()){
+//		emb = this->createConsBlockDistributed(emcol);
+//		cblockMap_ds.insert(pair<ExpandedModel*,BlockCons*>(emcol,emb));
+//	}
+//	else{
+//		emb = (*it).second;
+//	}
+//
+//	for(std::vector<ExpandedModel*>::iterator it=emb->block->ems.begin();it!=emb->block->ems.end();it++)
+//	{
+//		boost::unordered_set<Node*> vSet;
+//		(*it)->copyVariables(vSet);
+//		unsigned int nz=0;
+//		for(std::vector<AutoDiff::Node*>::iterator cit=emb->cons.begin();cit!=emb->cons.end();cit++){
+//			if(*cit!=NULL){
+//				nz+=nzGrad(*cit,vSet);
+//			}
+//		}
+//		LOG("Nz for block - "<<nz);
+//		nzs.push_back(nz);
+//	}
+//	assert(emcol->model->level+1 == nzs.size());
+//	LOG("end nz_jacobs_distribute");
+//	return nzs.size();
+//}
+//
+///* End of Distribute Interface Implemenation
+// **********************************************************************************************
+// * */
+//
+//
+///* * ******************************************************************************************
+

@@ -135,11 +135,11 @@ statement:  setdef
 	     |  consdef
 	     | 	objdef
  	     |  block
-      	 |  stageblock
          ;
 			         
-block:   stochblock
-     |   blockblock
+block:  stochblock
+     |  blockblock
+     |	stageblock
      ;
          
 /* -------------------------------------------------------------------- 
@@ -819,11 +819,25 @@ void end_model(const string& name)
 /* ---------------------------------------------------------------------------
 Stochastic model helper functions
 ---------------------------------------------------------------------------- */
-void addStochInfo(ModelComp *newmcs, SyntaxNode *stochopt) {
+void addStochInfo(ModelComp *newmc, SyntaxNode *stochopt) {
 	assert(isInStochModel() == true);
- 	assert(stochopt==NULL); //component wised stochast option not yet implementated!
- 	  
-    newmcs->stage = curr_stage_indexset;
+	if(curr_stage_indexset != NULL)
+	{
+		if(stochopt!=NULL && stochopt->opCode == DETERMINISTIC) {
+			assert(newmc->type == TVAR);   //DETERMINISTIC only meaningful for var comp
+			static_cast<VarComp*>(newmc)->isDet = true;
+		}
+		else if(stochopt!=NULL)
+		{
+			cerr<<"ambiguous stage set declaration in side a stageblock!"<<endl;
+	 		assert(false);
+	 		exit(1);
+		}
+		newmc->stage = curr_stage_indexset;
+	}
+	else {
+		newmc->stage = stochopt;
+	}
 }
 bool isInStochModel()
 {

@@ -63,10 +63,6 @@ public:
 	boost::unordered_map<ExpandedModel*, BlockHV*> hvBlockMap_lo;
 	boost::unordered_map<ExpandedModel*, BlockCons*> cblockMap_lo;
 	boost::unordered_map<ExpandedModel*, BlockObj*> oblockMap_lo;
-	//Block Distributed Dependencies for Distributed Interface Calls
-	boost::unordered_map<ExpandedModel*, Block*> block_ds;
-	boost::unordered_map<ExpandedModel*,BlockCons* > cblockMap_ds;
-	boost::unordered_map<ExpandedModel*,BlockObj* >	oblockMap_ds;
 
 	ExpandedModel(AmplModel* _mod,ModelContext* _context);
 	virtual ~ExpandedModel();
@@ -107,24 +103,31 @@ public:
 	uint nz_obj_hess_local(ExpandedModel* emcol);
 	void obj_hess_local(ExpandedModel* emcol, boost::numeric::ublas::compressed_matrix<double>&);
 
-	/*
-	 * Distribute Interface Methods
-	 */
-	Block* getBlockDistributed(ExpandedModel* emcol);
-	//! Creating BlockCons defined by (constraints in this) X (variables in emcol)
-	BlockCons* createConsBlockDistributed(ExpandedModel * emcol);
-	//! creating BlockObj defined by (objective in this) X (variables in emcol)
-	BlockObj* constructObjBlockDistributed(ExpandedModel* emcol);
-	//! Return the function values
-	void cons_feval_distribute(ExpandedModel *emcol, std::vector<double>& fvals);
-	//! Returns the number of blocks and nonzeros in the Jacobian of a section of the model
-	int nz_jacobs_distribute(ExpandedModel* emcol, std::vector<unsigned int>& nzs);
-	//! Returns the nonzeros in the Jacobian of a section of the model
-	void cons_jacobs_distribute(ExpandedModel *emcol, std::vector<boost::numeric::ublas::compressed_matrix<double> >& blocks);
-	//! Return the nonzeros in the Hessian of a section of the model
-	int nz_hess_distribute(ExpandedModel* emcol, std::vector<unsigned int>& nzs);
-	//! Returns the nonzeros in the Hessian of a section of the model
-	void cons_hessian_distribute(ExpandedModel* emcol, std::vector<boost::numeric::ublas::compressed_matrix<double> >& blocks);
+//	/*
+//	 * Block Distributed Dependencies for Distributed Interface Calls
+//	 */
+//	boost::unordered_map<ExpandedModel*, Block*> block_ds;
+//	boost::unordered_map<ExpandedModel*,BlockCons* > cblockMap_ds;
+//	boost::unordered_map<ExpandedModel*,BlockObj* >	oblockMap_ds;
+
+//	/*
+//	 * Distribute Interface Methods
+//	 */
+//	Block* getBlockDistributed(ExpandedModel* emcol);
+//	//! Creating BlockCons defined by (constraints in this) X (variables in emcol)
+//	BlockCons* createConsBlockDistributed(ExpandedModel * emcol);
+//	//! creating BlockObj defined by (objective in this) X (variables in emcol)
+//	BlockObj* constructObjBlockDistributed(ExpandedModel* emcol);
+//	//! Return the function values
+//	void cons_feval_distribute(ExpandedModel *emcol, std::vector<double>& fvals);
+//	//! Returns the number of blocks and nonzeros in the Jacobian of a section of the model
+//	int nz_jacobs_distribute(ExpandedModel* emcol, std::vector<unsigned int>& nzs);
+//	//! Returns the nonzeros in the Jacobian of a section of the model
+//	void cons_jacobs_distribute(ExpandedModel *emcol, std::vector<boost::numeric::ublas::compressed_matrix<double> >& blocks);
+//	//! Return the nonzeros in the Hessian of a section of the model
+//	int nz_hess_distribute(ExpandedModel* emcol, std::vector<unsigned int>& nzs);
+//	//! Returns the nonzeros in the Hessian of a section of the model
+//	void cons_hessian_distribute(ExpandedModel* emcol, std::vector<boost::numeric::ublas::compressed_matrix<double> >& blocks);
 
 
 	/*
@@ -149,10 +152,7 @@ public:
 	void get_local_vars_names(vector<string>&);
 	//! Returns the names of local constraints
 	void get_local_cons_names(vector<string>&);
-	//! Returns the number of local variables
-	uint getNLocalCons();
-	//! Returns the names of local variables
-	uint getNLocalVars();
+
 
 	/*
 	 * Helper methods
