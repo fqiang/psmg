@@ -253,6 +253,8 @@ ExpandedModel* AmplModel::createExpandedModel(string dummyVar,SetComp* comp,stri
 			smodel = static_cast<StochModel*>(*it);
 			//erease *it from this model and add newmodel to this
 			it = subm_comps.erase(it);
+			this->n_submodels--;
+			this->n_total --;
 		}
 		else
 		{
@@ -347,6 +349,7 @@ void AmplModel::addComp(ModelComp *comp)
 			param_comps.push_back(static_cast<ParamComp*>(comp));
 			break;
 		case TOBJ:
+			assert(obj_comp == NULL); //support only one objective per model
 			obj_comp = static_cast<ObjComp*>(comp);
 			n_objs++;
 			assert(n_objs == 1);
@@ -362,36 +365,6 @@ void AmplModel::addComp(ModelComp *comp)
 	n_total++;
 
 	LOG("-- End AddComp [current:"<<this->name<<"]  n_total["<<n_total<<"]");
-}
-
-ModelComp* AmplModel::findModelCompThisModel(string& id)
-{
-	ModelComp* rval = NULL;
-	for(vector<SetComp*>::const_iterator p = set_comps.begin();p != set_comps.end();++p) {
-		if((*p)->name.compare(id)==0)
-		{
-			rval = *p;
-			goto found;
-		}
-	}
-	for (vector<ParamComp*>::const_iterator p = param_comps.begin();p != param_comps.end(); ++p) {
-		if((*p)->name.compare(id)==0)
-		{
-			rval = *p;
-			goto found;
-		}
-	}
-	for (vector<VarComp*>::const_iterator p = var_comps.begin();p != var_comps.end(); ++p) {
-		if((*p)->name.compare(id)==0)
-		{
-			rval = *p;
-			goto found;
-		}
-	}
-
-	found:
-	LOG("findModelComp -- model["<<this->name<<"] -- id["<<id<<"] - rval["<<rval<<"]");
-	return rval;
 }
 
 /*
@@ -605,30 +578,32 @@ void AmplModel::dump(ostream& fout, int count){
 
 	count = 0; //ignor the count passed in and reset counter to 0
 	for(vector<SetComp*>::const_iterator p = set_comps.begin();p != set_comps.end();++p) {
-		(*p)->dump(fout,count);
 		++count;
+		(*p)->dump(fout,count);
 	}
 	for (vector<ParamComp*>::const_iterator p = param_comps.begin();p != param_comps.end(); ++p) {
-		(*p)->dump(fout, count);
 		++count;
+		(*p)->dump(fout, count);
 	}
 	for (vector<ConsComp*>::const_iterator p = con_comps.begin();p != con_comps.end(); ++p) {
-		(*p)->dump(fout, count);
 		++count;
+		(*p)->dump(fout, count);
 	}
 	for (vector<VarComp*>::const_iterator p = var_comps.begin();p != var_comps.end(); ++p) {
-		(*p)->dump(fout, count);
 		++count;
+		(*p)->dump(fout, count);
 	}
 	if( obj_comp!=NULL) {
-		obj_comp->dump(fout, count);
 		++count;
+		obj_comp->dump(fout, count);
 	}
 
 	for(vector<AmplModel*>::const_iterator p = subm_comps.begin();p != subm_comps.end();++p) {
+		++count;
 		AmplModel *mc = *p;
 		mc->dump(fout,count);
 	}
+	assert(count == this->n_total);
 }
 
 /*

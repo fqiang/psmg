@@ -17,7 +17,7 @@
 #include "../parser/sml.tab.h"
 
 VarComp::VarComp(const string& id, SyntaxNode* index, SyntaxNode* attr, AmplModel* owner) : ModelComp(id,TVAR,index,attr,owner),
-	dim(0)
+	dim(0), isDet(false)
 {
 
 }
@@ -131,12 +131,12 @@ void VarComp::calculateVarComp(ModelContext* ctx)
 	 ---------------------------------------------------------------------------- */
 void VarComp::dump(ostream& fout,int counter)
 {
-	fout << "VarComp:  ("<<counter<<"------------------------------------------------------\n";
-	fout << "VarComp: " << name << " (" << (void *) this << ")\n";
+	fout << "VarComp:  counter ("<<counter<<")\n";
+	fout << "\t" << name << " (" << (void *) this << ")\n";
 	if (attributes) {
-		fout << "    attr: " << attributes << '\n';
+		fout << "\t"<<"attr: " << attributes << '\n';
 	}
 	if (indexing) {
-		fout << "    indexing: " << indexing << "\n";
+		fout << "\t"<<"indexing: " << indexing << "\n";
 	}
 }

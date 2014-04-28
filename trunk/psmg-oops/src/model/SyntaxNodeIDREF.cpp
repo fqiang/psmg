@@ -38,8 +38,19 @@ SyntaxNodeIDREF* SyntaxNodeIDREF::clone()
 	//make a copy, then
 	SyntaxNodeIDREF* refn = new SyntaxNodeIDREF(*this);
 	//update reference refn->ref
-	string refname = static_cast<SyntaxNodeID*>(this->values[0])->id;
-	refn->ref = SCTX::currCtx->model->findModelComp(refname);
+	SyntaxNodeID* idn = static_cast<SyntaxNodeID*>(this->values[0]);
+	if(refn->ref->type == TVAR && static_cast<VarComp*>(refn->ref)->isDet == true)
+	{
+		//referencing to the only var for this stage
+		string refname = GV(var_det_prefix)+"_"+SCTX::currCtx->stagename+"_"+refn->ref->name;
+		assert(idn->id.compare(refn->ref->name)==0);
+		refn->ref = SCTX::rootCtx->model->findModelComp(refname);
+	}
+	else {
+		string refname = idn->id;
+		assert(refname.compare(refn->ref->name)==0);
+		refn->ref = SCTX::currCtx->model->findModelComp(refname);
+	}
 	assert(refn->ref!=NULL);
 	return refn;
 }

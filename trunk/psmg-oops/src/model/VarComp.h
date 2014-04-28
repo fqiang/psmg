@@ -26,6 +26,10 @@ public:
 
 	void dump(ostream& fout,int counter);
 
+
+	//stochcastic only -- better implementation to use inheritance
+	bool isDet;
+
 };
 
 #endif /* VARCOMP_H_ */

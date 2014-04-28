@@ -109,6 +109,10 @@ AmplModel* StochModel::convertToAmplModel(ModelContext* parCtx)
 	Set* stset = static_cast<Set*>(parCtx->getCompValue(SCTX::stSetComp));
 	for(uint i = 0; i < stset->setValues_data_order.size(); i++)
 	{
+		if(i==0) {
+			SCTX::rootCtx = curr_sctx;
+		}
+
 		//create node set in prev_model that the current stage model is repeated on.
 		curr_sctx->stagename = stset->setValues_data_order[i];
 		curr_sctx->stage_level  = i;
@@ -145,10 +149,6 @@ AmplModel* StochModel::convertToAmplModel(ModelContext* parCtx)
 		string model_name = this->name + "STAGE" + curr_sctx->stagename;
 		curr_sctx->model = new AmplModel(model_name, model_index ,prev_model);
 
-		if(i==0) {
-			SCTX::rootCtx = curr_sctx;
-		}
-
 		//now scan ModelComps and add model comp belong to current stage into the current model.
 		BOOST_FOREACH(SetComp* setcomp , this->set_comps)
 		{
@@ -168,13 +168,27 @@ AmplModel* StochModel::convertToAmplModel(ModelContext* parCtx)
 				LOG("paramcomp ["<<paramcomp->name<<"] is in model["<<curr_sctx->model->name<<"]");
 				SyntaxNode* index = paramcomp->indexing==NULL? NULL : paramcomp->indexing->clone();
 				SyntaxNode* attr = paramcomp->attributes==NULL? NULL :paramcomp->attributes->clone();
-				ParamComp* paramcomp = new ParamComp(paramcomp->name,index,attr,curr_sctx->model);
-				curr_sctx->model->addComp(paramcomp);
+				ParamComp* nparamcomp = new ParamComp(paramcomp->name,index,attr,curr_sctx->model);
+				curr_sctx->model->addComp(nparamcomp);
 			}
 		}
 		BOOST_FOREACH(VarComp* varcomp , this->var_comps)
 		{
-			if(this->isInCurrentStage(varcomp->stage,curr_sctx->stagename,parCtx))
+			if(varcomp->stage!=NULL && varcomp->stage->opCode == DETERMINISTIC && this->isInCurrentStage(varcomp->stage,curr_sctx->stagename,parCtx))
+			{ //deterministic var comp -- only one for each valid time stage in stageset - therefore need to create this varcomp in stoch root model
+				//ie. var A deterministic
+				LOG("varcomp ["<<varcomp->name<<"] is in DETERMINISTRIC");
+				//deterministic varcomp only allow to reference modelcomp in stochroot and above, therefore set currCtx to rootCtx
+				SCTX::currCtx = SCTX::rootCtx;
+				SyntaxNode* index = varcomp->indexing==NULL? NULL: varcomp->indexing->clone();
+				SyntaxNode* attr = varcomp->attributes==NULL? NULL: varcomp->attributes->clone();
+				SCTX::currCtx = curr_sctx; //restored currCtx
+				string nvarcompname = GV(var_det_prefix)+"_"+curr_sctx->stagename+"_"+varcomp->name;
+				//add nvarcomp to stochroot model
+				VarComp* nvarcomp = new VarComp(nvarcompname,index,attr,SCTX::rootCtx->model);
+				SCTX::rootCtx->model->addComp(nvarcomp);
+			}
+			else if(this->isInCurrentStage(varcomp->stage,curr_sctx->stagename,parCtx))
 			{
 				LOG("varcomp ["<<varcomp->name<<"] is in model["<<curr_sctx->model->name<<"]");
 				SyntaxNode* index = varcomp->indexing==NULL? NULL : varcomp->indexing->clone();

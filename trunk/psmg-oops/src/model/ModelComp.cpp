@@ -72,10 +72,6 @@ ModelComp::~ModelComp() {
 	}
 	LOG("exit ModelComp destructor called...["<<this->name<<"]");
 }
-//
-//string& ModelComp::getHashKey() {
-//	return this->hashKey;
-//}
 
 void ModelComp::calculateMemoryUsage(unsigned long& size) {
 	LOG_MEM("ModelComp::calculateMemoryUsage -- comp["<<this->name<<"]");

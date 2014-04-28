@@ -22,8 +22,8 @@ BlockCons::~BlockCons() {
 void BlockCons::logBlock(ExpandedModel* emrow, ExpandedModel* emcol,ostream& out)
 {
 	out<<"Constraint Block"<<endl;
-	out<<"Constraints Declared/Row Model: "<<emrow->name<<"\t\t Size:"<<emrow->getNLocalCons()<<endl;
-	out<<"Variables   Declared/Col Model: "<<emcol->name<<"\t\t Size:"<<emcol->getNLocalVars()<<endl;
+	out<<"Constraints Declared/Row Model: "<<emrow->name<<"\t\t Size:"<<emrow->numLocalCons<<endl;
+	out<<"Variables   Declared/Col Model: "<<emcol->name<<"\t\t Size:"<<emcol->numLocalVars<<endl;
 	out<<endl<<"Local Variables:"<<endl;
 	vector<string> conNames, varNames;
 	std::vector<VarComp*>::iterator varcomp=emcol->model->var_comps.begin();

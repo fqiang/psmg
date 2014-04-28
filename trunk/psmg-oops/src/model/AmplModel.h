@@ -24,7 +24,6 @@
 #include "VarComp.h"
 #include "ConsComp.h"
 #include "ObjComp.h"
-#include "changeitem.h"
 #include <vector>
 #include <string>
 
@@ -87,7 +86,6 @@ public:
 
 	//find the ModelComp to fill the CompDescr.
 	ModelComp* findModelComp(string& id);
-	ModelComp* findModelCompThisModel(string& id);
 	ParamComp* findParamComp(string& id);
 	SetComp* findSetComp(string& id);
 	void calculateModelComp(ModelContext* context);

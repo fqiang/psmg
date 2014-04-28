@@ -22,14 +22,11 @@ public:
 	virtual ~ConsComp();
 
 	int card;
-//	int moveUpLevel;
 	boost::unordered_map<int,SyntaxNode*> partial;
 	void calculatePartialConstraints();
 	void moveConsToLeft();
 
 	void calculateLocalCon(ModelContext* ctx);
-	void moveUp(int level);
-
 	void dump(ostream& fout,int counter);
 };
 

@@ -81,7 +81,6 @@ class ModelComp{
 	/** Detailed debugging output */
 	virtual void dump(std::ostream& fout,int) = 0;
 
-//	string& getHashKey();
 	void calculateMemoryUsage(unsigned long& size);
 
 };

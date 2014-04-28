@@ -20,7 +20,7 @@ void Block::logBlock(ostream& out)
 	out<<"------------------BEGIN Dependent Expanded Models----------------------------"<<endl;
 	for(vector<ExpandedModel*>::iterator it=ems.begin();it!=ems.end();it++)
 	{
-		out<<"name["<<(*it)->name<<"["<<(*it)->ctx->getContextId()<<"] - nvar["<<(*it)->getNLocalVars()<<"] ncon["<<(*it)->getNLocalCons()<<"]"<<endl;
+		out<<"name["<<(*it)->name<<"["<<(*it)->ctx->getContextId()<<"] - nvar["<<(*it)->numLocalVars<<"] ncon["<<(*it)->numLocalCons<<"]"<<endl;
 	}
 	out<<"------------------END Dependent Expanded Models----------------------------"<<endl;
 	out<<endl;
