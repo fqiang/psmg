@@ -23,7 +23,6 @@
 #include "../context/Block.h"
 #include "../oops/sml-oops.h"
 #include "mpi.h"
-#include "pugixml.hpp"
 #include <iostream>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -72,19 +71,19 @@ Sml::~Sml()
 
 void Sml::processModelfile()
 {
-	FILE *inputFile = fopen(Config::modelfilename.c_str(),"r");
+	FILE *inputFile = fopen(GV(modelfilename).c_str(),"r");
 	if (!inputFile)
 	{
-		cerr << "ERROR: Cannot open file '" << Config::modelfilename << "'.\n";
+		cerr << "ERROR: Cannot open file '" << GV(modelfilename) << "'.\n";
 	}
 	fclose(inputFile);
 
 	// check that we can access the datafile, otherwise we get an ugly message
 	// from amplsolver in case the file cannot be accessed
-	inputFile = fopen(Config::datafilename.c_str(), "r");
+	inputFile = fopen(GV(datafilename).c_str(), "r");
 	if (!inputFile)
 	{
-		cerr << "ERROR: Cannot open file: '" << Config::datafilename << "'.\n";
+		cerr << "ERROR: Cannot open file: '" << GV(datafilename) << "'.\n";
 	}
 	fclose(inputFile);
 
@@ -255,20 +254,17 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	//loading the psmg configuration file
-	string conf_filename = "./psmg_conf.xml";
-	pugi::xml_document conf;
-	pugi::xml_parse_result result = conf.load_file(conf_filename.c_str());
-	if(result.status != pugi::status_ok)
-	{
-		cerr<<"can't find configuration file: "<<conf_filename<<", or file is corrupted!"<<endl;
-		exit(0);
+	string default_conf = "./psmg_conf.xml";
+	Config::initConfig(default_conf);
+	for(int i=1;i<argc;i++)
+	{ //if provide any model and data files
+		GV(modelfilename) = argv[i];
+		GV(datafilename) = argv[++i];
 	}
-
-	Config::initGlobalVariables(conf);
 	Config::printAll();
 
-	LOG("Process started on host["<<Config::hostname<<"]");
+
+	LOG("Process started on host["<<GV(hostname)<<"]");
 	TIMER_START("SML_PARSE_MODEL");
 	Sml::instance()->processModelfile();
 	TIMER_STOP("SML_PARSE_MODEL");

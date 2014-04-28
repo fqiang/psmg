@@ -18,6 +18,7 @@
 
 ParamComp::ParamComp(const string& id, SyntaxNode* index, SyntaxNode* attr,AmplModel* owner): ModelComp(id,TPARAM,index,attr,owner),numIndicies(-1)
 {
+	this->isSym = false;
 	if(this->attributes != NULL)
 	{
 		this->isSym = this->attributes->isParamSymbolic();

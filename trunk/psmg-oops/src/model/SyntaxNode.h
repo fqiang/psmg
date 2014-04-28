@@ -164,6 +164,7 @@ public:
 
 	void calculatePartialConstraints(boost::unordered_map<int,SyntaxNode*>&);
 	SyntaxNode* moveConsToLeft();
+	ModelContext* locateCtx(ModelContext* rowctx, ModelContext* currCtx, bool isLP);
 	AutoDiff::Node* buildAutoDiffDAG(ExpandedModel* emrow,ExpandedModel* emcol, bool isLP=false);
 
 	void calculateBaseValueVector(unsigned long& size);
@@ -183,7 +184,6 @@ private:
 	void foreachSetValue(vector<ModelComp*> comps, vector<string>& dummyVars, SetSimple* aSet, ModelContext* rowContext, vector<double>& jcobs, ModelContext* colContext);
 	void getIndiciesKey(ModelContext* ctx,string& varKey);
 	static bool isContainsInEm2(string& varKey, ExpandedModel* em);
-	AutoDiff::OPCODE opCodeTranslateToAutoDiffOp(int opCode);
 	AutoDiff::Node* createAutoDiffConIDREF(ModelContext* ctx);
 	AutoDiff::Node* createAutoDiffConIDREFLP(ModelContext* rowctx, ModelContext* colctx);
 };

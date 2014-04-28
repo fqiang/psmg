@@ -388,12 +388,12 @@ void dataerror(const char *s) {
 void parse_data(ModelContext* context) {
        
 	YAC_DATA_LOG("===============================================================");
-	YAC_DATA_LOG(" Start parsing data file: " << Config::datafilename);
+	YAC_DATA_LOG(" Start parsing data file: " << GV(datafilename));
 	YAC_DATA_LOG("===============================================================");
 	rootContext = context;
-  	datain = fopen(Config::datafilename.c_str(), "r");
+  	datain = fopen(GV(datafilename).c_str(), "r");
   	if (datain==NULL){
-    	printf("ERROR: Data file '%s' error:%s \n",Config::datafilename.c_str(),strerror(errno));
+    	printf("ERROR: Data file '%s' error:%s \n",GV(datafilename).c_str(),strerror(errno));
     	exit(1);
   	}
           

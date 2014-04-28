@@ -52,7 +52,6 @@ ostream& SyntaxNodeOP::put(ostream &s)
 	case DIVID:
 	   s << "/";
 	   break;
-	case ASSIGN:  s << "=";   break;
 	case GE:      s << ">=";  break;
 	case GT:      s << ">";   break;
 	case LE:      s << "<=";  break;
@@ -60,7 +59,6 @@ ostream& SyntaxNodeOP::put(ostream &s)
 	case EQ:      s << "==";  break;
 	case NE:      s << "!=";  break;
 	case IN:      s << "in";  break;
-	case DEFINED: s << ":=";  break;
 	case POWER:   s << "^";  break;
 	case COS:	  s << "cos"; break;
 	case SIN:	s<<"sin"; break;

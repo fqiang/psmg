@@ -395,7 +395,7 @@ ModelComp* AmplModel::findModelCompThisModel(string& id)
 }
 
 /*
- * Recursively findModelComp that has the name matches id
+ * Recursively-up findModelComp that has the name matches id
  */
 ModelComp* AmplModel::findModelComp(string& id)
 {
@@ -419,6 +419,14 @@ ModelComp* AmplModel::findModelComp(string& id)
 		if((*p)->name.compare(id)==0)
 		{
 			rval = *p;
+			goto found;
+		}
+	}
+	for(vector<AmplModel*>::const_iterator p = subm_comps.begin();p!=subm_comps.end();++p)
+	{
+		if((*p)->name.compare(id)==0)
+		{
+			rval =*p;
 			goto found;
 		}
 	}

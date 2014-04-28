@@ -1015,7 +1015,7 @@ void ExpandedModel::get_local_vars_names(std::vector<string>& names)
 		{
 			ostringstream oss;
 			this->getQaulifiedName(oss);
-			oss<<"-"<<var->name<<"_"<<i->indicies;
+			oss<<"-"<<var->name<<"_"<<(*i)->indicies;
 			names.push_back(oss.str());
 		}
 	}
@@ -1041,8 +1041,8 @@ void ExpandedModel::get_local_var_up_bounds(double *elts)
 		var_multi_map_by_order::iterator iv = var_by_order.begin();
 		for(;iv!=var_by_order.end();iv++)
 		{
-//			const VarSingle& v = *;
-			elts[i] = iv->ub;
+			VarSingle* varsingle = *iv;
+			elts[i] = varsingle->ub;
 			i++;
 		}
 	}
@@ -1067,7 +1067,8 @@ void ExpandedModel::get_local_var_low_bounds(double *elts)
 		var_multi_map_by_order::iterator iv = var_by_order.begin();
 		for(;iv!=var_by_order.end();iv++)
 		{
-			elts[i] = iv->lb;
+			VarSingle* varsingle = *iv;
+			elts[i] = varsingle->lb;
 			i++;
 		}
 	}
@@ -1167,9 +1168,10 @@ void ExpandedModel::update_primal_x(double *elts)
 		var_multi_map_by_order::iterator i = var_by_order.begin();
 		for(;i!=var_by_order.end();i++)
 		{
-			static_cast<AutoDiff::VNode*>(i->adv)->val = elts[index];
+			VarSingle* varsingle = *i;
+			static_cast<AutoDiff::VNode*>(varsingle->adv)->val = elts[index];
 			index++;
-			LOG("update_primal_var_soln - ["<<i->toString()<<"]");
+			LOG("update_primal_var_soln - ["<<varsingle->toString()<<"]");
 		}
 	}
 	assert(index==this->getNLocalVars());
@@ -1417,7 +1419,7 @@ void ExpandedModel::copyVariables(boost::unordered_set<AutoDiff::Node*>& vSet)
 		var_multi_map_by_order::iterator i = var_by_order.begin();
 		for(;i!=var_by_order.end();i++)
 		{
-			vSet.insert(i->adv);
+			vSet.insert((*i)->adv);
 //			LOG("copyVariables - ["<<v.toString()<<"]");
 		}
 	}
@@ -1433,7 +1435,7 @@ void ExpandedModel::copyVariables(std::vector<AutoDiff::Node*>& vSet)
 		var_multi_map_by_order::iterator i = var_by_order.begin();
 		for(;i!=var_by_order.end();i++)
 		{
-			vSet.push_back(i->adv);
+			vSet.push_back((*i)->adv);
 //			LOG("copyVariables - ["<<v.toString()<<"]");
 		}
 	}
@@ -1451,6 +1453,7 @@ void ExpandedModel::getQaulifiedName(ostringstream& oss)
 /*
  * Finding the sub-context from it's children problem, so that
  * the dummy varaibles value equals to dummyval
+ * Linear case: the ctx returned can be null, for LP problem only context initialized is the ancestor of emrow or emcol.
  */
 ModelContext* ExpandedModel::locateCtx(AmplModel* model, string& dummyval)
 {
@@ -1474,7 +1477,6 @@ ModelContext* ExpandedModel::locateCtx(AmplModel* model, string& dummyval)
 			if(rval!=NULL) break;
 		}
 	}
-	assert(rval != NULL);
 	return rval;
 }
 /*

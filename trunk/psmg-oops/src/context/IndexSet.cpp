@@ -9,15 +9,21 @@
 #include "../model/SetComp.h"
 
 string IndexSet::TMP = "TMP_";
+string IndexSet::NEWSET = "NEWSET_";
 
 IndexSet::IndexSet(string& name_) : name(name_) {
 
 }
 
-IndexSet::~IndexSet() {
-	for(boost::unordered_map<string,Set*>::iterator it=dummySetMap.begin();it!=dummySetMap.end();it++)
+IndexSet::~IndexSet()
+{
+	if(name.compare(0,7,IndexSet::NEWSET)==0)
 	{
-		Set::deleteSet(it->second);
+		for(boost::unordered_map<string,Set*>::iterator it=dummySetMap.begin();it!=dummySetMap.end();it++)
+		{
+			assert(it->second->name.compare(0,4,Set::TMP)==0);
+			delete it->second;
+		}
 	}
 	this->dummySetMap.clear();
 	this->dummyCompMap.clear();
