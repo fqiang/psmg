@@ -34,8 +34,8 @@ void BlockCons::logBlock(ExpandedModel* emrow, ExpandedModel* emcol,ostream& out
 		var_multi_map_by_order::iterator ivar = var_by_order.begin();
 		for(;ivar!=var_by_order.end();ivar++)
 		{
-			string name = emcol->ctx->getContextId()+"_"+var->name+"_"+ivar->indicies;
-			out<<"\t"<<name<<"\t\t"<<ivar->toString()<<endl;
+			string name = emcol->ctx->getContextId()+"_"+var->name+"_"+(*ivar)->indicies;
+			out<<"\t"<<name<<"\t\t"<<(*ivar)->toString()<<endl;
 		}
 	}
 

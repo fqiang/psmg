@@ -23,7 +23,7 @@ using namespace std;
 using namespace boost;
 using namespace boost::multi_index;
 
-typedef multi_index_container<VarSingle,
+typedef multi_index_container<VarSingle*,
 		indexed_by<
 			random_access<>,
 			hashed_unique<  member<VarSingle, string, &VarSingle::indicies> >

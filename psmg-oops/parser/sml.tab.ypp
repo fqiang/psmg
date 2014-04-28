@@ -363,7 +363,7 @@ setattribute: 	DIMEN INT_VAL
             		record_dummy_var();
             	} setexpression 
 	            {
-					$$ = new SyntaxNodeOP(ASSIGN, $3);
+					$$ = new SyntaxNode(ASSIGN, $3);
 	            	restore_dummy_var();
 				}
 			|	WITHIN identifier
@@ -422,7 +422,7 @@ paramattribute:   BINARY {$$ = new SyntaxNode(BINARY);}
               |   SYMBOLIC {$$ = new SyntaxNode(SYMBOLIC);}
               |   relop expr {$$ = new SyntaxNodeOP($1, $2);}
               |   DEFAULT expr {$$ = new SyntaxNode(DEFAULT, $2);}
-              |   DEFINED expr {$$ = new SyntaxNodeOP(DEFINED, $2);}
+              |   DEFINED expr {$$ = new SyntaxNode(DEFINED, $2);}
               ;
               
 relop:   LE {$$=LE;}
@@ -718,7 +718,7 @@ expr: value
     /* | expr ASSIGN expr { $$ = new SyntaxNodeOP(ASSIGN, $1, $3); } */
     | IF lexpr THEN expr { $$ = new SyntaxNode(IF, $2, $4); }
     | IF lexpr THEN expr ELSE expr { $$ = new SyntaxNode(IF, $2, $4, $6); }
-    | EXPECTATION LBRACKET expr_list RBRACKET 
+    | EXPECTATION LBRACKET expr RBRACKET 
       { 
       	$$ = new SyntaxNode(EXPECTATION, $3);
       }
@@ -883,7 +883,7 @@ bool isDummyVar(string& v)
 int parse_model() 
 {
 	int errcode = 0;
-	yyin = fopen(Config::modelfilename.c_str(),"r");
+	yyin = fopen(GV(modelfilename).c_str(),"r");
 	assert(errcode==0);
 	string name = "root";
 	//creating the root level - as always the case 

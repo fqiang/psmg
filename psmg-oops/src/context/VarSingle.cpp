@@ -19,6 +19,7 @@ VarSingle::VarSingle(string& i,double u, double l,AutoDiff::Node* v)
 
 VarSingle::~VarSingle() {
 	LOG("VarSingle --- delete --- "<<this->toString());
+	delete this->adv;
 }
 
 string VarSingle::toString() const

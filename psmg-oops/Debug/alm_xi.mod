@@ -7,7 +7,7 @@
 #
 
 param T;
-set TIME ordered := 0..T;
+set TIME ordered = 0..T;
 set NODES;
 param Parent{NODES} symbolic; # parent of nodes
 param Probs{NODES}; # probability distribution of nodes
@@ -33,20 +33,20 @@ block alm stochastic using (nd in NODES, Parent, Probs, st in TIME): {
 
   stages {0}: {
     subject to StartBudget:
-      (1+Gamma) * sum{j in ASSETS} (x_hold[j] * Price[j]) + cash = InitialWealth;
+      (1+Gamma) * sum{j0 in ASSETS} (x_hold[j0] * Price[j0]) + cash = InitialWealth;
   }
 
-  stages (1..T): {
+  stages {1..T}: {
 
     var x_sold{ASSETS} >= 0;
     var x_bought{ASSETS} >= 0;
     var slack1{BENCHMARK} >= 0;
 
     subject to CashBalance:
-      cash + (1+Gamma) * sum{j in ASSETS} (Price[j] * x_bought[j]) - ancestor(1).cash -(1-Gamma) * sum{j in ASSETS} (Price[j] * x_sold[j])=0;
+      cash + (1+Gamma) * sum{j1 in ASSETS} (Price[j1] * x_bought[j1]) - ancestor(1).cash -(1-Gamma) * sum{j2 in ASSETS} (Price[j2] * x_sold[j2])=0;
 
-    subject to Inventory{j in ASSETS}:
-      x_hold[j] - (1+Return[j,nd]) * ancestor(1).x_hold[j] - x_bought[j] + x_sold[j] = 0;
+    subject to Inventory{j3 in ASSETS}:
+      x_hold[j3] - (1+Return[j3,nd]) * ancestor(1).x_hold[j3] - x_bought[j3] + x_sold[j3] = 0;
 
     subject to StochasticDominance1{l in BENCHMARK}:
       sum{j in ASSETS}(Price[j] * x_hold[j]) + cash + risk[l] - slack1[l] = Vbenchmk[l];

@@ -13,6 +13,12 @@ Var::Var(string& name_): name(name_) {
 }
 
 Var::~Var() {
+	var_multi_map_by_order& var_by_order = this->varMultiMap.get<0>();
+	var_multi_map_by_order::iterator i = var_by_order.begin();
+	for(;i!=var_by_order.end();i++){
+		VarSingle* varsingle = *i;
+		delete varsingle;
+	}
 	this->varMultiMap.clear();
 }
 
@@ -24,7 +30,7 @@ string Var::toString()
 	var_multi_map_by_order& var_by_order = this->varMultiMap.get<0>();
 	var_multi_map_by_order::iterator i = var_by_order.begin();
 	for(;i!=var_by_order.end();i++){
-		oss<<"           "<<i->toString()<<endl;
+		oss<<"           "<<(*i)->toString()<<endl;
 	}
 	return oss.str();
 }
@@ -37,7 +43,7 @@ void Var::calculateMemoryUsage(unsigned long& size)
 	var_multi_map_by_order& var_by_order = this->varMultiMap.get<0>();
 	var_multi_map_by_order::iterator i = var_by_order.begin();
 	for(;i!=var_by_order.end();i++){
-		i->calculateMemoryUsage(size);
+		(*i)->calculateMemoryUsage(size);
 	}
 	LOG_MEM(" -- this Var usage ["<<size-pre<<"]");
 }

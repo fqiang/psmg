@@ -81,7 +81,7 @@ void SML_OOPS_driver_LP(ExpandedModel *root) {
 	vu->fillCallBack(FillUpBndVector);
 	vl->fillCallBack(FillLowBndVector);
 
-	if (Config::writeMatlab) {
+	if (GV(writeMatlab)) {
 		LOG("Writing matlab file:mat.m");
 		string mfile = GV(logdir)+ "mat.m";
 		FILE *mout = fopen(mfile.c_str(), "w");
@@ -94,7 +94,7 @@ void SML_OOPS_driver_LP(ExpandedModel *root) {
 		fclose(mout);
 	}
 
-	if (Config::writeMPS) {
+	if (GV(writeMPS)) {
 		LOG("Writing mps file:mat.m");
 		string mfile = GV(logdir)+"test.mps";
 		FILE *mps_file = fopen(mfile.c_str(), "w");
@@ -113,7 +113,7 @@ void SML_OOPS_driver_LP(ExpandedModel *root) {
 	PDProblem Prob(AlgAug, vb, vc, vl, vu, vx, vy, vz);
 	prob_ptr = &Prob;
 
-	if (Config::solve) {
+	if (GV(solve)) {
 		cout << "Calling OOPS..." << endl;
 		Prob.solve(stdout);
 	}

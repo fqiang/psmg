@@ -18,6 +18,7 @@ using namespace std;
 class IndexSet : public CompDescr {
 public:
 	static string TMP;
+	static string NEWSET;
 	string name;
 
 	boost::unordered_map<string, Set*> dummySetMap;

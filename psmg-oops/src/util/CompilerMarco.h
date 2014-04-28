@@ -49,13 +49,13 @@ typedef unsigned long ulong;
 
 
 #if DEBUG_PRINT_ENABLED
-#define LOG(arg) (std::cout<<"LOG==>["<<Config::rank<<"/"<<Config::size<<"]-"<<arg<<std::endl)
+#define LOG(arg) (std::cout<<"LOG==>["<<GV(rank)<<"/"<<GV(size)<<"]-"<<arg<<std::endl)
 #else
 #define LOG(arg) ((void)0)
 #endif
 
 #if DEBUG_PRINT_ENABLED
-  #define LOG_SM(arg) (std::cout<<"LOG_SM==>["<<Config::rank<<"/"<<Config::size<<"]-"<<arg<<std::endl)
+  #define LOG_SM(arg) (std::cout<<"LOG_SM==>["<<GV(rank)<<"/"<<GV(size)<<"]-"<<arg<<std::endl)
 #else
   #define LOG_SM(arg) ((void)0)
 #endif
@@ -110,7 +110,7 @@ typedef unsigned long ulong;
 //#endif
 
 #if MEMORY_LOG_ENABLED
-#define LOG_MEM(arg) (std::cout<<"LOG_MEM==>["<<Config::rank<<"/"<<Config::size<<"]-"<<arg<<std::endl)
+#define LOG_MEM(arg) (std::cout<<"LOG_MEM==>["<<GV(rank)<<"/"<<GV(size)<<"]-"<<arg<<std::endl)
 #else
 #define LOG_MEM(arg) ((void)0)
 #endif

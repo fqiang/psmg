@@ -42,28 +42,70 @@ void VarComp::calculateVarComp(ModelContext* ctx)
 	assert(this->type==TVAR);
 	LOG("calculateVarComp - model["<<this->model->name<<"] comp["<<this->name<<"]");
 	Var* var = new Var(this->name);
-	IndexSet* iset = NULL;
 	if(this->indexing!=NULL)
 	{
-		iset = this->indexing->createIndexSet(ctx);
-		assert(iset->dummyCompMap.size()==1); //supports one -dim variables for now.
-		string dummy = iset->dummyCompMap.begin()->first;
-		SetComp* comp = iset->dummyCompMap.begin()->second;
-		Set*	set = iset->dummySetMap.begin()->second;
-
-		vector<string>::iterator it=set->setValues_data_order.begin();
-		for(;it!=set->setValues_data_order.end();it++)
+		IndexSet* iset = this->indexing->createIndexSet(ctx);
+		assert(iset->dummyCompMap.size()<=2);
+		if(iset->dummyCompMap.size()==1)
 		{
-			ctx->addDummyCompValueMapTemp(dummy,comp,*it);
-			//compute variable bounds
-			double upper = INFINITY_D;
-			double lower = NEG_INFINITY_D;
-			if(this->attributes != NULL){
-				this->attributes->calculateVarBounds(ctx,upper,lower);
+			string dummy = iset->dummyCompMap.begin()->first;
+			SetComp* comp = iset->dummyCompMap.begin()->second;
+			Set*	set = iset->dummySetMap.begin()->second;
+
+			vector<string>::iterator it=set->setValues_data_order.begin();
+			for(;it!=set->setValues_data_order.end();it++)
+			{
+				ctx->addDummyCompValueMapTemp(dummy,comp,*it);
+				//compute variable bounds
+				double upper = INFINITY_D;
+				double lower = NEG_INFINITY_D;
+				if(this->attributes != NULL){
+					this->attributes->calculateVarBounds(ctx,upper,lower);
+				}
+				AutoDiff::Node* v =  AutoDiff::create_var_node(1.0);
+				VarSingle* varsingle = new VarSingle(*it,upper,lower,v);
+				var->varMultiMap.push_back(varsingle);
+				ctx->removeDummySetValueMapTemp(dummy);
 			}
-			AutoDiff::Node* v =  AutoDiff::create_var_node(1.0);
-			var->varMultiMap.push_back(VarSingle(*it,upper,lower,v));
-			ctx->removeDummySetValueMapTemp(dummy);
+		}
+		else if(iset->dummyCompMap.size()==2)
+		{
+			boost::unordered_map<string,SetComp*>::iterator it1 = iset->dummyCompMap.begin();
+			boost::unordered_map<string,Set*>::iterator it2 = iset->dummySetMap.begin();
+			string dummy1 = it1->first;
+			SetComp* comp1 = it1->second;it1++;
+			string dummy2 = it1->first;
+			SetComp* comp2 = it1->second;
+			Set* set1 = it2->second; it2++;
+			Set* set2 = it2->second;
+			vector<string>::iterator i = set1->setValues_data_order.begin();
+			for(;i!=set1->setValues_data_order.end();i++)
+			{
+				ctx->addDummyCompValueMapTemp(dummy1,comp1,*i);
+				vector<string>::iterator j = set2->setValues_data_order.begin();
+				for(;j!=set2->setValues_data_order.end();j++)
+				{
+					ctx->addDummyCompValueMapTemp(dummy2,comp2,*j);
+					//compute variable bounds
+					double upper = INFINITY_D;
+					double lower = NEG_INFINITY_D;
+					if(this->attributes != NULL){
+						this->attributes->calculateVarBounds(ctx,upper,lower);
+					}
+					AutoDiff::Node* v =  AutoDiff::create_var_node(1.0);
+					string varkey = *i + *j;
+					VarSingle* varsingle = new VarSingle(varkey,upper,lower,v);
+					var->varMultiMap.push_back(varsingle);
+					ctx->removeDummySetValueMapTemp(dummy2);
+				}
+				ctx->removeDummySetValueMapTemp(dummy1);
+			}
+
+		}
+		else
+		{
+			LOG("only support upto 2 indexed variables declaration!");
+			assert(false);
 		}
 		delete iset;
 	}
@@ -76,11 +118,12 @@ void VarComp::calculateVarComp(ModelContext* ctx)
 		}
 		string varkey = "";
 		AutoDiff::Node* v =  AutoDiff::create_var_node(1.0);
-		var->varMultiMap.push_back(VarSingle(varkey,upper,lower,v));
+		VarSingle* varsingle = new VarSingle(varkey,upper,lower,v);
+		var->varMultiMap.push_back(varsingle);
 	}
 
 	ctx->addCompValueMap(this,var);
-	LOG("fillLocalVar -- model["<<this->model->name<<"] comp["<<this->name<<"] card["<<var->varMultiMap.size()<<"] dim["<<this->dim<<"]");
+	LOG("calculateVarComp -- model["<<this->model->name<<"] comp["<<this->name<<"] card["<<var->varMultiMap.size()<<"] dim["<<this->dim<<"]");
 }
 
 /* ---------------------------------------------------------------------------
@@ -97,22 +140,3 @@ void VarComp::dump(ostream& fout,int counter)
 		fout << "    indexing: " << indexing << "\n";
 	}
 }
-
-//void VarComp::fillLocalVarRecurive(ModelContext* context,Var* aVar,vector<ModelComp*>::iterator it, ostringstream& oss){
-////	if(it==this->indexing->sets_mc.end())
-////	{
-////		aVar->addVarValue(oss);
-////	}
-////	else
-////	{
-////		Set* aSet = static_cast<Set*>(context->getCompValue(*it));
-////		for(vector<string>::iterator it_setval = aSet->setValues_data_order.begin();it_setval != aSet->setValues_data_order.end();it_setval++) {
-////			ostringstream copy(oss.str());
-////			oss<<*it_setval;
-////			this->fillLocalVarRecurive(context, aVar, it + 1, oss);
-////			oss.str("");
-////			oss.clear();
-////			oss<<copy.str();
-////		}
-////	}
-//}

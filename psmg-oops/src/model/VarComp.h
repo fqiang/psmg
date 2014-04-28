@@ -22,7 +22,6 @@ public:
 //	uint card; //number of variables for this declared varcomp
 	void calculateVarComp(ModelContext* ctx);
 	void calculateVarDimCard(ModelContext* context, uint& card);
-//	void fillLocalVarRecurive(ModelContext* context,Var* aVar,vector<ModelComp*>::iterator it,ostringstream& oss);
 
 
 	void dump(ostream& fout,int counter);
