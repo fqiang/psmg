@@ -27,6 +27,7 @@
 #include <limits>
 
 using namespace boost::numeric::ublas;
+using namespace boost;
 using namespace std;
 
 typedef AutoDiff::Node Node;
@@ -39,6 +40,17 @@ ExpandedModel::ExpandedModel(AmplModel* mod,ModelContext* context)
 	this->name = model->name;
 	ctx->em = this;
 	LOG("ExpandedModel2 constructor for name["<<this->name<<"]");
+}
+
+void ExpandedModel::addModelDummy(string dummyVar, ModelComp* comp, string value)
+{
+	assert(comp!=NULL);
+	pair<boost::unordered_map<string,string>::iterator,bool> ret1;
+	pair<boost::unordered_map<string,ModelComp*>::iterator,bool> ret2;
+	ret1 = this->dummyValueMap.insert(pair<string,string>(dummyVar,value));
+	ret2 = this->dummySetMap.insert(pair<string,ModelComp*>(dummyVar,comp));
+	assert(ret1.second && ret2.second);
+	this->name += "_"+value;
 }
 
 ExpandedModel::~ExpandedModel() {
@@ -80,17 +92,19 @@ BlockLP* ExpandedModel::getBlockLP(ExpandedModel* emcol)
 		{
 			//now build each constraint in autodiff format
 			LOG(" -- con [ "<<con->name<<"]");
-			Con* conset = new Con(con->name);
-			SyntaxNode* attribute = con->attributes;
+//			Con* conset = new Con(con->name);
+			unordered_map<int,SyntaxNode*>::iterator it = con->partial.find(emcol->model->level);
+			SyntaxNode* attribute = it==con->partial.end()? NULL: it->second;
 			SyntaxNode* indexing = con->indexing;
 			if(indexing!=NULL)
 			{
 				LOG(" -- con index["<<indexing->print()<<"]");
 				IndexSet* iset = indexing->createIndexSet(this->ctx);
-				assert(iset->dummySetMap.size()==1); //so far support only 1-demonsianl set
-				Set* set = iset->dummySetMap.begin()->second;
-				string dummy = iset->dummySetMap.begin()->first;
-				SetComp* setcomp = iset->dummyCompMap.begin()->second;
+				assert(iset->tuples.size()==1); //so far support only 1-demonsianl set
+				iset_tuple& tuple = *(iset->tuples.begin());
+				string dummy = tuple.get<0>();
+				Set* set = tuple.get<1>();
+				SetComp* setcomp =  tuple.get<2>();
 				std::vector<string>::iterator itset = set->setValues_data_order.begin();
 				for(;itset!=set->setValues_data_order.end();itset++)
 				{
@@ -99,14 +113,8 @@ BlockLP* ExpandedModel::getBlockLP(ExpandedModel* emcol)
 					string conName = con->name + "_" + value;
 					LOG(" constraint - ["<<conName<<"]");
 					//now, build autodiff constraint
-					SyntaxNode* assgin_expr = attribute->findChildNode(ASSIGN);
-					Node* acon = assgin_expr->buildAutoDiffDAG(this,emcol,true);
-					assert(acon!=NULL);
-					double lower = NEG_INFINITY_D;
-					double upper = INFINITY_D;
-					con->attributes->calculateConsBounds(this->ctx,lower,upper);
-					ConSingle* consingle = new ConSingle(acon, lower, upper);
-					conset->cons.push_back(consingle);
+					Node* acon = attribute==NULL? NULL: attribute->buildAutoDiffDAG(this,emcol,true);
+					rval->cons.push_back(acon);
 					this->ctx->removeDummySetValueMapTemp(dummy);
 				}
 				delete iset;
@@ -115,24 +123,13 @@ BlockLP* ExpandedModel::getBlockLP(ExpandedModel* emcol)
 			{
 				LOG(" -- con index is NULL - constraint - ["<<con->name<<"]");
 				//now, build autodiff constraint
-				double lower = NEG_INFINITY_D;
-				double upper = INFINITY_D;
-				SyntaxNode* assgin_expr = attribute->findChildNode(ASSIGN);
-				Node* acon = assgin_expr->buildAutoDiffDAG(this,emcol,true);
-				assert(acon!=NULL);
-				con->attributes->calculateConsBounds(ctx,lower,upper);
-				ConSingle* consingle = new ConSingle(acon, lower, upper);
-				conset->cons.push_back(consingle);
+				Node* acon = attribute==NULL?NULL:attribute->buildAutoDiffDAG(this,emcol,true);
+				rval->cons.push_back(acon);
 			}
-			rval->cons.push_back(conset);
 		}
 		if(GV(logBlock)){
 			ostringstream oss;
-			oss<<GV(logdir);
-			this->getQaulifiedName(oss);
-			oss<<"-";
-			emcol->getQaulifiedName(oss);
-			oss<<".lpblk";
+			oss<<GV(logdir)<<this->name<<"-"<<emcol->name<<".lpblk";
 			ofstream fout(oss.str().c_str());
 			rval->logBlock(this,emcol,fout);
 		}
@@ -149,40 +146,32 @@ uint ExpandedModel::nz_cons_jacobs_lp(ExpandedModel* emcol)
 	emcol->copyVariables(vSet);
 	assert(vSet.size()==emcol->numLocalVars);
 	uint nz = 0;
-	BOOST_FOREACH(Con* con, b->cons)
+	BOOST_FOREACH(AutoDiff::Node* cnode, b->cons)
 	{
-		BOOST_FOREACH(ConSingle* consingle, con->cons)
-		{
-			nz+=nzGrad(consingle->con,vSet);
-			LOG("nz now "<<nz);
-		}
+		if(cnode!=NULL)	nz+=nzGrad(cnode,vSet);
+		LOG("nz now "<<nz<<" - cnode"<<cnode);
 	}
 	LOG("row["<<name<<"] col["<<emcol->name<<"] - nz["<<nz<<"]");
+	Stat::numNZJacLPCall++;
 	return nz;
 }
 
-void ExpandedModel::cons_jacobs_lp(ExpandedModel* emcol,boost::numeric::ublas::compressed_matrix<double>& m)
+void ExpandedModel::cons_jacobs_lp(ExpandedModel* emcol,col_compress_matrix& m)
 {
 	std::vector<AutoDiff::Node*> vnodes;
 	emcol->copyVariables(vnodes);
 	assert(emcol->numLocalVars == vnodes.size());
 //	LOG("vnode size -"<<vnodes.size());
-	m.resize(this->numLocalCons,emcol->numLocalVars,false);
+//	m.resize(this->numLocalCons,emcol->numLocalVars,false);
 
 	BlockLP* b = this->getBlockLP(emcol);
 	int r = 0;
-	BOOST_FOREACH(Con* con, b->cons)
+	BOOST_FOREACH(AutoDiff::Node* cnode, b->cons)
 	{
 
-		BOOST_FOREACH(ConSingle* singlecon, con->cons)
-		{
-			matrix_row<compressed_matrix<double> > rgrad(m,r);
-			assert(con!=NULL);
-//			LOG("constraint expression  ---- ");
-//			LOG("--- "<<AutoDiff::visit_tree(singlecon->con));
-			grad_reverse(singlecon->con,vnodes,rgrad);
-			r++;
-		}
+		col_compress_matrix_row rgrad(m,r);
+		if(cnode!=NULL) grad_reverse(cnode,vnodes,rgrad);
+		r++;
 		LOG("row["<<name<<"] col["<<emcol->name<<"]");
 		LOG("jacobian now"<<m);
 	}
@@ -191,8 +180,8 @@ void ExpandedModel::cons_jacobs_lp(ExpandedModel* emcol,boost::numeric::ublas::c
 	assert(m.size1()==this->numLocalCons);
 	assert(m.size2()==emcol->numLocalVars);
 
-	Stat::numConsJacLocalCall++;
-	LOG("end cons_jacobs_distribute - emrow["<<this->name<<"] emcol["<<emcol->name<<"]");
+	Stat::numJacLPCall++;
+	LOG("end cons_jacobs_lp - emrow["<<this->name<<"] emcol["<<emcol->name<<"]");
 }
 void ExpandedModel::obj_grad_lp(ExpandedModel* emcol, double* vals)
 {
@@ -204,19 +193,22 @@ void ExpandedModel::obj_grad_lp(ExpandedModel* emcol, double* vals)
 		emcol->model->calculateModelCompRecursive(emcol->ctx);
 		emcol->model->calculateLocalVar(emcol->ctx);
 
-		AutoDiff::Node* con = this->model->obj_comp->attributes->buildAutoDiffDAG(this,emcol,true);
-		assert(con!=NULL);
-		std::vector<AutoDiff::Node*> vnodes;
-		emcol->copyVariables(vnodes);
+		unordered_map<int,SyntaxNode*>::iterator it= this->model->obj_comp->partial.find(emcol->model->level);
+		SyntaxNode* attr = it==this->model->obj_comp->partial.end()?NULL:it->second;
+		AutoDiff::Node* con = attr==NULL? NULL: attr->buildAutoDiffDAG(this,emcol,true);
+		if(con!=NULL) {
+			std::vector<AutoDiff::Node*> vnodes;
+			emcol->copyVariables(vnodes);
 
-		std::vector<double> grad;
-		LOG("objective expression  ---- ");
-		LOG("--- "<<visit_tree(con));
-		grad_reverse(con,vnodes,grad);
-		for(uint i=0;i<grad.size();i++)
-		{
-			//set to 0 if variable is not in the objective expression
-			vals[i] = isnan(grad[i])?0:grad[i];
+			std::vector<double> grad;
+			LOG("objective expression  ---- ");
+			LOG("--- "<<visit_tree(con));
+			grad_reverse(con,vnodes,grad);
+			for(uint i=0;i<grad.size();i++)
+			{
+				//set to 0 if variable is not in the objective expression
+				vals[i] = isnan(grad[i])?0:grad[i];
+			}
 		}
 	}
 }
@@ -326,13 +318,13 @@ void ExpandedModel::cons_jacobs_local(ExpandedModel *emcol, boost::numeric::ubla
 		assert(vnodes.size() == currcol);
 	}
 //	LOG("vnode size -"<<vnodes.size());
-	compressed_matrix<double> m(emb->cons.size(),vnodes.size());
+	compressed_matrix<double,column_major> m(emb->cons.size(),vnodes.size());
 	int r = 0;
 	BOOST_FOREACH(AutoDiff::Node* con, emb->cons)
 	{
 //		typedef boost::numeric::ublas::matrix_row<boost::numeric::ublas::compressed_matrix<double> > compressed_matrix_row;
 //		compressed_matrix_row rgrad(m,r);
-		matrix_row<compressed_matrix<double> > rgrad(m,r);
+		matrix_row<col_compress_matrix > rgrad(m,r);
 		assert(con!=NULL);
 		LOG("constraint expression  ---- ");
 		LOG("--- "<<visit_tree(con));
@@ -343,7 +335,7 @@ void ExpandedModel::cons_jacobs_local(ExpandedModel *emcol, boost::numeric::ubla
 //	LOG("Full Jacobian: "<<m);
 
 	int colrange = emcol->numLocalVars + colstart;
-	matrix_range<compressed_matrix<double> > mr(m,range(0,m.size1()),range(colstart,colrange));
+	matrix_range<compressed_matrix<double,column_major> > mr(m,range(0,m.size1()),range(colstart,colrange));
 	assert(mr.size2()==emcol->numLocalVars);
 	assert(mr.size1()==this->numLocalCons);
 	LOG("submatrix -- ["<<this->numLocalCons<<"] x ["<<emcol->numLocalVars<<"]");
@@ -777,10 +769,11 @@ BlockHV* ExpandedModel::getHVBlockLocal(ExpandedModel* emcol)
 					{
 						LOG(" -- con index["<<indexing->print()<<"]");
 						IndexSet* iset = indexing->createIndexSet(em->ctx);
-						assert(iset->dummySetMap.size()==1); //so far support only 1-demonsianl set
-						Set* set = iset->dummySetMap.begin()->second;
-						string dummy = iset->dummySetMap.begin()->first;
-						SetComp* setcomp = iset->dummyCompMap.begin()->second;
+						assert(iset->tuples.size()==1); //TODO: so far support only 1-demonsianl set
+						iset_tuple& tuple = *(iset->tuples.begin());
+						string dummy = tuple.get<0>();
+						Set* set = tuple.get<1>();
+						SetComp* setcomp = tuple.get<2>();
 						std::vector<string>::iterator itset = set->setValues_data_order.begin();
 						for(;itset!=set->setValues_data_order.end();itset++)
 						{
@@ -873,10 +866,11 @@ BlockCons* ExpandedModel::getConsBlockLocal(ExpandedModel* emcol)
 			{
 				LOG(" -- con index["<<indexing->print()<<"]");
 				IndexSet* iset = indexing->createIndexSet(ctx);
-				assert(iset->dummySetMap.size()==1); //so far support only 1-demonsianl set
-				Set* set = iset->dummySetMap.begin()->second;
-				string dummy = iset->dummySetMap.begin()->first;
-				SetComp* setcomp = iset->dummyCompMap.begin()->second;
+				assert(iset->tuples.size()==1); //TODO: so far support only 1-demonsianl set
+				iset_tuple& tuple = *(iset->tuples.begin());
+				string dummy = tuple.get<0>();
+				Set* set = tuple.get<1>();
+				SetComp* setcomp = tuple.get<2>();
 				std::vector<string>::iterator itset = set->setValues_data_order.begin();
 				for(;itset!=set->setValues_data_order.end();itset++)
 				{
@@ -1099,11 +1093,12 @@ void ExpandedModel::get_local_cons_bounds(double *lower, double *upper)
 		if(indexing!=NULL)
 		{
 			IndexSet* iset = indexing->createIndexSet(ctx);
-			assert(iset->dummyCompMap.size()==1); // support one dim indexing set only
-			SetComp* setcomp = iset->dummyCompMap.begin()->second;
-			Set* indset = iset->dummySetMap.begin()->second;
-			string dummy = iset->dummySetMap.begin()->first;
-			BOOST_FOREACH(string& val, indset->setValues_data_order)
+			assert(iset->tuples.size()==1); //TODO: so far support only 1-demonsianl set
+			iset_tuple& tuple = *(iset->tuples.begin());
+			string dummy = tuple.get<0>();
+			Set* set = tuple.get<1>();
+			SetComp* setcomp = tuple.get<2>();
+			BOOST_FOREACH(string& val, set->setValues_data_order)
 			{
 				this->ctx->addDummyCompValueMapTemp(dummy,setcomp,val);
 				con->attributes->calculateConsBounds(ctx,lower[i],upper[i]);
@@ -1131,23 +1126,23 @@ void ExpandedModel::get_local_cons_names(std::vector<string>& names)
 		if(indexing!=NULL)
 		{
 			IndexSet* iset = indexing->createIndexSet(ctx);
-			assert(iset->dummyCompMap.size()==1); // support one dim indexing set only
-			SetComp* setcomp = iset->dummyCompMap.begin()->second;
-			Set* indset = iset->dummySetMap.begin()->second;
-			string dummy = iset->dummySetMap.begin()->first;
-			std::vector<string>::iterator itset = indset->setValues_data_order.begin();
-			for(;itset!=indset->setValues_data_order.end();itset++)
+			assert(iset->tuples.size()==1); //TODO: so far support only 1-demonsianl set
+			iset_tuple& tuple = *(iset->tuples.begin());
+			string dummy = tuple.get<0>();
+			Set* set = tuple.get<1>();
+			SetComp* setcomp = tuple.get<2>();
+			std::vector<string>::iterator itset = set->setValues_data_order.begin();
+			for(;itset!=set->setValues_data_order.end();itset++)
 			{
 				ostringstream oss;
-				this->getQaulifiedName(oss);
-				oss<<"-"<<con->name<<"_"<<*itset;
+				oss<<this->name<<"-"<<con->name<<"_"<<*itset;
 				names.push_back(oss.str());
 			}
 			delete iset;
 		}
 		else
 		{
-			string conName = this->ctx->getContextId()+"-"+con->name + "_";
+			string conName = this->name+"-"+con->name + "_";
 			names.push_back(conName);
 		}
 	}
@@ -1205,18 +1200,6 @@ void ExpandedModel::update_lag(double* elts)
 /* ***********************************************************************************************
  *  Helper Methods Section
  */
-
-void ExpandedModel::addModelDummy(string dummyVar, ModelComp* comp, string value)
-{
-	assert(comp!=NULL);
-	pair<boost::unordered_map<string,string>::iterator,bool> ret1;
-	pair<boost::unordered_map<string,ModelComp*>::iterator,bool> ret2;
-	ret1 = this->dummyValueMap.insert(pair<string,string>(dummyVar,value));
-	ret2 = this->dummySetMap.insert(pair<string,ModelComp*>(dummyVar,comp));
-	assert(ret1.second && ret2.second);
-	this->name += "_"+value;
-}
-
 void ExpandedModel::addChildren(ExpandedModel* em2)
 {
 	this->children.push_back(em2);
@@ -1309,12 +1292,50 @@ void ExpandedModel::getParentEM(std::vector<ExpandedModel*>& ems)
 	}
 }
 
-void ExpandedModel::convertToColSparseMatrix(boost::numeric::ublas::compressed_matrix<double>& m,ColSparseMatrix* sm)
+void ExpandedModel::convertToColSparseMatrix(col_compress_matrix& m,ColSparseMatrix* sm)
 {
-	LOG("convertToColSparseMatrix - "<<m);
+	LOG("convertToColSparseMatrix - "<<m<<" nz"<<m.nnz());
 	assert(sm!=NULL);
-	boost::numeric::ublas::compressed_matrix<double>::iterator1 it1;
-	boost::numeric::ublas::compressed_matrix<double>::iterator2 it2;
+	if(m.nnz()!=0){
+		uint index =0;
+		uint prev = 0;
+		BOOST_FOREACH(uint i, m.index1_data())
+		{
+			sm->colstarts[index] = i>prev && i<=m.nnz()? i:prev;
+			LOG(" "<<i<<" -> "<<sm->colstarts[index]);
+			prev = sm->colstarts[index];
+			index ++;
+		}
+		index =0;
+		BOOST_FOREACH(uint i, m.index2_data())
+		{
+			LOG(" "<<i);
+			sm->rownos[index] = i;
+			index++;
+			if(index==m.nnz()) break;
+		}
+		index=0;
+		BOOST_FOREACH(double i, m.value_data())
+		{
+			LOG(" "<<i);
+			sm->values[index] = i;
+			index++;
+			if(index==m.nnz()) break;
+		}
+		if(sm->collen!=NULL)
+		{
+			for(int j=0;j<m.size2();j++)
+			{
+				sm->collen[j] = sm->colstarts[j+1] - sm->colstarts[j];;
+			}
+		}
+	}
+}
+
+void ExpandedModel::convertToColSparseMatrix(compress_matrix& m,ColSparseMatrix* sm)
+{
+//	LOG("convertToColSparseMatrix - "<<m);
+//	assert(sm!=NULL);
 //	uint index =0;
 //	BOOST_FOREACH(uint i, m.index1_data())
 //	{
@@ -1337,6 +1358,8 @@ void ExpandedModel::convertToColSparseMatrix(boost::numeric::ublas::compressed_m
 //		index++;
 //	}
 
+	boost::numeric::ublas::compressed_matrix<double>::iterator1 it1;
+	boost::numeric::ublas::compressed_matrix<double>::iterator2 it2;
 	uint i = 0;
 	int prev_col = -1;
 	int curr_col = 0;

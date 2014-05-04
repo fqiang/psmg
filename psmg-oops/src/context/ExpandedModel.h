@@ -21,6 +21,10 @@
 
 using namespace std;
 
+typedef boost::numeric::ublas::compressed_matrix<double,boost::numeric::ublas::column_major >  col_compress_matrix;
+typedef boost::numeric::ublas::matrix_row<col_compress_matrix> col_compress_matrix_row;
+typedef boost::numeric::ublas::compressed_matrix<double>  compress_matrix;
+
 class ConsComp;
 class VarComp;
 class BlockCons;
@@ -69,7 +73,7 @@ public:
 
 	//LP Interface
 	uint nz_cons_jacobs_lp(ExpandedModel* emcol);
-	void cons_jacobs_lp(ExpandedModel* emcol,boost::numeric::ublas::compressed_matrix<double>& m);
+	void cons_jacobs_lp(ExpandedModel* emcol,col_compress_matrix& m);
 	void obj_grad_lp(ExpandedModel*, double*);
 
 	//NLP interface
@@ -163,8 +167,8 @@ public:
 	void addChildren(ExpandedModel* em2);
 	void clearAllContextTreeKeepRoot();
 	void levelTraversal(vector<ExpandedModel*>& em2List,int level);
+	static void convertToColSparseMatrix(col_compress_matrix& m,ColSparseMatrix* sm);
 	static void convertToColSparseMatrix(boost::numeric::ublas::compressed_matrix<double>& m,ColSparseMatrix* sm);
-
 	/*
 	 * Utility methods
 	 */

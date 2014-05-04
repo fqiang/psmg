@@ -28,11 +28,11 @@ TimeStamp* TimeStamp::GetTimeStamp(string name)
 TimeStamp::TimeStamp(const TimeStamp& ts)
 {
 	assert(false); //should never happen
-	DEBUG_C("Disable copying!! \n");
+	LOG("Disable copying!!");
 }
 
 TimeStamp::TimeStamp(string name) {
-	DEBUG_C("create timestamp [%s] \n",name.c_str());
+	LOG("create timestamp ["<<name<<"]");
 	this->startTime = 0;
 	this->stopTime = 0;
 	this->name = name;
@@ -88,7 +88,7 @@ void TimeStamp::Reset() {
 
 
 TimeStamp::~TimeStamp() {
-	DEBUG_C("Destructor called on TimeStamp");
+	LOG("Destructor called on TimeStamp");
 }
 
 void TimeStamp::SelfTest()

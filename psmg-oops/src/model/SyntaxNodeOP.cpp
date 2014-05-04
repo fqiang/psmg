@@ -37,7 +37,7 @@ ostream& SyntaxNodeOP::put(ostream &s)
 	SyntaxNode* left = this->values[0];
 	SyntaxNode* right= this->nchild()==2? this->values[1]: NULL;
 	if(left)
-	  s << left << " ";
+	  s <<"("<< left << " ";
 
 	switch(opCode) {
 	case PLUS:
@@ -68,7 +68,7 @@ ostream& SyntaxNodeOP::put(ostream &s)
 	}
 
 	if(right)
-	  s << " " << right;
+	  s << " " << right <<")";
 
 	return s;
 }

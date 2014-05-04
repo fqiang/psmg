@@ -33,8 +33,7 @@
     #include "../model/SyntaxNodeIDREF.h"
     #include "../model/SyntaxNodeIDREFM.h"
     #include "../st_model/StochModel.h"
-//    #include "../st_model/StochModelComp.h"
-   
+
     #include "../util/global_util_functions.h"
     
     using namespace std;
@@ -50,7 +49,7 @@
     int yylex(void);
     void yyerror(const char *s);
 
-    static AmplModel *current_model;    /* this is the model currently active */
+    static AmplModel *current_model = NULL;    /* this is the model currently active */
                                        /* this is the GLOBAL context */
 
 	vector<string> index_dummy_vars;    
@@ -903,6 +902,7 @@ int parse_model()
 	//creating the root level - as always the case 
    	AmplModel::root = new AmplModel(name,NULL,NULL);
    	current_model = AmplModel::root;
+   	current_model->level = 0;
    	
    	//stochastic model related initialization
    	curr_stage_indexset = NULL;

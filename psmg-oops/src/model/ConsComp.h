@@ -24,7 +24,6 @@ public:
 	int card;
 	boost::unordered_map<int,SyntaxNode*> partial;
 	void calculatePartialConstraints();
-	void moveConsToLeft();
 
 	void calculateLocalCon(ModelContext* ctx);
 	void dump(ostream& fout,int counter);

@@ -56,9 +56,11 @@ AmplModel::AmplModel(const string& id, SyntaxNode* index,AmplModel *par) : Model
   n_submodels(0),
   n_total(0),
   level(0),
-  obj_comp(NULL)
+  obj_comp(NULL), split(false)
 {
-	LOG("AmplModel -- create - name["<<id<<"] -- parent["<<(par==NULL?"NULL":par->name)<<"]");
+	level = par==NULL? 0:par->level+1;
+	AmplModel::MAX_LEVEL = AmplModel::MAX_LEVEL<level?level:AmplModel::MAX_LEVEL;
+	LOG("AmplModel -- create - name["<<id<<"] -- level["<<level<<"] parent["<<(par==NULL?"NULL":par->name)<<"] MAX_LEVEL now["<<AmplModel::MAX_LEVEL<<"]");
 }
 
 /** Destructor */
@@ -93,51 +95,25 @@ AmplModel::~AmplModel()
 	obj_comp =  NULL;
 }
 
-void AmplModel::settingUpLevels(int lev)
+void AmplModel::splitConstraints()
 {
-	LOG("settingUpLevels -- model["<<this->name<<"] level["<<lev<<"]");
-	this->level = lev;
-	AmplModel::MAX_LEVEL = AmplModel::MAX_LEVEL<lev?lev:AmplModel::MAX_LEVEL;
-	vector<AmplModel*>::const_iterator it=this->subm_comps.begin();
+	LOG("formulateConstraints --- model["<<this->name<<"] level["<<level<<"] - split["<<split<<"]");
+	if(split) return;
 
-	for(;it!=this->subm_comps.end();it++)
-	{
-		LOG("submodel comp["<<(*it)->name<<"]");
-		(*it)->settingUpLevels(lev+1);
-	}
-}
-
-void AmplModel::formulateConstraints()
-{
-	LOG("formulateConstraints --- model["<<this->name<<"] level["<<level<<"]");
-
+	//we will need to compuate the partial constraint according to each level of intersection model
+	//level -1 - indicate the constant only level;
 	for(vector<ConsComp*>::iterator it = con_comps.begin();it!=con_comps.end();it++)
 	{
 		assert((*it)->type==TCON);
-
-		//this method is not yet tested
-		// to move the parameter to righ-hand-side and move variables to left-hand-side
-		// so the RHS can be evaluated as a constant upper-lower bound for the constraint
-		//(*it)->moveConsToLeft();
-
-		//for distribute Interface call - we will need to compuate the partial constraint according to each level of intersection model
-		//level -1 - indicate the constant only level;
-//		(*it)->calculatePartialConstraints();   //TODO not yet tested !
+		(*it)->calculatePartialConstraints();
 	}
 
 	if(obj_comp!=NULL)
 	{
 		assert(obj_comp->type == TOBJ);
-		//for distribute Interface call - we will need to compuate the partial constraint according to each level of intersection model
-		//level -1 - indicate the constant only level;
-//		obj_comp->calculatePartialConstraints();   //TODO not yet tested !
+		obj_comp->calculatePartialConstraints();
 	}
-
-	for(vector<AmplModel*>::iterator it=subm_comps.begin();it!=subm_comps.end();it++)
-	{
-		assert((*it)->type == TMODEL);
-		(*it)->formulateConstraints();
-	}
+	split = true;
 }
 
 /* ---------------------------------------------------------------------------
@@ -157,7 +133,7 @@ ExpandedModel* AmplModel::createExpandedModel(string dummyVar,SetComp* comp,stri
 	if(this==AmplModel::root){
 		//for root node
 		currEm2 = new ExpandedModel(AmplModel::root,currCtx);
-		assert(comp==NULL);
+		assert(comp==NULL && parCtx == NULL);
 	}
 	else
 	{
@@ -168,6 +144,7 @@ ExpandedModel* AmplModel::createExpandedModel(string dummyVar,SetComp* comp,stri
 		}
 	}
 
+	//duplicate computation for creating sibling expanded model
 	for(vector<SetComp*>::iterator i=set_comps.begin();i!=set_comps.end();i++)
 	{
 		assert((*i)->type==TSET);
@@ -289,17 +266,18 @@ ExpandedModel* AmplModel::createExpandedModel(string dummyVar,SetComp* comp,stri
 	for(vector<AmplModel*>::iterator it = subm_comps.begin();it!=subm_comps.end();it++)
 	{
 		AmplModel* subm = *it;
+		subm->splitConstraints();
 		assert(subm->type == TMODEL);
 		LOG(" START submodel["<<subm->name<<"] -----   in model["<<name<<"]");
 		if(subm->indexing!=NULL)
 		{
 			LOG("Indexing over: ["<<subm->indexing->print()<<"]");
 			IndexSet* iset = subm->indexing->createIndexSet(currCtx);
-			assert(iset->dummyCompMap.size()==1 && iset->dummySetMap.size()==1); // support only one dummy index for submodel/block declaration for now.
+			assert(iset->tuples.size()==1); // support only one dummy index for submodel/block declaration for now.
 
-			SetComp* setComp = iset->dummyCompMap.begin()->second;
-			string dummy = iset->dummyCompMap.begin()->first;
-			Set* set = iset->dummySetMap.begin()->second;
+			string dummy = iset->tuples.begin()->get<0>();
+			Set* set = iset->tuples.begin()->get<1>();
+			SetComp* setComp = iset->tuples.begin()->get<2>();
 			assert(set->dim == 1); //only support one dimensional set for block index set for now!
 			LOG("Name["<<name<<"]'s Comp["<<subm->name<<"] card["<<set->card<<"]");
 
