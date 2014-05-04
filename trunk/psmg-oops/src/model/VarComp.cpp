@@ -45,12 +45,12 @@ void VarComp::calculateVarComp(ModelContext* ctx)
 	if(this->indexing!=NULL)
 	{
 		IndexSet* iset = this->indexing->createIndexSet(ctx);
-		assert(iset->dummyCompMap.size()<=2);
-		if(iset->dummyCompMap.size()==1)
+		assert(iset->tuples.size()<=2);
+		if(iset->tuples.size()==1)
 		{
-			string dummy = iset->dummyCompMap.begin()->first;
-			SetComp* comp = iset->dummyCompMap.begin()->second;
-			Set*	set = iset->dummySetMap.begin()->second;
+			string dummy = iset->tuples.begin()->get<0>();
+			Set*	set = iset->tuples.begin()->get<1>();
+			SetComp* comp = iset->tuples.begin()->get<2>();
 
 			vector<string>::iterator it=set->setValues_data_order.begin();
 			for(;it!=set->setValues_data_order.end();it++)
@@ -68,16 +68,16 @@ void VarComp::calculateVarComp(ModelContext* ctx)
 				ctx->removeDummySetValueMapTemp(dummy);
 			}
 		}
-		else if(iset->dummyCompMap.size()==2)
+		else if(iset->tuples.size()==2)
 		{
-			boost::unordered_map<string,SetComp*>::iterator it1 = iset->dummyCompMap.begin();
-			boost::unordered_map<string,Set*>::iterator it2 = iset->dummySetMap.begin();
-			string dummy1 = it1->first;
-			SetComp* comp1 = it1->second;it1++;
-			string dummy2 = it1->first;
-			SetComp* comp2 = it1->second;
-			Set* set1 = it2->second; it2++;
-			Set* set2 = it2->second;
+			iset_tuple& tuple1 = iset->tuples[0];
+			iset_tuple& tuple2 = iset->tuples[1];
+			string dummy1 = tuple1.get<0>();
+			Set* set1 = tuple1.get<1>();
+			SetComp* comp1 = tuple1.get<2>();
+			string dummy2 = tuple2.get<0>();
+			Set* set2 = tuple2.get<1>();
+			SetComp* comp2 = tuple2.get<2>();
 			vector<string>::iterator i = set1->setValues_data_order.begin();
 			for(;i!=set1->setValues_data_order.end();i++)
 			{
@@ -100,7 +100,6 @@ void VarComp::calculateVarComp(ModelContext* ctx)
 				}
 				ctx->removeDummySetValueMapTemp(dummy1);
 			}
-
 		}
 		else
 		{
@@ -123,7 +122,7 @@ void VarComp::calculateVarComp(ModelContext* ctx)
 	}
 
 	ctx->addCompValueMap(this,var);
-	LOG("calculateVarComp -- model["<<this->model->name<<"] comp["<<this->name<<"] card["<<var->varMultiMap.size()<<"] dim["<<this->dim<<"]");
+	LOG("calculateVarComp -- model["<<this->model->name<<"] comp["<<this->name<<"] card["<< (uint)(var->varMultiMap.size()) <<"] dim["<<this->dim<<"]");
 }
 
 /* ---------------------------------------------------------------------------

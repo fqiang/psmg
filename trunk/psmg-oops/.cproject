@@ -149,7 +149,7 @@
 								<option id="gnu.cpp.link.option.paths.991754944" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="/home/s0965328/workspace/oops/oops_agr/oops/lib/parallel"/>
 									<listOptionValue builtIn="false" value="/home/s0965328/workspace/pugixml/lib"/>
-									<listOptionValue builtIn="false" value="/home/s0965328/workspace/autodiff/autodiff_library/Debug"/>
+									<listOptionValue builtIn="false" value="/home/s0965328/workspace/autodiff/autodiff_library/Release"/>
 									<listOptionValue builtIn="false" value="/home/s0965328/research/metis-4.0.3"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.489411667" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">

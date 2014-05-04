@@ -106,6 +106,7 @@ void Sml::generateExpandedModel()
 {
 	LOG("============== ExpandedModel2 Generation =============================");
 	//step 1: create expandedmodel recursively
+	AmplModel::root->splitConstraints();  //split constraints according to model levels
 	ExpandedModel::root = AmplModel::root->createExpandedModel("",NULL,"",NULL);
 	LOG("============== END ExpandedModel2 Generation =============================");
 }
@@ -115,15 +116,6 @@ void Sml::resetContextTree()
 	LOG("============== resetContextTree =============================");
 	ExpandedModel::root->clearAllContextTreeKeepRoot();
 	LOG("============== END resetContextTree =============================");
-}
-
-void Sml::formulateConstraints()
-{
-	LOG("============== formulateConstraints =============================");
-	AmplModel::root->settingUpLevels(0);
-	LOG("Max declared subproblem level -- "<<AmplModel::MAX_LEVEL);
-	AmplModel::root->formulateConstraints();
-	LOG("============== END formulateConstraints =============================");
 }
 
 void Sml::logEM(string filename="")
@@ -278,12 +270,12 @@ int main(int argc, char **argv)
 	AmplModel::root->calculateMemoryUsage(mem_size_flat);
 	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"]-Flat AmplModel Memory Usage Size ["<<mem_size_flat<<"] bytes"<<endl;
 
-	TIMER_START("ANALYSIS_CONSTRAINTS");
-	Sml::instance()->formulateConstraints();
-	TIMER_STOP("ANALYSIS_CONSTRAINTS");
-
 	TIMER_START("SML_EM2_GENERATION");
 	Sml::instance()->generateExpandedModel();
+	if(GV(logModel)) {
+			string mfile = GV(logdir)+GV(logModelFile) + "_partial";
+			AmplModel::root->logModel(mfile.c_str());
+	}
 	Sml::instance()->resetContextTree();
 	assert(ExpandedModel::root->ctx != NULL);
 	TIMER_STOP("SML_EM2_GENERATION");

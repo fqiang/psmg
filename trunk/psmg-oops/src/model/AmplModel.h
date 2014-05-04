@@ -71,6 +71,8 @@ public:
 	vector<AmplModel*> subm_comps;
 	ObjComp* obj_comp;
 
+	bool split; //true if constraint and objective already splitted into partials.
+
 	// -------------------------- methods ----------------------------------
 	/** Constructor */
 	AmplModel(const string& name, SyntaxNode* index, AmplModel *par);
@@ -90,10 +92,10 @@ public:
 	SetComp* findSetComp(string& id);
 	void calculateModelComp(ModelContext* context);
 	void calculateModelCompRecursive(ModelContext* context);
-	virtual ExpandedModel* createExpandedModel(string dummyVar,SetComp* comp,string value,ModelContext* parent);
-	void settingUpLevels(int);
 
-	void formulateConstraints();
+	void splitConstraints();
+	virtual ExpandedModel* createExpandedModel(string dummyVar,SetComp* comp,string value,ModelContext* parent);
+
 	void calculateLocalVar(ModelContext* context);
 	void calculateMemoryUsage(unsigned long& size);
 

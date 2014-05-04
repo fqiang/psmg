@@ -21,7 +21,7 @@ using namespace std;
 static string CONTEXT_ID_NOT_INIT="NOT_INITIALIZED";
 
 ModelContext::ModelContext(ModelContext* par):
-		parent(par),em(NULL),moveUpLevel(0)
+		parent(par),em(NULL)
 {
 	LOG("ModelContext - constructor - ");
 	//assert(_parent!=NULL);
@@ -165,33 +165,6 @@ void ModelContext::addCalcSumSet(SyntaxNode* key,IndexSet* iset)
 	this->tempISetMap[key] = iset;
 }
 
-void ModelContext::fillDummyValue(vector<string>& index)
-{
-	if(this->parent!=NULL)
-	{
-		this->parent->fillDummyValue(index);
-	}
-	boost::unordered_map<string,string>::iterator it;
-	for(it=this->em->dummyValueMap.begin();it!=this->em->dummyValueMap.end();it++)
-	{
-		index.push_back(it->second);
-	}
-}
-
-
-void ModelContext::fillDummyValue(ostringstream& oss)
-{
-	if(this->parent!=NULL)
-	{
-		this->parent->fillDummyValue(oss);
-	}
-	boost::unordered_map<string,string>::iterator it;
-	for(it=this->em->dummyValueMap.begin();it!=this->em->dummyValueMap.end();it++)
-	{
-		oss<<it->second;
-	}
-}
-
 void ModelContext::calculateMemoryUsage(unsigned long& size)
 {
 	size += sizeof(ModelContext);
@@ -220,63 +193,4 @@ void ModelContext::calculateMemoryUsage(unsigned long& size)
 		(*it).second->calculateMemoryUsage(size);
 	}
 }
-
-
-
-//string ModelContext::getDummyValueTemp(string& dummyVar)
-//{
-//	boost::unordered_map<string,string>::iterator it = this->dummyValueMapTemp.find(dummyVar);
-//	string rval = it==this->dummyValueMapTemp.end()?"":it->second;
-//	if(rval.empty())
-//	{
-//		LOG("no index value for var["<<dummyVar<<"] at temp level!");
-//	}
-//	return rval;
-//}
-
-//string ModelContext::getConsDummyValAsKey()
-//{
-//	string rval = "";
-//	boost::unordered_map<string,string>::iterator it = this->dummyValueMapCons.begin();
-//	for(;it!=this->dummyValueMapCons.end();it++)
-//	{
-//		rval += it->second;
-//	}
-//	return rval;
-//}
-
-//string ModelContext::getModelDummyValAsKey(int& num)
-//{
-//	assert(num>=0);
-//	LOG("getModelDummyValAsKey - int - contextId["<<this->getContextId()<<"] - num["<<num<<"]");
-//	int numKey = num;
-//	string rval="";
-//	boost::unordered_map<int,string>::iterator it = this->cacheModelDummyVarKey.find(numKey);
-//	rval = it==this->cacheModelDummyVarKey.end()?"":it->second;
-//	if(it==this->cacheModelDummyVarKey.end())
-//	{
-//		boost::unordered_map<string,string>::iterator it2 = this->em2->dummyValueMap.begin();
-//		for(;it2!=this->em2->dummyValueMap.end()&&num>0;it2++)
-//		{
-//			rval += it2->second;
-//			--num;
-//		}
-//
-//		if(parent!=NULL && num!=0){
-//			rval = this->parent->getModelDummyValAsKey(num) + rval;
-//		}
-//
-//		this->cacheModelDummyVarKey.insert(pair<int,string>(numKey,rval));
-//		LOG("insert key["<<numKey<<"] for value - rval["<<rval<<"]");
-//		assert(num==0);
-//	}
-//	else
-//	{
-//		assert(num==numKey);
-//		num = 0;
-//		LOG("find getModelDummyValAsKey in cache - ["<<numKey<<"] - rval["<<rval<<"]");
-//	}
-//	LOG("end getModelDummyValAsKey - int - contextId["<<this->getContextId()<<"] - num["<<num<<"] numKey["<<numKey<<"]- rval["<<rval<<"]");
-//	return rval;
-//}
 

@@ -33,7 +33,6 @@ public:
 	void processModelfile();
 	void generateExpandedModel();
 	void resetContextTree();
-	void formulateConstraints();
 	void logEM(string filename);
 	void testInterfaceLocal0(ExpandedModel* root,ExpandedModel* other);
 	void testInterfaceLocal1(ExpandedModel* emrow,ExpandedModel* emcol);

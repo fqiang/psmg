@@ -163,7 +163,7 @@ public:
 //	bool isContainVariablesInEm2(ModelContext* ctx,ExpandedModel* emcol);
 
 	void calculatePartialConstraints(boost::unordered_map<int,SyntaxNode*>&);
-	SyntaxNode* moveConsToLeft();
+	void collectConstantTreeNode(vector<SyntaxNode*>&);
 	ModelContext* locateCtx(ModelContext* rowctx, ModelContext* currCtx, bool isLP);
 	AutoDiff::Node* buildAutoDiffDAG(ExpandedModel* emrow,ExpandedModel* emcol, bool isLP=false);
 
@@ -172,18 +172,11 @@ public:
 	//end Feng
 
 	SyntaxNode* findChildNode(int op);
+	bool isContainsIDREF_TVAR_in_child();
 	void calcStageSet(ModelContext*, boost::unordered_set<string>*);
 
-//	static SyntaxNode *findKeywordinTree(SyntaxNode *root, int oc);
-//	static SyntaxNode* find_var_ref_in_context(AmplModel* context, SyntaxNode *ref);
-//	static SyntaxNode* find_var_ref_in_indexing(const std::string& name);
-
 private:
-	bool isDepend(vector<ModelComp*> varComps);
-	void handleSum(ModelContext* rowContext, vector<double>& jcobs, ModelContext* colContext);
-	void foreachSetValue(vector<ModelComp*> comps, vector<string>& dummyVars, SetSimple* aSet, ModelContext* rowContext, vector<double>& jcobs, ModelContext* colContext);
 	void getIndiciesKey(ModelContext* ctx,string& varKey);
-	static bool isContainsInEm2(string& varKey, ExpandedModel* em);
 	AutoDiff::Node* createAutoDiffConIDREF(ModelContext* ctx);
 	AutoDiff::Node* createAutoDiffConIDREFLP(ModelContext* rowctx, ModelContext* colctx);
 };
