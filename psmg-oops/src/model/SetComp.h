@@ -18,7 +18,6 @@ public:
 	virtual ~SetComp();
 
 	int setDim; //belong to set
-	int setCard; //belong to set
 	bool isOrdered;
 
 	void setSetDim();

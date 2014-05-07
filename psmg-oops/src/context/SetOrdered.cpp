@@ -48,7 +48,7 @@ void SetOrdered::addSetValue(const string& value)
 	else{
 		LOG("OrderedSet --- already has ["<<value<<"]");
 	}
-	LOG("OrderedSet --addSetValue- set contains "<<this->toString());
+//	LOG("OrderedSet --addSetValue- set contains "<<this->toString());
 }
 
 bool SetOrdered::contains(const string& key)

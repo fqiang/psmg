@@ -25,8 +25,10 @@ ParamMult::~ParamMult()
 
 void ParamMult::addParamValue(const string& indiciesKey, PValue* value)
 {
-	LOG("ParamMult - Add ParamValue name["<<name<<"] index["<<card<<"] ["<<indiciesKey<<" <= "<<value->toString()<<"]");
-	paramValues.insert(pair<string,PValue*>(indiciesKey,value));
+	LOG("ParamMult - Add ParamValue name["<<name<<"] card["<<card<<"] ["<<indiciesKey<<" <= "<<value->toString()<<"]");
+	pair<boost::unordered_map<string,PValue*>::iterator,bool> ret;
+	ret = paramValues.insert(pair<string,PValue*>(indiciesKey,value));
+	assert(ret.second);
 	card++;
 }
 

@@ -25,6 +25,8 @@
 #include "../parser/data.tab.h"
 #include "../util/global_util_functions.h"
 #include "../model/ParamComp.h"
+#include "../context/ParamMult.h"
+#include "../context/ParamSingle.h"
 
 using namespace std;
 
@@ -40,4 +42,13 @@ Param::~Param()
 	LOG("delete param - name["<<name<<"]");
 }
 
+Param* Param::createParam(ParamComp* comp)
+{
+	if(comp->numIndicies>=0) return new ParamMult(comp);
+	else{
+		assert(comp->numIndicies == 0);
+		return new ParamSingle(comp);
+	}
+
+}
 

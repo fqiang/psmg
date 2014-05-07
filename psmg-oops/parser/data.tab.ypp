@@ -38,10 +38,22 @@
 
    	int datalex(void);
    	static void dataerror(const char *s);
+   	void add_param_spec_item(const string& );
+   	
    	extern FILE *datain;
    	extern int datalineno;
    	ModelContext* rootContext;
- 
+  
+  	SetComp* curr_setcomp;
+   	Set* curr_set;
+   	ParamComp* curr_paramcomp;
+   	Param* curr_param; 
+   	vector<ParamComp*> curr_paramcomps;
+   	vector<Param*> curr_params;
+   	string param_indicies_key;
+   	int param_index;
+   	int ind_req;
+   	int ind_consumed;
 %}
 
 %union
@@ -49,17 +61,18 @@
    long ival;
    double fval;
    char* string;
+ 
 }
 
-%type <string> set_name 
+%type <string> set_name  
 %type <string> set_value
-%type <string> member_pairs member_pair
-%type <string> member_items 
-%type <string> member
+%type <string> set_tuple
+%type <string> set_item
 
 
-%type <string> param_name  param_names
-%type <string> param_specs param_specs_item
+%type <string> param_name 
+%type <string> param_spec_item 
+%type <string> param_value
 
 
 %token <string> ID 
@@ -89,107 +102,73 @@ statement:  set_def
 			}
          	;
 
-set_def:	SET set_name DEFINE member SEMICOLON {
-				YAC_DATA_LOG("set define start - FOR === ["<<$2<<"]");
-				YAC_DATA_LOG("   ===== VALUE ====");
-				YAC_DATA_LOG($4);
-				
-				string id($2);
-				SetComp* setComp = AmplModel::root->findSetComp(id);
-				Set* setValue = Set::createSet(setComp);
-				char* token;
-				token = strtok($4,",() ");
-			
-				ostringstream oss(ostringstream::out);
-				unsigned int tokenNum = 0;
-				do
-				{
-					oss<<token;
-					tokenNum++;
-					if(tokenNum%setValue->dim == 0)
-					{
-						setValue->addSetValue(oss.str());
-						oss.str("");
-						oss.clear();
-					}
-					token = strtok(NULL,",() ");
-				}while(token!=NULL);
-	
-				
-				setComp->setCard = setValue->card;
-				rootContext->addCompValueMap(setComp,setValue);
+set_def:	SET set_name DEFINE set_value_list SEMICOLON 
+			{
+				rootContext->addCompValueMap(curr_setcomp,curr_set);
+				curr_setcomp = NULL;
+				curr_set = NULL;
         	}
 			;            
 
-set_name:	ID { 
+set_name:	ID {
+				YAC_DATA_LOG("create set for "<<$1); 
+				string id($1);
+				curr_setcomp = AmplModel::root->findSetComp(id);
+				curr_set = Set::createSet(curr_setcomp);
+				assert(curr_setcomp->setDim == 1); //only 1-dim set can be specified in this grammar
 				$$ = $1;
 			}
 			;
 
-member:		  member_items {
+set_value_list:	set_value {
 				//YAC_DATA_LOG("member_items["<<$1<<"]"); 
-				$$ = $1; 
+				curr_set->addSetValue($1); 
 			}
-			| member_pairs { 
-				//YAC_DATA_LOG("member_pairs["<<$1<<"]");
-				$$ = $1;
-			}
-			;
-
-member_items: set_value {
-				//YAC_DATA_LOG("last set value ["<<$1<<"]");
-				$$ = $1;
-			}
-			| member_items set_value {
-				ostringstream oss(ostringstream::out);
-				oss<<$1<<','<<$2;
-				free($1);
-				free($2);
-				$$ = strdup(oss.str().c_str());
-			}
-			;
-
-member_pairs: LBRACKET member_pair RBRACKET {
-				//YAC_DATA_LOG("last set value tuple ["<<$2<<"]");
-				ostringstream oss(ostringstream::out);
-				oss<<'('<<$2<<')';
-				free($2);
-				$$ = strdup(oss.str().c_str());
-			}
-			| member_pairs LBRACKET member_pair RBRACKET {
-				//YAC_DATA_LOG("a set value tuple ["<<$3<<"]");
-				ostringstream oss(ostringstream::out);
-				oss<<$1<<'('<<$3<<')';
-				free($1);
-				free($3);
-				$$ = strdup(oss.str().c_str());
+			| set_value_list set_value {
+				curr_set->addSetValue($2); 
 			}
 			;
 			
-member_pair: set_value  { 
-				$$ = $1;
+set_value: LBRACKET set_tuple RBRACKET  { 
+				$$ = $2;
 			}
-			| member_pair COMMA set_value {
-				ostringstream oss(ostringstream::out);
-				oss<<$1<<','<<$3;
-				free($1);
-				free($3);
-				$$ = strdup(oss.str().c_str());
+			| set_item {
+				$$ = $1;
 			}
 			;
 
-param_def:	PARAM param_name DEFINE param_specs SEMICOLON { 
-				YAC_DATA_LOG("single param define start -FOR === ["<<$2<<"]");
-				YAC_DATA_LOG("   ===== VALUE ====");
-				YAC_DATA_LOG($4);
-				string id($2);
-				ParamComp* paramComp = AmplModel::root->findParamComp(id);
-				Param* param = NULL;
+set_tuple: 	set_tuple COMMA set_item
+			{
+				ostringstream oss;
+				oss<<$3<<","<<$1;
+				$$ = strdup(oss.str().c_str());
+			}
+			|
+			set_item
+			{
+				$$ = $1;
+			}
+			;
+			
+set_item: 	ID
+			{ 
+				$$ = $1;
+			}
+			| INT {
+				$$ = $1;
+			}
+			;
+/*******************************************************************************
+ *
+ * For specifiying parameter data
+ *
+ *****************************************************************************/
+param_def:	PARAM param_name DEFINE param_value SEMICOLON { 
+				YAC_DATA_LOG("single params define start -- "<<$2);
+				assert(curr_paramcomp->numIndicies == 0);
 				
-				param = new ParamSingle(paramComp);
-				assert(paramComp->numIndicies == 0);
 				PValue* pval = NULL;
-				if(paramComp->isSym){
+				if(curr_paramcomp->isSym){
 					string v($4);
 					pval = new PValueSym(v);
 				}
@@ -197,164 +176,92 @@ param_def:	PARAM param_name DEFINE param_specs SEMICOLON {
 				{
 					pval = new PValueValue(atof($4));
 	            }
-	            static_cast<ParamSingle*>(param)->setParamValue(pval);
-	            assert(param->card == 1);
-                rootContext->addCompValueMap(paramComp,param);
+	            
+	            static_cast<ParamSingle*>(curr_param)->setParamValue(pval);
+	            assert(curr_param->card == 1);
+                rootContext->addCompValueMap(curr_paramcomp,curr_param);
+                curr_paramcomp = NULL;
+                curr_param = NULL;
 			}
-			| PARAM COLON set_name COLON param_names DEFINE param_specs SEMICOLON
+			| PARAM COLON set_name COLON param_names 
+			{ 
+				ind_req =  curr_params[0]->numIndicies;
+			}
+			DEFINE set_param_specs SEMICOLON 
 			{
-				YAC_DATA_LOG("multiple params and set define start");
-				YAC_DATA_LOG("set : "<<$3<<"  params: "<<$5);
-				YAC_DATA_LOG("   ===== VALUE ====");
-				YAC_DATA_LOG($7);
+				YAC_DATA_LOG("multiple params define start -- with set");
+				YAC_DATA_LOG("set : "<<$3);
+				rootContext->addCompValueMap(curr_setcomp,curr_set);
 				
-				string setid($3);
-				SetComp* setComp = AmplModel::root->findSetComp(setid);
-				assert(setComp->setDim == 1); //only 1-dim set can be specified in this grammar
-				Set* setValue = Set::createSet(setComp);
-				rootContext->addCompValueMap(setComp,setValue);
-				
-				char* tok = strtok($5,",");
-				vector<ParamComp*> paramModels;
-				vector<Param*> params;
-				int numIndicies = 0;
-				while(tok!=NULL)
+				for(int i=0;i<curr_paramcomps.size();i++)
 				{
-					string id(tok);
-					ParamComp* paramComp = AmplModel::root->findParamComp(id);
-					Param* param = new ParamMult(paramComp);
-					paramModels.push_back(paramComp);
-					params.push_back(param);
-					rootContext->addCompValueMap(paramComp,param);		
-					assert(numIndicies = paramComp->numIndicies || numIndicies == 0);
-					tok = strtok(NULL,",");
+					rootContext->addCompValueMap(curr_paramcomps[i],curr_params[i]);
 				}
-				
-				ostringstream oss(ostringstream::out);
-                int curr_index = 0;
-				tok = strtok($7,",");
-				while(tok!=NULL)
-				{
-					YAC_DATA_LOG("tok: - "<<tok);
-					oss<<tok;
-                    ++curr_index;
-					if(curr_index == numIndicies)
-                    {
-                    		setValue->addSetValue(oss.str());
-                    		vector<Param*>::iterator i=params.begin();
-                    		vector<ParamComp*>::iterator j=paramModels.begin();
-                    		for(;i!=params.end();i++,j++)
-                            {
-                                    tok=strtok(NULL,",");
-                                    ParamMult* p = static_cast<ParamMult*>(*i);
-                                    ParamComp* pc = (*j);
-                            		
-                            		PValue* pval = NULL;
-                            		if(pc->isSym){
-                            			string v(tok);
-                            			pval = new PValueSym(v);
-                            		}
-                            		else {
-                            			pval = new PValueValue(atof(tok));
-                            		}
-                            		p->addParamValue(oss.str(),pval);
-                            }
-                            oss.str("");
-                            curr_index = 0;
-                    }
-                    tok = strtok(NULL,",");
-				}
+				curr_setcomp = NULL;
+				curr_set = NULL;
+				curr_paramcomps.clear();
+				curr_params.clear();
+				curr_paramcomp == NULL;
+				curr_param == NULL;
 			}
-			| PARAM COLON param_names DEFINE param_specs SEMICOLON {
-				YAC_DATA_LOG("multiple params define start -FOR === ["<<$3<<"]");
-				YAC_DATA_LOG("   ===== VALUE ====");
-				YAC_DATA_LOG($5);
+			| PARAM COLON param_names 
+			{ 
+				ind_req =  curr_params[0]->numIndicies;
+			}
+			DEFINE set_param_specs SEMICOLON 
+			{
+				YAC_DATA_LOG("multiple params define start - num param "<<curr_paramcomps.size());
 				
-				char* tok = strtok($3,",");
-				vector<ParamComp*> paramModels;
-				vector<Param*> params;
-				int numIndicies = 0;
-				int numIndicies_init = -1;
-				while(tok!=NULL)
+				for(int i=0;i<curr_paramcomps.size();i++)
 				{
-					string id(tok);
-					ParamComp* paramComp = AmplModel::root->findParamComp(id);
-					paramModels.push_back(paramComp);
-					Param* paramValue = new ParamMult(paramComp);
-					params.push_back(paramValue);
-					rootContext->addCompValueMap(paramComp,paramValue);
-					
-					numIndicies = paramComp->numIndicies;
-					if(numIndicies_init == -1) numIndicies_init = numIndicies;
-					assert(numIndicies_init==numIndicies);
-					
-					tok = strtok(NULL,",");
+					rootContext->addCompValueMap(curr_paramcomps[i],curr_params[i]);
 				}
-				
-				ostringstream oss(ostringstream::out);
-                int curr_index = 0;
-				tok = strtok($5,",");
-				while(tok!=NULL)
-				{
-					oss<<tok;
-                    ++curr_index;
-					if(curr_index == numIndicies)
-                    {
-                    		vector<Param*>::iterator i=params.begin();
-                        	vector<ParamComp*>::iterator j=paramModels.begin();
-                            for(;i!=params.end();i++,j++)
-                            {
-                                    tok=strtok(NULL,",");
-                                    YAC_DATA_LOG(tok);
-                                 	ParamMult* p = static_cast<ParamMult*>(*i);
-                                    ParamComp* pc = (*j);
-                                    
-                                    PValue* pval = NULL;
-                                    if(pc->isSym)
-                                    {
-                                    	string v(tok);
-                                    	pval = new PValueSym(v);
-                                    }
-                                    else
-                                    {
-                                    	double v = atof(tok);
-                                    	pval = new PValueValue(v);
-                                    }
-                                    p->addParamValue(oss.str(),pval);
-                            }
-                            oss.str("");
-                            curr_index = 0;
-                    }
-                    tok = strtok(NULL,",");
-				}
+				assert(curr_setcomp == NULL && curr_set == NULL);
+				curr_paramcomps.clear();
+				curr_params.clear();
+				curr_paramcomp == NULL;
+				curr_param == NULL;
 			}
 			;
+
+
+param_name:	ID {
+				string id($1);
+				curr_paramcomp = AmplModel::root->findParamComp(id);
+				curr_param = Param::createParam(curr_paramcomp);
+				$$ = $1;
+			}
+			;	
 
 param_names: param_name {
-				$$ = $1;
+				YAC_DATA_LOG(" -- param_name last --  ");
+				curr_paramcomps.push_back(curr_paramcomp);
+				curr_params.push_back(curr_param);
+				assert(curr_params.size()==0 || curr_params[0]->numIndicies == curr_param->numIndicies);
 			}
-			|	param_names param_name {
-				ostringstream oss(ostringstream::out);
-				oss<<$1<<','<<$2;  //each param_name(set_value) is on newline
-				free($1);
-				free($2);
-				$$ = strdup(oss.str().c_str());
+			|	param_names param_name {	
+				YAC_DATA_LOG(" -- param_name recur --  ");	
+				curr_paramcomps.push_back(curr_paramcomp);
+				curr_params.push_back(curr_param);
+				assert(curr_params.size()==0 || curr_params[0]->numIndicies == curr_param->numIndicies);
 			}
 			;
 
-param_specs: param_specs_item{
-				$$ = $1;
-			}
-			| param_specs param_specs_item {
-				ostringstream oss(ostringstream::out);
-				oss<<$1<<','<<$2;  //each on newline
-				free($1);
-				free($2);
-				$$ = strdup(oss.str().c_str());
-			}
-			;
+set_param_specs: param_spec_item { 
+					YAC_DATA_LOG(" set_param_specs -- last - ");
+					add_param_spec_item($1);	
+				}
+				|	set_param_specs param_spec_item  { 
+					YAC_DATA_LOG(" set_param_specs -- recur - ");
+					add_param_spec_item($2 );
+				}
+				;
+
+param_spec_item: param_value { $$ = $1; }
+				;
+
 			
-param_specs_item: ID {
+param_value: ID {
 				$$ = $1;
 			}
 			| INT {
@@ -365,18 +272,7 @@ param_specs_item: ID {
 			}
 			;
 
-param_name:	ID {
-				$$ = $1;
-			}
-			;	
 
-set_value: ID { 
-				$$ = $1;
-			}
-			| INT {
-				$$ = $1;
-			}
-			;
 
 %%
 
@@ -396,12 +292,56 @@ void parse_data(ModelContext* context) {
     	printf("ERROR: Data file '%s' error:%s \n",GV(datafilename).c_str(),strerror(errno));
     	exit(1);
   	}
-          
+  	curr_param = NULL;
+  	curr_paramcomp = NULL;
+  	curr_setcomp = NULL;
+  	curr_set = NULL;
+  	curr_params.clear();
+  	curr_paramcomps.clear();
+  	param_indicies_key = "";
+    ind_req = 0;
+    ind_consumed = 0;
+    param_index =0;
+        
   	dataparse();
   	YAC_DATA_LOG("===============================================================");
   	YAC_DATA_LOG(" Finished parsing data file");
   	YAC_DATA_LOG("===============================================================");
 	fclose(datain);
+}
+
+void add_param_spec_item(const string& item )
+{
+	YAC_DATA_LOG("-- in - add_param_spec_item - "<<item<<" - "<<param_indicies_key );
+	//first computing the number of indices required for current param
+	if(ind_consumed < ind_req)
+	{
+		param_indicies_key += item;
+		
+		ind_consumed++;
+		if(ind_consumed==ind_req) {
+			if(curr_set!=NULL) curr_set->addSetValue(param_indicies_key);
+			param_index = 0;	
+		}
+	}
+	else
+	{
+		assert(ind_consumed == ind_req);
+		PValue* pval = NULL;
+		ParamComp* pc = curr_paramcomps[param_index];
+		if(pc->isSym) pval = new PValueSym(item);
+		else  pval = new PValueValue(atof(item.c_str()));
+		ParamMult* p = static_cast<ParamMult*>(curr_params[param_index]);
+		p->addParamValue(param_indicies_key,pval);
+		assert(param_index<=curr_params.size());
+		
+		param_index++;
+		if(param_index==curr_params.size()) {
+			param_index = 0;
+			ind_consumed = 0;
+			param_indicies_key = "";
+		}
+	}
 }
 
 static void print_token_value (FILE *file, int type, YYSTYPE value)
