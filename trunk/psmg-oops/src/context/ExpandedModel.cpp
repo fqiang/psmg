@@ -954,26 +954,31 @@ void ExpandedModel::logEMRecursive(string& line, ostream& out)
 	}
 	out<<header<<this->name<<"["<<this->numLocalCons<<" X "<<this->numLocalVars<<"]"<<endl;
 
-	std::vector<string> nameCons;
-	this->get_cons_names(nameCons);
-	for(std::vector<string>::iterator it = nameCons.begin();it!=nameCons.end();it++){
-		out<<line<<"\t constraint:"<<(*it)<<endl;
-	}
+	if(ctx!=NULL){
+		std::vector<string> nameCons;
+		this->get_cons_names(nameCons);
+		for(std::vector<string>::iterator it = nameCons.begin();it!=nameCons.end();it++){
+			out<<line<<"\t constraint:"<<(*it)<<endl;
+		}
 
 
-	std::vector<string> nameVars;
-	this->get_vars_names(nameVars);
-	for(std::vector<string>::iterator it = nameVars.begin();it!=nameVars.end();it++){
-		out<<line<<"\t variable:"<<(*it)<<endl;
-	}
+		std::vector<string> nameVars;
+		this->get_vars_names(nameVars);
+		for(std::vector<string>::iterator it = nameVars.begin();it!=nameVars.end();it++){
+			out<<line<<"\t variable:"<<(*it)<<endl;
+		}
 
-	string pre = line;
-	line += "\t";
-	for(std::vector<ExpandedModel*>::iterator it=this->children.begin();it!=this->children.end();it++)
-	{
-		(*it)->logEMRecursive(line,out);
+		string pre = line;
+		line += "\t";
+		for(std::vector<ExpandedModel*>::iterator it=this->children.begin();it!=this->children.end();it++)
+		{
+			(*it)->logEMRecursive(line,out);
+		}
+		line = pre;
 	}
-	line = pre;
+	else{
+		out<<"[This EM's Context is not Initialized Locally]"<<endl;
+	}
 }
 
 void ExpandedModel::getAllEM(std::vector<ExpandedModel*>& ems)

@@ -11,7 +11,7 @@
 #include "../util/global_util_functions.h"
 #include "PValueSym.h"
 
-PValueSym::PValueSym(string& v) : PValue(), value(v){
+PValueSym::PValueSym(const string& v) : PValue(), value(v){
 	// TODO Auto-generated constructor stub
 }
 

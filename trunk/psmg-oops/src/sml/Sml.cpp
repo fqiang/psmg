@@ -23,6 +23,7 @@
 #include "../oops/sml-oops.h"
 #include "mpi.h"
 #include <iostream>
+#include <sstream>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <time.h>
@@ -159,9 +160,11 @@ int main(int argc, char **argv)
 	Sml::instance()->processModelfile();
 	TIMER_STOP("SML_PARSE_MODEL");
 
-	if(GV(logModel)) {
-		string mfile = GV(logdir)+GV(logModelFile);
-		AmplModel::root->logModel(mfile.c_str());
+	if(GV(logModel) && GV(rank) == 0) {
+		string datname = GV(datafilename).substr(0, GV(datafilename).find(".", 0));
+		ostringstream oss;
+		oss<<GV(logdir)<<datname<<GV(modfile_suffix);
+		AmplModel::root->logModel(oss.str().c_str());
 	}
 
 	unsigned long mem_size_flat = 0;
@@ -170,9 +173,11 @@ int main(int argc, char **argv)
 
 	TIMER_START("SML_EM2_GENERATION");
 	Sml::instance()->generateExpandedModel();
-	if(GV(logModel)) {
-			string mfile = GV(logdir)+GV(logModelFile) + "_partial";
-			AmplModel::root->logModel(mfile.c_str());
+	if(GV(logModel) && GV(rank) == 0 ) {
+		string datname = GV(datafilename).substr(0, GV(datafilename).find(".", 0));
+		ostringstream oss;
+		oss<<GV(logdir)<<datname<<"_partial"<<GV(modfile_suffix);
+		AmplModel::root->logModel(oss.str().c_str());
 	}
 	Sml::instance()->resetContextTree();
 	assert(ExpandedModel::root->ctx != NULL);
@@ -193,7 +198,10 @@ int main(int argc, char **argv)
 	SML_OOPS_driver_LP(ExpandedModel::root);
 
 	if(GV(logEM)){
-		Sml::instance()->logEM(GV(logdir)+GV(logEMFile));
+		string datname = GV(datafilename).substr(0, GV(datafilename).find(".", 0));
+		ostringstream oss;
+		oss<<GV(logdir)<<datname<<"_"<<GV(rank)<<"_"<<GV(size)<<"_"<<GV(emfile_suffix);
+		Sml::instance()->logEM(oss.str());
 	}
 
 	mem_size_em2=0;

@@ -44,6 +44,7 @@ class	 Param: public CompDescr{
 		Param(ParamComp* comp);
 		~Param();
 
+		static Param* createParam(ParamComp* comp);
 		virtual string toString() =0;
 		virtual void calculateMemoryUsage(unsigned long& size) =0;
 

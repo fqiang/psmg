@@ -63,14 +63,14 @@ void SetSimple::addSetValue(const string& value)
 	if(!this->contains(value))
 	{
 		card++;
-		LOG("Add SetValue index["<<card<<"] ["<<value<<"]");
+		LOG("Add SetValue card["<<card<<"] ["<<value<<"]");
 		this->setValues_data_order.push_back(value);
 	}
 	else
 	{
 		LOG("SetSimple -- already has["<<value<<"]");
 	}
-	LOG("addSetValue --  set contains "<<this->toString());
+	//LOG("addSetValue --  set contains "<<this->toString());
 }
 
 string SetSimple::toString()

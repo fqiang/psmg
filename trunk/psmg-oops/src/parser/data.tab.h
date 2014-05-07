@@ -89,16 +89,17 @@ typedef union YYSTYPE
 {
 
 /* Line 2068 of yacc.c  */
-#line 48 "data.tab.ypp"
+#line 60 "data.tab.ypp"
 
    long ival;
    double fval;
    char* string;
+ 
 
 
 
 /* Line 2068 of yacc.c  */
-#line 102 "../src/parser/data.tab.hpp"
+#line 103 "../src/parser/data.tab.hpp"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

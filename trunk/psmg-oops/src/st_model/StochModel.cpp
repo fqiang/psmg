@@ -265,9 +265,11 @@ AmplModel* StochModel::convertToAmplModel(ModelContext* parCtx)
 		curr_sctx = new StochCtx(curr_sctx);
 	}
 
-	if(GV(logModel)){
-		string mfile = GV(logdir)+GV(logModelFile)+"_stoch";
-		AmplModel::root->logModel(mfile.c_str());
+	if(GV(logModel) && GV(rank) == 0){
+		string datname = GV(datafilename).substr(0, GV(datafilename).find(".", 0));
+		ostringstream oss;
+		oss<<GV(logdir)<<datname<<"_stoch"<<GV(modfile_suffix);
+		AmplModel::root->logModel(oss.str().c_str());
 	}
 	return SCTX::rootCtx->model;
 }

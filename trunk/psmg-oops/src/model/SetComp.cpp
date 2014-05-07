@@ -13,7 +13,7 @@
 #include "../parser/sml.tab.h"
 
 SetComp::SetComp(const string& id, SyntaxNode* index, SyntaxNode* attr,AmplModel* owner):ModelComp(id, TSET, index,attr,owner),
-	setDim(0),setCard(0)
+	setDim(0)
 {
 	isOrdered = false;
 	if(this->attributes!=NULL)
@@ -109,7 +109,6 @@ void SetComp::calculateSetModelComp(ModelContext* context) {
 	}
 
 	LOG( "the calculated set is   -- ["<<theSet->name<<"]  -- "<<theSet->toString());
-	this->setCard = theSet->card;
 	assert(theSet->dim==this->setDim);
 	theSet->name = this->name;
 	theSet->dim = this->setDim;

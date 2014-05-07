@@ -34,6 +34,7 @@ void Set::deleteSet(Set* set)
 
 Set* Set::createSet(SetComp* comp)
 {
+	assert(comp!=NULL);
 	Set* rval = NULL;
 	if(comp->isOrdered)
 	{

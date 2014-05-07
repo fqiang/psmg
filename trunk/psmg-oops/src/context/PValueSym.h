@@ -14,7 +14,7 @@ class PValueSym : public PValue {
 public:
 	string value;
 
-	PValueSym(string&);
+	PValueSym(const string&);
 	PValueSym(const PValueSym& other);
 	virtual ~PValueSym();
 
