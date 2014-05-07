@@ -6,5 +6,5 @@
 <STOCH node_dummy_prefix="n" stage_dummy_prefix="st"
 	root_stage_parent_name="null" var_det_prefix="det">
 </STOCH>
-<DEBUG writeMatlab="false" writeMPS="false" debug="false" logdir="./log/" logEM="true" logBlock="true" logModel="true" logModelFile="logModel.dat" logEMFile="logEM.dat" matlabFile="mat.m" mpsFile="mps.mps">
+<DEBUG writeMatlab="true" writeMPS="false" debug="false" logdir="./log/" logEM="true" logBlock="true" logModel="true" logModelFile="logModel.dat" logEMFile="logEM.dat" matlabFile="mat.m" mpsFile="mps.mps">
 	</DEBUG>

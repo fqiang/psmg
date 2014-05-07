@@ -38,13 +38,15 @@ SyntaxNodeIDREF* SyntaxNodeIDREF::clone()
 	//make a copy, then
 	SyntaxNodeIDREF* refn = new SyntaxNodeIDREF(*this);
 	//update reference refn->ref
-	SyntaxNodeID* idn = static_cast<SyntaxNodeID*>(this->values[0]);
+	SyntaxNodeID* idn = static_cast<SyntaxNodeID*>(refn->values[0]);
 	if(refn->ref->type == TVAR && static_cast<VarComp*>(refn->ref)->isDet == true)
 	{
 		//referencing to the only var for this stage
 		string refname = GV(var_det_prefix)+"_"+SCTX::currCtx->stagename+"_"+refn->ref->name;
 		assert(idn->id.compare(refn->ref->name)==0);
 		refn->ref = SCTX::rootCtx->model->findModelComp(refname);
+		//update the idname in idnode as well - for sack of consistance
+		idn->id = refname;
 	}
 	else {
 		string refname = idn->id;
@@ -74,7 +76,7 @@ ostream& SyntaxNodeIDREF::put(ostream& s) {
 	assert(nchild()==1 || nchild()==2);
 	assert(this->values[0]->opCode == ID);
 	SyntaxNodeID* idn = static_cast<SyntaxNodeID*>(this->values[0]);
-	s<<"IDREF{"<<idn->id<<"}";
+	s<<"IDREF{"<<idn->id<<":"<<(void*)ref<<"}";
 	if(nchild()==2){
 		assert(values[1]->opCode == COMMA);
 		s<<"["<<values[1]<<"]";

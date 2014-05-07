@@ -846,18 +846,18 @@ void SyntaxNode::evalTerm(ModelContext* context, PValue** rval) {
 		*rval = new PValueSym(val);
 	}
 	else if (this->opCode == SUM) {
-		assert(this->values[0]->values[0]->values[0]->opCode == ID);
-		assert(this->values[0]->values[0]->values[1]->opCode == IDREF);
-		SyntaxNodeID* idNode = static_cast<SyntaxNodeID*>(this->values[0]->values[0]->values[0]);
-		SyntaxNodeIDREF* refNode = static_cast<SyntaxNodeIDREF*>(this->values[0]->values[0]->values[1]);
-		string dummy = idNode->id;
-		SetSimple* aSet = static_cast<SetSimple*>(context->getCompValue(refNode->ref));
-		vector<string>::iterator it = aSet->setValues_data_order.begin();
+		IndexSet* iset = this->values[0]->createIndexSet(context);
+		assert(iset->tuples.size()==1); //TODO: support only one index set for sum expression
+		iset_tuple& tuple = *(iset->tuples.begin());
+		string dummy = tuple.get<0>();
+		Set* aSet =  tuple.get<1>();
+		SetComp* comp = tuple.get<2>();
 
+		vector<string>::iterator it = aSet->setValues_data_order.begin();
 		PValue* sum = new PValueValue((double)0);
 		for(;it != aSet->setValues_data_order.end();it++) {
 			string value = (*it);
-			context->addDummyCompValueMapTemp(dummy, refNode->ref, value);
+			context->addDummyCompValueMapTemp(dummy, comp, value);
 			PValue* tmp = NULL;
 			this->values[1]->evalTerm(context,&tmp);
 			sum->accumulate(tmp);
@@ -1015,7 +1015,7 @@ bool SyntaxNode::evalBool(ModelContext* context) {
 }
 
 
-SyntaxNode* SyntaxNode::findChildNode( int op) {
+SyntaxNode* SyntaxNode::findDirectChild( int op) {
 	SyntaxNode* ret = NULL;
 	for(SyntaxNode::iterator i=this->begin();i!=end();i++)
 	{
@@ -1484,14 +1484,22 @@ void SyntaxNode::calculatePartialConstraints(boost::unordered_map<int,SyntaxNode
 			boost::unordered_map<int,SyntaxNode*> conspart;
 			boost::unordered_map<int,SyntaxNode*>::iterator i;
 			this->values.at(0)->calculatePartialConstraints(conspart);
+
 			SyntaxNode* lnode = NULL;
 			for(i=conspart.begin();i!=conspart.end();i++){
 				lnode = lnode==NULL?i->second:new SyntaxNodeOP(PLUS,lnode,i->second);
 			}
 			assert(lnode!=NULL);
 			SyntaxNodeOP* newnode = new SyntaxNodeOP(opCode,lnode);
-			for(i=conspart.begin();i!=conspart.end();i++){
-				partials.insert(pair<int,SyntaxNode*>(i->first,lnode));
+			if(conspart.size()==1 && conspart.find(-1)!=conspart.end())
+			{//const only cos/sin(const_)
+				partials.insert(pair<int,SyntaxNode*>(-1,newnode));
+			}
+			else
+			{
+				for(i=conspart.begin();i!=conspart.end();i++){//can't be a const anymore . ie. cos(const+TVAR....) is on TVAR's level
+					if(i->first!=-1) partials.insert(pair<int,SyntaxNode*>(i->first,newnode));
+				}
 			}
 		}
 		else
@@ -1503,7 +1511,7 @@ void SyntaxNode::calculatePartialConstraints(boost::unordered_map<int,SyntaxNode
 }
 
 /*
- * end of constraints separability calculation
+ * end of constraints separable calculation
  */
 
 //This is for linear expression only
@@ -1668,7 +1676,7 @@ ModelContext* SyntaxNode::locateCtx(ModelContext* rowctx, ModelContext* currCtx,
 //		This condition is placed intentionally so that the modeller will be able explictly enable this optimization routine.
 AutoDiff::Node* SyntaxNode::buildAutoDiffDAG(ExpandedModel* emrow,ExpandedModel* emcol, bool isLP)
 {
-	LOG("enter - createAutoDiffConsDAG  - emrow["<<emrow->name<<"] emcol["<<emcol->name<<"] --- "<<this->print());
+	LOG("enter - createAutoDiffConsDAG  - emrow["<<emrow->name<<"] emcol["<<(emcol==NULL?"null":emcol->name)<<"] --- "<<this->print());
 	ModelContext* ctx = emrow->ctx;
 	AutoDiff::Node* con = NULL;
 	if(this->opCode==ASSIGN)
@@ -1716,36 +1724,38 @@ AutoDiff::Node* SyntaxNode::buildAutoDiffDAG(ExpandedModel* emrow,ExpandedModel*
 		SyntaxNode* indexing_set_expr_list = indexing_set->values[0]->values[0];
 		SyntaxNode* condition_opt = indexing_set->values[0]->nchild()==2?indexing_set->values[0]->values[1] : NULL;
 
-		assert(indexing_set_expr_list->nchild()==1); //support 1-index for now only
+		assert(indexing_set_expr_list->nchild()==1); //TODO: support 1-index dummy for sum only
 		SyntaxNode* set_expr = indexing_set_expr_list->values[0];
 		assert(set_expr->opCode == IN);
 		assert(set_expr->values[0]->opCode == COMMA);
-		assert(set_expr->values[0]->nchild() == 1); //support 1-dim set ie. not yet support {(i,j) IN SET }
+		assert(set_expr->values[0]->nchild() == 1); //TODO: support 1-dim set ie. not yet support {(i,j) IN SET }
+
 		string dummySum = static_cast<SyntaxNodeID*>(set_expr->values[0]->values[0])->id;
 		ModelComp* compSum = static_cast<SyntaxNodeIDREF*>(set_expr->values[1])->ref;
-		ModelComp* compEmcol = (emcol->model->indexing==NULL)?
-				NULL : emcol->dummySetMap.begin()->second;
-		string dummyEmcol = (emcol->model->indexing==NULL)?
-				"" : emcol->dummySetMap.begin()->first;
+		assert(dummySum.compare("")!=0 && compSum!=NULL);
+		ModelComp* compEmcol = NULL;
+		string dummyEmcol = "";
+		if(emcol!=NULL && emcol->model->indexing!=NULL){ //there is indexingset for emcol's model
+			compEmcol = emcol->dummySetMap.begin()->second;
+			dummyEmcol = emcol->dummySetMap.begin()->first;
+		}
 
 		if(compSum == compEmcol && dummySum.compare(dummyEmcol)==0 && condition_opt == NULL)
-		{
-			LOG("SUM over {"<<dummySum<<" in "<<compSum->name<<"} -- Emcol over {"<<dummyEmcol<<" in "<<compEmcol->name<<"}");
-			ctx->addDummyCompValueMapTemp(dummySum, compSum, (emcol->dummyValueMap.begin())->second);
+		{	//the emcol 's model indexset exact matches the sum indexset- ie. block ID {a in Arcs} {...} v.s. sum{a in Arcs : NULL}(...);
+			//this design is to speedup the summation handling for sum constraints applied on serveral sibling variables.
+			//note: 1. sibling variables can't be non-additively separable.
+			//		2. to enable this optimisation, the model fille has to be in exact form as stated above.
+			string& dummyval = emcol->dummyValueMap.begin()->second;
+			LOG("Exact matches found for {"<<dummySum<<" in "<<compSum->name<<"} == {"<<dummyEmcol<<" in "<<compEmcol->name<<"} - Sum explict ["<<dummySum<<" -> ["<<dummyval<<"]");
+			ctx->addDummyCompValueMapTemp(dummySum, compSum, dummyval);
 			con = this->values[1]->buildAutoDiffDAG(emrow,emcol, isLP);
 			ctx->removeDummySetValueMapTemp(dummySum);
 		}
 		else
 		{
-			LOG("SUM over {"<<dummySum<<" in "<<compSum->name<<"}");
-			if(compEmcol!=NULL)
-			{
-				LOG("Emcol over {"<<dummyEmcol<<" in "<<compEmcol->name<<"}");
-			}
-			else
-			{
-				LOG("Emcol["<<emcol->name<<"] *NO* indexing");
-			}
+			LOG("All SUM over full set {"<<dummySum<<" in "<<compSum->name<<":"<<condition_opt<<"}");
+			compEmcol!=NULL? LOG("Emcol over {"<<dummyEmcol<<" in "<<compEmcol->name<<"}") : LOG("Emcol[null]");
+
 			SyntaxNode* index_set = this->values[0];
 			IndexSet* iset = NULL;
 			if (!ctx->getCalcSumSet(index_set, &iset))
@@ -1870,7 +1880,7 @@ AutoDiff::Node* SyntaxNode::buildAutoDiffDAG(ExpandedModel* emrow,ExpandedModel*
 		LOG("opCode["<<this->opCode<<"] is not yet implemented! -- "<<this->print());
 		assert(false);
 	}
-	LOG("exit - createAutoDiffConsDAG  - emrow["<<emrow->name<<"] emcol"<<emcol->name<<"]");
+	LOG("exit - createAutoDiffConsDAG  - emrow["<<emrow->name<<"] emcol["<<(emcol==NULL?"null":emcol->name)<<"]");
 	return con;
 }
 

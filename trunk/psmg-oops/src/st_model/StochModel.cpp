@@ -241,7 +241,7 @@ AmplModel* StochModel::convertToAmplModel(ModelContext* parCtx)
 				LOG("obj_comp ["<<obj_comp->name<<"] is in model["<<curr_sctx->model->name<<"]");
 				assert(obj_comp->indexing == NULL);  //single objective no indexing
 				bool exp = obj_comp->attributes->hasExp();
-				assert(exp == false); //obj can't has expectation opcode, because objective in always weighted by the probs reach it's stage
+				assert(exp == false); //obj can't has expectation opcode, because objective in always weighted by the probs that reach it's stage
 				assert(i == stset->setValues_data_order.size()-1); //obj has to be defined only in the final stage
 				SyntaxNode* attr = obj_comp->attributes->clone();
 				//now need to weight the obj attribute by probs reach it

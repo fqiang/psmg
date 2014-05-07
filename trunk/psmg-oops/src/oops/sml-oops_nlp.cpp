@@ -44,6 +44,8 @@
 using namespace std;
 
 typedef boost::numeric::ublas::compressed_matrix<double>  compressed_matrix;
+typedef boost::numeric::ublas::compressed_matrix<double,boost::numeric::ublas::column_major>  col_compress_matrix;
+
 
 
 static PDProblem* prob_ptr = NULL;
@@ -438,7 +440,7 @@ void SMLCallBack(CallBackInterfaceType *cbi) {
 		LOG("get nz_cons_jacobs --- ");
 		//
 		//before update the current x in PSMG, the Block need to be initialized by calling getBlockLocal
-		obl->emrow->getBlockLocal();
+		obl->emrow->getBlockDep();
 		//first need to update the primal varibles value
 		//then calling cons_jacobs_local to retrieve the jacob for this block
 		//1. update primal variables
@@ -447,13 +449,13 @@ void SMLCallBack(CallBackInterfaceType *cbi) {
 		}
 		obl->i++;
 		//2. compute the non zero for jacob of intersection emrow x emcol
-		cbi->nz = obl->emrow->nz_cons_jacobs_local(obl->emcol);
+		cbi->nz = obl->emrow->nz_cons_jacobs_nlp_local(obl->emcol);
 	} else {
 		LOG("jacobs - want to fill in matrices");
 		//2. computing jacob of intersection emrow X emcol
 		//   use the current point offered by previous call
-		compressed_matrix block;
-		obl->emrow->cons_jacobs_local(obl->emcol, block);
+		col_compress_matrix block(obl->emrow->numLocalCons,obl->emcol->numLocalVars);
+		obl->emrow->cons_jacobs_nlp_local(obl->emcol, block);
 		ColSparseMatrix m(cbi->element,cbi->row_nbs,cbi->col_beg,cbi->col_len);
 		ExpandedModel::convertToColSparseMatrix(block,&m);
 	}
@@ -494,7 +496,7 @@ void SMLCallBackQ(CallBackInterfaceType *cbi) {
 	if (cbi->row_nbs == NULL) {
 		LOG("get nz laghess --- ");
 		//before update the current x in PSMG, the Block need to be initialized by calling getBlockLocal
-		obl->emrow->getBlockLocal();
+		obl->emrow->getBlockDep();
 		//first need to update the primal varibles value
 		//then calling cons_jacobs_local to retrieve the jacob for this block
 		//1. update primal variables
@@ -503,15 +505,15 @@ void SMLCallBackQ(CallBackInterfaceType *cbi) {
 		}
 		obl->i++;
 		//2. compute the nonzero for lagrangian hessian of the block insection by (emrow X emcol)
-		cbi->nz = obl->emrow->nz_lag_hess_local(obl->emcol);
+		cbi->nz = obl->emrow->nz_lag_hess_nlp_local(obl->emcol);
 	}
 	else
 	{
 		LOG("laghess ---  fill in matrices");
 		//2. computing jacob of intersection emrow X emcol
 		//   use the current point offered by previous call
-		compressed_matrix block;
-		obl->emrow->lag_hess_local(obl->emcol, block);
+		col_compress_matrix block;
+		obl->emrow->lag_hess_nlp_local(obl->emcol, block);
 		ColSparseMatrix m(cbi->element,cbi->row_nbs,cbi->col_beg,cbi->col_len);
 		ExpandedModel::convertToColSparseMatrix(block,&m);
 	}
@@ -687,10 +689,8 @@ void FillObjVector(Vector *vc) {
 
 	assert(obl->emcol->numLocalVars == T->end - T->begin);
 
-	vector<double> vals;
-	obl->emrow->obj_grad_local(obl->emrow, vals);
-	for (uint i = 0; i < vals.size(); i++)
-		dense->elts[i] = vals[i];
+	assert(obl->emrow == obl->emcol);
+	obl->emrow->obj_grad(dense->elts);
 }
 
 /* ---------------------------------------------------------------------------
@@ -708,7 +708,7 @@ void FillUpBndVector(Vector *vu) {
 	ExpandedModel *emrow = obl->emrow;
 
 	assert(obl->emcol->numLocalVars == T->end - T->begin);
-	emrow->get_local_var_up_bounds(dense->elts);
+	emrow->get_var_up_bounds(dense->elts);
 }
 
 /* ---------------------------------------------------------------------------
@@ -727,7 +727,7 @@ void FillRhsVector(Vector *vb) {
 	// FIXME: should the id structure include information on the ExpandedModelInterface
 	//        as well? That way we could do some more sanity checks
 
-	emrow->get_local_cons_bounds(dense->elts, checkub);
+	emrow->get_cons_bounds(dense->elts, checkub);
 
 	// check that lower and upper constraint bounds are the same due to the
 	// OOPS restriction
@@ -756,7 +756,7 @@ void FillLowBndVector(Vector *vl) {
 	ExpandedModel *emrow = obl->emrow;
 
 	assert(obl->emcol->numLocalVars == T->end - T->begin);
-	emrow->get_local_var_low_bounds(dense->elts);
+	emrow->get_var_low_bounds(dense->elts);
 
 	for (int i = 0; i < dense->dim; i++) {
 		if (fabs(dense->elts[i]) > 1e-6) {

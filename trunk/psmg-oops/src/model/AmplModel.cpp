@@ -211,6 +211,7 @@ ExpandedModel* AmplModel::createExpandedModel(string dummyVar,SetComp* comp,stri
 		currEm2->numLocalCons += mc->card;
 		LOG("add cons -- EM["<<currEm2->name<<"] -- varcomp["<<mc->card<<"] numLocalCons["<<currEm2->numLocalCons<<"]");
 	}
+	assert(currEm2->y==NULL); currEm2->y = new double[currEm2->numLocalCons];
 
 	if(obj_comp!=NULL)
 	{

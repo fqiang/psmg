@@ -20,7 +20,6 @@
 #include "../metric/Stat.h"
 #include "../model/AmplModel.h"
 #include "../context/ModelContext.h"
-#include "../context/Block.h"
 #include "../oops/sml-oops.h"
 #include "mpi.h"
 #include <iostream>
@@ -132,6 +131,98 @@ void Sml::logEM(string filename="")
 	LOG("============== END printEMStructure =============================");
 }
 
+//oops properties
+FILE *globlog = NULL;
+FILE *printout = stdout;
+
+int main(int argc, char **argv)
+{
+	int parstatus = InitLippPar(argc, argv);
+	if (parstatus != MPI_SUCCESS)
+	{
+		cerr<<"Could not Initialize MPI..."<<endl;
+		exit(1);
+	}
+
+	string default_conf = "./psmg_conf.xml";
+	Config::initConfig(default_conf);
+	for(int i=1;i<argc;i++)
+	{ //if provide any model and data files
+		GV(modelfilename) = argv[i];
+		GV(datafilename) = argv[++i];
+	}
+	Config::printAll();
+
+
+	LOG("Process started on host["<<GV(hostname)<<"]");
+	TIMER_START("SML_PARSE_MODEL");
+	Sml::instance()->processModelfile();
+	TIMER_STOP("SML_PARSE_MODEL");
+
+	if(GV(logModel)) {
+		string mfile = GV(logdir)+GV(logModelFile);
+		AmplModel::root->logModel(mfile.c_str());
+	}
+
+	unsigned long mem_size_flat = 0;
+	AmplModel::root->calculateMemoryUsage(mem_size_flat);
+	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"]-Flat AmplModel Memory Usage Size ["<<mem_size_flat<<"] bytes"<<endl;
+
+	TIMER_START("SML_EM2_GENERATION");
+	Sml::instance()->generateExpandedModel();
+	if(GV(logModel)) {
+			string mfile = GV(logdir)+GV(logModelFile) + "_partial";
+			AmplModel::root->logModel(mfile.c_str());
+	}
+	Sml::instance()->resetContextTree();
+	assert(ExpandedModel::root->ctx != NULL);
+	TIMER_STOP("SML_EM2_GENERATION");
+
+	unsigned long mem_size_em2 = 0;
+	unsigned long mem_size_ctx = 0;
+	ExpandedModel::root->calculateMemoryUsage(mem_size_em2,mem_size_ctx);
+	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"]-Structure Memory Usage Size Before Solve ["<<mem_size_em2<<"] bytes"<<endl;
+	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"]-Data Memory Usage Size Before Solve ["<<mem_size_ctx<<"] bytes"<<endl;
+
+	assert(ExpandedModel::root != NULL);
+
+//	//Testing Section start
+//	Sml::instance()->testInterfaceLocal(ExpandedModel::root);
+//	//Testing Section end
+
+	SML_OOPS_driver_LP(ExpandedModel::root);
+
+	if(GV(logEM)){
+		Sml::instance()->logEM(GV(logdir)+GV(logEMFile));
+	}
+
+	mem_size_em2=0;
+	mem_size_ctx=0;
+	ExpandedModel::root->calculateMemoryUsage(mem_size_em2,mem_size_ctx);
+	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"]-Structure Memory Usage Size After Solve ["<<mem_size_em2<<"] bytes"<<endl;
+	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"]-Data Memory Usage Size After Solve ["<<mem_size_ctx<<"] bytes"<<endl;
+
+
+
+	delete ExpandedModel::root;
+	delete AmplModel::root;
+	Sml::deleteInstance();
+
+	TIMER_LIST;
+	TIMER_RESET;
+
+	Stat::logStatistics(cout);
+
+	MPI_Barrier(MPI_COMM_WORLD);
+	MPI::Finalize();
+	return 0;
+}
+
+
+
+
+
+//
 //
 //void Sml::testInterfaceLocal2(ExpandedModel* emrow)
 //{
@@ -232,90 +323,3 @@ void Sml::logEM(string filename="")
 //	//calling Local inteface calls for Gradient and Hessian of the diagonal block
 //	this->testInterfaceLocal1(root,root);
 //}
-
-//oops properties
-FILE *globlog = NULL;
-FILE *printout = stdout;
-
-int main(int argc, char **argv)
-{
-	int parstatus = InitLippPar(argc, argv);
-	if (parstatus != MPI_SUCCESS)
-	{
-		cerr<<"Could not Initialize MPI..."<<endl;
-		exit(1);
-	}
-
-	string default_conf = "./psmg_conf.xml";
-	Config::initConfig(default_conf);
-	for(int i=1;i<argc;i++)
-	{ //if provide any model and data files
-		GV(modelfilename) = argv[i];
-		GV(datafilename) = argv[++i];
-	}
-	Config::printAll();
-
-
-	LOG("Process started on host["<<GV(hostname)<<"]");
-	TIMER_START("SML_PARSE_MODEL");
-	Sml::instance()->processModelfile();
-	TIMER_STOP("SML_PARSE_MODEL");
-
-	if(GV(logModel)) {
-		string mfile = GV(logdir)+GV(logModelFile);
-		AmplModel::root->logModel(mfile.c_str());
-	}
-
-	unsigned long mem_size_flat = 0;
-	AmplModel::root->calculateMemoryUsage(mem_size_flat);
-	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"]-Flat AmplModel Memory Usage Size ["<<mem_size_flat<<"] bytes"<<endl;
-
-	TIMER_START("SML_EM2_GENERATION");
-	Sml::instance()->generateExpandedModel();
-	if(GV(logModel)) {
-			string mfile = GV(logdir)+GV(logModelFile) + "_partial";
-			AmplModel::root->logModel(mfile.c_str());
-	}
-	Sml::instance()->resetContextTree();
-	assert(ExpandedModel::root->ctx != NULL);
-	TIMER_STOP("SML_EM2_GENERATION");
-
-	unsigned long mem_size_em2 = 0;
-	unsigned long mem_size_ctx = 0;
-	ExpandedModel::root->calculateMemoryUsage(mem_size_em2,mem_size_ctx);
-	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"]-Structure Memory Usage Size Before Solve ["<<mem_size_em2<<"] bytes"<<endl;
-	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"]-Data Memory Usage Size Before Solve ["<<mem_size_ctx<<"] bytes"<<endl;
-
-	assert(ExpandedModel::root != NULL);
-
-//	//Testing Section start
-//	Sml::instance()->testInterfaceLocal(ExpandedModel::root);
-//	//Testing Section end
-
-	SML_OOPS_driver_LP(ExpandedModel::root);
-
-	if(GV(logEM)){
-		Sml::instance()->logEM(GV(logdir)+GV(logEMFile));
-	}
-
-	mem_size_em2=0;
-	mem_size_ctx=0;
-	ExpandedModel::root->calculateMemoryUsage(mem_size_em2,mem_size_ctx);
-	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"]-Structure Memory Usage Size After Solve ["<<mem_size_em2<<"] bytes"<<endl;
-	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"]-Data Memory Usage Size After Solve ["<<mem_size_ctx<<"] bytes"<<endl;
-
-
-
-	delete ExpandedModel::root;
-	delete AmplModel::root;
-	Sml::deleteInstance();
-
-	TIMER_LIST;
-	TIMER_RESET;
-
-	Stat::logStatistics(cout);
-
-	MPI_Barrier(MPI_COMM_WORLD);
-	MPI::Finalize();
-	return 0;
-}

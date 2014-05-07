@@ -18,20 +18,22 @@
 #include "ModelContext.h"
 #include "autodiff.h"
 #include "ColSparseMatrix.h"
+#include "../model/ConsComp.h"
+#include "../model/VarComp.h"
+#include "BlockCons.h"
+#include "BlockObj.h"
+#include "BlockHV.h"
+#include "BlockLP.h"
+#include "BlockObjLP.h"
 
 using namespace std;
 
 typedef boost::numeric::ublas::compressed_matrix<double,boost::numeric::ublas::column_major >  col_compress_matrix;
 typedef boost::numeric::ublas::matrix_row<col_compress_matrix> col_compress_matrix_row;
-typedef boost::numeric::ublas::compressed_matrix<double>  compress_matrix;
+typedef boost::numeric::ublas::matrix_column<col_compress_matrix> col_compress_matrix_col;
+typedef boost::numeric::ublas::matrix_range<col_compress_matrix > col_compress_matrix_range;
 
-class ConsComp;
-class VarComp;
-class BlockCons;
-class BlockObj;
-class Block;
-class BlockHV;
-class BlockLP;
+//typedef boost::numeric::ublas::compressed_matrix<double>  compress_matrix;
 
 class ExpandedModel
 {
@@ -56,56 +58,79 @@ public:
 	//  a ---> "A1"
 	boost::unordered_map<string,string> dummyValueMap;
 
-	//BlockLP for LP problem --
+
+//! Return Obj Block (objective in this) X (variables in emcol)
+//	//! Creat one if this is not already created
+//	BlockObj* getBlockObjPartial(ExpandedModel* emcol);
+//	boost::unordered_map<ExpandedModel*, BlockObjLP*> lp_oblockMap; //constructed using partial attributes
+//	BlockObj* getBlockObjFull();
+//	BlockObj* oblockFull;		//constructed using full objective attributes
+//	boost::unordered_map<ExpandedModel*, BlockObj*> nlp_oblockMap_lo;   //constructed using partial attributes
+//	void obj_grad_lp(ExpandedModel*, double*);
+//	uint nz_cons_hess_local(ExpandedModel* emcol);
+//	void cons_hess_local(ExpandedModel* emcol, boost::numeric::ublas::compressed_matrix<double>&);
+//	uint nz_obj_hess_local(ExpandedModel* emcol);
+//	void obj_hess_local(ExpandedModel* emcol, boost::numeric::ublas::compressed_matrix<double>&);
+
+
+	//! Return the block_lo
+	//! Initialize the block_lo pointer if necessary
+	BlockDep* getBlockDep();
+	BlockDep* blockdep; 		//Block Local Dependencies for Local Interface Call
+
+	//! Return Constraint Block defined by (constraints in this) X (variables in emcol)
+	//! Creat one if this is not already created
+	BlockCons* getBlockConsFull();
+	BlockCons* cblockFull;	//constructed using full constraints attributes
+
+	//! Hessian of Lagrangian block
+	BlockHV* getBlockHVFull();
+	BlockHV* hvblockFull;   //constructed using full constraints + objective attributes
+
+	BlockObj* getBlockObj();
+	BlockObj* blockobj;			//block objective is set 1. model->obj_comp is delcared and 2. after first call of function or derivative eval of obj function.
+
+	//BlockLP for LP problem -- Jacobian block (this x emcol) evaluation
 	//the reason for storing the BlockLP for each different emcol is that:
 	// we will use the AutoDiff::Node* con saved in the BlockLP to compute nz_jacobian and jacobian of intersection
 	BlockLP* getBlockLP(ExpandedModel* emcol);
-	boost::unordered_map<ExpandedModel*, BlockLP*> lpBlockMap;
+	boost::unordered_map<ExpandedModel*, BlockLP*> lp_cblockMap;    //constructed using partial attributes
 
-	//Block Local Dependencies for Local Interface Calls
-	Block* block_lo;
-	boost::unordered_map<ExpandedModel*, BlockHV*> hvBlockMap_lo;
-	boost::unordered_map<ExpandedModel*, BlockCons*> cblockMap_lo;
-	boost::unordered_map<ExpandedModel*, BlockObj*> oblockMap_lo;
+	//the constraint block created using partial attributes, this is only used for cons_jacobs_nlp evaluation
+	BlockCons* getBlockConsPartial(ExpandedModel* emcol);
+	boost::unordered_map<ExpandedModel*, BlockCons*> nlp_cblockMap_lo;  //constructed using partial attributes
+
+	//the hv block created using *partial attributes*, this is different from attributes in getBlockConsPartial
+	BlockHV* getBlockHVPartial(ExpandedModel* emcol);
+	boost::unordered_map<ExpandedModel*, BlockHV*> nlp_hvblockMap_lo;   //constructed using *partial attributes*
 
 	ExpandedModel(AmplModel* _mod,ModelContext* _context);
 	virtual ~ExpandedModel();
 
-	//LP Interface
+	//Both LP and NLP
+	//Function evaluation for constraints declared at this exapaned model
+	void cons_feval_local(double* fvals);
+	//Objective function evaluation for objective declared at this expanded model
+	double& obj_feval(double& oval);
+	//! Returns the objective gradient for this expanded model w.r.t. local vars
+	//! assume objective only use variable declared in it's own expanded model
+	void obj_grad(double* vals);
+
+	//LP Interface - specific
 	uint nz_cons_jacobs_lp(ExpandedModel* emcol);
 	void cons_jacobs_lp(ExpandedModel* emcol,col_compress_matrix& m);
-	void obj_grad_lp(ExpandedModel*, double*);
 
-	//NLP interface
+
+	//NLP interface - specific
 	/*
 	 * Location Interface Methods
 	 */
-	//! Return the block_lo
-	//! Initialize the block_lo pointer if necessary
-	Block* getBlockLocal();
-	//! Return Constraint Block defined by (constraints in this) X (variables in emcol)
-	//! Creat one if this is not already created
-	BlockCons* getConsBlockLocal(ExpandedModel* emcol);
-	BlockHV* getHVBlockLocal(ExpandedModel* emcol);
-	//! Return Obj Block (objective in this) X (variables in emcol)
-	//! Creat one if this is not already created
-	BlockObj* getObjBlockLocal(ExpandedModel* emcol);
-	//
-	//Function evaluation for constraints declared at this exapaned model
-	void cons_feval_local(std::vector<double>& fvals);
+
 	//! Return the nonzeros in the Jacobian of a section of the model
-	uint nz_cons_jacobs_local(ExpandedModel* emcol);
-	void cons_jacobs_local(ExpandedModel *emcol, boost::numeric::ublas::compressed_matrix<double>&);
-	uint nz_cons_hess_local(ExpandedModel* emcol);
-	void cons_hess_local(ExpandedModel* emcol, boost::numeric::ublas::compressed_matrix<double>&);
-	uint nz_lag_hess_local(ExpandedModel* emcol);
-	void lag_hess_local(ExpandedModel* emcol,boost::numeric::ublas::compressed_matrix<double>&);
-	//
-	double& obj_feval_local(double& oval);
-	//! Returns the objective gradient for the local model w.r.t. local vars
-	void obj_grad_local(ExpandedModel* emcol, std::vector<double>& ograd);
-	uint nz_obj_hess_local(ExpandedModel* emcol);
-	void obj_hess_local(ExpandedModel* emcol, boost::numeric::ublas::compressed_matrix<double>&);
+	uint nz_cons_jacobs_nlp_local(ExpandedModel* emcol);
+	void cons_jacobs_nlp_local(ExpandedModel *emcol, col_compress_matrix& m);
+	uint nz_lag_hess_nlp_local(ExpandedModel* emcol);
+	void lag_hess_nlp_local(ExpandedModel* emcol,col_compress_matrix&);
 
 //	/*
 //	 * Block Distributed Dependencies for Distributed Interface Calls
@@ -142,20 +167,21 @@ public:
 	void update_primal_x(double *elts);
 	//! Setting the lagrangian mulitpler for local constraints
 	void update_lag(double* elts);
+	double* y;
 
 	/*
 	 * Common inteface methods for Both Local and Distributed Inteface calls
 	 */
 	//! Returns the vector of upper bounds for the local variables in this model
-	void get_local_var_up_bounds(double *elts);
+	void get_var_up_bounds(double *elts);
 	//! Returns the vector of lower bounds for the local variables in this model
-	void get_local_var_low_bounds(double *elts);
+	void get_var_low_bounds(double *elts);
 	//! Return the arrays of bounds for the constraints in this model
-	void get_local_cons_bounds(double *lower, double *upper);
+	void get_cons_bounds(double *lower, double *upper);
 	//! Returns the names of local variables
-	void get_local_vars_names(vector<string>&);
+	void get_vars_names(vector<string>&);
 	//! Returns the names of local constraints
-	void get_local_cons_names(vector<string>&);
+	void get_cons_names(vector<string>&);
 
 
 	/*
@@ -176,7 +202,7 @@ public:
 	void logEMRecursive(string& line,ostream&);
 	void calculateMemoryUsage(unsigned long& size_str,unsigned long& size_data);
 private:
-	void getQaulifiedName(ostringstream& oss);
+	string qualifiedName();
 	ModelContext* recursiveInitContext();
 	void copyVariables(boost::unordered_set<AutoDiff::Node*>&);
 	void copyVariables(std::vector<AutoDiff::Node*>&);

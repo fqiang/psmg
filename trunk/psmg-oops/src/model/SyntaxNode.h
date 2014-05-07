@@ -165,13 +165,13 @@ public:
 	void calculatePartialConstraints(boost::unordered_map<int,SyntaxNode*>&);
 	void collectConstantTreeNode(vector<SyntaxNode*>&);
 	ModelContext* locateCtx(ModelContext* rowctx, ModelContext* currCtx, bool isLP);
-	AutoDiff::Node* buildAutoDiffDAG(ExpandedModel* emrow,ExpandedModel* emcol, bool isLP=false);
+	AutoDiff::Node* buildAutoDiffDAG(ExpandedModel* emrow,ExpandedModel* emcol=NULL, bool isLP=false);
 
 	void calculateBaseValueVector(unsigned long& size);
 	virtual void calculateMemoryUsage(unsigned long& size);
 	//end Feng
 
-	SyntaxNode* findChildNode(int op);
+	SyntaxNode* findDirectChild(int op);
 	bool isContainsIDREF_TVAR_in_child();
 	void calcStageSet(ModelContext*, boost::unordered_set<string>*);
 
