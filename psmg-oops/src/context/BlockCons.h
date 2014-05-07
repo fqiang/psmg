@@ -5,25 +5,25 @@
  *      Author: s0965328
  */
 
-#ifndef CONSBLOCK_H_
-#define CONSLOCK_H_
+#ifndef BLOCKCONS_H_
+#define BLOCKCONS_H_
 
-#include "ExpandedModel.h"
 #include "autodiff.h"
-#include "Block.h"
+#include "BlockDep.h"
 #include <vector>
 
+class ExpandedModel;
 using namespace std;
 
 class BlockCons{
 public:
 
-	BlockCons(Block*);
+	BlockCons(BlockDep*);
 	virtual ~BlockCons();
 
-	void logBlock(ExpandedModel*, ExpandedModel*, ostream& out);
+	void logBlock(ExpandedModel*, ExpandedModel* emcol, ostream& out);
 
-	Block* block;
+	BlockDep* block;
 	vector<AutoDiff::Node*> cons;
 };
 

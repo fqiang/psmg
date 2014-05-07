@@ -28,6 +28,18 @@ void ObjComp::calculatePartialConstraints()
 	assert(this->partial.size() == 0);
 
 	attributes->calculatePartialConstraints(this->partial);
+
+	//validate objective expression!  assume objective is using variable delcared only in it's level.
+	assert(this->partial.size()<=2);
+	boost::unordered_map<int,SyntaxNode*>::iterator it;
+	if(this->partial.size()==2) {
+		assert(this->partial.find(-1)!=this->partial.end());
+		assert(this->partial.find(model->level)!=this->partial.end());
+	}
+	else
+	{
+		assert(this->partial.size()==1 && partial.begin()->first==model->level);
+	}
 }
 
 /* ---------------------------------------------------------------------------

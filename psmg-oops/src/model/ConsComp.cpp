@@ -38,7 +38,7 @@ void ConsComp::calculatePartialConstraints()
 {
 	LOG("ConsComp::calculatePartialConstraints --id["<<name<< "] - indx["<<this->indexing->print()<<"]-- attr["<<this->attributes->print()<<"] - declared level["<<this->model->level<<"]");
 	assert(attributes->opCode == COMMA);
-	SyntaxNode* assign_expr = attributes->findChildNode(ASSIGN);
+	SyntaxNode* assign_expr = attributes->findDirectChild(ASSIGN);
 	assert(assign_expr->nchild()==2);
 	assert(this->partial.size() == 0);
 

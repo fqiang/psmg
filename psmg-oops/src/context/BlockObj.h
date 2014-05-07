@@ -5,26 +5,27 @@
  *      Author: s0965328
  */
 
-#ifndef OBJBLOCK_H_
-#define OBJBLOCK_H_
+#ifndef BLOCKOBJ_H_
+#define BLOCKOBJ_H_
 
-#include "ExpandedModel.h"
 #include "autodiff.h"
-#include "Block.h"
+#include "BlockDep.h"
 
-
+class ExpandedModel;
 
 using namespace std;
-
+//! the block objective
+//! note: assume the objective function are only involved variabels declared in it's own expanded model.
+//!       extra constraints can be created to relate to other parent or children blocks.
 class BlockObj {
 public:
-	BlockObj(Block*);
+	BlockObj(ExpandedModel* row);
 	virtual ~BlockObj();
 
-	Block* block;
+	ExpandedModel* emthis;
 	AutoDiff::Node*	objective;
 
-	void logBlock(ExpandedModel*, ExpandedModel*, ostream& out);
+	void logBlock(ExpandedModel*, ostream& out);
 };
 
 #endif /* CBLOCK_H_ */
