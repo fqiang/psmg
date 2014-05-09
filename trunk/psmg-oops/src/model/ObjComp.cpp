@@ -8,7 +8,7 @@
 #include "ObjComp.h"
 #include "SyntaxNode.h"
 #include "AmplModel.h"
-#include "../util/global_util_functions.h"
+#include "../util/util.h"
 
 //always include sml.tab.h at last
 #include "../parser/sml.tab.h"

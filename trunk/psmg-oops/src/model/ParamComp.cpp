@@ -9,10 +9,15 @@
 #include "ParamComp.h"
 #include "SyntaxNode.h"
 #include "SetComp.h"
+#include "../context/Set.h"
+#include "../context/ModelContext.h"
 #include "../context/ParamSingle.h"
 #include "../context/ParamMult.h"
 #include "../context/PValueSym.h"
 #include "../context/PValueValue.h"
+
+
+
 #include "../parser/sml.tab.h"
 
 

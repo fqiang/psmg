@@ -9,7 +9,6 @@
 #define VALUENODE_H_
 
 #include "SyntaxNode.h"
-#include <sstream>
 
 /** @class SyntaxNodeValue
  *  Represents a value.

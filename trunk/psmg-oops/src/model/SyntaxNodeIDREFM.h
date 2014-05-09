@@ -10,6 +10,8 @@
 
 #include "SyntaxNode.h"
 
+class AmplModel;
+
 class SyntaxNodeIDREFM : public SyntaxNode {
 public:
 	AmplModel* ref;

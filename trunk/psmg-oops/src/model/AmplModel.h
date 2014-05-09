@@ -18,14 +18,18 @@
 #ifndef AMPLMODEL_H
 #define AMPLMODEL_H
 
-#include "ModelComp.h"
-#include "SetComp.h"
-#include "ParamComp.h"
-#include "VarComp.h"
-#include "ConsComp.h"
-#include "ObjComp.h"
 #include <vector>
 #include <string>
+
+#include "ModelComp.h"
+
+class SetComp;
+class ObjComp;
+class ParamComp;
+class VarComp;
+class ConsComp;
+class ModelContext;
+class ExpandedModel;
 
 using namespace std;
 

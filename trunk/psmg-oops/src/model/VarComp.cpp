@@ -7,11 +7,18 @@
 
 #include <typeinfo>
 #include "VarComp.h"
+
+#include "../util/util.h"
+
+#include "SetComp.h"
 #include "AmplModel.h"
 #include "SyntaxNode.h"
 #include "SyntaxNodeValue.h"
 #include "../context/Var.h"
+#include "../context/Set.h"
+#include "../context/IndexSet.h"
 #include "../context/PValueValue.h"
+#include "../context/ModelContext.h"
 
 #include "ObjComp.h"
 #include "../parser/sml.tab.h"

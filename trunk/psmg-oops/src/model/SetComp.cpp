@@ -7,9 +7,12 @@
 
 #include <typeinfo>
 #include "SetComp.h"
+#include "../util/util.h"
+#include "../context/ModelContext.h"
 #include "../context/SetOrdered.h"
 #include "SyntaxNode.h"
 #include "ObjComp.h"
+
 #include "../parser/sml.tab.h"
 
 SetComp::SetComp(const string& id, SyntaxNode* index, SyntaxNode* attr,AmplModel* owner):ModelComp(id, TSET, index,attr,owner),
