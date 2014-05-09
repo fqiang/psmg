@@ -4,7 +4,6 @@
  *  Created on: 22 Apr 2014
  *      Author: s0965328
  */
-#include "../util/global_util_functions.h"
 #include "../model/ModelComp.h"
 
 #define SCTX StochCtx

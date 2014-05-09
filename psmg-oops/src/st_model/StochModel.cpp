@@ -15,16 +15,7 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#include "../util/global_util_functions.h"
-#include "../sml/Config.h"
-#include "StochCtx.h"
-#include "StochModel.h"
-#include "../model/SyntaxNode.h"
-#include "../model/SyntaxNodeOP.h"
-#include "../model/SyntaxNodeID.h"
-#include "../model/SyntaxNodeIDREF.h"
-#include "../model/SyntaxNodeString.h"
-#include "../parser/sml.tab.h"
+
 #include <boost/foreach.hpp>
 #include <cstdlib>
 #include <stdio.h>
@@ -32,6 +23,31 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+
+#include "../util/util.h"
+#include "../sml/Config.h"
+
+
+#include "StochCtx.h"
+#include "StochModel.h"
+
+#include "../model/ParamComp.h"
+#include "../model/ObjComp.h"
+#include "../model/VarComp.h"
+#include "../model/ConsComp.h"
+#include "../model/SetComp.h"
+#include "../model/SyntaxNode.h"
+#include "../model/SyntaxNodeOP.h"
+#include "../model/SyntaxNodeID.h"
+#include "../model/SyntaxNodeIDREF.h"
+#include "../model/SyntaxNodeString.h"
+#include "../model/SyntaxNode.h"
+
+#include "../context/ExpandedModel.h"
+#include "../context/ModelContext.h"
+#include "../context/Set.h"
+
+#include "../parser/sml.tab.h"
 
 using namespace std;
 
