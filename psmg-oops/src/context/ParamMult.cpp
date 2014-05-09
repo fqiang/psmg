@@ -6,6 +6,7 @@
  */
 
 #include "ParamMult.h"
+#include "../util/util.h"
 
 
 ParamMult::ParamMult(ParamComp* comp):Param(comp)

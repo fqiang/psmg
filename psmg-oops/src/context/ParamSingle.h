@@ -9,7 +9,7 @@
 #define PARAMSINGLE_H_
 
 #include "Param.h"
-#include "PValue.h"
+class PValue;
 
 class ParamSingle : public Param {
 public:

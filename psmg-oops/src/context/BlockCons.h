@@ -9,9 +9,9 @@
 #define BLOCKCONS_H_
 
 #include "autodiff.h"
-#include "BlockDep.h"
 #include <vector>
 
+class BlockDep;
 class ExpandedModel;
 using namespace std;
 

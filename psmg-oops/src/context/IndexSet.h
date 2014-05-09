@@ -15,23 +15,17 @@
 #include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/member.hpp>
 
-#include "../model/SetComp.h"
+class Set;
+class SetComp;
+
 #include "CompDescr.h"
-#include "Set.h"
 
 using namespace std;
 using namespace boost::multi_index;
 
+//1. dummy index name, 2. the corresponding set, 3, SetComp that the dummy index referred.
 typedef boost::tuple<string, Set*,SetComp*> iset_tuple;
-//typedef multi_index_container<iset_tuple,
-//		indexed_by<
-//			random_access<>,
-//			hashed_unique<  member<iset_tuple, string, &iset_tuple::get<0>() > >
-//		>
-//> iset_multi_map;
-//
-//typedef iset_multi_map::nth_index<0>::type iset_multi_map_by_order;
-//typedef iset_multi_map::nth_index<1>::type iset_multi_map_by_dummy;
+
 
 class IndexSet : public CompDescr {
 public:
@@ -40,9 +34,6 @@ public:
 	string name;
 
 	vector<iset_tuple> tuples;
-
-//	boost::unordered_map<string, Set* > dummySetMap;
-//	boost::unordered_map<string, SetComp*> dummyCompMap;
 
 	IndexSet(string& name);
 	virtual ~IndexSet();

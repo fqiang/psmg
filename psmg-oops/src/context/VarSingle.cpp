@@ -5,7 +5,7 @@
  *      Author: s0965328
  */
 
-#include "../util/global_util_functions.h"
+#include "../util/util.h"
 #include "VarSingle.h"
 #include <string>
 #include <sstream>

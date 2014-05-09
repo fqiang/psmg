@@ -9,6 +9,7 @@
 #include "ExpandedModel.h"
 #include "../model/AmplModel.h"
 #include "../model/VarComp.h"
+#include "../model/ObjComp.h"
 #include "Var.h"
 
 //BlockObj::BlockObj(BlockDep* b) : block(b), objective(NULL){

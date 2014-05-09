@@ -8,9 +8,11 @@
 #ifndef SET_H_
 #define SET_H_
 
+#include <vector>
+
 #include "CompDescr.h"
-#include "../model/SetComp.h"
-#include "../util/global_util_functions.h"
+
+class SetComp;
 
 class Set : public CompDescr {
 public:
