@@ -18,20 +18,20 @@ typedef unsigned long ulong;
 #define DEBUG_YAC_DATA_ENABLED 1
 #define DEBUG_YAC_MODEL_ENABLE 1
 #define SYS_MEMORY_USAGE_ENABLED 0
-#define MEMORY_LOG_ENABLED 0
-#define PERFORMANCE_MEASURE_ENABLED 0
+#define MEM_ENABLED 0
+#define TIMER_ENABLED 1
 #else
 #define DEBUG_PRINT_ENABLED 0
 #define DEBUG_YAC_ENABLED 0
 #define DEBUG_YAC_MODEL_ENABLE 0
 #define SYS_MEMORY_USAGE_ENABLED 0
-#define MEMORY_LOG_ENABLED 0
-#define PERFORMANCE_MEASURE_ENABLED 1
+#define MEM_ENABLED 0
+#define TIMER_ENABLED 1
 #endif
 
 #ifdef MEM
 #define SYS_MEMORY_USAGE_ENABLED 1
-#define MEMORY_LOG_ENABLED 1
+#define MEM_ENABLED 1
 #endif
 
 #if DEBUG_PRINT_ENABLED
@@ -59,7 +59,7 @@ typedef unsigned long ulong;
 #endif
 
 
-#if PERFORMANCE_MEASURE_ENABLED
+#if TIMER_ENABLED
 #define TIMER_START(arg) (TimeStamp::GetTimeStamp(arg)->start())
 #define TIMER_STOP(arg) (TimeStamp::GetTimeStamp(arg)->stop())
 #define TIMER_LIST (TimeStamp::List())
@@ -79,7 +79,7 @@ typedef unsigned long ulong;
 //#define LOG_SYS_MEM(arg) ((void)0)
 //#endif
 
-#if MEMORY_LOG_ENABLED
+#if MEM_ENABLED
 #define LOG_MEM(arg) (std::cout<<"LOG_MEM==>["<<GV(rank)<<"/"<<GV(size)<<"]-"<<arg<<std::endl)
 #else
 #define LOG_MEM(arg) ((void)0)

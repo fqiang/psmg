@@ -59,10 +59,6 @@ void Sml::deleteInstance()
 Sml::Sml()
 {
 	LOG("PSMG processor created...");
-	cout << "Parallel Problem Generator for Structure-conveying Modelling Language, version - trunk" << endl;
-	cout << "(c) 2013 Feng Qiang, Andreas Grothey, University of Edinburgh." << endl;
-	cout << "Released under LGPL v3" << endl;
-	cout << "CPU:: CLOCKS_PER_SEC ["<<CLOCKS_PER_SEC<<"]"<<endl;
 }
 
 Sml::~Sml()
@@ -153,7 +149,15 @@ int main(int argc, char **argv)
 		GV(modelfilename) = argv[i];
 		GV(datafilename) = argv[++i];
 	}
-	Config::printAll();
+
+	if(GV(rank)==0){
+		cout << "Parallel Problem Generator for Structure-conveying Modelling Language, version - trunk" << endl;
+		cout << "(c) 2013 Feng Qiang, Andreas Grothey, University of Edinburgh." << endl;
+		cout << "Released under LGPL v3" << endl;
+		cout << "CPU:: CLOCKS_PER_SEC ["<<CLOCKS_PER_SEC<<"]"<<endl;
+		Config::printAll();
+	}
+
 
 
 	LOG("Process started on host["<<GV(hostname)<<"]");
@@ -161,6 +165,7 @@ int main(int argc, char **argv)
 	Sml::instance()->processModelfile();
 	TIMER_STOP("SML_PARSE_MODEL");
 
+	//log the model file
 	if(GV(logModel) && GV(rank) == 0) {
 		string datname = GV(datafilename).substr(0, GV(datafilename).find(".", 0));
 		ostringstream oss;
@@ -174,6 +179,10 @@ int main(int argc, char **argv)
 
 	TIMER_START("SML_EM2_GENERATION");
 	Sml::instance()->generateExpandedModel();
+	assert(ExpandedModel::root->ctx != NULL);
+	TIMER_STOP("SML_EM2_GENERATION");
+
+	//log the split constrained mode file
 	if(GV(logModel) && GV(rank) == 0 ) {
 		string datname = GV(datafilename).substr(0, GV(datafilename).find(".", 0));
 		ostringstream oss;
@@ -181,14 +190,12 @@ int main(int argc, char **argv)
 		AmplModel::root->logModel(oss.str().c_str());
 	}
 	Sml::instance()->resetContextTree();
-	assert(ExpandedModel::root->ctx != NULL);
-	TIMER_STOP("SML_EM2_GENERATION");
 
 	unsigned long mem_size_em2 = 0;
 	unsigned long mem_size_ctx = 0;
 	ExpandedModel::root->calculateMemoryUsage(mem_size_em2,mem_size_ctx);
-	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"]-Structure Memory Usage Size Before Solve ["<<mem_size_em2<<"] bytes"<<endl;
-	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"]-Data Memory Usage Size Before Solve ["<<mem_size_ctx<<"] bytes"<<endl;
+	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"]-Structure Memory Usage [ "<<mem_size_em2<<" ] bytes"<<endl;
+	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"]-Data Memory Usage Before Solve [ "<<mem_size_ctx<<" ] bytes"<<endl;
 
 	assert(ExpandedModel::root != NULL);
 
@@ -201,15 +208,15 @@ int main(int argc, char **argv)
 	if(GV(logEM)){
 		string datname = GV(datafilename).substr(0, GV(datafilename).find(".", 0));
 		ostringstream oss;
-		oss<<GV(logdir)<<datname<<"_"<<GV(rank)<<"_"<<GV(size)<<"_"<<GV(emfile_suffix);
+		oss<<GV(logdir)<<datname<<"_"<<GV(rank)<<"_"<<GV(size)<<GV(emfile_suffix);
 		Sml::instance()->logEM(oss.str());
 	}
 
 	mem_size_em2=0;
 	mem_size_ctx=0;
 	ExpandedModel::root->calculateMemoryUsage(mem_size_em2,mem_size_ctx);
-	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"]-Structure Memory Usage Size After Solve ["<<mem_size_em2<<"] bytes"<<endl;
-	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"]-Data Memory Usage Size After Solve ["<<mem_size_ctx<<"] bytes"<<endl;
+	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"]-Structure Memory Usage After Solve [ "<<mem_size_em2<<" ] bytes"<<endl;
+	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"]-Data Memory Usage After Solve [ "<<mem_size_ctx<<" ] bytes"<<endl;
 
 
 

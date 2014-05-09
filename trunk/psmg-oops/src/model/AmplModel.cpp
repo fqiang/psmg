@@ -149,7 +149,6 @@ ExpandedModel* AmplModel::createExpandedModel(string dummyVar,SetComp* comp,stri
 			currEm2->addModelDummy(dummyVar,comp,value);
 		}
 	}
-
 	//duplicate computation for creating sibling expanded model
 	for(vector<SetComp*>::iterator i=set_comps.begin();i!=set_comps.end();i++)
 	{
@@ -166,9 +165,9 @@ ExpandedModel* AmplModel::createExpandedModel(string dummyVar,SetComp* comp,stri
 
 	if(this==AmplModel::root)
 	{
+		//comment: any unused character will be throw on stdout from lex
 		parse_data(currCtx);
 	}
-
 	//calculating set values
 	for(vector<SetComp*>::iterator i=set_comps.begin();i!=set_comps.end();i++)
 	{
