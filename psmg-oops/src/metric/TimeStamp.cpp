@@ -39,17 +39,14 @@ TimeStamp::TimeStamp(string name) {
 }
 
 void TimeStamp::start() {
-//	time(&this->startTime );
 	this->startTime = clock();
 	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"] TimeStamp:["<<name<<"] START@:["<<startTime<<"]"<<endl;
 }
 
 void TimeStamp::stop() {
-//	time(&this->stopTime);
 	this->stopTime = clock();
-//	time_t elapse = stopTime - startTime;
 	clock_t elapse = stopTime - startTime;
-	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"] TimeStamp:["<<name<<"] STOP@:["<<stopTime<<"] Elapse[ "<<elapse<<" ]"<<endl;
+	cout<<'['<<GV(rank)<<"/"<<GV(size)<<"] TimeStamp:["<<name<<"] STOP@:["<<stopTime<<"] Elapse[ "<<elapse<<" ]"<<endl;
 }
 
 string TimeStamp::toString() const{
