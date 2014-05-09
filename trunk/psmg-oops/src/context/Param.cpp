@@ -23,7 +23,7 @@
 #include <iostream>
 #include <sstream>
 #include "../parser/data.tab.h"
-#include "../util/global_util_functions.h"
+#include "../util/util.h"
 #include "../model/ParamComp.h"
 #include "../context/ParamMult.h"
 #include "../context/ParamSingle.h"
@@ -44,7 +44,7 @@ Param::~Param()
 
 Param* Param::createParam(ParamComp* comp)
 {
-	if(comp->numIndicies>=0) return new ParamMult(comp);
+	if(comp->numIndicies>0) return new ParamMult(comp);
 	else{
 		assert(comp->numIndicies == 0);
 		return new ParamSingle(comp);

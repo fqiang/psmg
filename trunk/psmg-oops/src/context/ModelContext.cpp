@@ -11,9 +11,11 @@
 #include "ModelContext.h"
 #include "ExpandedModel.h"
 #include "SetSimple.h"
+#include "IndexSet.h"
+
 #include "../model/SyntaxNode.h"
 #include "../model/ModelComp.h"
-#include "../util/global_util_functions.h"
+#include "../util/util.h"
 
 
 using namespace std;

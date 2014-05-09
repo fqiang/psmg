@@ -15,16 +15,20 @@
 #include <boost/numeric/ublas/matrix_sparse.hpp>
 #include <boost/numeric/ublas/io.hpp>
 #include <boost/foreach.hpp>
-#include "ModelContext.h"
 #include "autodiff.h"
-#include "ColSparseMatrix.h"
-#include "../model/ConsComp.h"
-#include "../model/VarComp.h"
-#include "BlockCons.h"
-#include "BlockObj.h"
-#include "BlockHV.h"
-#include "BlockLP.h"
-#include "BlockObjLP.h"
+
+class ColSparseMatrix;
+class ModelContext;
+class ModelComp;
+class AmplModel;
+class ConsComp;
+class VarComp;
+class BlockDep;
+class BlockLP;
+class BlockCons;
+class BlockObj;
+class BlockHV;
+
 
 using namespace std;
 

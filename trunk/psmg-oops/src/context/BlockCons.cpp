@@ -7,6 +7,8 @@
 #include <iostream>
 #include "BlockCons.h"
 
+
+#include "BlockDep.h"
 #include "ExpandedModel.h"
 #include "../model/AmplModel.h"
 #include "../model/VarComp.h"

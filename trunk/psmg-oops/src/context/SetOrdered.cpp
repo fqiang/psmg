@@ -7,6 +7,8 @@
 
 #include "SetOrdered.h"
 
+#include "../util/util.h"
+
 SetOrdered::SetOrdered(SetComp* comp):Set(comp){
 	LOG("Create OrderedSet -");
 }

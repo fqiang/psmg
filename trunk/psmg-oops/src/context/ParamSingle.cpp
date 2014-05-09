@@ -7,6 +7,12 @@
 
 #include "ParamSingle.h"
 
+#include <cassert>
+#include <sstream>
+
+#include "PValue.h"
+
+
 ParamSingle::ParamSingle(ParamComp* comp) : Param(comp), value(NULL) {
 	// TODO Auto-generated constructor stub
 

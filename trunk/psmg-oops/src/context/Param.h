@@ -18,7 +18,6 @@
 #define PARAM_H_
 
 #include <string>
-#include "../util/global_util_functions.h"
 #include "CompDescr.h"
 
 class ParamComp;

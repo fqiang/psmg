@@ -8,18 +8,19 @@
 #ifndef MODELCONTEXT_H_
 #define MODELCONTEXT_H_
 
-#include "../util/global_util_functions.h"
-#include "VarSingle.h"
-#include "Set.h"
-#include "autodiff.h"
-#include "IndexSet.h"
 #include <boost/unordered_map.hpp>
 #include <string>
 #include <vector>
+#include "autodiff.h"
 
 using namespace std;
 
+class Set;
+class IndexSet;
+class CompDescr;
+class ModelComp;
 class ExpandedModel;
+class SyntaxNode;
 
 class ModelContext {
 

@@ -8,7 +8,7 @@
 #include <cassert>
 #include <typeinfo>
 #include <sstream>
-#include "../util/global_util_functions.h"
+#include "../util/util.h"
 #include "PValueSym.h"
 
 PValueSym::PValueSym(const string& v) : PValue(), value(v){

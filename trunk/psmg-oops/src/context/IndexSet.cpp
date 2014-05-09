@@ -6,8 +6,11 @@
  */
 
 #include "IndexSet.h"
-#include "../model/SetComp.h"
+
 #include <boost/foreach.hpp>
+
+#include "Set.h"
+#include "../model/SetComp.h"
 
 string IndexSet::TMP = "TMP_";
 string IndexSet::NEWSET = "NEWSET_";

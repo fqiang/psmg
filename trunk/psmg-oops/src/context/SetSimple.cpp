@@ -26,7 +26,7 @@
 #include "../context/SetOrdered.h"
 #include "../model/SetComp.h"
 #include "../parser/data.tab.h"
-#include "../util/global_util_functions.h"
+#include "../util/util.h"
 
 using namespace std;
 using namespace __gnu_cxx;

@@ -2,8 +2,9 @@
 #define SETSIMPLE_H_
 
 #include "Set.h"
-#include "../model/SetComp.h"
 #include <string>
+
+class SetComp;
 
 using namespace std;
 using namespace __gnu_cxx;

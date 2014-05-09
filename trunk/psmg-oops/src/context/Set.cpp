@@ -6,8 +6,12 @@
  */
 
 #include "Set.h"
+
+#include "../util/util.h"
+#include "../model/SetComp.h"
 #include "SetSimple.h"
 #include "SetOrdered.h"
+
 
 string Set::TMP = "TMP_";
 

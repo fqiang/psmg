@@ -5,31 +5,43 @@
  *      Author: s0965328
  */
 
-#include "ExpandedModel.h"
-#include "../model/SyntaxNodeIDREF.h"
-#include "../model/SyntaxNodeID.h"
-#include "../model/AmplModel.h"
-#include "BlockDep.h"
-#include "BlockCons.h"
-#include "BlockObj.h"
-#include "BlockObjLP.h"
-#include "BlockHV.h"
-#include "BlockLP.h"
-#include "Var.h"
-#include "VarSingle.h"
-#include "../model/ObjComp.h"
-#include "../parser/sml.tab.h"
+
 #include <boost/foreach.hpp>
 #include <cassert>
 #include <iomanip>
 #include <list>
 #include <limits>
 
+#include "ExpandedModel.h"
+
+#include "../util/util.h"
+
+#include "IndexSet.h"
+#include "ModelContext.h"
+#include "ColSparseMatrix.h"
+#include "Set.h"
+
+#include "../model/ConsComp.h"
+#include "../model/SetComp.h"
+#include "../model/VarComp.h"
+#include "../model/SyntaxNodeIDREF.h"
+#include "../model/SyntaxNodeID.h"
+#include "../model/AmplModel.h"
+#include "BlockDep.h"
+#include "BlockCons.h"
+#include "BlockObj.h"
+#include "BlockHV.h"
+#include "BlockLP.h"
+#include "Var.h"
+#include "VarSingle.h"
+
+#include "../model/ObjComp.h"
+#include "../parser/sml.tab.h"
+
 using namespace boost::numeric::ublas;
 using namespace boost;
+using namespace AutoDiff;
 using namespace std;
-
-typedef AutoDiff::Node Node;
 
 ExpandedModel* ExpandedModel::root = NULL; //initialize root to NULL
 

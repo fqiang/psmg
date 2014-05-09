@@ -7,6 +7,8 @@
 
 
 #include "Var.h"
+#include "VarSingle.h"
+#include "../util/util.h"
 
 Var::Var(string& name_): name(name_) {
 

@@ -14,10 +14,9 @@
 #include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/member.hpp>
 
+#include "CompDescr.h"
 
 #include "VarSingle.h"
-#include "CompDescr.h"
-#include "../util/global_util_functions.h"
 
 using namespace std;
 using namespace boost;
