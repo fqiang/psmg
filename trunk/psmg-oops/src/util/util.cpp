@@ -10,7 +10,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include "global_util_functions.h"
+#include "util.h"
 
 using namespace std;
 using namespace __gnu_cxx;
