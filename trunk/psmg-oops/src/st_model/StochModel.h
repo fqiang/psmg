@@ -18,11 +18,15 @@
 #ifndef STOCHMODEL_H
 #define STOCHMODEL_H
 
-#include "../model/AmplModel.h"
-#include "../model/SyntaxNode.h"
-#include "../context/ExpandedModel.h"
 #include <string>
 #include <vector>
+#include <boost/unordered_map.hpp>
+#include <boost/unordered_set.hpp>
+#include "../model/AmplModel.h"
+
+class SyntaxNode;
+class ExpandedModel;
+class ModelContext;
 
 /* ------------------------------------------------------------------------ */
 /** @class StochModel
