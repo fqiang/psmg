@@ -55,9 +55,9 @@ void VarComp::calculateVarComp(ModelContext* ctx)
 		assert(iset->tuples.size()<=2);
 		if(iset->tuples.size()==1)
 		{
-			string dummy = iset->tuples.begin()->get<0>();
-			Set*	set = iset->tuples.begin()->get<1>();
-			SetComp* comp = iset->tuples.begin()->get<2>();
+			string dummy = iset->tuples.begin()->dummyVar;
+			Set*	set = iset->tuples.begin()->set;
+			SetComp* comp = iset->tuples.begin()->setcomp;
 
 			vector<string>::iterator it=set->setValues_data_order.begin();
 			for(;it!=set->setValues_data_order.end();it++)
@@ -79,12 +79,12 @@ void VarComp::calculateVarComp(ModelContext* ctx)
 		{
 			iset_tuple& tuple1 = iset->tuples[0];
 			iset_tuple& tuple2 = iset->tuples[1];
-			string dummy1 = tuple1.get<0>();
-			Set* set1 = tuple1.get<1>();
-			SetComp* comp1 = tuple1.get<2>();
-			string dummy2 = tuple2.get<0>();
-			Set* set2 = tuple2.get<1>();
-			SetComp* comp2 = tuple2.get<2>();
+			string dummy1 = tuple1.dummyVar;
+			Set* set1 = tuple1.set;
+			SetComp* comp1 = tuple1.setcomp;
+			string dummy2 = tuple2.dummyVar;
+			Set* set2 = tuple2.set;
+			SetComp* comp2 = tuple2.setcomp;
 			vector<string>::iterator i = set1->setValues_data_order.begin();
 			for(;i!=set1->setValues_data_order.end();i++)
 			{

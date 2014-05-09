@@ -282,9 +282,9 @@ ExpandedModel* AmplModel::createExpandedModel(string dummyVar,SetComp* comp,stri
 			IndexSet* iset = subm->indexing->createIndexSet(currCtx);
 			assert(iset->tuples.size()==1); // support only one dummy index for submodel/block declaration for now.
 
-			string dummy = iset->tuples.begin()->get<0>();
-			Set* set = iset->tuples.begin()->get<1>();
-			SetComp* setComp = iset->tuples.begin()->get<2>();
+			string dummy = iset->tuples.begin()->dummyVar;
+			Set* set = iset->tuples.begin()->set;
+			SetComp* setComp = iset->tuples.begin()->setcomp;
 			assert(set->dim == 1); //only support one dimensional set for block index set for now!
 			LOG("Name["<<name<<"]'s Comp["<<subm->name<<"] card["<<set->card<<"]");
 

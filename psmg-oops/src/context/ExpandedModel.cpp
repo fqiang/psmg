@@ -7,6 +7,7 @@
 
 
 #include <boost/foreach.hpp>
+#include <boost/unordered_map.hpp>
 #include <cassert>
 #include <iomanip>
 #include <list>
@@ -115,9 +116,9 @@ BlockLP* ExpandedModel::getBlockLP(ExpandedModel* emcol)
 				IndexSet* iset = indexing->createIndexSet(this->ctx);
 				assert(iset->tuples.size()==1); //so far support only 1-demonsianl set
 				iset_tuple& tuple = *(iset->tuples.begin());
-				string dummy = tuple.get<0>();
-				Set* set = tuple.get<1>();
-				SetComp* setcomp =  tuple.get<2>();
+				string dummy = tuple.dummyVar;
+				Set* set = tuple.set;
+				SetComp* setcomp =  setcomp;
 				std::vector<string>::iterator itset = set->setValues_data_order.begin();
 				for(;itset!=set->setValues_data_order.end();itset++)
 				{
@@ -545,9 +546,9 @@ BlockCons* ExpandedModel::getBlockConsPartial(ExpandedModel* emcol)
 				IndexSet* iset = indexing->createIndexSet(ctx);
 				assert(iset->tuples.size()==1); //TODO: so far support only 1-demonsianl set
 				iset_tuple& tuple = *(iset->tuples.begin());
-				string dummy = tuple.get<0>();
-				Set* set = tuple.get<1>();
-				SetComp* setcomp = tuple.get<2>();
+				string dummy = tuple.dummyVar;
+				Set* set = tuple.set;
+				SetComp* setcomp = tuple.setcomp;
 				std::vector<string>::iterator itset = set->setValues_data_order.begin();
 				for(;itset!=set->setValues_data_order.end();itset++)
 				{
@@ -605,9 +606,9 @@ BlockCons* ExpandedModel::getBlockConsFull()
 			IndexSet* iset = indexing->createIndexSet(ctx);
 			assert(iset->tuples.size()==1); //TODO: so far support only 1-demonsianl set
 			iset_tuple& tuple = *(iset->tuples.begin());
-			string dummy = tuple.get<0>();
-			Set* set = tuple.get<1>();
-			SetComp* setcomp = tuple.get<2>();
+			string dummy = tuple.dummyVar;
+			Set* set = tuple.set;
+			SetComp* setcomp = tuple.setcomp;
 			std::vector<string>::iterator itset = set->setValues_data_order.begin();
 			for(;itset!=set->setValues_data_order.end();itset++)
 			{
@@ -825,9 +826,9 @@ void ExpandedModel::get_cons_bounds(double *lower, double *upper)
 			IndexSet* iset = indexing->createIndexSet(ctx);
 			assert(iset->tuples.size()==1); //TODO: so far support only 1-demonsianl set
 			iset_tuple& tuple = *(iset->tuples.begin());
-			string dummy = tuple.get<0>();
-			Set* set = tuple.get<1>();
-			SetComp* setcomp = tuple.get<2>();
+			string dummy = tuple.dummyVar;
+			Set* set = tuple.set;
+			SetComp* setcomp = tuple.setcomp;
 			BOOST_FOREACH(string& val, set->setValues_data_order)
 			{
 				this->ctx->addDummyCompValueMapTemp(dummy,setcomp,val);
@@ -858,9 +859,9 @@ void ExpandedModel::get_cons_names(std::vector<string>& names)
 			IndexSet* iset = indexing->createIndexSet(ctx);
 			assert(iset->tuples.size()==1); //TODO: so far support only 1-demonsianl set
 			iset_tuple& tuple = *(iset->tuples.begin());
-			string dummy = tuple.get<0>();
-			Set* set = tuple.get<1>();
-//			SetComp* setcomp = tuple.get<2>();
+			string dummy = tuple.dummyVar;
+			Set* set = tuple.set;
+//			SetComp* setcomp = tuple.setcomp;
 			std::vector<string>::iterator itset = set->setValues_data_order.begin();
 			for(;itset!=set->setValues_data_order.end();itset++)
 			{
