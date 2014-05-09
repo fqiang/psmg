@@ -57,11 +57,16 @@ ExpandedModel::ExpandedModel(AmplModel* mod,ModelContext* context)
 void ExpandedModel::addModelDummy(string dummyVar, ModelComp* comp, string value)
 {
 	assert(comp!=NULL);
-	pair<boost::unordered_map<string,string>::iterator,bool> ret1;
-	pair<boost::unordered_map<string,ModelComp*>::iterator,bool> ret2;
-	ret1 = this->dummyValueMap.insert(pair<string,string>(dummyVar,value));
-	ret2 = this->dummySetMap.insert(pair<string,ModelComp*>(dummyVar,comp));
-	assert(ret1.second && ret2.second);
+	pair<boost::unordered_map<string,model_dummy_t>::iterator,bool> ret1;
+	model_dummy_t a_model_dummy = std::make_pair<ModelComp*,string>(comp,value);
+	ret1 = this->dummyMap.insert(pair<string,model_dummy_t>(dummyVar,a_model_dummy));
+	assert(ret1.second);
+//	assert(ret1.second && ret2.second);
+//	pair<boost::unordered_map<string,string>::iterator,bool> ret1;
+//	pair<boost::unordered_map<string,ModelComp*>::iterator,bool> ret2;
+//	ret1 = this->dummyValueMap.insert(pair<string,string>(dummyVar,value));
+//	ret2 = this->dummySetMap.insert(pair<string,ModelComp*>(dummyVar,comp));
+//	assert(ret1.second && ret2.second);
 	this->name += "_"+value;
 }
 
@@ -69,8 +74,9 @@ ExpandedModel::~ExpandedModel() {
 	LOG("ExpandedModel2 destructor called !!!");
 	LOG("delete context recurisivly!");
 	delete ctx;
-	dummySetMap.clear();
-	dummyValueMap.clear();
+	dummyMap.clear();
+//	dummySetMap.clear();
+//	dummyValueMap.clear();
 	for(uint i=0;i<this->children.size();i++)
 	{
 		delete children.at(i);
@@ -1107,9 +1113,11 @@ ModelContext* ExpandedModel::locateCtx(AmplModel* model, string& dummyval)
 	ModelContext* rval = NULL;
 	BOOST_FOREACH(ExpandedModel* em, this->children)
 	{
+		assert(em->dummyMap.size()==1); //only 1 model dummy supported for now.
 		if(em->model == model)
 		{
-			string dumval = em->dummyValueMap.begin()->second;
+//			string dumval = em->dummyValueMap.begin()->second;
+			string dumval = em->dummyMap.begin()->second.second;
 			if(dumval.compare(dummyval)==0) {
 				rval = em->ctx;
 				break;
@@ -1138,17 +1146,25 @@ void ExpandedModel::calculateMemoryUsage(unsigned long& size_str,unsigned long& 
 		LOG_MEM(" --- context memory usage ["<<size_data-pre<<"]");
 	}
 
-	for(boost::unordered_map<string,ModelComp*>::iterator it=dummySetMap.begin();it!=dummySetMap.end();it++)
+
+	for(boost::unordered_map<string,model_dummy_t>::iterator it=dummyMap.begin();it!=dummyMap.end();it++)
 	{
-		size_str += sizeof(pair<string,ModelComp*>);
+		size_str += sizeof(pair<string,model_dummy_t>);
 		size_str += (*it).first.size() + 1;
+		size_str += (*it).second.second.size() +1;
 	}
-	for(boost::unordered_map<string,string>::iterator it=dummyValueMap.begin();it!=dummyValueMap.end();it++)
-	{
-		size_str += sizeof(pair<string,string>);
-		size_str += (*it).first.size() + 1;
-		size_str += (*it).second.size()+ 1;
-	}
+
+//	for(boost::unordered_map<string,ModelComp*>::iterator it=dummySetMap.begin();it!=dummySetMap.end();it++)
+//	{
+//		size_str += sizeof(pair<string,ModelComp*>);
+//		size_str += (*it).first.size() + 1;
+//	}
+//	for(boost::unordered_map<string,string>::iterator it=dummyValueMap.begin();it!=dummyValueMap.end();it++)
+//	{
+//		size_str += sizeof(pair<string,string>);
+//		size_str += (*it).first.size() + 1;
+//		size_str += (*it).second.size()+ 1;
+//	}
 
 	size_str += sizeof(ExpandedModel);
 	size_str += name.size() + 1;

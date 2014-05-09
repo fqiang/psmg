@@ -551,6 +551,7 @@ AmplModel::dump(ostream &fout)
 void AmplModel::dump(ostream& fout, int count){
 	fout << "AM: ----------------------------------------------------------\n";
 	fout << "AM: This is AmplModel (" << (void *) this << "): " << name << "\n";
+	fout << "AM: indexing: "<<indexing->print()<<"\n";
 	fout << "AM: level: " << level << "\n";
 	fout << "AM: parent: " << (parent ? parent->name : "NULL") << "\n";
 	fout << "AM: Nb sets       : " << n_sets << "\n";

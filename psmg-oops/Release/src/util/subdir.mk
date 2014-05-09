@@ -4,16 +4,16 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
-../src/util/DummyVariableGenerator.cpp \
-../src/util/global_util_functions.cpp 
+../src/util/DummyVarGen.cpp \
+../src/util/util.cpp 
 
 OBJS += \
-./src/util/DummyVariableGenerator.o \
-./src/util/global_util_functions.o 
+./src/util/DummyVarGen.o \
+./src/util/util.o 
 
 CPP_DEPS += \
-./src/util/DummyVariableGenerator.d \
-./src/util/global_util_functions.d 
+./src/util/DummyVarGen.d \
+./src/util/util.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
