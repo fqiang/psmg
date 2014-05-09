@@ -16,6 +16,7 @@ CPP_SRCS += \
 ../src/model/SyntaxNodeIDREFM.cpp \
 ../src/model/SyntaxNodeOP.cpp \
 ../src/model/SyntaxNodeString.cpp \
+../src/model/SyntaxNodeSumExp.cpp \
 ../src/model/SyntaxNodeValue.cpp \
 ../src/model/VarComp.cpp 
 
@@ -32,6 +33,7 @@ OBJS += \
 ./src/model/SyntaxNodeIDREFM.o \
 ./src/model/SyntaxNodeOP.o \
 ./src/model/SyntaxNodeString.o \
+./src/model/SyntaxNodeSumExp.o \
 ./src/model/SyntaxNodeValue.o \
 ./src/model/VarComp.o 
 
@@ -48,6 +50,7 @@ CPP_DEPS += \
 ./src/model/SyntaxNodeIDREFM.d \
 ./src/model/SyntaxNodeOP.d \
 ./src/model/SyntaxNodeString.d \
+./src/model/SyntaxNodeSumExp.d \
 ./src/model/SyntaxNodeValue.d \
 ./src/model/VarComp.d 
 

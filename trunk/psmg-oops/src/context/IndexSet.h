@@ -8,12 +8,8 @@
 #ifndef INDEXSET_H_
 #define INDEXSET_H_
 
-#include <boost/tuple/tuple.hpp>
-#include <boost/unordered_map.hpp>
-#include <boost/multi_index_container.hpp>
-#include <boost/multi_index/random_access_index.hpp>
-#include <boost/multi_index/hashed_index.hpp>
-#include <boost/multi_index/member.hpp>
+#include <boost/foreach.hpp>
+#include <vector>
 
 class Set;
 class SetComp;
@@ -21,10 +17,15 @@ class SetComp;
 #include "CompDescr.h"
 
 using namespace std;
-using namespace boost::multi_index;
 
 //1. dummy index name, 2. the corresponding set, 3, SetComp that the dummy index referred.
-typedef boost::tuple<string, Set*,SetComp*> iset_tuple;
+typedef struct iset_tuple{
+	string dummyVar;
+	Set* set;
+	SetComp* setcomp;
+	iset_tuple(string a, Set* s, SetComp* sp):dummyVar(a),set(s),setcomp(sp){
+	}
+} iset_tuple;
 
 
 class IndexSet : public CompDescr {
@@ -33,7 +34,7 @@ public:
 	static string NEWSET;
 	string name;
 
-	vector<iset_tuple> tuples;
+	std::vector<iset_tuple> tuples;
 
 	IndexSet(string& name);
 	virtual ~IndexSet();

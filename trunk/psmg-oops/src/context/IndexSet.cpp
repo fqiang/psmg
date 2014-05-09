@@ -6,8 +6,8 @@
  */
 
 #include "IndexSet.h"
-
-#include <boost/foreach.hpp>
+#include <cassert>
+#include <sstream>
 
 #include "Set.h"
 #include "../model/SetComp.h"
@@ -25,8 +25,8 @@ IndexSet::~IndexSet()
 	{
 		BOOST_FOREACH(iset_tuple& tuple, tuples)
 		{
-			assert(tuple.get<1>()->name.compare(0,4,Set::TMP)==0);
-			delete tuple.get<1>();
+			assert(tuple.set->name.compare(0,4,Set::TMP)==0);
+			delete tuple.set;
 		}
 	}
 	tuples.clear();
@@ -36,7 +36,7 @@ IndexSet::~IndexSet()
 void IndexSet::addSet(string& dummyVar, Set* aSet,SetComp* comp)
 {
 	assert(aSet->dim==1); //TODO for now just handle one-dim set
-	iset_tuple tuple = boost::make_tuple<string,Set*,SetComp*>(dummyVar,aSet,comp);
+	iset_tuple tuple(dummyVar,aSet,comp);
 	tuples.push_back(tuple);
 }
 
@@ -46,8 +46,8 @@ string IndexSet::toString()
 	oss<<"IndexSet:["<<name<<"]"<<endl;
 	BOOST_FOREACH(iset_tuple& tuple, tuples)
 	{
-		oss<<"["<<tuple.get<0>()<<" -> "<<tuple.get<2>()->name<<"] ";
-		oss<<tuple.get<1>()->toString()<<endl;
+		oss<<"["<<tuple.dummyVar<<" -> "<<tuple.setcomp->name<<"] ";
+		oss<<tuple.set->toString()<<endl;
 	}
 	return oss.str();
 }
@@ -63,8 +63,8 @@ void IndexSet::calculateMemoryUsage(unsigned long int& size)
 	{
 		BOOST_FOREACH(iset_tuple& tuple, tuples)
 		{
-			assert(tuple.get<1>()->name.compare(0,4,Set::TMP)==0);
-			tuple.get<1>()->calculateMemoryUsage(size);
+			assert(tuple.set->name.compare(0,4,Set::TMP)==0);
+			tuple.set->calculateMemoryUsage(size);
 		}
 	}
 

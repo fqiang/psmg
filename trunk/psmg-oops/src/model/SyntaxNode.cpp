@@ -337,8 +337,8 @@ void SyntaxNode::calculateConCard(ModelContext* ctx,int& card)
 	SyntaxNode* setexpr_list = this->values[0]->values[0];
 	assert(setexpr_list->nchild()==1); //only support one dummy index
 	IndexSet* iset = this->createIndexSet(ctx);
-	assert(iset->tuples.size()== 1); //only support one dummy index for now
-	card = iset->tuples.begin()->get<1>()->card;
+	assert(iset->tuples.size()== 1); //only support one dummy index for constraint now
+	card = iset->tuples.begin()->set->card;
 	delete iset;
 }
 void SyntaxNode::calculateVarDimCard(ModelContext* ctx, uint& dim, uint& card) {
@@ -348,7 +348,7 @@ void SyntaxNode::calculateVarDimCard(ModelContext* ctx, uint& dim, uint& card) {
 	IndexSet* iset = this->createIndexSet(ctx);
 	dim = iset->tuples.size();
 	BOOST_FOREACH(iset_tuple& tuple, iset->tuples){
-		card = card * tuple.get<1>()->card;
+		card = card * tuple.set->card;
 	}
 	delete iset;
 }
@@ -602,7 +602,7 @@ Set* SyntaxNode::calculateSetValue(ModelContext* context) {
 		IndexSet* iset = this->createIndexSet(context);
 		assert(iset->tuples.size()==1); // TODO: support only 1 dummy index for now.
 		rval = new SetSimple(Set::TMP,1);
-		rval->copyFromSet(iset->tuples.begin()->get<1>());
+		rval->copyFromSet(iset->tuples.begin()->set);
 		delete iset;
 	}
 	else if (this->opCode == IDREF) {
@@ -671,8 +671,8 @@ Set* SyntaxNode::calculateSetValue(ModelContext* context) {
 		IndexSet* iset = this->values[0]->createIndexSet(context);
 		assert(iset->tuples.size()==1); //setof indexset only has one dimensional
 		iset_tuple& tuple = *(iset->tuples.begin());
-		string dummy = tuple.get<0>();
-		Set* set = tuple.get<1>();
+		string dummy = tuple.dummyVar;
+		Set* set = tuple.set;
 		if(typeid(*(this->values[1])) == typeid(SyntaxNodeID))
 		{
 			SyntaxNodeID* idn = static_cast<SyntaxNodeID*>(this->values[1]);
@@ -859,9 +859,9 @@ void SyntaxNode::evalTerm(ModelContext* context, PValue** rval) {
 		IndexSet* iset = this->values[0]->createIndexSet(context);
 		assert(iset->tuples.size()==1); //TODO: support only one index set for sum expression
 		iset_tuple& tuple = *(iset->tuples.begin());
-		string dummy = tuple.get<0>();
-		Set* aSet =  tuple.get<1>();
-		SetComp* comp = tuple.get<2>();
+		string dummy = tuple.dummyVar;
+		Set* aSet =  tuple.set;
+		SetComp* comp = tuple.setcomp;
 
 		vector<string>::iterator it = aSet->setValues_data_order.begin();
 		PValue* sum = new PValueValue((double)0);
@@ -1819,9 +1819,9 @@ AutoDiff::Node* SyntaxNode::buildAutoDiffDAG(ExpandedModel* emrow,ExpandedModel*
 			assert(iset->tuples.size() ==  1); //TODO: only for one dummy variables set for sum expression
 			iset_tuple& tuple = *(iset->tuples.begin());
 
-			string dummy = tuple.get<0>();
-			Set* set = tuple.get<1>();
-			ModelComp* comp = tuple.get<2>();
+			string dummy = tuple.dummyVar;
+			Set* set = tuple.set;
+			ModelComp* comp = tuple.setcomp;
 			vector<string>::iterator setv = set->setValues_data_order.begin();
 			for(;setv!=set->setValues_data_order.end();setv++)
 			{
