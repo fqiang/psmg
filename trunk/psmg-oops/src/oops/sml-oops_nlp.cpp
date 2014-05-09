@@ -30,7 +30,8 @@
 #include "oops/BlockDiagSimpleAlg.h"
 
 #include "../context/ExpandedModel.h"
-#include "../util/global_util_functions.h"
+#include "../context/ColSparseMatrix.h"
+#include "../util/util.h"
 #include "../sml/Sml.h"
 
 #include "OOPSBlock.h"

@@ -15,11 +15,12 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#include "../util/global_util_functions.h"
+#include "../util/util.h"
 #include "../sml/Sml.h"
 #include "../metric/Stat.h"
 #include "../model/AmplModel.h"
 #include "../context/ModelContext.h"
+#include "../context/ExpandedModel.h"
 #include "../oops/sml-oops.h"
 #include "mpi.h"
 #include <iostream>

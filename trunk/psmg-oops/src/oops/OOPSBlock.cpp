@@ -19,7 +19,7 @@
 #include <iomanip>
 #include <fstream>
 #include <string>
-#include "../util/global_util_functions.h"
+#include "../util/util.h"
 #include "OOPSBlock.h"
 #include "../context/ExpandedModel.h"
 

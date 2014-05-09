@@ -23,6 +23,10 @@
     #include <assert.h>
     #include <typeinfo>
     #include <iostream>
+    #include "../model/ParamComp.h"
+    #include "../model/VarComp.h"
+    #include "../model/ConsComp.h"
+    #include "../model/SetComp.h"
     #include "../model/ObjComp.h"
     #include "../model/ModelComp.h" 
     #include "../model/AmplModel.h"

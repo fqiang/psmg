@@ -6,7 +6,6 @@
 CPP_SRCS += \
 ../src/model/AmplModel.cpp \
 ../src/model/ConsComp.cpp \
-../src/model/DumCompEntry.cpp \
 ../src/model/ModelComp.cpp \
 ../src/model/ObjComp.cpp \
 ../src/model/ParamComp.cpp \
@@ -23,7 +22,6 @@ CPP_SRCS += \
 OBJS += \
 ./src/model/AmplModel.o \
 ./src/model/ConsComp.o \
-./src/model/DumCompEntry.o \
 ./src/model/ModelComp.o \
 ./src/model/ObjComp.o \
 ./src/model/ParamComp.o \
@@ -40,7 +38,6 @@ OBJS += \
 CPP_DEPS += \
 ./src/model/AmplModel.d \
 ./src/model/ConsComp.d \
-./src/model/DumCompEntry.d \
 ./src/model/ModelComp.d \
 ./src/model/ObjComp.d \
 ./src/model/ParamComp.d \

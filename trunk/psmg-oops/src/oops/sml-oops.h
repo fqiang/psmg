@@ -18,7 +18,7 @@
 #define SML_OOPS_H
 /* This is the OOPS driver for the Structured Modelling Language (SML) */
 
-#include "../context/ExpandedModel.h"
+class ExpandedModel;
 
 void SML_OOPS_driver_NLP(ExpandedModel *root);
 void SML_OOPS_driver_LP(ExpandedModel *root);
