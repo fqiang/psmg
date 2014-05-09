@@ -15,7 +15,7 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#include "../util/global_util_functions.h"
+#include "../util/util.h"
 #include "ModelComp.h"
 #include "AmplModel.h"
 #include "SyntaxNode.h"

@@ -8,6 +8,8 @@
 #include "SyntaxNodeIDREFM.h"
 #include "SyntaxNodeID.h"
 #include "AmplModel.h"
+#include "../st_model/StochCtx.h"
+
 #include "ObjComp.h"
 #include "../parser/sml.tab.h"
 

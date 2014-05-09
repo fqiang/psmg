@@ -9,6 +9,9 @@
 #include "SyntaxNodeString.h"
 #include "ObjComp.h"
 #include "../st_model/StochCtx.h"
+
+#include "../util/util.h"
+
 #include "../parser/sml.tab.h"
 #include <sstream>
 

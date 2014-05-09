@@ -5,8 +5,10 @@
  *      Author: s0965328
  */
 
-#include <boost/foreach.hpp>
 #include "ConsComp.h"
+
+#include <boost/foreach.hpp>
+#include "../util/util.h"
 #include "SyntaxNode.h"
 #include "AmplModel.h"
 
@@ -25,7 +27,7 @@ ConsComp::~ConsComp() {
 
 void ConsComp::calculateLocalCon(ModelContext* ctx)
 {
-	LOG("calculateLocalCon -- in model["<<this->model->name<<"] id["<<this->name<<"]");
+	LOG("calculateLocalCon -- in model["<< (this->model->name) <<"] id["<<this->name<<"]");
 	this->card = 1;
 	if(this->indexing!=NULL){ //a single constraint
 		this->indexing->calculateConCard(ctx,this->card);

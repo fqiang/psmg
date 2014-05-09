@@ -42,17 +42,18 @@
 #include <iostream>
 #include <boost/unordered_map.hpp>
 
-#include "../st_model/StochCtx.h"
-#include "ModelComp.h"
 #include "autodiff.h"
-#include "../context/ModelContext.h"
-#include "../context/SetSimple.h"
-#include "../context/ExpandedModel.h"
-#include "../context/PValue.h"
 
-class SyntaxNodeIDREF;
-class AmplModel;
 class SetComp;
+class StochCtx;
+
+class ModelContext;
+class Set;
+class SetOrdered;
+class IndexSet;
+class SetSimple;
+class ExpandedModel;
+class PValue;
 
 using namespace std;
 
@@ -129,43 +130,21 @@ public:
 	void calculateParamIndicies(vector<string>&, vector<SetComp*>&);
 	void calculateSetValue(ModelContext* context, Set* rval);
 	Set* calculateSetValue(ModelContext* context);
-//	Set* calculateTempSet(ModelContext* context);
-//	void calculateParamValue(ModelContext* context,double&);
-//	void calculateParamValue(ModelContext* context,string&);
+
 	void calculateVarDimCard(ModelContext* ctx, uint& dim, uint& card);
 	void calculateVarBounds(ModelContext* ctx, double& upper, double& lower);
 	void calculateConsBounds(ModelContext* ctx, double& upper, double& lower);
 	void calculateConCard(ModelContext* ctx,int& card);
 	double evalRhs(ModelContext* context);
-//	double evalDiff(ModelContext* rowContext, ModelContext* colContext, ModelComp* varComp, string& varKey);
-//	void evalDiff(ModelContext* rowContext, ModelContext* colContext, vector<double>& jcobs);
-//	bool isZeroVector(vector<double>& v);
-//	void multVectorScalar(vector<double>& v, double scalar, vector<double>& result);
-//	void plusVector(vector<double>& left, vector<double>& right, vector<double>& result);
-//	void minusVector(vector<double>& left, vector<double>& right, vector<double>& result);
-//	void negateVector(vector<double>& v);
-//	void calcSumSetComp(ModelContext* context, IndexSet** aSet);
-//	void calculateCompsDummyNames(ModelContext* context, IndexSet* iset);
-//	void calculateIndexSet(ModelContext* context, IndexSet* iset);
-//	string setOrgSetComp(ModelComp** orgSetComp);
 	bool evalBool(ModelContext* context);
 	void evalTerm(ModelContext* context,PValue**);
 	IndexSet* createIndexSet(ModelContext* context);
 	bool hasExp();
 	virtual SyntaxNode* appendDOTNotation(StochCtx*);
-//	void evalTerm(ModelContext* context,string&);
-
-//	void calcVarDefinedLevels(set<int>& levels);
-//	void calcSeparability(int level, set<int>& deps);
-//	bool containsVarDefInLevel(int level);
-//	Node* constructAutoDiffNode(ModelContext* ctx, Block* emb, ExpandedModel* emcol);
-//	Node* constructAutoDiffNode(ModelContext* ctx, Block* emb);
-//	bool isContainVariablesInEm2(ModelContext* ctx,ExpandedModel* emcol);
 
 	void calculatePartialConstraints(boost::unordered_map<int,SyntaxNode*>&);
-	void collectConstantTreeNode(vector<SyntaxNode*>&);
-	ModelContext* locateCtx(ModelContext* rowctx, ModelContext* currCtx, bool isLP);
-	AutoDiff::Node* buildAutoDiffDAG(ExpandedModel* emrow,ExpandedModel* emcol=NULL, bool isLP=false);
+	ModelContext* locateCtx(ModelContext* rowctx, ModelContext* currCtx);
+	AutoDiff::Node* buildAutoDiffDAG(ExpandedModel* emrow, ExpandedModel* emcol=NULL, bool isLP=false);
 
 	void calculateBaseValueVector(unsigned long& size);
 	virtual void calculateMemoryUsage(unsigned long& size);
@@ -177,8 +156,8 @@ public:
 
 private:
 	void getIndiciesKey(ModelContext* ctx,string& varKey);
-	AutoDiff::Node* createAutoDiffConIDREF(ModelContext* ctx);
-	AutoDiff::Node* createAutoDiffConIDREFLP(ModelContext* rowctx, ModelContext* colctx);
+	AutoDiff::Node* createAutoDiffConIDREFExplicit(ModelContext* rowctx, ModelContext* explicitCtx);
+//	AutoDiff::Node* createAutoDiffConIDREFLP(ModelContext* rowctx, ModelContext* colctx);
 };
 
 
@@ -188,43 +167,4 @@ std::ostream& operator<<(std::ostream& s, SyntaxNode *node);
 // Routines taken from ampl.h
 
 #endif /* SYNTAXNODE1_H_ */
-
-
-
-//legacy !!
-
-//	void getIDREFIndiciesKey(ModelContext* ctx,string& varKey);
-
-//	// node is a dummy var -> remove (..)
-//	std::string printDummyVar() ;
-//
-//	/** Return comma separated list of arguments for IDREF nodes */
-//	std::string getArgumentList() const;
-
-//	/** Find all the IDREF nodes at or below the current node */
-//	virtual void findIDREF(std::list<ModelComp*>& lmc) const;
-//
-//	/** Find all the IDREF nodes at or below the current node */
-//	virtual void findIDREF(std::list<SyntaxNode*> *lnd);
-//
-//	/** Find all nodes of opCode @a oc at or below the current node */
-//	virtual void findOpCode(int oc, std::list<SyntaxNode*> *lnd);
-
-//	/** Find the ModelComp (if it exists) referred to by this SyntaxNode.
-//	 *
-//	 *  If the expression given by this SyntaxNode is an immediate reference to
-//	 *  a ModelComp then return that, otherwise return NULL.
-//	 */
-//	ModelComp *findModelComp() const;
-
-//	/** Creates a deep copy of the nodes: SyntaxNodes pointed to are recreated
-//	 *  as well.
-//	 *
-//	 *  Non-SyntaxNode objects pointed to are not recreated, here just pointers
-//	 *  are copied (->ref in the case of a SyntaxNodeIDREF object).
-//	 *  The int/double entries pointed to by INT_VAL/FLOAT_VAL SyntaxNodes *are*
-//	 *  recreated.
-//	 */
-//	virtual SyntaxNode *deep_copy();
-//
 

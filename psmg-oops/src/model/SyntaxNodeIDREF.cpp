@@ -10,8 +10,11 @@
 #include "SyntaxNodeID.h"
 
 #include "ObjComp.h"
+#include "VarComp.h"
 #include "../st_model/StochModel.h"
 #include "../st_model/StochCtx.h"
+#include "../util/util.h"
+
 #include "../parser/sml.tab.h"
 
 /* --------------------------------------------------------------------------

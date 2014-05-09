@@ -7,6 +7,8 @@
 
 #include "SyntaxNodeValue.h"
 
+#include "../util/util.h"
+
 #include "ObjComp.h"
 #include "../parser/sml.tab.h"
 

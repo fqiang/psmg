@@ -7,7 +7,7 @@
 
 #include "SyntaxNodeOP.h"
 
-#include "../util/global_util_functions.h"
+#include "../util/util.h"
 #include "../model/ObjComp.h"
 #include "../parser/sml.tab.h"
 

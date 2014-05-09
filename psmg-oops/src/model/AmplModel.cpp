@@ -16,14 +16,20 @@
  */
 
 #include "AmplModel.h"
-#include "ModelComp.h"
+#include "ObjComp.h"
+#include "ParamComp.h"
+#include "VarComp.h"
+#include "ConsComp.h"
+#include "SetComp.h"
 #include "SyntaxNode.h"
 #include "SyntaxNodeID.h"
 #include "SyntaxNodeIDREF.h"
-#include "../st_model/StochModel.h"
-#include "../util/global_util_functions.h"
 #include "../context/ExpandedModel.h"
+#include "../context/IndexSet.h"
+#include "../context/Set.h"
+#include "../st_model/StochModel.h"
 #include "../parser/sml.tab.h"
+#include "../util/util.h"
 #include <cassert>
 #include <typeinfo>
 #include <cctype>

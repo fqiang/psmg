@@ -9,11 +9,13 @@
 #define PARAMCOMP_H_
 
 #include "ModelComp.h"
-#include "../context/ModelContext.h"
-#include "../context/ParamMult.h"
-#include "../context/ParamSingle.h"
 
 class SetComp;
+
+class ModelContext;
+class ParamMult;
+class Set;
+class PValue;
 
 class ParamComp : public ModelComp {
 public:

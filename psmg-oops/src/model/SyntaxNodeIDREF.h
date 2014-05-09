@@ -10,6 +10,7 @@
 
 #include "SyntaxNode.h"
 
+class ModelComp;
 
 /* ----------------------------------------------------------------------------
 SyntaxNodeIDREF
