@@ -17,7 +17,7 @@
 
 %debug
 %{
- 	#include "../util/global_util_functions.h"
+ 	#include "../util/util.h"
    	#include "../context/Set.h"
 	#include "../context/ModelContext.h"
 	#include "../context/PValueSym.h"

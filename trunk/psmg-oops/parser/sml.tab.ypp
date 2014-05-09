@@ -38,7 +38,7 @@
     #include "../model/SyntaxNodeIDREFM.h"
     #include "../st_model/StochModel.h"
 
-    #include "../util/global_util_functions.h"
+    #include "../util/util.h"
     
     using namespace std;
 
@@ -109,7 +109,7 @@
 %token SUFFIX BLOCK
 %token USING DETERMINISTIC EXPECTATION STOCHASTIC STAGES
 %token ANCESTOR
-%token IDREF IDREFM VALUE LIST INDEX DVAR DOT STAGE NODE STRING
+%token IDREF IDREFM VALUE LIST INDEX DVAR DOT STAGE NODE STRING SUMEXP
 
 
 %nonassoc ASSIGN

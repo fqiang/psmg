@@ -9,7 +9,6 @@ CPP_SRCS += \
 ../src/context/BlockHV.cpp \
 ../src/context/BlockLP.cpp \
 ../src/context/BlockObj.cpp \
-../src/context/BlockObjLP.cpp \
 ../src/context/ExpandedModel.cpp \
 ../src/context/IndexSet.cpp \
 ../src/context/ModelContext.cpp \
@@ -31,7 +30,6 @@ OBJS += \
 ./src/context/BlockHV.o \
 ./src/context/BlockLP.o \
 ./src/context/BlockObj.o \
-./src/context/BlockObjLP.o \
 ./src/context/ExpandedModel.o \
 ./src/context/IndexSet.o \
 ./src/context/ModelContext.o \
@@ -53,7 +51,6 @@ CPP_DEPS += \
 ./src/context/BlockHV.d \
 ./src/context/BlockLP.d \
 ./src/context/BlockObj.d \
-./src/context/BlockObjLP.d \
 ./src/context/ExpandedModel.d \
 ./src/context/IndexSet.d \
 ./src/context/ModelContext.d \

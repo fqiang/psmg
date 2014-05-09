@@ -39,6 +39,9 @@ typedef boost::numeric::ublas::matrix_range<col_compress_matrix > col_compress_m
 
 //typedef boost::numeric::ublas::compressed_matrix<double>  compress_matrix;
 
+//1. the model comp of the dummy var referred to. 2. the string value of this dummy var at current em.
+typedef std::pair<ModelComp*, string> model_dummy_t;
+
 class ExpandedModel
 {
 public:
@@ -57,10 +60,11 @@ public:
 
 	//! the map from dummy variable for constructing this instance of EM.
 	//  block ID {a in ARCS} -- a --> ARCS
-	boost::unordered_map<string,ModelComp*> dummySetMap;
+//	boost::unordered_map<string,ModelComp*> dummySetMap;
 	//! the map from dummy variable to the value of this variable for this local problem.
 	//  a ---> "A1"
-	boost::unordered_map<string,string> dummyValueMap;
+//	boost::unordered_map<string,string> dummyValueMap;
+	boost::unordered_map<string,model_dummy_t> dummyMap;
 
 
 //! Return Obj Block (objective in this) X (variables in emcol)

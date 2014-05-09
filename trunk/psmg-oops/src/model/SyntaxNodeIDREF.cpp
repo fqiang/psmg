@@ -38,9 +38,9 @@ SyntaxNodeIDREF::SyntaxNodeIDREF(const SyntaxNodeIDREF& src):SyntaxNode(src)
 SyntaxNodeIDREF* SyntaxNodeIDREF::clone()
 {
 	assert(nchild()<=2);
-	//make a copy, then
+	//make a copy,
 	SyntaxNodeIDREF* refn = new SyntaxNodeIDREF(*this);
-	//update reference refn->ref
+	//then update reference refn->ref. and idn's name
 	SyntaxNodeID* idn = static_cast<SyntaxNodeID*>(refn->values[0]);
 	if(refn->ref->type == TVAR && static_cast<VarComp*>(refn->ref)->isDet == true)
 	{
@@ -48,7 +48,7 @@ SyntaxNodeIDREF* SyntaxNodeIDREF::clone()
 		string refname = GV(var_det_prefix)+"_"+SCTX::currCtx->stagename+"_"+refn->ref->name;
 		assert(idn->id.compare(refn->ref->name)==0);
 		refn->ref = SCTX::rootCtx->model->findModelComp(refname);
-		//update the idname in idnode as well - for sack of consistance
+		//update the idname in idnode as well - for sack of consistency
 		idn->id = refname;
 	}
 	else {

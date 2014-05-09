@@ -15,6 +15,7 @@
 #include "SyntaxNodeIDREFM.h"
 #include "SyntaxNodeValue.h"
 #include "SyntaxNodeString.h"
+#include "SyntaxNodeSumExp.h"
 #include "SyntaxNodeID.h"
 #include "SyntaxNodeOP.h"
 #include "SetComp.h"
@@ -88,7 +89,8 @@ SyntaxNode* SyntaxNode::clone(){
 	else if(opCode == EXPECTATION)
 	{//replace Exp[expr] ===> sum{n1 in NODES: Parent[n1]=n0} ( Prob[n1] * sum{n2 in NODES: Parent[n2]=n1}( Prob[n2]* almSTAGE1[n1].almSTAGE[n2].expr ) )
 		assert(nchild()==1);
-		rval = values[0]->clone();
+		rval = values[0]->clone(); //make copy of the expr of EXP[expr]
+		int nProb = 0;
 		for(StochCtx* i = SCTX::currCtx;i!=SCTX::rootCtx;i=i->parent)
 		{
 			rval = rval->appendDOTNotation(i);
@@ -96,18 +98,23 @@ SyntaxNode* SyntaxNode::clone(){
 			SyntaxNode* probn_expr_list = new SyntaxNode(COMMA,new SyntaxNodeID(i->model_dummy));
 			probn->push_back(probn_expr_list);
 			SyntaxNode* sum_expr = new SyntaxNodeOP(TIMES,probn,rval);
+			nProb++;
 
-			SyntaxNodeIDREF* parn = new SyntaxNodeIDREF(new SyntaxNodeID(SCTX::paSetComp->name),SCTX::paSetComp);
-			SyntaxNode* par_expr_list = new SyntaxNode(COMMA,new SyntaxNodeID(i->model_dummy));
-			parn->push_back(par_expr_list);
-			SyntaxNode* condn = new SyntaxNode(EQ,parn,new SyntaxNodeID(i->parent->model_dummy));
-			SyntaxNodeIDREF* noden = new SyntaxNodeIDREF(new SyntaxNodeID(SCTX::ndSetComp->name),SCTX::ndSetComp);
-			SyntaxNode* index_expr = new SyntaxNode(IN, new SyntaxNode(COMMA,new SyntaxNodeID(i->model_dummy)),noden);
-			SyntaxNode* index_expr_list = new SyntaxNode(COMMA,index_expr);
-			SyntaxNode* sum_index_set = new SyntaxNode(LBRACE,new SyntaxNode(COLON,index_expr_list,condn));
+			//instead of creating a normal sum node, a special node SUMEXP will be created for the EXPECTATION operation
+			//- this is to efficiently handling sum expression
+//			SyntaxNodeIDREF* parn = new SyntaxNodeIDREF(new SyntaxNodeID(SCTX::paSetComp->name),SCTX::paSetComp);
+//			SyntaxNode* par_expr_list = new SyntaxNode(COMMA,new SyntaxNodeID(i->model_dummy));
+//			parn->push_back(par_expr_list);
+//			SyntaxNode* condn = new SyntaxNode(EQ,parn,new SyntaxNodeID(i->parent->model_dummy));
+//			SyntaxNodeIDREF* noden = new SyntaxNodeIDREF(new SyntaxNodeID(SCTX::ndSetComp->name),SCTX::ndSetComp);
+//			SyntaxNode* index_expr = new SyntaxNode(IN, new SyntaxNode(COMMA,new SyntaxNodeID(i->model_dummy)),noden);
+//			SyntaxNode* index_expr_list = new SyntaxNode(COMMA,index_expr);
+//			SyntaxNode* sum_index_set = new SyntaxNode(LBRACE,new SyntaxNode(COLON,index_expr_list,condn));
+//			rval = new SyntaxNode(SUM,sum_index_set,sum_expr);
 
-			rval = new SyntaxNode(SUM,sum_index_set,sum_expr);
+			rval = sum_expr;
 		}
+		rval = new SyntaxNodeSumExp(rval,nProb);
 		LOG("clone :: EXPECTATION convert to ["<<rval->print()<<"]");
 	}
 	else
@@ -1247,6 +1254,19 @@ void SyntaxNode::calculatePartialConstraints(boost::unordered_map<int,SyntaxNode
 			partials.insert(pair<int,SyntaxNode*>((*it).first,newSum));
 		}
 	}
+	else if(this->opCode == SUMEXP)
+	{ // SumExp{nProbs} (expr) ---->  SumExp{nProbs}(expr1) + ... SumExp{nProbs}(exprn); given expr = expr1 + ... + exprn
+		assert(nchild()==1);
+		boost::unordered_map<int,SyntaxNode*> child;
+		this->values[0]->calculatePartialConstraints(child);
+		int nProbs = static_cast<SyntaxNodeSumExp*>(this)->nProbs;
+		boost::unordered_map<int,SyntaxNode*>::iterator it=child.begin();
+		for(;it!=child.end();it++)
+		{
+			SyntaxNode* newSumExp = new SyntaxNodeSumExp((*it).second,nProbs);
+			partials.insert(pair<int,SyntaxNode*>((*it).first,newSumExp));
+		}
+	}
 	else if(this->opCode == LSBRACKET)
 	{
 		assert(this->values[0]->opCode == IDREF);
@@ -1765,8 +1785,8 @@ AutoDiff::Node* SyntaxNode::buildAutoDiffDAG(ExpandedModel* emrow,ExpandedModel*
 		ModelComp* compEmcol = NULL;
 		string dummyEmcol = "";
 		if(emcol!=NULL && emcol->model->indexing!=NULL){ //there is indexingset for emcol's model
-			compEmcol = emcol->dummySetMap.begin()->second;
-			dummyEmcol = emcol->dummySetMap.begin()->first;
+			compEmcol = emcol->dummyMap.begin()->second.first;
+			dummyEmcol = emcol->dummyMap.begin()->first;
 		}
 
 		if(compSum == compEmcol && dummySum.compare(dummyEmcol)==0 && condition_opt == NULL)
@@ -1774,7 +1794,7 @@ AutoDiff::Node* SyntaxNode::buildAutoDiffDAG(ExpandedModel* emrow,ExpandedModel*
 			//this design is to speedup the summation handling for sum constraints applied on serveral sibling variables.
 			//note: 1. sibling variables can't be non-additively separable.
 			//		2. to enable this optimisation, the model fille has to be in exact form as stated above.
-			string& dummyval = emcol->dummyValueMap.begin()->second;
+			string& dummyval = emcol->dummyMap.begin()->second.second;
 			LOG("Exact matches found for {"<<dummySum<<" in "<<compSum->name<<"} == {"<<dummyEmcol<<" in "<<compEmcol->name<<"} - Sum explict ["<<dummySum<<" -> ["<<dummyval<<"]");
 			rowctx->addDummyCompValueMapTemp(dummySum, compSum, dummyval);
 			con = this->values[1]->buildAutoDiffDAG(emrow,emcol, isLP);
@@ -1833,6 +1853,44 @@ AutoDiff::Node* SyntaxNode::buildAutoDiffDAG(ExpandedModel* emrow,ExpandedModel*
 				//create a 0 node.
 				con = AutoDiff::create_param_node(0);
 			}
+		}
+	}
+	else if(this->opCode == SUMEXP)
+	{
+		assert(nchild()==1);
+		SyntaxNodeSumExp* sumexpn = static_cast<SyntaxNodeSumExp*>(this);
+		if(emcol!=NULL) // using partial attribute, nProbs must equals to emcol's level -1
+		{
+			assert(sumexpn->nProbs == emcol->model->level-1);
+			assert(emrow->model->level == 1); //must be the stage0 node. because constraint that contains exp[expr] will be moved to root stage.
+			//adding dummy from emcol's model dummy
+			int num = 0;
+			assert(emrow->ctx->dummyEmcolTempMap.size()==0);
+			for(ExpandedModel* c = emcol;c!=emrow;c=c->parent) {
+				assert(c->dummyMap.size()==1); //assume only 1 model dummy support!
+				string dv = c->dummyMap.begin()->first;
+				string& dval = c->dummyMap.begin()->second.second;
+				emrow->ctx->addDummyEmcolTempMap(dv,dval);
+				num++;
+			}
+			assert(num==sumexpn->nProbs); //sanity check!
+			//then, build con by using expr (this->values[0]);
+			con = this->values[0]->buildAutoDiffDAG(emrow,emcol,isLP);
+			//finally, remove the dummy from emcol's model dummy to restore emrow
+			for(ExpandedModel* c = emcol;c!=emrow;c=c->parent) {
+				assert(c->dummyMap.size()==1); //assume only 1 model dummy support!
+				string dv = c->dummyMap.begin()->first;
+				emrow->ctx->removeDummyEmcolTempMap(dv);
+			}
+			assert(emrow->ctx->dummyEmcolTempMap.size()==0);
+		}
+		else
+		{	//using full constraint attributes
+			//1. find out the stage X of expr of EXP[expr].
+			//2. create a summation express that using each instance in the corresponding contexts from the stage X
+
+			assert(false); //indicating building constraint using Full attributes
+			con = NULL;
 		}
 	}
 	else if(this->opCode == VALUE)

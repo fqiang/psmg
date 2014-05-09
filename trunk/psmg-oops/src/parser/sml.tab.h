@@ -166,11 +166,12 @@
      STAGE = 384,
      NODE = 385,
      STRING = 386,
-     ASSIGN = 387,
-     MINUS = 388,
-     PLUS = 389,
-     DIVID = 390,
-     TIMES = 391
+     SUMEXP = 387,
+     ASSIGN = 388,
+     MINUS = 389,
+     PLUS = 390,
+     DIVID = 391,
+     TIMES = 392
    };
 #endif
 /* Tokens.  */
@@ -303,11 +304,12 @@
 #define STAGE 384
 #define NODE 385
 #define STRING 386
-#define ASSIGN 387
-#define MINUS 388
-#define PLUS 389
-#define DIVID 390
-#define TIMES 391
+#define SUMEXP 387
+#define ASSIGN 388
+#define MINUS 389
+#define PLUS 390
+#define DIVID 391
+#define TIMES 392
 
 
 
@@ -330,7 +332,7 @@ typedef union YYSTYPE
 
 
 /* Line 2068 of yacc.c  */
-#line 334 "../src/parser/sml.tab.hpp"
+#line 336 "../src/parser/sml.tab.hpp"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

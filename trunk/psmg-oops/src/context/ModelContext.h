@@ -22,6 +22,9 @@ class ModelComp;
 class ExpandedModel;
 class SyntaxNode;
 
+//1. the ModelComp of dummy index referred to, 2. the value of this dummy index evaluated
+typedef std::pair<ModelComp*, string> dummy_tmp_t;
+
 class ModelContext {
 
 public:
@@ -30,8 +33,12 @@ public:
 
 	//! data storage for this expanded model tree node. key is ModelComp*
 	boost::unordered_map<ModelComp*,CompDescr*> compValueMap;
-	boost::unordered_map<string,ModelComp*> dummyCompMapTemp;
-	boost::unordered_map<string,string> dummyValueMapTemp;
+
+	boost::unordered_map<string, dummy_tmp_t> dummyTempMap;
+	boost::unordered_map<string,string> dummyEmcolTempMap;  //this is used for storing emcol model dummy for SUMEXP handling
+
+//	boost::unordered_map<string,ModelComp*> dummyCompMapTemp;
+//	boost::unordered_map<string,string> dummyValueMapTemp;
 
 	//! temporary IndexSet storage - mainly for sum{...} node
 	boost::unordered_map<SyntaxNode*,IndexSet*> tempISetMap;
@@ -39,6 +46,8 @@ public:
 	ModelContext(ModelContext* par);
 	virtual ~ModelContext();
 
+	void addDummyEmcolTempMap(string& dummyVar, string& value);
+	void removeDummyEmcolTempMap(string& dummyVar);
 	void addDummyCompValueMapTemp(string& dummyVar,ModelComp* comp,string& val);
 	void removeDummySetValueMapTemp(string& dummyVar);
 	string getDummyValue(string& dummyVar);
