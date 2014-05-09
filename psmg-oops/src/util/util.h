@@ -19,7 +19,7 @@
 #include "../metric/Stat.h"
 #include "../metric/TimeStamp.h"
 #include "../sml/Config.h"
-#include "CompilerMarco.h"
+#include "compile_marco.h"
 
 void print_mem_usage(std::string name);
 

@@ -4,7 +4,7 @@
 #include <iostream>
 
 /*
- * CompilerMarco.h
+ * compile_marco.h
  *
  *  Created on: 18 Feb 2013
  *      Author: s0965328
