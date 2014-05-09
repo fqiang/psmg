@@ -20,7 +20,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
-#include "../context/ExpandedModel.h"
+class ExpandedModel;
 
 using namespace std;
 

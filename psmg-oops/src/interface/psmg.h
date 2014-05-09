@@ -9,10 +9,12 @@
 #define PSMG_H_
 
 #include <vector>
+#include <string>
 
-#include "../context/ExpandedModel.h"
-#include "../context/ColSparseMatrix.h"
+class ExpandedModel;
+class ColSparseMatrix;
 
+using namespace std;
 
 //Maybe it is easier to just use ExpandedModel class as interface to access PSMG
 namespace PSMG{

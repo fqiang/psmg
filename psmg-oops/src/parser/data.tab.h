@@ -89,7 +89,7 @@ typedef union YYSTYPE
 {
 
 /* Line 2068 of yacc.c  */
-#line 60 "data.tab.ypp"
+#line 62 "data.tab.ypp"
 
    long ival;
    double fval;

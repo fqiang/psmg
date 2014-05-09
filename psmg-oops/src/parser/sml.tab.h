@@ -317,7 +317,7 @@ typedef union YYSTYPE
 {
 
 /* Line 2068 of yacc.c  */
-#line 68 "sml.tab.ypp"
+#line 72 "sml.tab.ypp"
 
   int optype;
   objType otype;

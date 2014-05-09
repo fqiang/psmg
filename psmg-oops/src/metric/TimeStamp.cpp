@@ -6,7 +6,7 @@
  */
 
 #include "TimeStamp.h"
-#include "../util/global_util_functions.h"
+#include "../util/util.h"
 #include <assert.h>
 #include <sstream>
 

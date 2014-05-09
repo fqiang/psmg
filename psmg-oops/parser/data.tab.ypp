@@ -26,6 +26,8 @@
    	#include "../context/ParamSingle.h"
    	#include "../model/AmplModel.h"
    	#include "../model/ModelComp.h"
+   	#include "../model/ParamComp.h"
+   	#include "../model/SetComp.h"
    	#include <cassert>
    	#include <cstdlib>
    	#include <iostream>
