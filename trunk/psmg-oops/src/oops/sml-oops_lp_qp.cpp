@@ -31,6 +31,7 @@
 
 #include "../context/ExpandedModel.h"
 #include "../context/ColSparseMatrix.h"
+#include "../model/AmplModel.h"
 #include "../util/util.h"
 #include "../sml/Sml.h"
 
@@ -50,36 +51,21 @@ static PDProblem* prob_ptr = NULL;
 static Algebra *createA(ExpandedModel *em);
 static Algebra *createQ(ExpandedModel *em);
 
-static Algebra* createBottomBord(ExpandedModel *emrow, ExpandedModel *emcol);
-static Algebra* createRHSBord(ExpandedModel *emrow, ExpandedModel *emcol);
-static Algebra* createBottmBordQ(ExpandedModel *emrow, ExpandedModel *emcol);
-static Algebra* createRHSBordQ(ExpandedModel *emrow, ExpandedModel *emcol);
-static void SMLCallBack(CallBackInterfaceType *cbi);
-static void SMLCallBackQ(CallBackInterfaceType *cbi);
-
 static void FillRhsVector(Vector *vb);
 static void FillObjVector(Vector *vc);
 static void FillUpBndVector(Vector *vu);
 static void FillLowBndVector(Vector *vl);
 
-static void OOPS_update_x(ExpandedModel* emrow);
-static Vector* find_sub_vector(ExpandedModel* root, Vector* root_vx, ExpandedModel* lookfor, vector<int>&);
-static void OOPS_update_sol_x_all_bellow(ExpandedModel* em, Vector *vx);
-static void OOPS_update_x_parent_only(ExpandedModel* emrow, vector<int>& path);
 
-static void OOPS_update_y(ExpandedModel* emrow);
-static void OOPS_update_sol_y_all_bellow(ExpandedModel* em, Vector *vx);
-static void OOPS_update_y_parent_only(ExpandedModel* emrow, vector<int>& path);
-
-
-
-void SML_OOPS_driver_NLP(ExpandedModel *root) {
+void SML_OOPS_driver_LP_QP(ExpandedModel *root) {
 	Algebra *AlgAug;
 	Vector *vb, *vc, *vu, *vl;
 	Vector *vx, *vy, *vz;
 
 	Algebra *A = createA(root);
 	Algebra *Q = createQ(root);
+	if(GV(rank)==0)
+		cout<<"Problem Size: row[ "<<A->nb_row<<" ]col[ "<<A->nb_col<<" ]"<<endl;
 
 	TIMER_START("OOPS_PROBLEM_SETUP");
 	AlgAug = OOPSSetup(A, Q);
@@ -98,8 +84,8 @@ void SML_OOPS_driver_NLP(ExpandedModel *root) {
 	vl->fillCallBack(FillLowBndVector);
 
 	if (GV(writeMatlab)) {
-		LOG("Writing matlab file: "<<GV(matlabFile));
-		string mfile = GV(logdir)+ GV(matlabFile);
+		LOG("Writing matlab file:mat.m");
+		string mfile = GV(logdir)+ "mat.m";
 		FILE *mout = fopen(mfile.c_str(), "w");
 		PrintMatrixMatlab(mout, A, "A");
 		PrintMatrixMatlab(mout, Q, "Q");
@@ -111,8 +97,8 @@ void SML_OOPS_driver_NLP(ExpandedModel *root) {
 	}
 
 	if (GV(writeMPS)) {
-		LOG("Writing mps file:"<<GV(mpsFile));
-		string mfile = GV(logdir)+GV(mpsFile);
+		LOG("Writing mps file:mat.m");
+		string mfile = GV(logdir)+"test.mps";
 		FILE *mps_file = fopen(mfile.c_str(), "w");
 		Write_MpsFile(mps_file, AlgAug, vb, vc, vu, vl, 1, NULL, NULL);
 		fclose(mps_file);
@@ -128,7 +114,7 @@ void SML_OOPS_driver_NLP(ExpandedModel *root) {
 
 	PDProblem Prob(AlgAug, vb, vc, vl, vu, vx, vy, vz);
 	prob_ptr = &Prob;
-	assert(prob_ptr!=NULL);
+
 	if (GV(solve)) {
 		cout << "Calling OOPS..." << endl;
 		Prob.solve(stdout);
@@ -145,6 +131,13 @@ void SML_OOPS_driver_NLP(ExpandedModel *root) {
 /* ==========================================================================
  Here comes the generation with all subroutines
  =========================================================================== */
+
+static Algebra* createBottomBord(ExpandedModel *emrow, ExpandedModel *emcol);
+static Algebra* createRHSBord(ExpandedModel *emrow, ExpandedModel *emcol);
+static Algebra* createBottmBordQ(ExpandedModel *emrow, ExpandedModel *emcol);
+static Algebra* createRHSBordQ(ExpandedModel *emrow, ExpandedModel *emcol);
+static void SMLCallBack(CallBackInterfaceType *cbi);
+static void SMLCallBackQ(CallBackInterfaceType *cbi);
 
 /* --------------------------------------------------------------------------
  createA
@@ -429,32 +422,24 @@ void SMLCallBack(CallBackInterfaceType *cbi) {
 
 	LOG("SMLCallBack - called -- ");
 	OOPSBlock *obl = (OOPSBlock*) cbi->id;
-//	assert(obl->prob!=NULL);
-	//update primal vriables x solution for bellow emrow
-	//			and ancestor and parent of emrow
-
 	if (cbi->row_nbs == NULL) {
-		LOG("get nz_cons_jacobs --- ");
-		//
-		//before update the current x in PSMG, the Block need to be initialized by calling getBlockLocal
-		obl->emrow->getBlockDep();
-		//first need to update the primal varibles value
-		//then calling cons_jacobs_local to retrieve the jacob for this block
-		//1. update primal variables
-		if(obl->i != 0){
-			OOPS_update_x(obl->emrow);
-		}
-		obl->i++;
-		//2. compute the non zero for jacob of intersection emrow x emcol
-		cbi->nz = obl->emrow->nz_cons_jacobs_nlp_local(obl->emcol);
+//		LOG_TIME(""<<Stat::numNZJacLPCall<<" row: "<<obl->emrow->name<<"  col: "<<obl->emcol->name<<" ");
+//		TIMER_START("nz_cons_jacobs_lp");
+		cbi->nz = obl->emrow->nz_cons_jacobs_lp_qp(obl->emcol);
+//		TIMER_STOP("nz_cons_jacobs_lp");
+		LOG("SMLCallBack  nz - "<<cbi->nz);
 	} else {
-		LOG("jacobs - want to fill in matrices");
-		//2. computing jacob of intersection emrow X emcol
-		//   use the current point offered by previous call
-		col_compress_matrix block(obl->emrow->numLocalCons,obl->emcol->numLocalVars);
-		obl->emrow->cons_jacobs_nlp_local(obl->emcol, block);
-		ColSparseMatrix m(cbi->element,cbi->row_nbs,cbi->col_beg,cbi->col_len);
-		ExpandedModel::convertToColSparseMatrix(block,m);
+		LOG("SMLCallBack  fill -"<<cbi->nz);
+//		LOG_TIME(""<<Stat::numJacLPCall<<" row: "<<obl->emrow->name<<"  col: "<<obl->emcol->name<<" ");
+//		TIMER_START("cons_jacobs_lp");
+		if(cbi->nz!=0) {
+			col_compress_matrix block(obl->emrow->numLocalCons,obl->emcol->numLocalVars,cbi->nz);
+			ColSparseMatrix m(cbi->element,cbi->row_nbs,cbi->col_beg,cbi->col_len);
+			obl->emrow->cons_jacobs_lp_qp(obl->emcol, block);
+			LOG(""<<block);
+			ExpandedModel::convertToColSparseMatrix(block,m);
+		}
+//		TIMER_STOP("cons_jacobs_lp");
 	}
 	LOG("end SMLCallBack --");
 }
@@ -473,206 +458,46 @@ void SMLCallBackQ(CallBackInterfaceType *cbi) {
 	 double *element
 	 void *id
 	 */
-
-	/*
-	 * compute the a submatrix of the lagrangian Hessian block defined by emrow X emcol in OOPSBlock
-	 * This will consist few parts
-	 * 1. the submatrix of hessian of emrow X emcol  -- variable
-	 * 2. the submatrix of all the levels above (and has to be of its ancestor) of emrow X emcol -- to deal with variables used in above it's declared level
-	 * 3. the submatrix of all the levels bellow of emrow x emcol -- to deal with variables used in bellow it's declared level
-	 * 3. objective constrain in emrow x emcol
-	 * Assumption: the varaible declared at this level do not appear in objective at other level. If this is the case
-	 * additional variable can be introduced to resolve this constraint
-	 *
-	 * We also assume the solver will call the get function evluation before evaluating the lagrangian hessian, therefore
-	 * the current point X is already update to date. We will need to update Y before evaluate lagrangian hessian.
-	 */
-	LOG("SMLCalBackQ - called");
-	OOPSBlock *obl = (OOPSBlock*) cbi->id;
-
-	if (cbi->row_nbs == NULL) {
-		LOG("get nz laghess --- ");
-		//before update the current x in PSMG, the Block need to be initialized by calling getBlockLocal
-		obl->emrow->getBlockDep();
-		//first need to update the primal varibles value
-		//then calling cons_jacobs_local to retrieve the jacob for this block
-		//1. update primal variables
-		if(obl->i != 0){
-			OOPS_update_y(obl->emrow);
-		}
-		obl->i++;
-		//2. compute the nonzero for lagrangian hessian of the block insection by (emrow X emcol)
-		cbi->nz = obl->emrow->nz_lag_hess_nlp_local(obl->emcol);
+	if(GV(solvetype).compare("lp")==0) {
+		cbi->nz = 0; //lp solver, therefore no Q matrix
+		return;
 	}
-	else
-	{
-		LOG("laghess ---  fill in matrices");
-		//2. computing jacob of intersection emrow X emcol
-		//   use the current point offered by previous call
-		col_compress_matrix block;
-		obl->emrow->lag_hess_nlp_local(obl->emcol, block);
-		ColSparseMatrix m(cbi->element,cbi->row_nbs,cbi->col_beg,cbi->col_len);
-		ExpandedModel::convertToColSparseMatrix(block,m);
+	LOG("SMLCalBackQ - called --");
+	OOPSBlock* obl = (OOPSBlock*)cbi->id;
+	int rowlevel = obl->emrow->model->level;
+	int collevel = obl->emcol->model->level;
+	if(rowlevel == collevel) assert(obl->emrow == obl->emcol);
+	if(cbi->row_nbs==NULL) {
+		if(rowlevel<collevel){
+			cbi->nz = obl->emcol->nz_obj_hess_qp(obl->emrow);
+		}
+		else{
+			cbi->nz = obl->emrow->nz_obj_hess_qp(obl->emcol);
+		}
+	}
+	else{
+		if(cbi->nz != 0)
+		{
+			if(rowlevel<collevel){ //compute the transpose
+				col_compress_matrix block(obl->emcol->numLocalVars,obl->emrow->numLocalVars,cbi->nz);
+				obl->emcol->obj_hess_qp(obl->emrow,block);
+				ColSparseMatrix m(cbi->element,cbi->row_nbs,cbi->col_beg,cbi->col_len);
+				block = boost::numeric::ublas::trans(block);
+				ExpandedModel::convertToColSparseMatrix(block,m);
+			}
+			else
+			{
+				col_compress_matrix block(obl->emrow->numLocalVars,obl->emcol->numLocalVars,cbi->nz);
+				obl->emrow->obj_hess_qp(obl->emcol,block);
+				ColSparseMatrix m(cbi->element,cbi->row_nbs,cbi->col_beg,cbi->col_len);
+				block = boost::numeric::ublas::trans(block);
+				ExpandedModel::convertToColSparseMatrix(block,m);
+			}
+		}
 	}
 	LOG("end SMLCalBackQ - called");
 
 }
-
-Vector* find_sub_vector(ExpandedModel* root, Vector* root_vx, ExpandedModel* lookfor, vector<int>& path)
-{
-	Vector* rval = NULL;
-	if(root==lookfor)
-	{
-		return rval = root_vx;
-	}
-	else
-	{
-		for(int i=0;i<root->children.size();i++)
-		{
-			path.push_back(i);
-			Vector* sub_vx = SubVector(root_vx,i);
-			rval = find_sub_vector(root->children.at(i),sub_vx,lookfor,path);
-			if(rval != NULL)
-				break;
-			else
-			{
-				path.pop_back();
-			}
-		}
-	}
-	return rval;
-}
-
-/*
- * Update the relate x vector
- */
-void OOPS_update_x(ExpandedModel* emrow)
-{
-	vector<int> path;
-	Vector* sub_vx = find_sub_vector(ExpandedModel::root,prob_ptr->x,emrow,path);
-	OOPS_update_sol_x_all_bellow(emrow,sub_vx);
-	OOPS_update_x_parent_only(emrow, path);
-}
-
-/* update the primal solution x for all expanded model bellow
- * and include the em itself.
- */
-void OOPS_update_sol_x_all_bellow(ExpandedModel* em, Vector *vx)
-{
-	Tree * tx = vx->node;
-	if(!tx->local)
-	{
-		LOG("OOPS_update_sol_x_all_bellow -- em["<<em->name<<"]  - solution is not on this proc");
-	}
-	int nchild = em->children.size();
-	assert((nchild == 0 && tx->nb_sons==0) || tx->nb_sons == nchild + 1);
-	if(nchild==0)
-	{
-		DenseVector *dx = GetDenseVectorFromVector(vx);
-		assert(dx->dim == em->numLocalVars);
-		em->update_primal_x(dx->elts);
-	}
-	else
-	{
-		// if there is child, the vx has size of nchild+1 node.
-		// the vxs is stored at index = nchild
-		Vector* vxs = SubVector(vx,nchild);
-		DenseVector* dx = GetDenseVectorFromVector(vxs);
-		assert(dx->dim == em->numLocalVars);
-		em->update_primal_x(dx->elts);
-		for(int i=0;i<nchild;i++){
-			ExpandedModel* child = em->children.at(i);
-			OOPS_update_sol_x_all_bellow(child,SubVector(vx,i));
-		}
-	}
-}
-
-void OOPS_update_x_parent_only(ExpandedModel* emrow, vector<int>& path)
-{
-	assert((emrow==ExpandedModel::root&&path.size()==0) && true);
-
-	ExpandedModel* currem = ExpandedModel::root;
-	Vector* currvx = prob_ptr->x;
-	for(int i=0;i<path.size();i++)
-	{
-		if(!currvx->node->local){
-			LOG("OOPS_update_sol_x_parent_only -- em["<<currem->name<<"]  - solution is not on this proc");
-		}
-
-		int ci = path[i];
-		Vector* vxs = SubVector(currvx,currem->children.size());
-		DenseVector* dx = GetDenseVectorFromVector(vxs);
-		currem->update_primal_x(dx->elts);
-
-		currvx = SubVector(currvx,ci);
-		currem = currem->children.at(ci);
-	}
-}
-
-/*
- * Update the related Y vector
- */
-
-void OOPS_update_y(ExpandedModel* emrow)
-{
-	vector<int> path;
-	Vector* sub_vy = find_sub_vector(ExpandedModel::root,prob_ptr->x,emrow,path);
-	OOPS_update_sol_y_all_bellow(emrow,sub_vy);
-	OOPS_update_y_parent_only(emrow, path);
-}
-
-void OOPS_update_sol_y_all_bellow(ExpandedModel* em, Vector *vy)
-{
-	Tree * tx = vy->node;
-	if(!tx->local)
-	{
-		LOG("OOPS_update_sol_x_all_bellow -- em["<<em->name<<"]  - solution is not on this proc");
-	}
-	int nchild = em->children.size();
-	assert((nchild == 0 && tx->nb_sons==0) || tx->nb_sons == nchild + 1);
-	if(nchild==0)
-	{
-		DenseVector *dy = GetDenseVectorFromVector(vy);
-		assert(dy->dim == em->numLocalCons);
-		em->update_primal_x(dy->elts);
-	}
-	else
-	{
-		// if there is child, the vx has size of nchild+1 node.
-		// the vxs is stored at index = nchild
-		Vector* vys = SubVector(vy,nchild);
-		DenseVector* dy = GetDenseVectorFromVector(vys);
-		assert(dy->dim == em->numLocalCons);
-		em->update_lag(dy->elts);
-		for(int i=0;i<nchild;i++){
-			ExpandedModel* child = em->children.at(i);
-			OOPS_update_sol_y_all_bellow(child,SubVector(vy,i));
-		}
-	}
-}
-
-void OOPS_update_y_parent_only(ExpandedModel* emrow, vector<int>& path)
-{
-	assert((emrow==ExpandedModel::root&&path.size()==0) && true);
-
-	ExpandedModel* currem = ExpandedModel::root;
-	Vector* currvy = prob_ptr->y;
-	for(int i=0;i<path.size();i++)
-	{
-		if(!currvy->node->local){
-			LOG("OOPS_update_sol_x_parent_only -- em["<<currem->name<<"]  - solution is not on this proc");
-		}
-
-		int ci = path[i];
-		Vector* vys = SubVector(currvy,currem->children.size());
-		DenseVector* dy = GetDenseVectorFromVector(vys);
-		currem->update_lag(dy->elts);
-
-		currvy = SubVector(currvy,ci);
-		currem = currem->children.at(ci);
-	}
-}
-
 
 /* ---------------------------------------------------------------------------
  CallBackFunction: FillObjVector
@@ -682,11 +507,11 @@ void FillObjVector(Vector *vc) {
 	DenseVector *dense = GetDenseVectorFromVector(vc);
 
 	Algebra *A = (Algebra*) T->nodeOfAlg; // the diagonal node that spawned this tree
-	OOPSBlock *obl = (OOPSBlock*) A->id;        // and its id structure
+	OOPSBlock *obl = (OOPSBlock*) A->id;  // and its id structure
 
 	assert(obl->emcol->numLocalVars == T->end - T->begin);
 
-	assert(obl->emrow == obl->emcol);
+	assert(obl->emrow == obl->emcol); // this should be a diagonal block
 	obl->emrow->obj_grad_c_lp_qp(dense->elts);
 }
 
@@ -698,10 +523,8 @@ void FillUpBndVector(Vector *vu) {
 	DenseVector *dense = GetDenseVectorFromVector(vu);
 
 	Algebra *A = (Algebra *) T->nodeOfAlg; // the diagonal node that spawned this tree
-	//NodeId *id = (NodeId*)A->id;        // and its id structure
 	OOPSBlock *obl = (OOPSBlock*) A->id;        // and its id structure
 	assert(obl->emrow == obl->emcol); // this should be a diagonal block
-	//NlFile *nlf = obl->emrow->nlfile;
 	ExpandedModel *emrow = obl->emrow;
 
 	assert(obl->emcol->numLocalVars == T->end - T->begin);
@@ -720,9 +543,6 @@ void FillRhsVector(Vector *vb) {
 	Algebra *A = (Algebra*) T->nodeOfAlg; // the diagonal node that spawned this tree
 	OOPSBlock *obl = (OOPSBlock*) A->id; // and its id structure
 	ExpandedModel *emrow = obl->emrow;
-
-	// FIXME: should the id structure include information on the ExpandedModelInterface
-	//        as well? That way we could do some more sanity checks
 
 	emrow->get_cons_bounds(dense->elts, checkub);
 
