@@ -35,7 +35,7 @@ void ParamMult::addParamValue(const string& indiciesKey, PValue* value)
 
 PValue* ParamMult::findParamValue(const string& indiciesKey)
 {
-	LOG("-- ParamMult::findParamValue - key["<<indiciesKey<<"] );//in"<<endl<<this->toString());
+	LOG("-- ParamMult::findParamValue - key["<<indiciesKey<<"]" ); //in"<<endl<<this->toString());
 	PValue* rval = (this->paramValues.find(indiciesKey)->second);
 	LOG("-- ParamMult::findParamValue -- found  - ["<<rval<<"]");
 	return rval;

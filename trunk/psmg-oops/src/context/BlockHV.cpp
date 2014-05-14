@@ -8,8 +8,8 @@
 #include <iostream>
 #include "BlockHV.h"
 #include "BlockDep.h"
-#include "BlockCons.h"
-#include "BlockObj.h"
+#include "BlockConsFull.h"
+#include "BlockObjFull.h"
 
 #include "ExpandedModel.h"
 #include "../model/AmplModel.h"
@@ -17,7 +17,7 @@
 #include "../model/ObjComp.h"
 #include "Var.h"
 
-BlockHV::BlockHV(BlockCons* bc,BlockObj* o):blkcons(bc), blkobj(o) {
+BlockHV::BlockHV(BlockConsFull* bc,BlockObjFull* o):blkcons(bc), blkobj(o) {
 	// TODO Auto-generated constructor stub
 
 }
@@ -80,14 +80,14 @@ void BlockHV::logBlock(ExpandedModel* emrow, ExpandedModel* emcol,ostream& out)
 	BOOST_FOREACH(AutoDiff::Node* cnode, blkcons->cons)
 	{
 		uint i =0;
-		string node_expr = cnode==NULL?"NULL":visit_tree(cnode);
+		string node_expr = cnode==NULL?"NULL":tree_expr(cnode);
 		out<<i<<"\t"<<consNames[i]<<"\t\t"<<node_expr<<endl;
 		i++;
 	}
 	out<<endl<<"Objective used:"<<endl;
 	string objname = emrow->model->obj_comp==NULL?"null":emrow->model->obj_comp->name;
 	AutoDiff::Node* onode = blkobj==NULL? NULL:blkobj->objective;
-	string onode_expr = onode==NULL?"NULL":visit_tree(onode);
+	string onode_expr = onode==NULL?"NULL":tree_expr(onode);
 	out<<"\t"<<objname<<"\t\t"<<onode_expr<<endl;
 
 	//printing dependent block information

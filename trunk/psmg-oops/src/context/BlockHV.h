@@ -12,19 +12,19 @@
 #include <vector>
 
 
-class BlockCons;
-class BlockObj;
+class BlockConsFull;
+class BlockObjFull;
 class ExpandedModel;
 
 class BlockHV {
 public:
-	BlockHV(BlockCons* bc,BlockObj* o);
+	BlockHV(BlockConsFull* bc,BlockObjFull* o);
 	virtual ~BlockHV();
 
 	void logBlock(ExpandedModel*, ExpandedModel*, ostream& out);
 
-	BlockCons* blkcons;
-	BlockObj* blkobj;
+	BlockConsFull* blkcons;
+	BlockObjFull* blkobj;
 };
 
 #endif /* BLOCKHV_H_ */
