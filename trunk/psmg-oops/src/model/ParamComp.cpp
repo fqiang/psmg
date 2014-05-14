@@ -39,7 +39,7 @@ void ParamComp::setParamIndicies() {
 	assert(this->type==TPARAM);
 	this->numIndicies = 0;
 	if (this->indexing != NULL) {
-		this->numIndicies = this->indexing->calculateParamSetIndicies();
+		this->numIndicies = this->indexing->calculateNumParamIndicies();
 	}
 	assert(this->numIndicies>=0);
 }

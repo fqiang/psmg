@@ -212,9 +212,10 @@ ExpandedModel* AmplModel::createExpandedModel(string dummyVar,SetComp* comp,stri
 	{
 		ConsComp* mc = *it;
 		assert(mc->type==TCON);
-		mc->calculateLocalCon(currCtx);
-		currEm2->numLocalCons += mc->card;
-		LOG("add cons -- EM["<<currEm2->name<<"] -- varcomp["<<mc->card<<"] numLocalCons["<<currEm2->numLocalCons<<"]");
+		uint card = 1;
+		mc->calculateLocalConCard(currCtx,card);
+		currEm2->numLocalCons += card;
+		LOG("add cons -- EM["<<currEm2->name<<"] -- varcomp["<<card<<"] numLocalCons["<<currEm2->numLocalCons<<"]");
 	}
 	assert(currEm2->y==NULL); currEm2->y = new double[currEm2->numLocalCons];
 

@@ -31,6 +31,14 @@ using namespace std;
 typedef enum {TVAR=0, TCON, TPARAM, TSET, TOBJ, TMODEL, TNOTYPE} compType;
 typedef enum {TMAX=0,TMIN} objType;
 
+typedef struct CPart{
+	SyntaxNode* constant;
+	SyntaxNode* first;
+	SyntaxNode* higher;
+
+	CPart(): constant(NULL),first(NULL),higher(NULL) {};
+} CPart;
+
 /** @class ModelComp
  *  Object to represent a component of an AMPL/SML model/block.
  *

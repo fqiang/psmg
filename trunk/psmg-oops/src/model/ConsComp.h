@@ -21,11 +21,16 @@ public:
 	ConsComp(const string& id, SyntaxNode* index, SyntaxNode* attr,AmplModel* owner);
 	virtual ~ConsComp();
 
-	int card;
+//	int card;
+	CPart cpart;
+//	boost::unordered_map<int,SyntaxNode*> const_partial;
+//	boost::unordered_map<int,SyntaxNode*> first_partial;
+//	boost::unordered_map<int,SyntaxNode*> higher_partial;
+
 	boost::unordered_map<int,SyntaxNode*> partial;
 	void calculatePartialConstraints();
 
-	void calculateLocalCon(ModelContext* ctx);
+	void calculateLocalConCard(ModelContext* ctx, uint& card);
 	void dump(ostream& fout,int counter);
 };
 

@@ -17,7 +17,7 @@
 #include "SyntaxNodeString.h"
 #include "SyntaxNodeSumExp.h"
 #include "SyntaxNodeID.h"
-#include "SyntaxNodeOP.h"
+#include "SyntaxNode.h"
 #include "SetComp.h"
 #include "AmplModel.h"
 #include "ParamComp.h"
@@ -42,6 +42,57 @@
 
 using namespace std;
 using namespace boost;
+
+SyntaxNode::SyntaxNode(int code, SyntaxNode *val1, SyntaxNode *val2, SyntaxNode* val3) :opCode(code) {
+	if (val1 != NULL) {
+		values.push_back(val1);
+	}
+	if (val2 != NULL) {
+		values.push_back(val2);
+	}
+	if (val3 != NULL) {
+		values.push_back(val3);
+	}
+	LOG("SyntaxNode constructor  --- "<<values.size()<<"<- opCode["<<opCode<<"] val1:["<<val1<<"] val2:["<<val2<<"] val3:["<<val3<<"]");
+
+	//sanity check!
+	switch(opCode){
+	case POWER:
+	case PLUS:
+	case TIMES:
+	case DIVID:
+		assert(val1!=NULL && val2!=NULL); //binary op only
+		break;
+	case GT:
+	case LE:
+	case LT:
+	case EQ:
+	case NE:
+	case GE:
+	case MINUS: //either binary or unary
+		assert(val1!=NULL);
+		break;
+	case SIN:
+	case COS:
+	case ORD:
+	case CARD:
+		assert(val1!=NULL && val2 == NULL); //unary only
+		break;
+	case STOCHASTIC:
+		assert(val1==NULL && val2 == NULL && val3 == NULL);
+		break;
+	default:
+		LOG("sanity chekc ! -- opCode "<<opCode<<" not yet known!");
+		break;
+	}
+}
+
+SyntaxNode::~SyntaxNode() {
+	for(vector<SyntaxNode*>::iterator it = values.begin();it != values.end();it++) {
+		delete *it;
+	}
+	values.clear();
+}
 
 SyntaxNode *SyntaxNode::push_back(SyntaxNode *newitem) {
 	values.push_back(newitem);
@@ -97,7 +148,7 @@ SyntaxNode* SyntaxNode::clone(){
 			SyntaxNodeIDREF* probn = new SyntaxNodeIDREF(new SyntaxNodeID(SCTX::pbSetComp->name),SCTX::pbSetComp);
 			SyntaxNode* probn_expr_list = new SyntaxNode(COMMA,new SyntaxNodeID(i->model_dummy));
 			probn->push_back(probn_expr_list);
-			SyntaxNode* sum_expr = new SyntaxNodeOP(TIMES,probn,rval);
+			SyntaxNode* sum_expr = new SyntaxNode(TIMES,probn,rval);
 			nProb++;
 
 			//instead of creating a normal sum node, a special node SUMEXP will be created for the EXPECTATION operation
@@ -121,27 +172,6 @@ SyntaxNode* SyntaxNode::clone(){
 		rval = new SyntaxNode(*this);
 	return rval;
 }
-
-SyntaxNode::SyntaxNode(int code, SyntaxNode *val1, SyntaxNode *val2, SyntaxNode* val3) :opCode(code) {
-	if (val1 != NULL) {
-		values.push_back(val1);
-	}
-	if (val2 != NULL) {
-		values.push_back(val2);
-	}
-	if (val3 != NULL) {
-		values.push_back(val3);
-	}
-	LOG("SyntaxNode constructor  --- "<<values.size()<<"<- opCode["<<opCode<<"] val1:["<<val1<<"] val2:["<<val2<<"] val3:["<<val3<<"]");
-}
-
-SyntaxNode::~SyntaxNode() {
-	for(vector<SyntaxNode*>::iterator it = values.begin();it != values.end();it++) {
-		delete *it;
-	}
-	values.clear();
-}
-
 
 ostream& SyntaxNode::put(ostream&s) {
 	if (this == NULL)
@@ -299,23 +329,47 @@ ostream& SyntaxNode::put(ostream&s) {
 			s<<" IN ";
 			s<<**(++i);
 			break;
-		case COS:
-			s<<" cos(";
-			s<<**i;
-			s<<")";
-			break;
-		case SIN:
-			s<<" sin(";
-			s<<**i;
-			s<<")";
-			break;
 		case ANCESTOR:
 			s<<" ancestor(";
 			s<<**i;
 			s<<",";
-			if (this->nchild() == 2)
-				s << **(++i);
+			s << **(++i);
 			s<<")";
+			break;
+		case PLUS:
+			s <<"("<< **i << " ";
+			s << "+";
+			s <<" "<<**(++i)<<")";
+			break;
+		case MINUS:
+			s <<"("<< **i << " ";
+			s << "-";
+			if(nchild()==2)
+				s <<" "<<**(++i);
+			s<<")";
+			break;
+		case TIMES:
+			s <<"("<< **i << " ";
+			s << "*";
+			s <<" "<<**(++i)<<")";
+			break;
+		case DIVID:
+			s <<"("<< **i << " ";
+			s << "/";
+			s <<" "<<**(++i)<<")";
+			break;
+		case POWER:
+			s <<"("<< **i << " ";
+			s << "^";
+			s <<" "<<**(++i)<<")";
+			break;
+		case COS:
+			s <<"cos( "<< **i << " ";
+			s <<")";
+			break;
+		case SIN:
+			s <<"sin( "<< **i << " ";
+			s <<")";
 			break;
 		default:
 			LOG("Unknown opcode ["<<this->opCode<<"]");
@@ -328,8 +382,7 @@ ostream& SyntaxNode::put(ostream&s) {
 	return s;
 }
 
-//Feng
-void SyntaxNode::calculateConCard(ModelContext* ctx,int& card)
+void SyntaxNode::calculateConCard(ModelContext* ctx, uint& card)
 {
 	LOG(this->print());
 	assert(this->opCode == LBRACE);
@@ -502,7 +555,7 @@ bool SyntaxNode::isParamSymbolic()
 	return rval;
 }
 
-int SyntaxNode::calculateParamSetIndicies()
+int SyntaxNode::calculateNumParamIndicies()
 {
 	LOG("calculateParamSetIndicies - opCode["<<opCode<<"]");
 	assert(this->opCode == LBRACE);
@@ -1184,11 +1237,6 @@ double SyntaxNode::evalRhs(ModelContext* context) {
 	return static_cast<PValueValue*>(rval)->value;
 }
 
-
-//End Feng
-
-
-
 /* --------------------------------------------------------------------------
  SyntaxNode::print()
  --------------------------------------------------------------------------- */
@@ -1209,6 +1257,218 @@ ostream& operator<<(ostream&s, SyntaxNode &node) {
 	return node.put(s);
 }
 
+/*
+ * will need to called to seperate the linear and quadratic parts of the attribtues
+ * return the degree of this expression attribute
+ */
+
+void SyntaxNode::calculateLinearNonLinearParts(CPart& cpart)
+{
+	assert(cpart.constant == NULL && cpart.first == NULL && cpart.higher == NULL);
+	if(opCode == IDREF)
+	{
+		SyntaxNodeIDREF* refn = static_cast<SyntaxNodeIDREF*>(this);
+		ModelComp* comp = refn->ref;
+		if(comp->type == TVAR){ cpart.first = this; }
+		else if(comp->type == TPARAM){	cpart.constant = this;}
+		else assert(false);
+	}
+	else if(this->opCode == DOT)
+	{
+		assert(this->values[0]->opCode == DOT || this->values[0]->opCode == IDREFM);
+		assert(this->values[1]->opCode == IDREF);
+		SyntaxNodeIDREF* refn = static_cast<SyntaxNodeIDREF*>(this->values[1]);
+		if(refn->ref->type == TVAR) cpart.first = this;
+		else if(refn->ref->type == TPARAM) cpart.constant = this;
+		else assert(false);
+	}
+	else if (this->opCode == VALUE)
+	{
+		cpart.constant = this;
+	}
+	else if(this->opCode == SUM)
+	{
+		assert(this->nchild()==2);
+		SyntaxNode* indx = this->values.at(0);
+		CPart child;
+		this->values.at(1)->calculateLinearNonLinearParts(child);
+		cpart.constant = child.constant!=NULL? new SyntaxNode(SUM,indx,child.constant) : NULL;
+		cpart.first = child.first!=NULL? new SyntaxNode(SUM,indx,child.first) : NULL;
+		cpart.higher = child.higher!=NULL? new SyntaxNode(SUM,indx,child.higher) : NULL;
+	}
+	else if(this->opCode == SUMEXP)
+	{ // SumExp{nProbs} (expr) ---->  SumExp{nProbs}(expr1) + ... SumExp{nProbs}(exprn); given expr = expr1 + ... + exprn
+		assert(nchild()==1);
+		CPart child;
+		this->values[0]->calculateLinearNonLinearParts(child);
+		int nProbs = static_cast<SyntaxNodeSumExp*>(this)->nProbs;
+		cpart.constant = child.constant!=NULL? new SyntaxNodeSumExp(child.constant,nProbs) : NULL;
+		cpart.first = child.first!=NULL? new SyntaxNodeSumExp(child.first,nProbs) : NULL;
+		cpart.higher = child.higher!=NULL? new SyntaxNodeSumExp(child.higher,nProbs) : NULL;
+	}
+	else if(this->opCode == PLUS || this->opCode == MINUS)
+	{
+		assert(nchild()<=2);
+		CPart left;
+		CPart right;
+		if(nchild()==2){
+			this->values[0]->calculateLinearNonLinearParts(left);
+			this->values[1]->calculateLinearNonLinearParts(right);
+			//constant term
+			if(left.constant == NULL && right.constant == NULL)	cpart.constant = NULL;
+			else if(left.constant == NULL && right.constant != NULL) cpart.constant = opCode==MINUS? new SyntaxNode(MINUS,right.constant) : right.constant;
+			else if(left.constant != NULL && right.constant == NULL) cpart.constant = left.constant;
+			else if(left.constant != NULL && right.constant !=NULL)	cpart.constant = new SyntaxNode(opCode, left.constant, right.constant);
+			//first order term
+			if(left.first == NULL && right.first == NULL)	cpart.first = NULL;
+			else if(left.first == NULL && right.first != NULL) cpart.first = opCode==MINUS? new SyntaxNode(MINUS,right.first) : right.first;
+			else if(left.first != NULL && right.first == NULL) cpart.first = left.first;
+			else if(left.first != NULL && right.first !=NULL)	cpart.first = new SyntaxNode(opCode, left.first, right.first);
+			//higher order term
+			if(left.higher == NULL && right.higher == NULL)	cpart.higher = NULL;
+			else if(left.higher == NULL && right.higher != NULL) cpart.higher = opCode==MINUS? new SyntaxNode(MINUS,right.higher) : right.higher;
+			else if(left.higher != NULL && right.higher == NULL) cpart.higher = left.higher;
+			else if(left.higher != NULL && right.higher !=NULL)	cpart.higher = new SyntaxNode(opCode, left.higher, right.higher);
+		}
+		else if(nchild()==1)
+		{
+			assert(opCode == MINUS);
+			this->values[0]->calculateLinearNonLinearParts(left);
+			cpart.constant = left.constant == NULL? NULL: new SyntaxNode(MINUS,cpart.constant);
+			cpart.first = left.first == NULL? NULL: new SyntaxNode(MINUS,cpart.first);
+			cpart.higher = left.higher == NULL? NULL: new SyntaxNode(MINUS,cpart.higher);
+		}
+	}
+	else if(this->opCode == TIMES )
+	{/* left = a + b*x + c*x^2  ,right = d + e*x + f*x^2 ,
+	  * result: constant (a*d)
+	  *			first    (a*e*x{0} + d*b*x{1})
+	  *			higher   a*f*x^2{0} + b*x*e*x{1} + b*x*f*x^2{2} + c*x^2*d{3} + c*x^2*e*x{4} + c*x^2*f*x^2{5}
+	 */
+		assert(nchild()==2);
+		CPart left,right;
+		this->values[0]->calculateLinearNonLinearParts(left);
+		this->values[1]->calculateLinearNonLinearParts(right);
+		//constant term
+		cpart.constant = (left.constant == NULL) || (right.constant == NULL)? NULL: new SyntaxNode(TIMES,left.constant,right.constant);
+		//first order term
+		SyntaxNode* linear[2];
+		linear[0] = (left.constant==NULL) || (right.first == NULL) ? NULL: new SyntaxNode(TIMES,left.constant, right.first);
+		linear[1] = (left.first==NULL) || (right.constant == NULL) ? NULL: new SyntaxNode(TIMES,left.first, right.constant);
+		//accumulate first order term
+		int i = 0;
+		while(i<2) {
+			if(linear[i]!=NULL) {
+				cpart.first = linear[i];
+				i++;
+				break;
+			}
+			i++;
+		}
+		for(;i<2;i++)
+		{
+			cpart.first = linear[i]!=NULL? new SyntaxNode(PLUS, cpart.first, linear[i]): cpart.first;
+		}
+
+		//higher order term
+		SyntaxNode* higher[6];
+		higher[0] = (left.constant == NULL) || (right.higher ==NULL)? NULL: new SyntaxNode(TIMES,left.constant, right.higher);
+		higher[1] = (left.first==NULL) || (right.first == NULL) ? NULL: new SyntaxNode(TIMES,left.first, right.first);
+		higher[2] = (left.first==NULL) || (right.higher == NULL) ? NULL: new SyntaxNode(TIMES,left.first, right.higher);
+		higher[3] = (left.higher==NULL) || (right.constant == NULL) ? NULL: new SyntaxNode(TIMES,left.higher, right.constant);
+		higher[4] = (left.higher==NULL) || (right.first == NULL) ? NULL: new SyntaxNode(TIMES,left.higher, right.first);
+		higher[5] = (left.higher==NULL) || (right.higher == NULL) ? NULL: new SyntaxNode(TIMES,left.higher, right.higher);
+		//accumulate higher order term
+		i = 0;
+		while(i<6) {
+			if(higher[i]!=NULL) {
+				cpart.higher = higher[i];
+				i++;
+				break;
+			}
+			i++;
+		}
+		for(;i<6;i++)
+		{
+			cpart.higher = higher[i]!=NULL? new SyntaxNode(PLUS, cpart.higher, higher[i]): cpart.higher;
+		}
+	}
+	else if(this->opCode == DIVID)
+	{
+		assert(nchild()==2);
+		CPart left, right;
+		this->values[0]->calculateLinearNonLinearParts(left);
+		this->values[1]->calculateLinearNonLinearParts(right);
+		if(left.constant != NULL && left.first == NULL && right.higher == NULL &&
+			right.constant !=NULL && right.first == NULL && right.higher == NULL)
+		{//constant divided by constant
+			cpart.constant = new SyntaxNode(DIVID,left.constant,right.constant);
+		}
+		else if(right.constant!=NULL && right.first == NULL && right.higher == NULL)
+		{//divided by constant
+			cpart.constant = new SyntaxNode(DIVID,left.constant,right.constant);
+			cpart.first = new SyntaxNode(DIVID,left.first,right.constant);
+			cpart.higher = new SyntaxNode(DIVID,left.higher, right.constant);
+		}
+		else
+		{//anything else - only higher order term
+			SyntaxNode* numerator = NULL;
+			if(left.constant!=NULL)	 numerator = left.constant;
+			if(left.first!=NULL)	 numerator = (numerator==NULL)? left.first: new SyntaxNode(PLUS,numerator,left.first);
+			if(left.higher!=NULL)	 numerator = (numerator==NULL)? left.higher: new SyntaxNode(PLUS,numerator,left.higher);
+			SyntaxNode* denominator = NULL;
+			if(right.constant!=NULL)	 denominator = right.constant;
+			if(right.first!=NULL)	 denominator = (denominator==NULL)? right.first: new SyntaxNode(PLUS,denominator,right.first);
+			if(right.higher!=NULL)	 denominator = (denominator==NULL)? right.higher: new SyntaxNode(PLUS,denominator,right.higher);
+			cpart.higher = new SyntaxNode(DIVID,numerator,denominator);
+		}
+	}
+	else if(opCode == POWER)
+	{
+		assert(nchild()==2);
+		CPart left,right;
+		this->values[0]->calculateLinearNonLinearParts(left);
+		this->values[1]->calculateLinearNonLinearParts(right);
+		if(left.constant != NULL && left.first == NULL && right.higher == NULL &&
+			right.constant !=NULL && right.first == NULL && right.higher == NULL)
+		{
+			cpart.constant = new SyntaxNode(POWER,left.constant,right.constant);
+		}
+		else
+		{
+			SyntaxNode* base = NULL;
+			if(left.constant!=NULL)	 base = left.constant;
+			if(left.first!=NULL)	 base = (base==NULL)? left.first: new SyntaxNode(PLUS,base,left.first);
+			if(left.higher!=NULL)	 base = (base==NULL)? left.higher: new SyntaxNode(PLUS,base,left.higher);
+			SyntaxNode* expo = NULL;
+			if(right.constant!=NULL)	 expo = right.constant;
+			if(right.first!=NULL)	 expo = (expo==NULL)? right.first: new SyntaxNode(PLUS,expo,right.first);
+			if(right.higher!=NULL)	 expo = (expo==NULL)? right.higher: new SyntaxNode(PLUS,expo,right.higher);
+			cpart.higher = new SyntaxNode(POWER,base,expo);
+		}
+	}
+	else if(opCode == COS || opCode == SIN)
+	{//collect and create higher order term only
+		assert(nchild()==1);
+		CPart child;
+		this->values[0]->calculateLinearNonLinearParts(child);
+		SyntaxNode* val = NULL;
+		if(child.constant!=NULL)	 val = child.constant;
+		if(child.first!=NULL)	 val = (val==NULL)? child.first: new SyntaxNode(PLUS,val,child.first);
+		if(child.higher!=NULL)	 val = (val==NULL)? child.higher: new SyntaxNode(PLUS,val,child.higher);
+		cpart.higher = val;
+	}
+	else
+	{
+		assert(false);
+	}
+}
+
+/*
+ * constraint level splitting algorithm
+ * constant is set on level = -1;
+ * where AmplModel::MAX_LEVEL is the total number of levels in the block model
+ */
 void SyntaxNode::calculatePartialConstraints(boost::unordered_map<int,SyntaxNode*>& partials)
 {
 	assert(partials.size()==0);
@@ -1234,7 +1494,8 @@ void SyntaxNode::calculatePartialConstraints(boost::unordered_map<int,SyntaxNode
 		assert(this->values[0]->opCode == DOT || this->values[0]->opCode == IDREFM);
 		assert(this->values[1]->opCode == IDREF);
 		SyntaxNodeIDREF* refn = static_cast<SyntaxNodeIDREF*>(this->values[1]);
-		partials.insert(pair<int,SyntaxNode*>(refn->ref->model->level, this));
+		int level = refn->ref->type == TPARAM? -1:refn->ref->model->level;
+		partials.insert(pair<int,SyntaxNode*>(level, this));
 	}
 	else if (this->opCode == VALUE)
 	{
@@ -1267,272 +1528,263 @@ void SyntaxNode::calculatePartialConstraints(boost::unordered_map<int,SyntaxNode
 			partials.insert(pair<int,SyntaxNode*>((*it).first,newSumExp));
 		}
 	}
-	else if(this->opCode == LSBRACKET)
-	{
-		assert(this->values[0]->opCode == IDREF);
-		this->values[0]->calculatePartialConstraints(partials);
-	}
-	else
-	{
-		if(this->opCode == PLUS || this->opCode == MINUS )
-		{//binary operators - additively separable
-			if(nchild()==2) {
-				boost::unordered_map<int,SyntaxNode*> child_left;
-				boost::unordered_map<int,SyntaxNode*> child_right;
-				this->values.at(0)->calculatePartialConstraints(child_left);
-				this->values.at(1)->calculatePartialConstraints(child_right);
-				assert(child_left.size()>=1);
-				assert(child_right.size()>=1);
-				for(int i=-1;i<=AmplModel::MAX_LEVEL ; i++)
-				{
-					boost::unordered_map<int,SyntaxNode*>::iterator it_left = child_left.find(i);
-					boost::unordered_map<int,SyntaxNode*>::iterator it_right = child_right.find(i);
-					if(it_left == child_left.end() && it_right != child_right.end())
-					{//(null) -/+ right
-						SyntaxNode* newNode = opCode == MINUS? new SyntaxNodeOP(opCode,(*it_right).second): it_right->second;
-						partials.insert(pair<int,SyntaxNode*>(i, newNode));
-					}
-					else if(it_right==child_right.end() && it_left != child_left.end())
-					{//left -/ (null)
-						partials.insert(pair<int,SyntaxNode*>(i, (*it_left).second));
-					}
-					else if(it_right!=child_right.end() && it_left!=child_left.end())
-					{//left -/+ right
-						SyntaxNode* newNode = new SyntaxNodeOP(opCode,(*it_left).second,(*it_right).second);
-						partials.insert(pair<int,SyntaxNode*>(i, newNode));
-					}
-					else
-					{
-						//not possible
-					}
+	else if(this->opCode == PLUS || this->opCode == MINUS )
+	{//binary operators - additively separable
+		assert(nchild()<=2);
+		if(nchild()==2) {
+			boost::unordered_map<int,SyntaxNode*> child_left;
+			boost::unordered_map<int,SyntaxNode*> child_right;
+			this->values.at(0)->calculatePartialConstraints(child_left);
+			this->values.at(1)->calculatePartialConstraints(child_right);
+			assert(child_left.size()>=1);
+			assert(child_right.size()>=1);
+			for(int i=-1;i<=AmplModel::MAX_LEVEL ; i++)
+			{
+				boost::unordered_map<int,SyntaxNode*>::iterator it_left = child_left.find(i);
+				boost::unordered_map<int,SyntaxNode*>::iterator it_right = child_right.find(i);
+				if(it_left == child_left.end() && it_right != child_right.end())
+				{//(null) -/+ right
+					SyntaxNode* newNode = opCode == MINUS? new SyntaxNode(opCode,(*it_right).second): it_right->second;
+					partials.insert(pair<int,SyntaxNode*>(i, newNode));
+				}
+				else if(it_right==child_right.end() && it_left != child_left.end())
+				{//left -/ (null)
+					partials.insert(pair<int,SyntaxNode*>(i, (*it_left).second));
+				}
+				else if(it_right!=child_right.end() && it_left!=child_left.end())
+				{//left -/+ right
+					SyntaxNode* newNode = new SyntaxNode(opCode,(*it_left).second,(*it_right).second);
+					partials.insert(pair<int,SyntaxNode*>(i, newNode));
+				}
+				else if(it_left == child_left.end() && it_right == child_right.end())
+				{//(null) -/+ (null)
+					//do nothing
+				}
 
-				}
-			}
-			else if(nchild()==1)
-			{//negative op
-				assert(this->opCode == MINUS);
-				boost::unordered_map<int,SyntaxNode*> conspart;
-				this->values.at(0)->calculatePartialConstraints(conspart);
-				assert(partials.size()>=1);
-				for(int i=-1;i<=AmplModel::MAX_LEVEL ; i++)
-				{
-					boost::unordered_map<int,SyntaxNode*>::iterator it = conspart.find(i);
-					if(it != conspart.end())
-					{
-						SyntaxNode* newNode  = new SyntaxNodeOP(MINUS,(*it).second);
-						partials.insert(pair<int,SyntaxNode*>(i, newNode));
-					}
-				}
-			}
-			else
-			{
-				assert(false); // not possible
 			}
 		}
-		else if(this->opCode == POWER){
-			assert(nchild()==2);
-			boost::unordered_map<int,SyntaxNode*> left;
-			boost::unordered_map<int,SyntaxNode*> right;
-			boost::unordered_map<int,SyntaxNode*>::iterator li;
-			boost::unordered_map<int,SyntaxNode*>::iterator ri;
-			this->values.at(0)->calculatePartialConstraints(left);
-			this->values.at(1)->calculatePartialConstraints(right);
-			li = left.find(-1); ri = right.find(-1);
-			if((left.size()==1 && li!=left.end()) && (right.size()==1 && ri!=right.end()))
-			{// const ^ const
-				partials.insert(pair<int,SyntaxNode*>(-1,new SyntaxNodeOP(POWER,li->second,ri->second)));
-			}
-			else if(left.size()==1 && li!=left.end())
-			{//const ^ all other
-				SyntaxNode* rnode = NULL;
-				for(ri=right.begin();ri!=right.end();ri++){
-					rnode = rnode==NULL?ri->second:new SyntaxNodeOP(PLUS,rnode,ri->second);
-				}
-				assert(rnode!=NULL);
-				SyntaxNodeOP* newnode = new SyntaxNodeOP(POWER,li->second,rnode);
-				for(ri=right.begin();ri!=right.end();ri++){
-					partials.insert(pair<int,SyntaxNode*>(ri->first,newnode));
-				}
-			}
-			else if(right.size()==1 && ri!=right.end())
-			{//all other ^ const
-				SyntaxNode* lnode = NULL;
-				for(li=left.begin();li!=left.end();li++){
-					lnode = lnode==NULL?li->second:new SyntaxNodeOP(PLUS,lnode,li->second);
-				}
-				assert(lnode!=NULL);
-				SyntaxNodeOP* newnode= new SyntaxNodeOP(POWER,lnode,ri->second);
-				for(li=left.begin();li!=left.end();li++){
-					partials.insert(pair<int,SyntaxNode*>(li->first,newnode));
-				}
-			}
-			else
-			{
-				SyntaxNode* rnode = NULL;
-				for(ri=right.begin();ri!=right.end();ri++){
-					rnode = rnode==NULL?ri->second:new SyntaxNodeOP(PLUS,rnode,ri->second);
-				}
-				SyntaxNode* lnode = NULL;
-				for(li=left.begin();li!=left.end();li++){
-					lnode = lnode==NULL?li->second:new SyntaxNodeOP(PLUS,lnode,li->second);
-				}
-				SyntaxNode* newnode = new SyntaxNodeOP(POWER,lnode,rnode);
-				for(ri=right.begin();ri!=right.end();ri++)
-				{
-					if(partials.find(ri->first)==partials.end()) partials.insert(pair<int,SyntaxNode*>(ri->first,newnode));
-				}
-				for(li=left.begin();li!=left.end();li++)
-				{
-					if(partials.find(li->first)==partials.end()) partials.insert(pair<int,SyntaxNode*>(li->first,newnode));
-				}
-			}
-		}
-		else if(this->opCode == DIVID)
-		{
-			assert(nchild()==2);
-			boost::unordered_map<int,SyntaxNode*> left;
-			boost::unordered_map<int,SyntaxNode*> right;
-			boost::unordered_map<int,SyntaxNode*>::iterator li;
-			boost::unordered_map<int,SyntaxNode*>::iterator ri;
-			this->values.at(0)->calculatePartialConstraints(left);
-			this->values.at(1)->calculatePartialConstraints(right);
-			li = left.find(-1); ri = right.find(-1);
-			if((left.size()==1 && li!=left.end()) && (right.size()==1 && ri!=right.end()))
-			{// const / const
-				partials.insert(pair<int,SyntaxNode*>(-1,new SyntaxNodeOP(DIVID,li->second,ri->second)));
-			}
-			else if(left.size()==1 && li!=left.end())
-			{//const / all other
-				SyntaxNode* rnode = NULL;
-				for(ri=right.begin();ri!=right.end();ri++){
-					rnode = rnode==NULL?ri->second:new SyntaxNodeOP(PLUS,rnode,ri->second);
-				}
-				assert(rnode!=NULL);
-				SyntaxNodeOP* newnode = new SyntaxNodeOP(DIVID,li->second,rnode);
-				for(ri=right.begin();ri!=right.end();ri++){
-					partials.insert(pair<int,SyntaxNode*>(ri->first,newnode));
-				}
-			}
-			else if(right.size()==1 && ri!=right.end())
-			{//all other / const
-				for(li=left.begin();li!=left.end();li++){
-					SyntaxNode* newnode = new SyntaxNodeOP(DIVID,li->second,ri->second);
-					partials.insert(pair<int,SyntaxNode*>(li->first,newnode));
-				}
-			}
-			else
-			{
-				SyntaxNode* rnode = NULL;
-				for(ri=right.begin();ri!=right.end();ri++){
-					rnode = rnode==NULL?ri->second:new SyntaxNodeOP(PLUS,rnode,ri->second);
-				}
-				SyntaxNode* lnode = NULL;
-				for(li=left.begin();li!=left.end();li++){
-					lnode = lnode==NULL?li->second:new SyntaxNodeOP(PLUS,lnode,li->second);
-				}
-				SyntaxNode* newnode = new SyntaxNodeOP(DIVID,lnode,rnode);
-				for(ri=right.begin();ri!=right.end();ri++)
-				{
-					if(partials.find(ri->first)==partials.end()) partials.insert(pair<int,SyntaxNode*>(ri->first,newnode));
-				}
-				for(li=left.begin();li!=left.end();li++)
-				{
-					if(partials.find(li->first)==partials.end()) partials.insert(pair<int,SyntaxNode*>(li->first,newnode));
-				}
-			}
-		}
-		else if(this->opCode == TIMES)
-		{//binary operator  -- non-separable
-			assert(nchild()==2);                                            //level*level
-			boost::unordered_map<int,SyntaxNode*> left;                     //    -1   0    1    2
-			boost::unordered_map<int,SyntaxNode*> right;                    //-1  -1   0    1    2
-			boost::unordered_map<int,SyntaxNode*>::iterator li;				// 0   0   0    0,1  0,2
-			boost::unordered_map<int,SyntaxNode*>::iterator ri;				// 1   1   0,1  1    1,2
-			this->values.at(0)->calculatePartialConstraints(left);			// 2   2   0,2  1,2  2
-			this->values.at(1)->calculatePartialConstraints(right);
-			assert(left.size()>=1);
-			assert(right.size()>=1);
-			//the constant node locate at level=-1
-
-			//for each levels
-			for(int i=-1;i<=AmplModel::MAX_LEVEL; i++)
-			{
-				for(int j=-1;j<=AmplModel::MAX_LEVEL;j++)
-				{
-					li = left.find(i);
-					ri = right.find(j);
-					SyntaxNode* ln = li==left.end()?NULL:li->second;
-					SyntaxNode* rn = ri==right.end()?NULL:ri->second;
-					SyntaxNode* newnode = NULL;
-					if(ln!=NULL && rn!=NULL)  newnode = new SyntaxNodeOP(TIMES,ln,rn);
-					if(i==j)
-					{//put on i/j level
-						//create node
-						boost::unordered_map<int,SyntaxNode*>::iterator it=partials.find(i);
-						if(newnode!=NULL && it!=partials.end()) {
-							newnode = new SyntaxNodeOP(PLUS,it->second,newnode);
-						}
-						if(newnode!=NULL) partials[j] = newnode;
-					}
-					else if(i==-1 && j!=-1)
-					{//put on j level
-						boost::unordered_map<int,SyntaxNode*>::iterator it = partials.find(j);
-						if(newnode!=NULL && it!=partials.end()) {
-							newnode = new SyntaxNodeOP(PLUS,it->second,newnode);
-						}
-						if(newnode!=NULL) partials[j] = newnode;
-					}
-					else if(i!=-1 && j==-1)
-					{//put on i level
-						boost::unordered_map<int,SyntaxNode*>::iterator it = partials.find(i);
-						if(newnode!=NULL && it!=partials.end()){
-							newnode = new SyntaxNodeOP(PLUS,it->second,newnode);
-						}
-						if(newnode!=NULL) partials[i] = newnode;
-					}
-					else
-					{//put on both i ,j level
-						boost::unordered_map<int,SyntaxNode*>::iterator iti = partials.find(i);
-						if(newnode!=NULL && iti!=partials.end()) newnode = new SyntaxNodeOP(PLUS,iti->second,newnode);
-						if(newnode!=NULL) partials[i] = newnode;
-
-						boost::unordered_map<int,SyntaxNode*>::iterator itj = partials.find(j);
-						if(newnode!=NULL && itj!=partials.end()) newnode = new SyntaxNodeOP(PLUS,itj->second,newnode);
-						if(newnode!=NULL) partials[j] = newnode;
-					}
-				}
-			}
-		}
-		else if(this->opCode == COS || this->opCode == SIN)
-		{
-			assert(this->nchild()==1);
+		else if(nchild()==1)
+		{//negative op
+			assert(this->opCode == MINUS);
 			boost::unordered_map<int,SyntaxNode*> conspart;
-			boost::unordered_map<int,SyntaxNode*>::iterator i;
 			this->values.at(0)->calculatePartialConstraints(conspart);
-
+			assert(conspart.size()>=1);
+			for(int i=-1;i<=AmplModel::MAX_LEVEL ; i++)
+			{
+				boost::unordered_map<int,SyntaxNode*>::iterator it = conspart.find(i);
+				if(it != conspart.end())
+				{
+					SyntaxNode* newNode  = new SyntaxNode(MINUS,(*it).second);
+					partials.insert(pair<int,SyntaxNode*>(i, newNode));
+				}
+			}
+		}
+	}
+	else if(this->opCode == POWER)
+	{
+		assert(nchild()==2);
+		boost::unordered_map<int,SyntaxNode*> left;
+		boost::unordered_map<int,SyntaxNode*> right;
+		boost::unordered_map<int,SyntaxNode*>::iterator li;
+		boost::unordered_map<int,SyntaxNode*>::iterator ri;
+		this->values.at(0)->calculatePartialConstraints(left);
+		this->values.at(1)->calculatePartialConstraints(right);
+		li = left.find(-1); ri = right.find(-1);
+		if((left.size()==1 && li!=left.end()) && (right.size()==1 && ri!=right.end()))
+		{// const ^ const
+			partials.insert(pair<int,SyntaxNode*>(-1,new SyntaxNode(POWER,li->second,ri->second)));
+		}
+		else if(left.size()==1 && li!=left.end())
+		{//const ^ all other
+			SyntaxNode* rnode = NULL;
+			for(ri=right.begin();ri!=right.end();ri++){
+				rnode = rnode==NULL?ri->second:new SyntaxNode(PLUS,rnode,ri->second);
+			}
+			assert(rnode!=NULL);
+			SyntaxNode* newnode = new SyntaxNode(POWER,li->second,rnode);
+			for(ri=right.begin();ri!=right.end();ri++){
+				partials.insert(pair<int,SyntaxNode*>(ri->first,newnode));
+			}
+		}
+		else if(right.size()==1 && ri!=right.end())
+		{//all other ^ const
 			SyntaxNode* lnode = NULL;
-			for(i=conspart.begin();i!=conspart.end();i++){
-				lnode = lnode==NULL?i->second:new SyntaxNodeOP(PLUS,lnode,i->second);
+			for(li=left.begin();li!=left.end();li++){
+				lnode = lnode==NULL?li->second:new SyntaxNode(PLUS,lnode,li->second);
 			}
 			assert(lnode!=NULL);
-			SyntaxNodeOP* newnode = new SyntaxNodeOP(opCode,lnode);
-			if(conspart.size()==1 && conspart.find(-1)!=conspart.end())
-			{//const only cos/sin(const_)
-				partials.insert(pair<int,SyntaxNode*>(-1,newnode));
-			}
-			else
-			{
-				for(i=conspart.begin();i!=conspart.end();i++){//can't be a const anymore . ie. cos(const+TVAR....) is on TVAR's level
-					if(i->first!=-1) partials.insert(pair<int,SyntaxNode*>(i->first,newnode));
-				}
+			SyntaxNode* newnode= new SyntaxNode(POWER,lnode,ri->second);
+			for(li=left.begin();li!=left.end();li++){
+				partials.insert(pair<int,SyntaxNode*>(li->first,newnode));
 			}
 		}
 		else
 		{
-			LOG("calculatePartialConstraints --- opCode["<<opCode<<"] not yet implemented!");
-			assert(false);
+			SyntaxNode* rnode = NULL;
+			for(ri=right.begin();ri!=right.end();ri++){
+				rnode = rnode==NULL?ri->second:new SyntaxNode(PLUS,rnode,ri->second);
+			}
+			SyntaxNode* lnode = NULL;
+			for(li=left.begin();li!=left.end();li++){
+				lnode = lnode==NULL?li->second:new SyntaxNode(PLUS,lnode,li->second);
+			}
+			SyntaxNode* newnode = new SyntaxNode(POWER,lnode,rnode);
+			for(ri=right.begin();ri!=right.end();ri++)
+			{
+				if(partials.find(ri->first)==partials.end()) partials.insert(pair<int,SyntaxNode*>(ri->first,newnode));
+			}
+			for(li=left.begin();li!=left.end();li++)
+			{
+				if(partials.find(li->first)==partials.end()) partials.insert(pair<int,SyntaxNode*>(li->first,newnode));
+			}
 		}
 	}
+	else if(this->opCode == DIVID)
+	{
+		assert(nchild()==2);
+		boost::unordered_map<int,SyntaxNode*> left;
+		boost::unordered_map<int,SyntaxNode*> right;
+		boost::unordered_map<int,SyntaxNode*>::iterator li;
+		boost::unordered_map<int,SyntaxNode*>::iterator ri;
+		this->values.at(0)->calculatePartialConstraints(left);
+		this->values.at(1)->calculatePartialConstraints(right);
+		li = left.find(-1); ri = right.find(-1);
+		if((left.size()==1 && li!=left.end()) && (right.size()==1 && ri!=right.end()))
+		{// const / const
+			partials.insert(pair<int,SyntaxNode*>(-1,new SyntaxNode(DIVID,li->second,ri->second)));
+		}
+		else if(left.size()==1 && li!=left.end())
+		{//const / all other
+			SyntaxNode* rnode = NULL;
+			for(ri=right.begin();ri!=right.end();ri++){
+				rnode = rnode==NULL?ri->second:new SyntaxNode(PLUS,rnode,ri->second);
+			}
+			assert(rnode!=NULL);
+			SyntaxNode* newnode = new SyntaxNode(DIVID,li->second,rnode);
+			for(ri=right.begin();ri!=right.end();ri++){
+				partials.insert(pair<int,SyntaxNode*>(ri->first,newnode));
+			}
+		}
+		else if(right.size()==1 && ri!=right.end())
+		{//all other / const
+			for(li=left.begin();li!=left.end();li++){
+				SyntaxNode* newnode = new SyntaxNode(DIVID,li->second,ri->second);
+				partials.insert(pair<int,SyntaxNode*>(li->first,newnode));
+			}
+		}
+		else
+		{
+			SyntaxNode* rnode = NULL;
+			for(ri=right.begin();ri!=right.end();ri++){
+				rnode = rnode==NULL?ri->second:new SyntaxNode(PLUS,rnode,ri->second);
+			}
+			SyntaxNode* lnode = NULL;
+			for(li=left.begin();li!=left.end();li++){
+				lnode = lnode==NULL?li->second:new SyntaxNode(PLUS,lnode,li->second);
+			}
+			SyntaxNode* newnode = new SyntaxNode(DIVID,lnode,rnode);
+			for(ri=right.begin();ri!=right.end();ri++)
+			{
+				if(partials.find(ri->first)==partials.end()) partials.insert(pair<int,SyntaxNode*>(ri->first,newnode));
+			}
+			for(li=left.begin();li!=left.end();li++)
+			{
+				if(partials.find(li->first)==partials.end()) partials.insert(pair<int,SyntaxNode*>(li->first,newnode));
+			}
+		}
+	}
+	else if(this->opCode == TIMES)
+	{//binary operator  -- non-separable
+		assert(nchild()==2);                                            //level/level
+		boost::unordered_map<int,SyntaxNode*> left;                     //    -1   0    1    2
+		boost::unordered_map<int,SyntaxNode*> right;                    //-1  -1   0    1    2
+		boost::unordered_map<int,SyntaxNode*>::iterator li;				// 0   0   0    0,1  0,2
+		boost::unordered_map<int,SyntaxNode*>::iterator ri;				// 1   1   0,1  1    1,2
+		this->values.at(0)->calculatePartialConstraints(left);			// 2   2   0,2  1,2  2
+		this->values.at(1)->calculatePartialConstraints(right);
+		assert(left.size()>=1);
+		assert(right.size()>=1);
+		//the constant node locate at level=-1
+
+		//for each levels
+		for(int i=-1;i<=AmplModel::MAX_LEVEL; i++)
+		{
+			for(int j=-1;j<=AmplModel::MAX_LEVEL;j++)
+			{
+				li = left.find(i);
+				ri = right.find(j);
+				SyntaxNode* ln = li==left.end()?NULL:li->second;
+				SyntaxNode* rn = ri==right.end()?NULL:ri->second;
+				SyntaxNode* newnode = NULL;
+				if(ln!=NULL && rn!=NULL)  newnode = new SyntaxNode(TIMES,ln,rn);
+				if(i==j)
+				{//put on i/j level
+					//create node
+					boost::unordered_map<int,SyntaxNode*>::iterator it=partials.find(i);
+					if(newnode!=NULL && it!=partials.end()) {
+						newnode = new SyntaxNode(PLUS,it->second,newnode);
+					}
+					if(newnode!=NULL) partials[j] = newnode;
+				}
+				else if(i==-1 && j!=-1)
+				{//put on j level
+					boost::unordered_map<int,SyntaxNode*>::iterator it = partials.find(j);
+					if(newnode!=NULL && it!=partials.end()) {
+						newnode = new SyntaxNode(PLUS,it->second,newnode);
+					}
+					if(newnode!=NULL) partials[j] = newnode;
+				}
+				else if(i!=-1 && j==-1)
+				{//put on i level
+					boost::unordered_map<int,SyntaxNode*>::iterator it = partials.find(i);
+					if(newnode!=NULL && it!=partials.end()){
+						newnode = new SyntaxNode(PLUS,it->second,newnode);
+					}
+					if(newnode!=NULL) partials[i] = newnode;
+				}
+				else
+				{//put on both i ,j level
+					boost::unordered_map<int,SyntaxNode*>::iterator iti = partials.find(i);
+					if(newnode!=NULL && iti!=partials.end()) newnode = new SyntaxNode(PLUS,iti->second,newnode);
+					if(newnode!=NULL) partials[i] = newnode;
+
+					boost::unordered_map<int,SyntaxNode*>::iterator itj = partials.find(j);
+					if(newnode!=NULL && itj!=partials.end()) newnode = new SyntaxNode(PLUS,itj->second,newnode);
+					if(newnode!=NULL) partials[j] = newnode;
+				}
+			}
+		}
+	}
+	else if(this->opCode == COS || this->opCode == SIN)
+	{
+		assert(this->nchild()==1);
+		boost::unordered_map<int,SyntaxNode*> conspart;
+		boost::unordered_map<int,SyntaxNode*>::iterator i;
+		this->values.at(0)->calculatePartialConstraints(conspart);
+
+		SyntaxNode* lnode = NULL;
+		for(i=conspart.begin();i!=conspart.end();i++){
+			lnode = lnode==NULL?i->second:new SyntaxNode(PLUS,lnode,i->second);
+		}
+		assert(lnode!=NULL);
+		SyntaxNode* newnode = new SyntaxNode(opCode,lnode);
+		if(conspart.size()==1 && conspart.find(-1)!=conspart.end())
+		{//const only cos/sin(const_)
+			partials.insert(pair<int,SyntaxNode*>(-1,newnode));
+		}
+		else
+		{
+			for(i=conspart.begin();i!=conspart.end();i++){//can't be a const anymore . ie. cos(const+TVAR....) is on TVAR's level
+				if(i->first!=-1) partials.insert(pair<int,SyntaxNode*>(i->first,newnode));
+			}
+		}
+	}
+	else
+	{
+		LOG("calculatePartialConstraints --- opCode["<<opCode<<"] not yet implemented!");
+		assert(false);
+	}
+//	}
 }
 
 /*
@@ -1545,6 +1797,7 @@ void SyntaxNode::calculatePartialConstraints(boost::unordered_map<int,SyntaxNode
 //! In lp problem the return value can be null if the context is not initialized
 ModelContext* SyntaxNode::locateCtx(ModelContext* rowctx, ModelContext* currCtx)
 {
+	assert(opCode == DOT || opCode == IDREFM);
 	if(currCtx == NULL)
 	{
 		return NULL;
