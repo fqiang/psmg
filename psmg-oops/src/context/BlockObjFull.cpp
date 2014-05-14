@@ -12,6 +12,8 @@
 #include "../model/VarComp.h"
 #include "../model/ObjComp.h"
 #include "Var.h"
+#include "../sml/Config.h"
+#include <fstream>
 
 //BlockObj::BlockObj(BlockDep* b) : block(b), objective(NULL){
 //
@@ -26,8 +28,11 @@ BlockObjFull::~BlockObjFull() {
 
 }
 
-void BlockObjFull::logBlock(ExpandedModel* emrow, ostream& out)
+void BlockObjFull::logBlock(ExpandedModel* emrow)
 {
+	ostringstream oss;
+	oss<<GV(logdir)<<emrow->qualifiedName()<<".objblk";
+	ofstream out(oss.str().c_str());
 	string objname = emrow->model->obj_comp==NULL? "null":emrow->model->obj_comp->name;
 	out<<"Objective Block - (Assume to be Partial)"<<endl;
 	out<<"Objective Declared/Row Model: "<<emrow->name<<"\t\t Name:"<<objname<<endl;
