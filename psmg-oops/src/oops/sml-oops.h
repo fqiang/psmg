@@ -21,7 +21,7 @@
 class ExpandedModel;
 
 void SML_OOPS_driver_NLP(ExpandedModel *root);
-void SML_OOPS_driver_LP(ExpandedModel *root);
+void SML_OOPS_driver_LP_QP(ExpandedModel *root);
 void SML_OOPS_driver_QP(ExpandedModel *root);
 
 #endif
