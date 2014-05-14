@@ -167,7 +167,7 @@ int main(int argc, char **argv)
 
 	//log the model file
 	if(GV(logModel) && GV(rank) == 0) {
-		string datname = GV(datafilename).substr(0, GV(datafilename).find(".", 0));
+		string datname = GV(modelfilename).substr(0, GV(modelfilename).find(".", 0));
 		ostringstream oss;
 		oss<<GV(logdir)<<datname<<GV(modfile_suffix);
 		AmplModel::root->logModel(oss.str().c_str());
@@ -184,7 +184,7 @@ int main(int argc, char **argv)
 
 	//log the split constrained mode file
 	if(GV(logModel) && GV(rank) == 0 ) {
-		string datname = GV(datafilename).substr(0, GV(datafilename).find(".", 0));
+		string datname = GV(modelfilename).substr(0, GV(modelfilename).find(".", 0));
 		ostringstream oss;
 		oss<<GV(logdir)<<datname<<"_partial"<<GV(modfile_suffix);
 		AmplModel::root->logModel(oss.str().c_str());
@@ -203,7 +203,7 @@ int main(int argc, char **argv)
 //	Sml::instance()->testInterfaceLocal(ExpandedModel::root);
 //	//Testing Section end
 
-	SML_OOPS_driver_LP(ExpandedModel::root);
+	SML_OOPS_driver_LP_QP(ExpandedModel::root);
 
 	if(GV(logEM)){
 		string datname = GV(datafilename).substr(0, GV(datafilename).find(".", 0));
