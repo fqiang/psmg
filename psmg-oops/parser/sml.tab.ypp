@@ -31,7 +31,6 @@
     #include "../model/ModelComp.h" 
     #include "../model/AmplModel.h"
     #include "../model/SyntaxNode.h"
-    #include "../model/SyntaxNodeOP.h"
     #include "../model/SyntaxNodeID.h"
     #include "../model/SyntaxNodeValue.h"
     #include "../model/SyntaxNodeIDREF.h"
@@ -423,7 +422,7 @@ paramattributes: paramattribute
 paramattribute:   BINARY {$$ = new SyntaxNode(BINARY);}
               |   INTEGER {$$ = new SyntaxNode(INTEGER);}
               |   SYMBOLIC {$$ = new SyntaxNode(SYMBOLIC);}
-              |   relop expr {$$ = new SyntaxNodeOP($1, $2);}
+              |   relop expr {$$ = new SyntaxNode($1, $2);}
               |   DEFAULT expr {$$ = new SyntaxNode(DEFAULT, $2);}
               |   DEFINED expr {$$ = new SyntaxNode(DEFINED, $2);}
               ;
@@ -712,13 +711,13 @@ expr: value
 		$$ = $1;
 	}
     | LBRACKET expr RBRACKET { $$ = $2; }
-    | MINUS expr { $$ = new SyntaxNodeOP(MINUS, $2); }
-    | expr PLUS expr { $$ = new SyntaxNodeOP(PLUS, $1, $3); }
-    | expr MINUS expr { $$ = new SyntaxNodeOP(MINUS, $1, $3); }
-    | expr TIMES expr { $$ = new SyntaxNodeOP(TIMES, $1, $3); }
-    | expr DIVID expr { $$ = new SyntaxNodeOP(DIVID, $1, $3); }
-    | expr POWER expr { $$ = new SyntaxNodeOP(POWER, $1, $3); }
-    /* | expr ASSIGN expr { $$ = new SyntaxNodeOP(ASSIGN, $1, $3); } */
+    | MINUS expr { $$ = new SyntaxNode(MINUS, $2); }
+    | expr PLUS expr { $$ = new SyntaxNode(PLUS, $1, $3); }
+    | expr MINUS expr { $$ = new SyntaxNode(MINUS, $1, $3); }
+    | expr TIMES expr { $$ = new SyntaxNode(TIMES, $1, $3); }
+    | expr DIVID expr { $$ = new SyntaxNode(DIVID, $1, $3); }
+    | expr POWER expr { $$ = new SyntaxNode(POWER, $1, $3); }
+    /* | expr ASSIGN expr { $$ = new SyntaxNode(ASSIGN, $1, $3); } */
     | IF lexpr THEN expr { $$ = new SyntaxNode(IF, $2, $4); }
     | IF lexpr THEN expr ELSE expr { $$ = new SyntaxNode(IF, $2, $4, $6); }
     | EXPECTATION LBRACKET expr RBRACKET 
