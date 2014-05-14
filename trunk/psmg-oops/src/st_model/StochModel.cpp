@@ -37,7 +37,7 @@
 #include "../model/ConsComp.h"
 #include "../model/SetComp.h"
 #include "../model/SyntaxNode.h"
-#include "../model/SyntaxNodeOP.h"
+#include "../model/SyntaxNode.h"
 #include "../model/SyntaxNodeID.h"
 #include "../model/SyntaxNodeIDREF.h"
 #include "../model/SyntaxNodeString.h"
@@ -266,7 +266,7 @@ AmplModel* StochModel::convertToAmplModel(ModelContext* parCtx)
 					string pddummy = GV(node_dummy_prefix) + stset->setValues_data_order[j]; //pddummy must be one of the model_dummy_name
 					SyntaxNodeIDREF* pdrefn = new SyntaxNodeIDREF(new SyntaxNodeID(SCTX::pbSetComp->name),SCTX::pbSetComp);
 					pdrefn->push_back(new SyntaxNode(COMMA,new SyntaxNodeID(pddummy)));
-					attr = new SyntaxNodeOP(TIMES,attr,pdrefn);
+					attr = new SyntaxNode(TIMES,attr,pdrefn);
 				}
 				ObjComp* nobjcomp = new ObjComp(obj_comp->name,obj_comp->otype,attr,curr_sctx->model);
 				curr_sctx->model->addComp(nobjcomp);
@@ -282,7 +282,7 @@ AmplModel* StochModel::convertToAmplModel(ModelContext* parCtx)
 	}
 
 	if(GV(logModel) && GV(rank) == 0){
-		string datname = GV(datafilename).substr(0, GV(datafilename).find(".", 0));
+		string datname = GV(modelfilename).substr(0, GV(modelfilename).find(".", 0));
 		ostringstream oss;
 		oss<<GV(logdir)<<datname<<"_stoch"<<GV(modfile_suffix);
 		AmplModel::root->logModel(oss.str().c_str());
