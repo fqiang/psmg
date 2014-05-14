@@ -11,6 +11,12 @@
 /*
  * The compressed column stroage for a sparse matrix
  */
+
+typedef boost::numeric::ublas::compressed_matrix<double,boost::numeric::ublas::column_major,0,std::vector<std::size_t>,std::vector<double> >  col_compress_matrix;
+typedef boost::numeric::ublas::matrix_row<col_compress_matrix> col_compress_matrix_row;
+typedef boost::numeric::ublas::matrix_column<col_compress_matrix> col_compress_matrix_col;
+typedef boost::numeric::ublas::matrix_range<col_compress_matrix > col_compress_matrix_range;
+
 class ColSparseMatrix {
 
 

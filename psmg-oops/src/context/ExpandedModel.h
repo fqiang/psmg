@@ -17,27 +17,24 @@
 #include <boost/foreach.hpp>
 #include "autodiff.h"
 
-class ColSparseMatrix;
+#include "ColSparseMatrix.h"
+
 class ModelContext;
 class ModelComp;
 class AmplModel;
 class ConsComp;
 class VarComp;
 class BlockDep;
-class BlockLP;
-class BlockCons;
-class BlockObj;
+class BlockALPQP;
+class BlockQQP;
+class BlockANLP;
+class BlockConsFull;
+class BlockObjFull;
 class BlockHV;
 
 
 using namespace std;
 
-typedef boost::numeric::ublas::compressed_matrix<double,boost::numeric::ublas::column_major >  col_compress_matrix;
-typedef boost::numeric::ublas::matrix_row<col_compress_matrix> col_compress_matrix_row;
-typedef boost::numeric::ublas::matrix_column<col_compress_matrix> col_compress_matrix_col;
-typedef boost::numeric::ublas::matrix_range<col_compress_matrix > col_compress_matrix_range;
-
-//typedef boost::numeric::ublas::compressed_matrix<double>  compress_matrix;
 
 //1. the model comp of the dummy var referred to. 2. the string value of this dummy var at current em.
 typedef std::pair<ModelComp*, string> model_dummy_t;
@@ -88,29 +85,36 @@ public:
 
 	//! Return Constraint Block defined by (constraints in this) X (variables in emcol)
 	//! Creat one if this is not already created
-	BlockCons* getBlockConsFull();
-	BlockCons* cblockFull;	//constructed using full constraints attributes
+	BlockConsFull* getBlockConsFull();
+	BlockConsFull* cblockFull;	//constructed using full constraints attributes
+
+	BlockObjFull* getBlockObjFull();
+	BlockObjFull* oblockFull; 	//oblockFull is set when
+							//1. model->obj_comp is declared and
+							//2. after first call of function eval of obj function.
 
 	//! Hessian of Lagrangian block
 	BlockHV* getBlockHVFull();
 	BlockHV* hvblockFull;   //constructed using full constraints + objective attributes
 
-	BlockObj* getBlockObj();
-	BlockObj* blockobj;			//block objective is set 1. model->obj_comp is delcared and 2. after first call of function or derivative eval of obj function.
 
 	//BlockLP for LP problem -- Jacobian block (this x emcol) evaluation
 	//the reason for storing the BlockLP for each different emcol is that:
 	// we will use the AutoDiff::Node* con saved in the BlockLP to compute nz_jacobian and jacobian of intersection
-	BlockLP* getBlockLP(ExpandedModel* emcol);
-	boost::unordered_map<ExpandedModel*, BlockLP*> lp_cblockMap;    //constructed using partial attributes
+	BlockALPQP* getBlockA_LP_QP(ExpandedModel* emcol);
+	boost::unordered_map<ExpandedModel*, BlockALPQP*> lp_cblockMap;    //constructed using partial attributes
+
+	BlockQQP* getBlockQ_QP(ExpandedModel* emcol);
+	boost::unordered_map<ExpandedModel*, BlockQQP*> qp_oblockMap;    //constructed using partial attributes
+
 
 	//the constraint block created using partial attributes, this is only used for cons_jacobs_nlp evaluation
-	BlockCons* getBlockConsPartial(ExpandedModel* emcol);
-	boost::unordered_map<ExpandedModel*, BlockCons*> nlp_cblockMap_lo;  //constructed using partial attributes
+	BlockANLP* getBlockA_NLP(ExpandedModel* emcol);
+	boost::unordered_map<ExpandedModel*, BlockANLP*> nlp_cblockMap_lo;  //constructed using partial attributes
 
-	//the hv block created using *partial attributes*, this is different from attributes in getBlockConsPartial
-	BlockHV* getBlockHVPartial(ExpandedModel* emcol);
-	boost::unordered_map<ExpandedModel*, BlockHV*> nlp_hvblockMap_lo;   //constructed using *partial attributes*
+//	//the hv block created using *partial attributes*, this is different from attributes in getBlockConsPartial
+//	BlockHV* getBlockHVPartial(ExpandedModel* emcol);
+//	boost::unordered_map<ExpandedModel*, BlockHV*> nlp_hvblockMap_lo;   //constructed using *partial attributes*
 
 	ExpandedModel(AmplModel* _mod,ModelContext* _context);
 	virtual ~ExpandedModel();
@@ -120,14 +124,15 @@ public:
 	void cons_feval_local(double* fvals);
 	//Objective function evaluation for objective declared at this expanded model
 	double& obj_feval(double& oval);
+
+	//LP and QP Interface - specific
+	uint nz_cons_jacobs_lp_qp(ExpandedModel* emcol);
+	void cons_jacobs_lp_qp(ExpandedModel* emcol,col_compress_matrix& m);
 	//! Returns the objective gradient for this expanded model w.r.t. local vars
 	//! assume objective only use variable declared in it's own expanded model
-	void obj_grad(double* vals);
-
-	//LP Interface - specific
-	uint nz_cons_jacobs_lp(ExpandedModel* emcol);
-	void cons_jacobs_lp(ExpandedModel* emcol,col_compress_matrix& m);
-
+	void obj_grad_c_lp_qp(double* vals);
+	uint nz_obj_hess_qp(ExpandedModel* emcol);
+	void obj_hess_qp(ExpandedModel* emcol, col_compress_matrix& m);
 
 	//NLP interface - specific
 	/*
@@ -201,16 +206,15 @@ public:
 	void addChildren(ExpandedModel* em2);
 	void clearAllContextTreeKeepRoot();
 	void levelTraversal(vector<ExpandedModel*>& em2List,int level);
-	static void convertToColSparseMatrix(col_compress_matrix& m,ColSparseMatrix* sm);
-	static void convertToColSparseMatrix(boost::numeric::ublas::compressed_matrix<double>& m,ColSparseMatrix* sm);
+	static void convertToColSparseMatrix(col_compress_matrix& m,ColSparseMatrix& sm);
 	/*
 	 * Utility methods
 	 */
 	ModelContext* locateCtx(AmplModel* model, string& dummyval);
 	void logEMRecursive(string& line,ostream&);
 	void calculateMemoryUsage(unsigned long& size_str,unsigned long& size_data);
-private:
 	string qualifiedName();
+private:
 	ModelContext* recursiveInitContext();
 	void copyVariables(boost::unordered_set<AutoDiff::Node*>&);
 	void copyVariables(std::vector<AutoDiff::Node*>&);
