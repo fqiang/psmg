@@ -15,6 +15,10 @@ class ObjComp : public ModelComp {
 public:
 
 	objType otype;
+
+	//This will be used by QP problem. the first order term will be in first_partial, and corresponding c coefficient for either
+	//LP or QP problem will need to specified in it's own(local) block.
+	//The higher order term (quadratic term for QP) will be in higher_partial and store separately for each different column level block.
 	CPart cpart;
 	boost::unordered_map<int,SyntaxNode*> const_partial;
 	boost::unordered_map<int,SyntaxNode*> first_partial;

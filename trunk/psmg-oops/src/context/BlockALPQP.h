@@ -16,7 +16,7 @@ class ExpandedModel;
 class BlockALPQP {
 public:
 
-	BlockALPQP(ExpandedModel*,ExpandedModel*);
+	BlockALPQP();
 	virtual ~BlockALPQP();
 
 	//calculated constraint set for the emrow.

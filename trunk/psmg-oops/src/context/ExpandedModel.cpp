@@ -101,7 +101,7 @@ BlockALPQP* ExpandedModel::getBlockA_LP_QP(ExpandedModel* emcol)
 	}
 	else
 	{
-		rval = new BlockALPQP(this,emcol);
+		rval = new BlockALPQP();
 		//init context and set, param model comp if necessary for this(emrow) and emcol
 		this->recursiveInitContext();
 		emcol->recursiveInitContext();
@@ -395,7 +395,7 @@ void ExpandedModel::obj_grad_c_lp_qp(double* vals)
 			vals[i] = isnan(grad[i])?0:grad[i];
 		}
 	}
-	Stat::numGradObjCall++;
+	Stat::numGradObjCCall++;
 	LOG("end obj_grad_c - emrow["<<this->name<<"] size["<<this->numLocalVars<<"]");
 }
 
@@ -803,10 +803,7 @@ BlockObjFull* ExpandedModel::getBlockObjFull()
 		}
 
 		if(GV(logBlock)){
-			ostringstream oss;
-			oss<<GV(logdir)<<this->qualifiedName()<<".objblk";
-			ofstream fout(oss.str().c_str());
-			oblockFull->logBlock(this,fout);
+			oblockFull->logBlock(this);
 		}
 	}
 	LOG("exit - getBlockObjFull - row["<<this->name<<"] - nvar["<<this->numLocalVars<<"] --- with OBJ["<<objname<<"]");

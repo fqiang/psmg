@@ -25,7 +25,7 @@ public:
 	BlockDep* block;
 	AutoDiff::Node*	objective;
 
-	void logBlock(ExpandedModel*, ostream& out);
+	void logBlock(ExpandedModel*);
 };
 
 #endif /* CBLOCK_H_ */

@@ -14,7 +14,7 @@
 #include <iostream>
 #include <fstream>
 
-BlockALPQP::BlockALPQP(ExpandedModel* row,ExpandedModel* col) {
+BlockALPQP::BlockALPQP() {
 
 }
 
