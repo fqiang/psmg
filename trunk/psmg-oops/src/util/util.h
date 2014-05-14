@@ -5,8 +5,8 @@
  *      Author: s0965328
  */
 
-#ifndef GLOBAL_UTIL_FUNCTION_H_
-#define GLOBAL_UTIL_FUNCTION_H_
+#ifndef UTIL_H_
+#define UTIL_H_
 
 #include <stdio.h>
 #include <cassert>
