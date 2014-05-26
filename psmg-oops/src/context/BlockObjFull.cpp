@@ -43,12 +43,12 @@ void BlockObjFull::logBlock(ExpandedModel* emrow)
 	std::vector<VarComp*>::iterator varcomp=emrow->model->var_comps.begin();
 	for(;varcomp!=emrow->model->var_comps.end();varcomp++)
 	{
-		Var* var = static_cast<Var*>(emrow->ctx->getCompValue(*varcomp));
+		Var* var = static_cast<Var*>(emrow->ctx.getCompValue(*varcomp));
 		var_multi_map_by_order& var_by_order = var->varMultiMap.get<0>();
 		var_multi_map_by_order::iterator ivar = var_by_order.begin();
 		for(;ivar!=var_by_order.end();ivar++)
 		{
-			string name = emrow->ctx->getContextId()+"_"+var->name+"_"+(*ivar)->indicies;
+			string name = emrow->name+"_"+var->name+"_"+(*ivar)->indicies;
 			out<<"\t"<<name<<"\t\t"<<(*ivar)->toString()<<endl;
 		}
 	}

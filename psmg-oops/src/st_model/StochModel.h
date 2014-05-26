@@ -67,9 +67,9 @@ public:
 	StochModel(const string& name, SyntaxNode* stochsets,AmplModel *parent);
 	~StochModel();
 	ExpandedModel* createExpandedModel(string dummyVar,SetComp* comp,string value,ModelContext* parent);
-	AmplModel* convertToAmplModel(ModelContext* parCtx);
+	AmplModel* convertToAmplModel(ModelContext& parCtx);
 
-	bool isInCurrentStage(SyntaxNode* stage, string& stagename, ModelContext* ctx);
+	bool isInCurrentStage(SyntaxNode* stage, string& stagename, ModelContext& ctx);
 };
 
 #endif

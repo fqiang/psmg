@@ -38,14 +38,16 @@ string Var::toString()
 }
 void Var::calculateMemoryUsage(unsigned long& size)
 {
-	LOG_MEM("Var::calculateMemoryUsage -- name["<<indicies<<"]");
+	MEM("Var::calculateMemoryUsage -- name["<<name<<"]");
 	long pre = size;
 	size += sizeof(Var);
-	size += name.size();
+	size += name.size() + 1;
+
 	var_multi_map_by_order& var_by_order = this->varMultiMap.get<0>();
 	var_multi_map_by_order::iterator i = var_by_order.begin();
 	for(;i!=var_by_order.end();i++){
 		(*i)->calculateMemoryUsage(size);
 	}
-	LOG_MEM(" -- this Var usage ["<<size-pre<<"]");
+//	cout<<this->toString()<<endl;
+	MEM(" -- this Var usage ["<<size-pre<<"]");
 }

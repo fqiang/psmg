@@ -4,5 +4,5 @@
 
 USER_OBJS :=
 
-LIBS := -lparoops -lautodiff_library -llapack -lpugixml -lmetis -lgfortran -lfl -ldl
+LIBS := -lparoops -llapack -lmetis -lgfortran -lfl -ldl
 

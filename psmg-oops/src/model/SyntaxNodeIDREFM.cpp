@@ -60,6 +60,7 @@ ostream& SyntaxNodeIDREFM::put(ostream& s)
 		assert(values[1]->opCode == COMMA);
 		s<<"["<<values[1]<<"]";
 	}
+	return s;
 }
 
 void SyntaxNodeIDREFM::calculateMemoryUsage(unsigned long& size) {

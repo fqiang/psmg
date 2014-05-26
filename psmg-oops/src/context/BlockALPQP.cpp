@@ -19,6 +19,12 @@ BlockALPQP::BlockALPQP() {
 }
 
 BlockALPQP::~BlockALPQP() {
+	BOOST_FOREACH(AutoDiff::Node* cnode, cons)
+	{
+		if(cnode!=NULL && cnode->getType()!=AutoDiff::VNode_Type)
+			delete cnode;
+	}
+	cons.clear();
 }
 
 void BlockALPQP::logBlock(ExpandedModel* emrow, ExpandedModel* emcol)
@@ -35,12 +41,12 @@ void BlockALPQP::logBlock(ExpandedModel* emrow, ExpandedModel* emcol)
 	std::vector<VarComp*>::iterator varcomp=emcol->model->var_comps.begin();
 	for(;varcomp!=emcol->model->var_comps.end();varcomp++)
 	{
-		Var* var = static_cast<Var*>(emcol->ctx->getCompValue(*varcomp));
+		Var* var = static_cast<Var*>(emcol->ctx.getCompValue(*varcomp));
 		var_multi_map_by_order& var_by_order = var->varMultiMap.get<0>();
 		var_multi_map_by_order::iterator ivar = var_by_order.begin();
 		for(;ivar!=var_by_order.end();ivar++)
 		{
-			string name = emcol->ctx->getContextId()+"_"+var->name+"_"+(*ivar)->indicies;
+			string name = emcol->name+"_"+var->name+"_"+(*ivar)->indicies;
 			out<<"\t"<<name<<"\t\t"<<(*ivar)->toString()<<endl;
 		}
 	}

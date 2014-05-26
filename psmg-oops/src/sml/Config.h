@@ -21,7 +21,7 @@
 
 #include <string>
 #include <limits>
-#include "pugixml.hpp"
+#include "../xml/pugixml.hpp"
 
 #define INFINITY_D std::numeric_limits<double>::infinity()
 #define NEG_INFINITY_D -std::numeric_limits<double>::infinity()
@@ -45,18 +45,18 @@ class Config{
 	 int rank;
 	 int size;
 
+	 string configFilename;
 	 string datafilename;
 	 string modelfilename;
 	 bool solve;
 	 string solvetype;
-	 string configFilename;
 
 	 string root_stage_parent_name;
 	 string node_dummy_prefix;
 	 string stage_dummy_prefix;
 	 string var_det_prefix;
 
-	 bool debug;
+	 bool assertion;
 	 string logdir;
 	 bool writeMPS;
 	 string mpsFile;

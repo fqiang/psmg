@@ -8,20 +8,26 @@
 #ifndef UTIL_H_
 #define UTIL_H_
 
-#include <stdio.h>
+#define NDEBUG     //enable or disable assert
 #include <cassert>
+
+
+#include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sstream>
 #include <inttypes.h>
 #include <unistd.h>
 #include <fstream>
-#include "../metric/Stat.h"
-#include "../metric/TimeStamp.h"
-#include "../sml/Config.h"
 #include "compile_marco.h"
+#include "../metric/TimeStamp.h"
+#include "../metric/Stat.h"
+#include "../sml/Config.h"
+
+class SyntaxNode;
 
 void print_mem_usage(std::string name);
 
+void print(SyntaxNode* node);
 
 #endif /* UTIL_H_ */

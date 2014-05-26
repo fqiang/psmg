@@ -24,20 +24,20 @@ ConsComp::~ConsComp() {
 
 }
 
-void ConsComp::calculateLocalConCard(ModelContext* ctx,uint& card)
+void ConsComp::calculateLocalConCard(ModelContext& ctx,uint& card)
 {
-	LOG("calculateLocalCon -- in model["<< (this->model->name) <<"] id["<<this->name<<"]");
+	TRACE("calculateLocalCon -- in model["<< (this->model->name) <<"] id["<<this->name<<"]");
 	card = 1;
 	if(this->indexing!=NULL){ //a single constraint
 		this->indexing->calculateConCard(ctx,card);
 	}
-	LOG( "calculateLocalVar -- in model["<<this->model->name<<"] id["<<this->name<<"] -- card["<<card<<"]");
+	TRACE( "calculateLocalVar -- in model["<<this->model->name<<"] id["<<this->name<<"] -- card["<<card<<"]");
 }
 
 
 void ConsComp::calculatePartialConstraints()
 {
-	LOG("ConsComp::calculatePartialConstraints --id["<<name<< "] - indx["<<this->indexing->print()<<"]-- attr["<<this->attributes->print()<<"] - declared level["<<this->model->level<<"]");
+	TRACE("ConsComp::calculatePartialConstraints --id["<<name<< "] - indx["<<this->indexing<<"]-- attr["<<this->attributes<<"] - declared level["<<this->model->level<<"]");
 	assert(attributes->opCode == COMMA);
 	SyntaxNode* assign_expr = attributes->findDirectChild(ASSIGN);
 	assert(assign_expr->nchild()==2); //TODO: for now- only equality constraint supported
@@ -85,4 +85,16 @@ void ConsComp::dump(ostream& fout,int counter)
 		else	fout<<"\tfirst : "<<cpart.first<<endl;
 	if(cpart.higher == NULL)	fout<<"\thigher : "<<"null"<<endl;
 		else	fout<<"\thigher : "<<cpart.higher<<endl;
+}
+
+void ConsComp::calculateMemoryUsage(ulong& size)
+{
+	ModelComp::calculateMemoryUsage(size);
+	size += sizeof(ConsComp);
+	if(cpart.constant!=NULL)
+		cpart.constant->calculateMemoryUsage(size);
+	if(cpart.first!=NULL)
+		cpart.first->calculateMemoryUsage(size);
+	if(cpart.higher!=NULL)
+		cpart.higher->calculateMemoryUsage(size);
 }

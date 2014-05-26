@@ -17,7 +17,6 @@
 
 #include "Param.h"
 #include <string>
-#include <cassert>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
@@ -34,12 +33,12 @@ using namespace __gnu_cxx;
 
 Param::Param(ParamComp* comp):numIndicies(comp->numIndicies),name(comp->name),card(0)
 {
-	LOG("Create param - name["<<name<<"] numIndicies["<<numIndicies<<"]");
+	TRACE("Create param - name["<<name<<"] numIndicies["<<numIndicies<<"]");
 }
 
 Param::~Param()
 {
-	LOG("delete param - name["<<name<<"]");
+	TRACE("delete param - name["<<name<<"]");
 }
 
 Param* Param::createParam(ParamComp* comp)

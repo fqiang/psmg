@@ -1,19 +1,19 @@
-/* A Bison parser, made by GNU Bison 2.5.  */
+/* A Bison parser, made by GNU Bison 3.0.2.  */
 
 /* Bison interface for Yacc-like parsers in C
-   
-      Copyright (C) 1984, 1989-1990, 2000-2011 Free Software Foundation, Inc.
-   
+
+   Copyright (C) 1984, 1989-1990, 2000-2013 Free Software Foundation, Inc.
+
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-   
+
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
@@ -26,153 +26,161 @@
    special exception, which will cause the skeleton and the resulting
    Bison output files to be licensed under the GNU General Public
    License without this special exception.
-   
+
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
+#ifndef YY_YY_SRC_PARSER_SML_TAB_HPP_INCLUDED
+# define YY_YY_SRC_PARSER_SML_TAB_HPP_INCLUDED
+/* Debug traces.  */
+#ifndef YYDEBUG
+# define YYDEBUG 1
+#endif
+#if YYDEBUG
+extern int yydebug;
+#endif
 
-/* Tokens.  */
+/* Token type.  */
 #ifndef YYTOKENTYPE
 # define YYTOKENTYPE
-   /* Put the tokens into the symbol table, so that GDB and other debuggers
-      know about them.  */
-   enum yytokentype {
-     ID = 258,
-     INT_VAL = 259,
-     FLOAT_VAL = 260,
-     INFINITE = 261,
-     COEFF = 262,
-     COVER = 263,
-     OBJ = 264,
-     DEFAULT = 265,
-     FROM = 266,
-     TO = 267,
-     TO_COME = 268,
-     MODELTYPE = 269,
-     DOTDOT = 270,
-     NET_IN = 271,
-     NET_OUT = 272,
-     DIMEN = 273,
-     ORDERED = 274,
-     CIRCULAR = 275,
-     REVERSED = 276,
-     SYMBOLIC = 277,
-     ARC = 278,
-     INTEGER = 279,
-     BINARY = 280,
-     CHECK = 281,
-     CLOSE = 282,
-     DISPLAY = 283,
-     DROP = 284,
-     INCLUDE = 285,
-     PRINT = 286,
-     PRINTF = 287,
-     QUIT = 288,
-     RESET = 289,
-     RESTORE = 290,
-     SOLVE = 291,
-     UPDATE = 292,
-     WRITE = 293,
-     SHELL = 294,
-     MODEL = 295,
-     DATA = 296,
-     OPTION = 297,
-     LET = 298,
-     SOLUTION = 299,
-     FIX = 300,
-     UNFIX = 301,
-     END = 302,
-     FUNCTION = 303,
-     PIPE = 304,
-     FORMAT = 305,
-     SETOF = 306,
-     BY = 307,
-     LESS = 308,
-     MOD = 309,
-     DIV = 310,
-     MIN = 311,
-     MAX = 312,
-     IF = 313,
-     THEN = 314,
-     ELSE = 315,
-     AND = 316,
-     OR = 317,
-     EXISTS = 318,
-     FORALL = 319,
-     NOT = 320,
-     WITHIN = 321,
-     WHILE = 322,
-     REPEAT = 323,
-     FOR = 324,
-     CARD = 325,
-     NEXT = 326,
-     NEXTW = 327,
-     PREV = 328,
-     PREVW = 329,
-     FIRST = 330,
-     LAST = 331,
-     MEMBER = 332,
-     ORD = 333,
-     ORD_ZERO = 334,
-     VAR = 335,
-     PARAM = 336,
-     SET = 337,
-     MAXIMIZE = 338,
-     MINIMIZE = 339,
-     OBJECTIVE = 340,
-     SUBJECTTO = 341,
-     SUM = 342,
-     PROD = 343,
-     IN = 344,
-     POWER = 345,
-     NE = 346,
-     LE = 347,
-     GE = 348,
-     EQ = 349,
-     LT = 350,
-     GT = 351,
-     SIN = 352,
-     COS = 353,
-     UNION = 354,
-     DIFF = 355,
-     CROSS = 356,
-     INTER = 357,
-     SYMDIFF = 358,
-     LBRACE = 359,
-     RBRACE = 360,
-     COMMA = 361,
-     SEMICOLON = 362,
-     LSBRACKET = 363,
-     RSBRACKET = 364,
-     COLON = 365,
-     LBRACKET = 366,
-     RBRACKET = 367,
-     DEFINED = 368,
-     SUFFIX = 369,
-     BLOCK = 370,
-     USING = 371,
-     DETERMINISTIC = 372,
-     EXPECTATION = 373,
-     STOCHASTIC = 374,
-     STAGES = 375,
-     ANCESTOR = 376,
-     IDREF = 377,
-     IDREFM = 378,
-     VALUE = 379,
-     LIST = 380,
-     INDEX = 381,
-     DVAR = 382,
-     DOT = 383,
-     STAGE = 384,
-     NODE = 385,
-     STRING = 386,
-     SUMEXP = 387,
-     ASSIGN = 388,
-     MINUS = 389,
-     PLUS = 390,
-     DIVID = 391,
-     TIMES = 392
-   };
+  enum yytokentype
+  {
+    ID = 258,
+    INT_VAL = 259,
+    FLOAT_VAL = 260,
+    INFINITE = 261,
+    COEFF = 262,
+    COVER = 263,
+    OBJ = 264,
+    DEFAULT = 265,
+    FROM = 266,
+    TO = 267,
+    TO_COME = 268,
+    MODELTYPE = 269,
+    DOTDOT = 270,
+    NET_IN = 271,
+    NET_OUT = 272,
+    DIMEN = 273,
+    ORDERED = 274,
+    CIRCULAR = 275,
+    REVERSED = 276,
+    SYMBOLIC = 277,
+    ARC = 278,
+    INTEGER = 279,
+    BINARY = 280,
+    CHECK = 281,
+    CLOSE = 282,
+    DISPLAY = 283,
+    DROP = 284,
+    INCLUDE = 285,
+    PRINT = 286,
+    PRINTF = 287,
+    QUIT = 288,
+    RESET = 289,
+    RESTORE = 290,
+    SOLVE = 291,
+    UPDATE = 292,
+    WRITE = 293,
+    SHELL = 294,
+    MODEL = 295,
+    DATA = 296,
+    OPTION = 297,
+    LET = 298,
+    SOLUTION = 299,
+    FIX = 300,
+    UNFIX = 301,
+    END = 302,
+    FUNCTION = 303,
+    PIPE = 304,
+    FORMAT = 305,
+    SETOF = 306,
+    BY = 307,
+    LESS = 308,
+    MOD = 309,
+    DIV = 310,
+    MIN = 311,
+    MAX = 312,
+    IF = 313,
+    THEN = 314,
+    ELSE = 315,
+    AND = 316,
+    OR = 317,
+    EXISTS = 318,
+    FORALL = 319,
+    NOT = 320,
+    WITHIN = 321,
+    WHILE = 322,
+    REPEAT = 323,
+    FOR = 324,
+    CARD = 325,
+    NEXT = 326,
+    NEXTW = 327,
+    PREV = 328,
+    PREVW = 329,
+    FIRST = 330,
+    LAST = 331,
+    MEMBER = 332,
+    ORD = 333,
+    ORD_ZERO = 334,
+    VAR = 335,
+    PARAM = 336,
+    SET = 337,
+    MAXIMIZE = 338,
+    MINIMIZE = 339,
+    OBJECTIVE = 340,
+    SUBJECTTO = 341,
+    SUM = 342,
+    PROD = 343,
+    IN = 344,
+    POWER = 345,
+    NE = 346,
+    LE = 347,
+    GE = 348,
+    EQ = 349,
+    LT = 350,
+    GT = 351,
+    SIN = 352,
+    COS = 353,
+    UNION = 354,
+    DIFF = 355,
+    CROSS = 356,
+    INTER = 357,
+    SYMDIFF = 358,
+    LBRACE = 359,
+    RBRACE = 360,
+    COMMA = 361,
+    SEMICOLON = 362,
+    LSBRACKET = 363,
+    RSBRACKET = 364,
+    COLON = 365,
+    LBRACKET = 366,
+    RBRACKET = 367,
+    DEFINED = 368,
+    SUFFIX = 369,
+    BLOCK = 370,
+    USING = 371,
+    DETERMINISTIC = 372,
+    EXPECTATION = 373,
+    STOCHASTIC = 374,
+    STAGES = 375,
+    ANCESTOR = 376,
+    IDREF = 377,
+    IDREFM = 378,
+    VALUE = 379,
+    LIST = 380,
+    INDEX = 381,
+    DVAR = 382,
+    DOT = 383,
+    STAGE = 384,
+    NODE = 385,
+    STRING = 386,
+    SUMEXP = 387,
+    ASSIGN = 388,
+    PLUS = 389,
+    MINUS = 390,
+    TIMES = 391,
+    DIVID = 392
+  };
 #endif
 /* Tokens.  */
 #define ID 258
@@ -306,20 +314,17 @@
 #define STRING 386
 #define SUMEXP 387
 #define ASSIGN 388
-#define MINUS 389
-#define PLUS 390
-#define DIVID 391
-#define TIMES 392
+#define PLUS 389
+#define MINUS 390
+#define TIMES 391
+#define DIVID 392
 
-
-
-
+/* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-typedef union YYSTYPE
+typedef union YYSTYPE YYSTYPE;
+union YYSTYPE
 {
-
-/* Line 2068 of yacc.c  */
-#line 71 "sml.tab.ypp"
+#line 71 "sml.tab.ypp" /* yacc.c:1909  */
 
   int optype;
   objType otype;
@@ -329,16 +334,15 @@ typedef union YYSTYPE
   AmplModel* model;
   SyntaxNode *opPtr;
 
-
-
-/* Line 2068 of yacc.c  */
-#line 336 "../src/parser/sml.tab.hpp"
-} YYSTYPE;
+#line 338 "../src/parser/sml.tab.hpp" /* yacc.c:1909  */
+};
 # define YYSTYPE_IS_TRIVIAL 1
-# define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
 #endif
 
+
 extern YYSTYPE yylval;
 
+int yyparse (void);
 
+#endif /* !YY_YY_SRC_PARSER_SML_TAB_HPP_INCLUDED  */

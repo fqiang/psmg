@@ -8,7 +8,7 @@
 #ifndef BLOCKDEP_H_
 #define BLOCKDEP_H_
 
-#include "autodiff.h"
+#include "../autodiff/autodiff.h"
 #include <vector>
 
 using namespace std;

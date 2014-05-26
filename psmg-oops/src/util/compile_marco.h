@@ -13,58 +13,41 @@
 typedef unsigned int uint;
 typedef unsigned long ulong;
 
-#ifdef DEBUG
-#define DEBUG_PRINT_ENABLED 1 //enable debug print
-#define DEBUG_YAC_DATA_ENABLED 1
-#define DEBUG_YAC_MODEL_ENABLE 1
-#define SYS_MEMORY_USAGE_ENABLED 0
-#define MEM_ENABLED 0
-#define TIMER_ENABLED 1
-#else
-#define DEBUG_PRINT_ENABLED 0
-#define DEBUG_YAC_ENABLED 0
-#define DEBUG_YAC_MODEL_ENABLE 0
-#define SYS_MEMORY_USAGE_ENABLED 0
-#define MEM_ENABLED 0
-#define TIMER_ENABLED 1
-#endif
-
-#ifdef MEM
-#define SYS_MEMORY_USAGE_ENABLED 1
+#if DEBUG
+#define TRACE_PRINT_ENABLED 1
+#define TRACE_PARSER_ENABLED 1
 #define MEM_ENABLED 1
+#define TIMER_ENABLED 1
 #endif
 
-#if DEBUG_PRINT_ENABLED
-#define LOG(arg) (std::cout<<"LOG==>["<<GV(rank)<<"/"<<GV(size)<<"]-"<<arg<<std::endl)
+#if RELEASE
+#define TRACE_PRINT_ENABLED 0
+#define TRACE_PARSER_ENABLED 0
+#define MEM_ENABLED 0
+#define TIMER_ENABLED 1
+#endif
+
+#if TRACE_PRINT_ENABLED
+#define TRACE(arg) (std::cout<<"TRACE==>["<<GV(rank)<<"/"<<GV(size)<<"]-"<<arg<<std::endl)
 #else
-#define LOG(arg) ((void)0)
+#define TRACE(arg) ((void)0)
 #endif
 
-#if DEBUG_PRINT_ENABLED
-  #define LOG_SM(arg) (std::cout<<"LOG_SM==>["<<GV(rank)<<"/"<<GV(size)<<"]-"<<arg<<std::endl)
+#define ERROR(arg) (std::cout<<"ERROR **** ["<<GV(rank)<<"/"<<GV(size)<<"]-"<<arg<<std::endl)
+#define WARN(arg) (std::cout<<"ERROR **** ["<<GV(rank)<<"/"<<GV(size)<<"]-"<<arg<<std::endl)
+
+#if 0
+#define YAC(arg) (std::cout<<"YAC==>"<<arg<<std::endl)
 #else
-  #define LOG_SM(arg) ((void)0)
+#define YAC(arg) ((void)0)
 #endif
-
-#if DEBUG_YAC_DATA_ENABLED
-#define YAC_DATA_LOG(arg) (std::cout<<"YAC_DATA_LOG==>"<<arg<<std::endl)
-#else
-#define YAC_DATA_LOG(arg) ((void)0)
-#endif
-
-#if DEBUG_YAC_MODEL_ENABLE
-#define YAC_MODEL_LOG(arg) (std::cout<<"YAC_MODEL_LOG==>"<<arg<<std::endl)
-#else
-#define YAC_MODEL_LOG(arg) ((void)0)
-#endif
-
 
 #if TIMER_ENABLED
 #define TIMER_START(arg) (TimeStamp::GetTimeStamp(arg)->start())
 #define TIMER_STOP(arg) (TimeStamp::GetTimeStamp(arg)->stop())
 #define TIMER_LIST (TimeStamp::List())
 #define TIMER_RESET (TimeStamp::Reset())
-#define LOG_TIME(arg) (std::cout<<"LOG==>["<<GV(rank)<<"/"<<GV(size)<<"]-"<<arg<<std::endl)
+#define LOG_TIME(arg) (std::cout<<"TIME==>["<<GV(rank)<<"/"<<GV(size)<<"]-"<<arg<<std::endl)
 #else
 #define TIMER_START(arg) ((void)0)
 #define TIMER_STOP(arg) ((void)0)
@@ -73,16 +56,11 @@ typedef unsigned long ulong;
 #define LOG_TIME(arg) ((void)0)
 #endif
 
-//#if SYS_MEMORY_USAGE_ENABLED
-//#define LOG_SYS_MEM(arg) print_mem_usage(arg)
-//#else
-//#define LOG_SYS_MEM(arg) ((void)0)
-//#endif
 
 #if MEM_ENABLED
-#define LOG_MEM(arg) (std::cout<<"LOG_MEM==>["<<GV(rank)<<"/"<<GV(size)<<"]-"<<arg<<std::endl)
+#define MEM(arg) (std::cout<<"MEM==>["<<GV(rank)<<"/"<<GV(size)<<"]-"<<arg<<std::endl)
 #else
-#define LOG_MEM(arg) ((void)0)
+#define MEM(arg) ((void)0)
 #endif
 
 #endif

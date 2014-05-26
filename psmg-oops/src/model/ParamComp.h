@@ -25,11 +25,12 @@ public:
 	int numIndicies;
 	bool isSym;
 	void setParamIndicies();
-	void calculateParamModelComp(ModelContext* context);
-	void calculateParamModelComp(ModelContext* context,
-				vector<string>& dumVars,vector<SetComp*>& comps,vector<Set*>& sets, int curr, ParamMult* param);
-	void evalParamValue(ModelContext* ctx,PValue** rval);
+	void calculateParamModelComp(ModelContext& context);
+	void calculateParamModelComp(ModelContext& context,
+				vector<string>& dumVars,vector<SetComp*>& comps,vector<Set*>& sets, uint curr, ParamMult* param);
+	void evalParamValue(ModelContext& ctx,PValue** rval);
 	void dump(ostream& fout,int counter);
+	void calculateMemoryUsage(ulong& size);
 };
 
 #endif /* PARAMCOMP_H_ */

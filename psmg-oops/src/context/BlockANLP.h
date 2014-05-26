@@ -8,7 +8,7 @@
 #ifndef BLOCKANLP_H_
 #define BLOCKANLP_H_
 
-#include "autodiff.h"
+#include "../autodiff/autodiff.h"
 #include <vector>
 
 class BlockDep;

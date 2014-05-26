@@ -149,7 +149,7 @@ block:  stochblock
 ------------------------------------------------------------------------- */
 blockblock: BLOCK ID 
 			{  
-				YAC_MODEL_LOG("blockblock: -- started -- "<<$2);
+				YAC("blockblock: -- started -- "<<$2);
 				record_dummy_var();
 			} indexing_opt COLON {   
 				begin_model($2,$4);
@@ -177,7 +177,7 @@ where
 -------------------------------------------------------------------- */
 stochblock: BLOCK ID
 			{
-				YAC_MODEL_LOG("stochblock: -- started - "<<$2);
+				YAC("stochblock: -- started - "<<$2);
 				record_dummy_var();
 			} indexing_opt STOCHASTIC USING LBRACKET indexing_setexpr_list RBRACKET COLON 
 			{
@@ -186,7 +186,7 @@ stochblock: BLOCK ID
     	    {
                end_model($2); 
 	           restore_dummy_var();
-               YAC_MODEL_LOG("vardef: -- end -- "<<$2);
+               YAC("vardef: -- end -- "<<$2);
             }
           ;
 
@@ -238,11 +238,11 @@ indexing_opt: /* empty */ {		$$=NULL;	}
 
 indexing_set:	LBRACE indexing_setexpr_list indexing_condition_opt RBRACE 
 				{	
-					YAC_MODEL_LOG("indexing -- rule matched!");
+					YAC("indexing -- rule matched!");
 					SyntaxNode *tmp = NULL;
 		      		tmp = new SyntaxNode(LBRACE, new SyntaxNode(COLON, $2, $3));
 		           	$$ = tmp;
-		           	YAC_MODEL_LOG("indexing -- rule end -- "<<$$->print());
+		           	YAC("indexing -- rule end -- "<<$$);
 				}
 			;
 
@@ -319,13 +319,13 @@ indexing_dummy: ID
  -------------------------------------------------------------------   */
 setdef:	SET ID
 		{
-			YAC_MODEL_LOG("setdef: start -- ID=["<<$2<<"]");
+			YAC("setdef: start -- ID=["<<$2<<"]");
 			record_dummy_var();
 		} indexing_opt stochattr_opt setattributes_opt SEMICOLON
         {
-            YAC_MODEL_LOG("indexing_opt=["<<$4<<"]");
-            YAC_MODEL_LOG("stochattr_opt=["<<$5<<"]");
-            YAC_MODEL_LOG("setattributes_opt=["<<$6<<"]");
+            YAC("indexing_opt=["<<$4<<"]");
+            YAC("stochattr_opt=["<<$5<<"]");
+            YAC("setattributes_opt=["<<$6<<"]");
             ModelComp *newmc = new SetComp($2, $4, $6,current_model);
             if (isInStochModel()){
             	addStochInfo(newmc, $5);
@@ -333,7 +333,7 @@ setdef:	SET ID
             current_model->addComp(newmc);
            	
            	restore_dummy_var();
-           	YAC_MODEL_LOG("setdef: -- end -- "<<$2);
+           	YAC("setdef: -- end -- "<<$2);
         }
       ;
       
@@ -384,7 +384,7 @@ setattribute: 	DIMEN INT_VAL
  -------------------------------------------------------------------   */
 paramdef:  	PARAM ID
 			{
-				YAC_MODEL_LOG("paramdef: -- start -- "<<$2);
+				YAC("paramdef: -- start -- "<<$2);
 				record_dummy_var();
 			} indexing_opt stochattr_opt paramattributes_opt SEMICOLON {
 			   	ModelComp *newmc = new ParamComp($2,$4,$6,current_model);
@@ -395,7 +395,7 @@ paramdef:  	PARAM ID
 			   	current_model->addComp(newmc);
                	
                	restore_dummy_var();
-               	YAC_MODEL_LOG("paramdef: -- end -- "<<$2);
+               	YAC("paramdef: -- end -- "<<$2);
             }
         ;
         
@@ -440,7 +440,7 @@ relop:   LE {$$=LE;}
  -------------------------------------------------------------------   */
 vardef: VAR ID 
 		{
-			YAC_MODEL_LOG("vardef: -- start -- "<<$2);
+			YAC("vardef: -- start -- "<<$2);
 			record_dummy_var();
 		}indexing_opt stochattr_opt varattributes_opt SEMICOLON {
             ModelComp *newmc = new VarComp($2, $4, $6,current_model);
@@ -449,7 +449,7 @@ vardef: VAR ID
             }
             current_model->addComp(newmc);
           	restore_dummy_var();
-          	YAC_MODEL_LOG("vardef: -- end -- "<<$2);
+          	YAC("vardef: -- end -- "<<$2);
         }
       ;
      
@@ -485,11 +485,11 @@ varattribute:  BINARY {$$ = new SyntaxNode(BINARY);}
  -------------------------------------------------------------------   */     
 consdef:	SUBJECTTO ID
 			{
-				YAC_MODEL_LOG("consdef: -- start -- "<<$2);
+				YAC("consdef: -- start -- "<<$2);
 				record_dummy_var();
 			} indexing_opt stochattr_opt COLON consattributes SEMICOLON
 			{
-				YAC_MODEL_LOG("consdef: -- indexing -- "<<$4);
+				YAC("consdef: -- indexing -- "<<$4);
 				ModelComp *newmc = new ConsComp($2, $4, $7,current_model);
 	            if (isInStochModel()){
 					addStochInfo(newmc, $5);
@@ -497,7 +497,7 @@ consdef:	SUBJECTTO ID
 	            current_model->addComp(newmc);
 	            
 	            restore_dummy_var();
-	            YAC_MODEL_LOG("consdef: -- end -- "<<$2);
+	            YAC("consdef: -- end -- "<<$2);
 			}
 			;
 			
@@ -529,14 +529,14 @@ objdef def statement
 --------------------------------------------------------------------------*/
 objdef: objdef_type ID stochattr_opt COLON expr SEMICOLON
 		{
-			YAC_MODEL_LOG("objdef: -- "<<$2);
+			YAC("objdef: -- "<<$2);
 			ModelComp *newmc = new ObjComp($2, $1, $5,current_model);
             if (isInStochModel()){
 	           addStochInfo(newmc, $3);
             }
             
             current_model->addComp(newmc);
-            YAC_MODEL_LOG("objdef: -- end -- "<<$2);
+            YAC("objdef: -- end -- "<<$2);
 		}
 		;
 		
@@ -549,7 +549,7 @@ objdef_type:	MAXIMIZE { $$ = TMAX; }
 /* this is anything that evaluates to a set */
 setexpression: 	indexing_set 
 				{
-					YAC_MODEL_LOG("setexpression: indexing -- "<<$1);
+					YAC("setexpression: indexing -- "<<$1);
 					$$= $1;
 				}
 				| expr DOTDOT expr
@@ -558,13 +558,13 @@ setexpression: 	indexing_set
 	           	} 
 			 	| identifier 
 			 	{
-		     		YAC_MODEL_LOG("setexpression: identifier -- rule matched -- "<<$1);
+		     		YAC("setexpression: identifier -- rule matched -- "<<$1);
 		     		assert($1->opCode == IDREF);
 		     		$$ = $1;
              	}
              	| SETOF 
              	{ 
-	         		YAC_MODEL_LOG("setexpression - setof -- start ");
+	         		YAC("setexpression - setof -- start ");
 	         		record_dummy_var();
 	         	} indexing_set identifier {
 	         		restore_dummy_var();
@@ -593,7 +593,7 @@ ubsetop: UNION    { $$ = UNION; }
 //Logical expression
 /*------------------------------------------------------------------------------------ */
 lexpr:  identifier IN identifier {
-			YAC_MODEL_LOG("lexpr: identifier IN identifier - rule matched! "<<$1<<" "<<$3);
+			YAC("lexpr: identifier IN identifier - rule matched! "<<$1<<" "<<$3);
 			assert($3->opCode == IDREF);
 			$$ = new SyntaxNode(IN,$1,$3);
 		}
@@ -638,7 +638,7 @@ ulogic_op: NOT  {  $$ = NOT; }
 */
 identifier: ID 
 			{
-			   	YAC_MODEL_LOG("identifier: ID  -- "<<$1);
+			   	YAC("identifier: ID  -- "<<$1);
 			   	string key = $1;
 			   	if(isDummyVar(key))
 			   	{
@@ -651,12 +651,18 @@ identifier: ID
 			   		// for case 1: first identifier should reference to a model below current model
 			   		// for case 2: identifier should be anything above or at current model.
 			   		ModelComp* 	ref = current_model->findModelComp(key); 
-			   		if(ref->type == TMODEL){
+			   		if(ref!=NULL && ref->type == TMODEL){
 			   		   	$$ = new SyntaxNodeIDREFM(new SyntaxNodeID($1),static_cast<AmplModel*>(ref));
+				   	}
+				   	else if(ref!=NULL && (ref->type == TPARAM || ref->type == TVAR || ref->type == TSET))
+				   	{
+				   	   	$$ = new SyntaxNodeIDREF(new SyntaxNodeID($1),ref);
 				   	}
 				   	else
 				   	{
-				   	   	$$ = new SyntaxNodeIDREF(new SyntaxNodeID($1),ref);
+				   		YAC("error !"<<$1<<" undefined!");
+				   		cerr<<"model error: "<<$1<<" undefined!"<<endl;
+				   		assert(false);
 				   	}
 			   	}
             }
@@ -689,13 +695,13 @@ identifier: ID
 
 expr_list:	expr 
 			{
-				YAC_MODEL_LOG("expr_list: expr rule matched! "<<$1);
+				YAC("expr_list: expr rule matched! "<<$1);
                	$$ = new SyntaxNode(COMMA,$1);
             }
          |  expr_list COMMA expr 
          	{ 
-         		YAC_MODEL_LOG("expr_list: expr_list COMMA expr -- "<<$1);
-         		YAC_MODEL_LOG("expr_list: expr_list COMMA expr -- "<<$3);
+         		YAC("expr_list: expr_list COMMA expr -- "<<$1);
+         		YAC("expr_list: expr_list COMMA expr -- "<<$3);
                	assert($1->opCode == COMMA);
                	$$ = $1->push_back($3);
             }
@@ -703,7 +709,7 @@ expr_list:	expr
 
 expr: value 
 	{ 
-		YAC_MODEL_LOG("expr: value rule matched!" <<$1);
+		YAC("expr: value rule matched!" <<$1);
 		$$ = $1;
 	}
 	| identifier
@@ -784,13 +790,13 @@ begin_model
 ---------------------------------------------------------------------------- */
 void begin_model(const string& name, SyntaxNode *indexing, SyntaxNode* stochsets) 
 {
-	YAC_MODEL_LOG("begin_model  ["<< name <<"] indexing["<<indexing<<"] -- in current model["<<current_model->name<<"]");
+	YAC("begin_model  ["<< name <<"] indexing["<<indexing<<"] -- in current model["<<current_model->name<<"]");
 	AmplModel* new_mod = NULL;
 	if(stochsets!=NULL)
 	{
 		assert(indexing==NULL); // stochmodel has indexing=NULL
 		assert(stochsets!=NULL && stochsets->nchild()==4);
-		YAC_MODEL_LOG(" model ["<<name<<"] is stochastic block!" );
+		YAC(" model ["<<name<<"] is stochastic block!" );
 		new_mod = new StochModel(name, stochsets, current_model);
 	}
 	else
@@ -799,7 +805,7 @@ void begin_model(const string& name, SyntaxNode *indexing, SyntaxNode* stochsets
 	}
 	current_model->addComp(new_mod);  
 	current_model = new_mod;
-	YAC_MODEL_LOG("     current model now "<<current_model->name);
+	YAC("     current model now "<<current_model->name);
 }
 
 /* ----------------------------------------------------------------------------
@@ -807,7 +813,7 @@ end_model
 ---------------------------------------------------------------------------- */
 void end_model(const string& name) 
 {
-	YAC_MODEL_LOG("end_model -- ["<<current_model->name<<"] -- isStoch["<<isInStochModel()<<"]");
+	YAC("end_model -- ["<<current_model->name<<"] -- isStoch["<<isInStochModel()<<"]");
 	// Check end block name matches block name
 	if (name.compare(current_model->name)!=0) {
 		cerr << "end model '" << name << "' encountered in model '" << current_model->name << "'" << endl;
@@ -855,28 +861,28 @@ add_indexing/rem_indexing
 -------------------------------------------------------------------------- */
 void print_index_dummy_vars()
 {
-	YAC_MODEL_LOG("print_index_dummy_vars -- ");
+	YAC("print_index_dummy_vars -- ");
 	for(int i=0;i<index_dummy_vars.size();i++)
 	{
-		YAC_MODEL_LOG("["<<i<<"] "<<index_dummy_vars[i]);
+		YAC("["<<i<<"] "<<index_dummy_vars[i]);
 	}	
 }
 
 void record_dummy_var()
 {
-	YAC_MODEL_LOG("record_dummy_var -- size["<<index_dummy_vars.size()<<"]");
+	YAC("record_dummy_var -- size["<<index_dummy_vars.size()<<"]");
 	dummy_var_size.push_back(index_dummy_vars.size());
 }
 
 void restore_dummy_var()
 {
-	YAC_MODEL_LOG("restore_dummy_var -- size["<<index_dummy_vars.size()<<"]");
+	YAC("restore_dummy_var -- size["<<index_dummy_vars.size()<<"]");
 	print_index_dummy_vars();
 	int pre_size = dummy_var_size.back();
 	assert(pre_size <= index_dummy_vars.size());
 	for(int i=index_dummy_vars.size()-1;i>=pre_size;i--)
 	{
-		YAC_MODEL_LOG("remove - "<<index_dummy_vars[i]);
+		YAC("remove - "<<index_dummy_vars[i]);
 	}
 	dummy_var_size.pop_back();
 	index_dummy_vars.resize(pre_size);
@@ -910,10 +916,10 @@ int parse_model()
    	//stochastic model related initialization
    	curr_stage_indexset = NULL;
 
-	YAC_MODEL_LOG("starting model parser.... ");
+	YAC("starting model parser.... ");
    	errcode = yyparse();
    	assert(errcode==0);
-   	YAC_MODEL_LOG("model parser finished !");
+   	YAC("model parser finished !");
    	
    	fclose(yyin);
    	assert(errcode==0);

@@ -11,7 +11,7 @@
 #include <boost/unordered_map.hpp>
 #include <string>
 #include <vector>
-#include "autodiff.h"
+#include "../autodiff/autodiff.h"
 
 using namespace std;
 
@@ -28,34 +28,32 @@ typedef std::pair<ModelComp*, string> dummy_tmp_t;
 class ModelContext {
 
 public:
-	ModelContext* parent;
 	ExpandedModel* em;
-
+	ModelContext* parent;
+	bool used;
 	//! data storage for this expanded model tree node. key is ModelComp*
 	boost::unordered_map<ModelComp*,CompDescr*> compValueMap;
 
 	boost::unordered_map<string, dummy_tmp_t> dummyTempMap;
 	boost::unordered_map<string,string> dummyEmcolTempMap;  //this is used for storing emcol model dummy for SUMEXP handling
 
-//	boost::unordered_map<string,ModelComp*> dummyCompMapTemp;
-//	boost::unordered_map<string,string> dummyValueMapTemp;
-
 	//! temporary IndexSet storage - mainly for sum{...} node
 	boost::unordered_map<SyntaxNode*,IndexSet*> tempISetMap;
 
-	ModelContext(ModelContext* par);
+	ModelContext(ExpandedModel* par);
 	virtual ~ModelContext();
+	void dropContent();
 
 	void addDummyEmcolTempMap(string& dummyVar, string& value);
 	void removeDummyEmcolTempMap(string& dummyVar);
 	void addDummyCompValueMapTemp(string& dummyVar,ModelComp* comp,string& val);
 	void removeDummySetValueMapTemp(string& dummyVar);
-	string getDummyValue(string& dummyVar);
+	string& getDummyValue(string& dummyVar);
 	ModelComp* getDummyComp(string& dummyVar);
 	CompDescr* getCompValue(ModelComp* comp);
 	void addCompValueMap(ModelComp* comp,CompDescr* value);
-	string getContextId();
-
+//	string getContextId();
+	bool operator==(const ModelContext& other) const;
 
 	bool getCalcSumSet(SyntaxNode*,IndexSet** iset);
 	void addCalcSumSet(SyntaxNode*,IndexSet* iset);

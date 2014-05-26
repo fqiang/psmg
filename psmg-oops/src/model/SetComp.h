@@ -21,9 +21,9 @@ public:
 	bool isOrdered;
 
 	void setSetDim();
-	void calculateSetModelComp(ModelContext* context);
+	void calculateSetModelComp(ModelContext& context);
 	void dump(ostream& fout,int counter);
-
+	void calculateMemoryUsage(ulong& size);
 };
 
 #endif /* SETCOMP_H_ */

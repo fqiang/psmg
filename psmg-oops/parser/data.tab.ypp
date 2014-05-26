@@ -28,7 +28,6 @@
    	#include "../model/ModelComp.h"
    	#include "../model/ParamComp.h"
    	#include "../model/SetComp.h"
-   	#include <cassert>
    	#include <cstdlib>
    	#include <iostream>
    	#include <sstream>
@@ -100,7 +99,7 @@ statements: /* empty */
 statement:  set_def
 			| param_def
 			| DATA SEMICOLON {
-				YAC_DATA_LOG("data rule matched");
+				YAC("data rule matched");
 			}
          	;
 
@@ -113,7 +112,7 @@ set_def:	SET set_name DEFINE set_value_list SEMICOLON
 			;            
 
 set_name:	ID {
-				YAC_DATA_LOG("create set for "<<$1); 
+				YAC("create set for "<<$1); 
 				string id($1);
 				curr_setcomp = AmplModel::root->findSetComp(id);
 				curr_set = Set::createSet(curr_setcomp);
@@ -123,7 +122,7 @@ set_name:	ID {
 			;
 
 set_value_list:	set_value {
-				//YAC_DATA_LOG("member_items["<<$1<<"]"); 
+				//YAC("member_items["<<$1<<"]"); 
 				curr_set->addSetValue($1); 
 			}
 			| set_value_list set_value {
@@ -166,7 +165,7 @@ set_item: 	ID
  *
  *****************************************************************************/
 param_def:	PARAM param_name DEFINE param_value SEMICOLON { 
-				YAC_DATA_LOG("single params define start -- "<<$2);
+				YAC("single params define start -- "<<$2);
 				assert(curr_paramcomp->numIndicies == 0);
 				
 				PValue* pval = NULL;
@@ -191,11 +190,11 @@ param_def:	PARAM param_name DEFINE param_value SEMICOLON {
 			}
 			DEFINE set_param_specs SEMICOLON 
 			{
-				YAC_DATA_LOG("multiple params define start -- with set");
-				YAC_DATA_LOG("set : "<<$3);
+				YAC("multiple params define start -- with set");
+				YAC("set : "<<$3);
 				rootContext->addCompValueMap(curr_setcomp,curr_set);
 				
-				for(int i=0;i<curr_paramcomps.size();i++)
+				for(uint i=0;i<curr_paramcomps.size();i++)
 				{
 					rootContext->addCompValueMap(curr_paramcomps[i],curr_params[i]);
 				}
@@ -212,7 +211,7 @@ param_def:	PARAM param_name DEFINE param_value SEMICOLON {
 			}
 			DEFINE set_param_specs SEMICOLON 
 			{
-				YAC_DATA_LOG("multiple params define start - num param "<<curr_paramcomps.size());
+				YAC("multiple params define start - num param "<<curr_paramcomps.size());
 				
 				for(int i=0;i<curr_paramcomps.size();i++)
 				{
@@ -236,13 +235,13 @@ param_name:	ID {
 			;	
 
 param_names: param_name {
-				YAC_DATA_LOG(" -- param_name last --  ");
+				YAC(" -- param_name last --  ");
 				curr_paramcomps.push_back(curr_paramcomp);
 				curr_params.push_back(curr_param);
 				assert(curr_params.size()==0 || curr_params[0]->numIndicies == curr_param->numIndicies);
 			}
 			|	param_names param_name {	
-				YAC_DATA_LOG(" -- param_name recur --  ");	
+				YAC(" -- param_name recur --  ");	
 				curr_paramcomps.push_back(curr_paramcomp);
 				curr_params.push_back(curr_param);
 				assert(curr_params.size()==0 || curr_params[0]->numIndicies == curr_param->numIndicies);
@@ -250,11 +249,11 @@ param_names: param_name {
 			;
 
 set_param_specs: param_spec_item { 
-					YAC_DATA_LOG(" set_param_specs -- last - ");
+					YAC(" set_param_specs -- last - ");
 					add_param_spec_item($1);	
 				}
 				|	set_param_specs param_spec_item  { 
-					YAC_DATA_LOG(" set_param_specs -- recur - ");
+					YAC(" set_param_specs -- recur - ");
 					add_param_spec_item($2 );
 				}
 				;
@@ -285,9 +284,9 @@ void dataerror(const char *s) {
 
 void parse_data(ModelContext* context) {
        
-	YAC_DATA_LOG("===============================================================");
-	YAC_DATA_LOG(" Start parsing data file: " << GV(datafilename));
-	YAC_DATA_LOG("===============================================================");
+	YAC("===============================================================");
+	YAC(" Start parsing data file: " << GV(datafilename));
+	YAC("===============================================================");
 	rootContext = context;
   	datain = fopen(GV(datafilename).c_str(), "r");
   	if (datain==NULL){
@@ -306,15 +305,15 @@ void parse_data(ModelContext* context) {
     param_index =0;
         
   	dataparse();
-  	YAC_DATA_LOG("===============================================================");
-  	YAC_DATA_LOG(" Finished parsing data file");
-  	YAC_DATA_LOG("===============================================================");
+  	YAC("===============================================================");
+  	YAC(" Finished parsing data file");
+  	YAC("===============================================================");
 	fclose(datain);
 }
 
 void add_param_spec_item(const string& item )
 {
-	YAC_DATA_LOG("-- in - add_param_spec_item - "<<item<<" - "<<param_indicies_key );
+	YAC("-- in - add_param_spec_item - "<<item<<" - "<<param_indicies_key );
 	//first computing the number of indices required for current param
 	if(ind_consumed < ind_req)
 	{

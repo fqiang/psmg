@@ -22,7 +22,7 @@ ObjComp::~ObjComp() {
 
 void ObjComp::calculatePartialConstraints()
 {
-	LOG("ObjComp::calculatePartialConstraints --id["<<name<< "] - indx["<<this->indexing<<"]-- attr["<<this->attributes->print()<<"] - declared level["<<this->model->level<<"] - ["<<this<<"]");
+	TRACE("ObjComp::calculatePartialConstraints --id["<<name<< "] - indx["<<this->indexing<<"]-- attr["<<this->attributes<<"] - declared level["<<this->model->level<<"] - ["<<this<<"]");
 	assert(indexing==NULL);
 
 	assert(cpart.constant == NULL && cpart.first==NULL && cpart.higher==NULL);
@@ -37,10 +37,7 @@ void ObjComp::calculatePartialConstraints()
 	// this is for LP and QP problem
 	// LP and QP , we will need to compute the c vector (the coefficient of the linear part of the objective)
 	// for NLP, this part doesn't contribute to HV.
-	assert(first_partial.size() == 1 && first_partial.begin()->first==model->level); //assuming first order term of the objective only contains the varaible declared in it's own level
-
-//	assert(this->partial.size() == 0);
-//	attributes->calculatePartialConstraints(this->partial);
+	assert(first_partial.size() == 1 && first_partial.begin()->first==model->level); //assuming first order term of the objective only contains the variable declared in it's own level
 }
 
 /* ---------------------------------------------------------------------------
@@ -68,4 +65,31 @@ void ObjComp::dump(ostream& fout,int counter)
 		else	fout<<"\tfirst : "<<cpart.first<<endl;
 	if(cpart.higher == NULL)	fout<<"\thigher : "<<"null"<<endl;
 		else	fout<<"\thigher : "<<cpart.higher<<endl;
+}
+
+
+void ObjComp::calculateMemoryUsage(ulong& size)
+{
+	ModelComp::calculateMemoryUsage(size);
+	size += sizeof(ObjComp);
+	if(cpart.constant!=NULL)
+		cpart.constant->calculateMemoryUsage(size);
+	if(cpart.first!=NULL)
+		cpart.first->calculateMemoryUsage(size);
+	if(cpart.higher!=NULL)
+		cpart.higher->calculateMemoryUsage(size);
+
+	unordered_map<int,SyntaxNode*>::iterator it = const_partial.begin();
+	for(;it!=const_partial.end();it++)
+	{
+		it->second->calculateMemoryUsage(size);
+	}
+	for(it=first_partial.begin();it!=first_partial.end();it++)
+	{
+		it->second->calculateMemoryUsage(size);
+	}
+	for(it=higher_partial.begin();it!=higher_partial.end();it++)
+	{
+		it->second->calculateMemoryUsage(size);
+	}
 }

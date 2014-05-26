@@ -8,7 +8,7 @@
 #ifndef BLOCKHV_H_
 #define BLOCKHV_H_
 
-#include "autodiff.h"
+#include "../autodiff/autodiff.h"
 #include <vector>
 
 

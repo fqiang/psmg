@@ -21,7 +21,7 @@ using namespace  std;
 SyntaxNodeID::SyntaxNodeID(string i) :
    SyntaxNode(ID), id(i){
 
-	LOG("SyntaxNodeID constructor called  - opCode["<<ID<<"] ID["<<id<<"]");
+	TRACE("SyntaxNodeID constructor called  - opCode["<<ID<<"] ID["<<id<<"]");
 }
 
 SyntaxNodeID::~SyntaxNodeID()

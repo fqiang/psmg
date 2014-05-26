@@ -15,21 +15,12 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-//#include "../context/ExpandedModel2.h"
-
 class ExpandedModel;
+
 /** @class OOPSBlock
  *  OOPSBlock is an object that directly corresponds to a node in the
  *  OOPS Algebra Tree. 
  *  
- * It is characterized by 
- *   - An ExpandedModelInterface/NlFile that gives information on the rows 
- *     in this block
- *   - A list of variable definitions (given as the start of variable names)
- *     that should be used from the NlFile.
- *  This class will do the necessary interfacing (i.e. extract a list
- *  of variable indices from the NlFile that should be used and indicate
- *  In which positions these should appear in the block
  */
 class PDProblem;
 

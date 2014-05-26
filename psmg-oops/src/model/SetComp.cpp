@@ -36,21 +36,6 @@ SetComp::~SetComp() {
 }
 
 
-/* ---------------------------------------------------------------------------
- SetComp::dump(ostream &fout)
- ---------------------------------------------------------------------------- */
-void SetComp::dump(ostream& fout,int counter)
-{
-	fout << "SetComp:  counter ("<<counter<<")\n";
-	fout << "\t"<< name << " (" << (void *) this << ")\n";
-	if (attributes) {
-		fout << "\t"<<"attr: " << attributes << '\n';
-	}
-	if (indexing) {
-		fout <<"\t"<<"indexing: " << indexing << "\n";
-	}
-}
-
 /***************************************************************************************
  Set related operation evaluation
  Feng
@@ -89,7 +74,7 @@ void SetComp::setSetDim() {
 	assert(setDim!=0);
 }
 
-void SetComp::calculateSetModelComp(ModelContext* context) {
+void SetComp::calculateSetModelComp(ModelContext& context) {
 	assert(this->type==TSET);
 	assert(this->indexing == NULL);
 	//set define may not have a indexing
@@ -106,14 +91,36 @@ void SetComp::calculateSetModelComp(ModelContext* context) {
 			(*i)->values[0]->calculateSetValue(context,theSet);
 		}
 		else if((*i)->opCode == WITHIN){
-			LOG("WITHIN ... "<<this->attributes);
+			TRACE("WITHIN ... "<<this->attributes);
 			within = *i;
 		}
 	}
 
-	LOG( "the calculated set is   -- ["<<theSet->name<<"]  -- "<<theSet->toString());
+	TRACE( "the calculated set is   -- ["<<theSet->name<<"]  -- "<<theSet->toString());
 	assert(theSet->dim==this->setDim);
 	theSet->name = this->name;
 	theSet->dim = this->setDim;
-	context->addCompValueMap(this, theSet);
+	context.addCompValueMap(this, theSet);
+}
+
+
+/* ---------------------------------------------------------------------------
+ SetComp::dump(ostream &fout)
+ ---------------------------------------------------------------------------- */
+void SetComp::dump(ostream& fout,int counter)
+{
+	fout << "SetComp:  counter ("<<counter<<")\n";
+	fout << "\t"<< name << " (" << (void *) this << ")\n";
+	if (attributes) {
+		fout << "\t"<<"attr: " << attributes << '\n';
+	}
+	if (indexing) {
+		fout <<"\t"<<"indexing: " << indexing << "\n";
+	}
+}
+
+void SetComp::calculateMemoryUsage(ulong& size)
+{
+	ModelComp::calculateMemoryUsage(size);
+	size += sizeof(SetComp);
 }

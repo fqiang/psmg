@@ -37,12 +37,11 @@
 #include <set>
 #include <string>
 #include <sstream>
-#include <cassert>
 #include <cstdlib>
 #include <iostream>
 #include <boost/unordered_map.hpp>
 
-#include "autodiff.h"
+#include "../autodiff/autodiff.h"
 
 class SetComp;
 class StochCtx;
@@ -118,9 +117,6 @@ public:
 	/** Destructor */
 	virtual ~SyntaxNode();
 
-	/** Recursive printing of expression */
-	std::string print() ;
-
 	virtual std::ostream& put(std::ostream& s);
 	virtual SyntaxNode *push_back(SyntaxNode *newitem);
 
@@ -128,23 +124,23 @@ public:
 	int calculateNumParamIndicies();
 	bool isParamSymbolic();
 	void calculateParamIndicies(vector<string>&, vector<SetComp*>&);
-	void calculateSetValue(ModelContext* context, Set* rval);
-	Set* calculateSetValue(ModelContext* context);
+	void calculateSetValue(ModelContext& context, Set* rval);
+	Set* calculateSetValue(ModelContext& context);
 
-	void calculateVarDimCard(ModelContext* ctx, uint& dim, uint& card);
-	void calculateVarBounds(ModelContext* ctx, double& upper, double& lower);
-	void calculateConsBounds(ModelContext* ctx, double& upper, double& lower);
-	void calculateConCard(ModelContext* ctx, uint& card);
-	double evalRhs(ModelContext* context);
-	bool evalBool(ModelContext* context);
-	void evalTerm(ModelContext* context,PValue**);
-	IndexSet* createIndexSet(ModelContext* context);
+	void calculateVarDimCard(ModelContext& ctx, uint& dim, uint& card);
+	void calculateVarBounds(ModelContext& ctx, double& upper, double& lower);
+	void calculateConsBounds(ModelContext& ctx, double& upper, double& lower);
+	void calculateConCard(ModelContext& ctx, uint& card);
+	double evalRhs(ModelContext& context);
+	bool evalBool(ModelContext& context);
+	void evalTerm(ModelContext& context,PValue**);
+	IndexSet* createIndexSet(ModelContext& context);
 	bool hasExp();
 	virtual SyntaxNode* appendDOTNotation(StochCtx*);
 
 	void calculateLinearNonLinearParts(CPart&);
 	void calculatePartialConstraints(boost::unordered_map<int,SyntaxNode*>&);
-	ModelContext* locateCtx(ModelContext* rowctx, ModelContext* currCtx);
+	ModelContext* locateCtx(ModelContext& rowctx, ModelContext& currCtx);
 	AutoDiff::Node* buildAutoDiffDAG(ExpandedModel* emrow, ExpandedModel* emcol=NULL, bool isLP=false);
 
 	void calculateBaseValueVector(unsigned long& size);
@@ -152,10 +148,10 @@ public:
 
 	SyntaxNode* findDirectChild(int op);
 	bool isContainsIDREF_TVAR_in_child();
-	void calcStageSet(ModelContext*, boost::unordered_set<string>*);
+	void calcStageSet(ModelContext&, boost::unordered_set<string>*);
 
 private:
-	void getIndiciesKey(ModelContext* ctx,string& varKey);
+	void getIndiciesKey(ModelContext& ctx,string& varKey);
 	AutoDiff::Node* createAutoDiffConIDREFExplicit(ModelContext* rowctx, ModelContext* explicitCtx);
 };
 

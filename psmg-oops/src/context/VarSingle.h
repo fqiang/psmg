@@ -10,8 +10,7 @@
 
 #include <string>
 #include <limits>
-
-#include "autodiff.h"
+#include "../autodiff/VNode.h"
 
 using namespace std;
 
@@ -20,9 +19,9 @@ public:
 	string indicies;
 	double ub;
 	double lb;
-	AutoDiff::Node* adv;
+	AutoDiff::VNode adv;
 
-	VarSingle(string& indicies_, double ub_, double lb_,AutoDiff::Node* v);
+	VarSingle(string& indicies_, double ub_, double lb_);
 	virtual ~VarSingle();
 
 	string toString() const;

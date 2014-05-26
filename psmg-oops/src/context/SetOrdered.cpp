@@ -10,11 +10,11 @@
 #include "../util/util.h"
 
 SetOrdered::SetOrdered(SetComp* comp):Set(comp){
-	LOG("Create OrderedSet -");
+	TRACE("Create OrderedSet -");
 }
 
 SetOrdered::~SetOrdered() {
-	LOG("OrderedSet::~OrderedSet -- delete "<<toString());
+	TRACE("OrderedSet::~OrderedSet -- delete "<<toString());
 	this->setOrders.clear();
 	this->setKeys.clear();
 }
@@ -42,15 +42,15 @@ void SetOrdered::addSetValue(const string& value)
 	if(!this->contains(value))
 	{
 		card++;
-		LOG("SetOrdered - addSetValue index["<<card<<"] ["<<value<<"]");
+		TRACE("SetOrdered - addSetValue index["<<card<<"] ["<<value<<"]");
 		this->setValues_data_order.push_back(value);
 		this->setOrders.insert(pair<string,int>(value,card));
 		this->setKeys.insert(pair<int,string>(card,value));
 	}
 	else{
-		LOG("OrderedSet --- already has ["<<value<<"]");
+		TRACE("OrderedSet --- already has ["<<value<<"]");
 	}
-//	LOG("OrderedSet --addSetValue- set contains "<<this->toString());
+//	TRACE("OrderedSet --addSetValue- set contains "<<this->toString());
 }
 
 bool SetOrdered::contains(const string& key)
@@ -65,7 +65,7 @@ bool SetOrdered::contains(const string& key)
 
 string SetOrdered::toString()
 {
-	LOG("OrderedSet["<<name<<"] card["<<card<<"]");
+	TRACE("OrderedSet["<<name<<"] card["<<card<<"]");
 	ostringstream oss;
 	vector<string>::const_iterator i;
 	for(i= this->setValues_data_order.begin();i!=this->setValues_data_order.end();i++)
