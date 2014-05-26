@@ -11,6 +11,7 @@
 #include <boost/unordered_map.hpp>
 #include "ModelComp.h"
 
+using namespace boost;
 class ObjComp : public ModelComp {
 public:
 
@@ -20,11 +21,11 @@ public:
 	//LP or QP problem will need to specified in it's own(local) block.
 	//The higher order term (quadratic term for QP) will be in higher_partial and store separately for each different column level block.
 	CPart cpart;
-	boost::unordered_map<int,SyntaxNode*> const_partial;
-	boost::unordered_map<int,SyntaxNode*> first_partial;
-	boost::unordered_map<int,SyntaxNode*> higher_partial;
+	unordered_map<int,SyntaxNode*> const_partial;
+	unordered_map<int,SyntaxNode*> first_partial;
+	unordered_map<int,SyntaxNode*> higher_partial;
 
-//	boost::unordered_map<int,SyntaxNode*> partial;
+//	unordered_map<int,SyntaxNode*> partial;
 
 	ObjComp(const string& id, objType t, SyntaxNode* attr,AmplModel* owner);
 	virtual ~ObjComp();
@@ -32,6 +33,7 @@ public:
 	void calculatePartialConstraints();
 
 	void dump(ostream& fout,int counter);
+	void calculateMemoryUsage(ulong& size);
 };
 
 #endif /* OBJCOMP_H_ */

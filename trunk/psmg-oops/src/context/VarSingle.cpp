@@ -7,33 +7,34 @@
 
 #include "../util/util.h"
 #include "VarSingle.h"
+#include "../autodiff/VNode.h"
 #include <string>
 #include <sstream>
 
 using namespace std;
+using namespace AutoDiff;
 
-VarSingle::VarSingle(string& i,double u, double l,AutoDiff::Node* v)
-:indicies(i),ub(u),lb(l),adv(v) {
-	LOG("VarSingle::VarSingle indicies["<<indicies<<"] - ub["<<ub<<"] lb["<<lb<<"]");
+VarSingle::VarSingle(string& i,double u, double l)
+:indicies(i),ub(u),lb(l), adv(1.0){
+	TRACE("VarSingle::VarSingle indicies["<<indicies<<"] - ub["<<ub<<"] lb["<<lb<<"]");
 }
 
 VarSingle::~VarSingle() {
-	LOG("VarSingle --- delete --- "<<this->toString());
-	delete this->adv;
+	TRACE("VarSingle --- delete --- "<<this->toString());
 }
 
 string VarSingle::toString() const
 {
 	ostringstream oss;
-	oss<<"{"<<lb<<"<["<<indicies<<"]<"<<ub<<"}  ---  {"<<adv->toString(0)<<"}";
+	oss<<"{"<<lb<<"<["<<indicies<<"]<"<<ub<<"}  ---  {"<<this->adv.toString(0)<<"}";
 	return oss.str();
 }
 
 void VarSingle::calculateMemoryUsage(unsigned long& size) const
 {
-	LOG_MEM("VarSingle::calculateMemoryUsage -- name["<<indicies<<"]");
+	MEM("VarSingle::calculateMemoryUsage -- name["<<indicies<<"]");
 	long pre = size;
 	size += sizeof(VarSingle);
 	size += indicies.size();
-	LOG_MEM(" -- this VarSingle usage ["<<size-pre<<"]");
+	MEM(" -- this VarSingle usage ["<<size-pre<<"]");
 }

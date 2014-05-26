@@ -15,7 +15,6 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#include <cassert>
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
@@ -33,49 +32,39 @@ using namespace __gnu_cxx;
 
 SetSimple::SetSimple(string& name, int dim):Set(name,dim)
 {
-	LOG("Create SimpleSet - name["<<name<<"] dim["<<dim<<"]");
+	TRACE("Create SimpleSet - name["<<name<<"] dim["<<dim<<"]");
 }
 
 SetSimple::SetSimple(SetComp* comp): Set(comp)
 {
-	LOG("Create SimpleSet - name["<<name<<"] dim["<<dim<<"]");
+	TRACE("Create SimpleSet - name["<<name<<"] dim["<<dim<<"]");
 }
-
-//SimpleSet::SimpleSet(SimpleSet& src):dim(src.dim),name(src.name),card(0)
-//{
-//	LOG("make set copy -- from name["<<name<<"] -- "<<src.toString());
-//	vector<string>::const_iterator i;
-//	for(i=src.setValues_data_order.begin();i!=src.setValues_data_order.end();i++)
-//	{
-//		string value = (*i);
-//		this->addSetValue(value);
-//	}
-//}
 
 SetSimple::~SetSimple()
 {
-	LOG("SimpleSet::~SimpleSet -- Delete  --"<<toString());
+	TRACE("SimpleSet::~SimpleSet -- Delete  --"<<toString());
 	this->setValues_data_order.clear();
 }
 
 void SetSimple::addSetValue(const string& value)
 {
-	if(!this->contains(value))
+	if(GV(assertion))
 	{
-		card++;
-		LOG("Add SetValue card["<<card<<"] ["<<value<<"]");
-		this->setValues_data_order.push_back(value);
+		if(this->contains(value))
+		{
+			ERROR("SetSimple -- already has["<<value<<"]");
+			assert(false);
+		}
 	}
-	else
-	{
-		LOG("SetSimple -- already has["<<value<<"]");
-	}
-	//LOG("addSetValue --  set contains "<<this->toString());
+
+	card++;
+	TRACE("Add SetValue card["<<card<<"] ["<<value<<"]");
+	this->setValues_data_order.push_back(value);
 }
 
 string SetSimple::toString()
 {
-	LOG("SimpleSet["<<name<<"] card["<<card<<"]");
+	TRACE("SimpleSet["<<name<<"] card["<<card<<"]");
 	ostringstream oss;
 	vector<string>::const_iterator i;
 	for(i= this->setValues_data_order.begin();i!=this->setValues_data_order.end();i++)

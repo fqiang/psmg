@@ -8,7 +8,7 @@
 #ifndef BLOCKOBJ_H_
 #define BLOCKOBJ_H_
 
-#include "autodiff.h"
+#include "../autodiff/autodiff.h"
 
 class ExpandedModel;
 class BlockDep;

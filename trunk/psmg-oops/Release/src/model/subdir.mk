@@ -14,7 +14,6 @@ CPP_SRCS += \
 ../src/model/SyntaxNodeID.cpp \
 ../src/model/SyntaxNodeIDREF.cpp \
 ../src/model/SyntaxNodeIDREFM.cpp \
-../src/model/SyntaxNodeOP.cpp \
 ../src/model/SyntaxNodeString.cpp \
 ../src/model/SyntaxNodeSumExp.cpp \
 ../src/model/SyntaxNodeValue.cpp \
@@ -31,7 +30,6 @@ OBJS += \
 ./src/model/SyntaxNodeID.o \
 ./src/model/SyntaxNodeIDREF.o \
 ./src/model/SyntaxNodeIDREFM.o \
-./src/model/SyntaxNodeOP.o \
 ./src/model/SyntaxNodeString.o \
 ./src/model/SyntaxNodeSumExp.o \
 ./src/model/SyntaxNodeValue.o \
@@ -48,7 +46,6 @@ CPP_DEPS += \
 ./src/model/SyntaxNodeID.d \
 ./src/model/SyntaxNodeIDREF.d \
 ./src/model/SyntaxNodeIDREFM.d \
-./src/model/SyntaxNodeOP.d \
 ./src/model/SyntaxNodeString.d \
 ./src/model/SyntaxNodeSumExp.d \
 ./src/model/SyntaxNodeValue.d \
@@ -58,8 +55,8 @@ CPP_DEPS += \
 # Each subdirectory must supply rules for building sources it contributes
 src/model/%.o: ../src/model/%.cpp
 	@echo 'Building file: $<'
-	@echo 'Invoking: GCC C++ Compiler'
-	mpic++ -I/home/s0965328/workspace/oops/oops_agr/oops/include -I/usr/include/mpi -I/home/s0965328/workspace/pugixml/src -I/home/s0965328/workspace/autodiff/autodiff_library/include -O3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	@echo 'Invoking: Intel Intel(R) 64 C++ Compiler '
+	/home/s0965328/usr/local/bin/mpic++ -g -O3 -w2 -opt-prefetch=3 -ipo -nolib-inline -I/home/s0965328/workspace/oops/oops_agr/oops/include -I/home/s0965328/usr/local/include -DRELEASE=1 -DDEBUG=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -c -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

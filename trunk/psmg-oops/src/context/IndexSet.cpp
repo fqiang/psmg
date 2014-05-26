@@ -6,9 +6,9 @@
  */
 
 #include "IndexSet.h"
-#include <cassert>
 #include <sstream>
 
+#include "../util/util.h"
 #include "Set.h"
 #include "../model/SetComp.h"
 
@@ -21,6 +21,7 @@ IndexSet::IndexSet(string& name_) : name(name_) {
 
 IndexSet::~IndexSet()
 {
+	TRACE("Deleting -------  IndexSet -- ["<<name<<"]");
 	if(name.compare(0,7,IndexSet::NEWSET)==0)
 	{
 		BOOST_FOREACH(iset_tuple& tuple, tuples)

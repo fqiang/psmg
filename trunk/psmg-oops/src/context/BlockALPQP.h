@@ -9,7 +9,7 @@
 #define BLOCKALPQP_H_
 
 #include <vector>
-#include "autodiff.h"
+#include "../autodiff/autodiff.h"
 
 class ExpandedModel;
 

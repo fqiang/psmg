@@ -28,11 +28,11 @@ TimeStamp* TimeStamp::GetTimeStamp(string name)
 TimeStamp::TimeStamp(const TimeStamp& ts)
 {
 	assert(false); //should never happen
-	LOG("Disable copying!!");
+	TRACE("Disable copying!!");
 }
 
 TimeStamp::TimeStamp(string name) {
-	LOG("create timestamp ["<<name<<"]");
+	TRACE("create timestamp ["<<name<<"]");
 	this->startTime = 0;
 	this->stopTime = 0;
 	this->name = name;
@@ -46,13 +46,13 @@ void TimeStamp::start() {
 void TimeStamp::stop() {
 	this->stopTime = clock();
 	clock_t elapse = stopTime - startTime;
-	cout<<'['<<GV(rank)<<"/"<<GV(size)<<"] TimeStamp:["<<name<<"] STOP@:["<<stopTime<<"] Elapse[ "<<elapse<<" ]"<<endl;
+	cout<<'['<<GV(rank)<<"/"<<GV(size)<<"] TimeStamp:["<<name<<"] STOP@:["<<stopTime<<"] Elapse[ "<<elapse/CLOCKS_PER_SEC<<" ]"<<endl;
 }
 
 string TimeStamp::toString() const{
 	ostringstream buf;
 	time_t elapse = this->stopTime - this->startTime;
-	buf<<"[name:"<<this->name<<"] [startTime:"<<this->startTime<<"] [stopTime:"<<this->stopTime<<"] [elapse:"<<elapse<<"]";
+	buf<<"[name:"<<this->name<<"] [startTime:"<<this->startTime<<"] [stopTime:"<<this->stopTime<<"] [elapse:"<<elapse/CLOCKS_PER_SEC<<"]";
 	return buf.str();
 }
 
@@ -64,7 +64,7 @@ void TimeStamp::List()
 	it = timeStamps.begin();
 	while(timeStamps.size()!=0&&it!=timeStamps.end())
 	{
-		cout<<"["<<GV(rank)<<"/"<<GV(size)<<"] TimeStamp:["<<(*it).first<<"]"<<(*it).second->toString()<<endl;
+		cout<<"["<<GV(rank)<<"/"<<GV(size)<<"] TimeStamp:"<<(*it).second->toString()<<endl;
 		it++;
 	}
 	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"] == TimeStamp List =="<<endl;
@@ -85,7 +85,7 @@ void TimeStamp::Reset() {
 
 
 TimeStamp::~TimeStamp() {
-	LOG("Destructor called on TimeStamp");
+	TRACE("Destructor called on TimeStamp");
 }
 
 void TimeStamp::SelfTest()

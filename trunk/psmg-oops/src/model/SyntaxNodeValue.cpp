@@ -14,7 +14,7 @@
 
 SyntaxNodeValue::SyntaxNodeValue(double val) : SyntaxNode(VALUE), val(val)
 {
-	LOG("SyntaxNodeValue constructor --- val["<<val<<"]");
+	TRACE("SyntaxNodeValue constructor --- val["<<val<<"]");
 }
 
 SyntaxNodeValue::~SyntaxNodeValue() {

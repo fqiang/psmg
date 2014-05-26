@@ -94,13 +94,13 @@ public:
 	ModelComp* findModelComp(string& id);
 	ParamComp* findParamComp(string& id);
 	SetComp* findSetComp(string& id);
-	void calculateModelComp(ModelContext* context);
-	void calculateModelCompRecursive(ModelContext* context);
+	void calculateModelComp(ModelContext& context);
+	void calculateModelCompRecursive(ModelContext& context);
 
 	void splitConstraints();
-	virtual ExpandedModel* createExpandedModel(string dummyVar,SetComp* comp,string value,ModelContext* parent);
+	virtual ExpandedModel* createExpandedModel(string dummyVar,SetComp* comp,string value,ExpandedModel* parent);
 
-	void calculateLocalVar(ModelContext* context);
+	void calculateLocalVar(ModelContext& context);
 	void calculateMemoryUsage(unsigned long& size);
 
 

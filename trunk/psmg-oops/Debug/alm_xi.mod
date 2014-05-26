@@ -43,13 +43,13 @@ block alm stochastic using (nd in NODES, Parent, Probs, st in TIME): {
     var slack1{BENCHMARK} >= 0;
 
     subject to CashBalance:
-      cash + (1+Gamma) * sum{j1 in ASSETS} (Price[j1] * x_bought[j1]) - ancestor(1).cash -(1-Gamma) * sum{j2 in ASSETS} (Price[j2] * x_sold[j2])=0;
+      cash + (1+Gamma) * sum{a in ASSETS} (Price[a] * x_bought[a]) - ancestor(1).cash -(1-Gamma) * sum{a in ASSETS} (Price[a] * x_sold[a])=0;
 
-    subject to Inventory{j3 in ASSETS}:
-      x_hold[j3] - (1+Return[j3,nd]) * ancestor(1).x_hold[j3] - x_bought[j3] + x_sold[j3] = 0;
+    subject to Inventory{a in ASSETS}:
+      x_hold[a] - (1+Return[a,nd]) * ancestor(1).x_hold[a] - x_bought[a] + x_sold[a] = 0;
 
     subject to StochasticDominance1{l in BENCHMARK}:
-      sum{j in ASSETS}(Price[j] * x_hold[j]) + cash + risk[l] - slack1[l] = Vbenchmk[l];
+      sum{a in ASSETS}(Price[a] * x_hold[a]) + cash + risk[l] - slack1[l] = Vbenchmk[l];
 
     subject to StochasticDominance2{l in BENCHMARK}:
       Exp(risk[l]) + slack2[l,st] = Bench2nd[l];
@@ -60,7 +60,7 @@ block alm stochastic using (nd in NODES, Parent, Probs, st in TIME): {
     var wealth >= 0;
 
     subject to FinalWealth:
-      wealth - sum{j in ASSETS} (Price[j] * x_hold[j]) - cash = 0;
+      wealth - sum{a in ASSETS} (Price[a] * x_hold[a]) - cash = 0;
 
     maximize objFunc: wealth;
   }

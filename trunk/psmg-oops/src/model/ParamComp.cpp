@@ -44,7 +44,7 @@ void ParamComp::setParamIndicies() {
 	assert(this->numIndicies>=0);
 }
 
-void ParamComp::calculateParamModelComp(ModelContext* context) {
+void ParamComp::calculateParamModelComp(ModelContext& context) {
 
 	assert(this->type==TPARAM);
 	vector<string> paramIndiciesDummy; //belong to param  dummay->Set*
@@ -58,7 +58,7 @@ void ParamComp::calculateParamModelComp(ModelContext* context) {
 		vector<Set*> sets;
 		for(uint i=0;i<paramIndiciesComp.size();i++)
 		{
-			Set* aSet = static_cast<Set*>(context->getCompValue(paramIndiciesComp[i]));
+			Set* aSet = static_cast<Set*>(context.getCompValue(paramIndiciesComp[i]));
 			sets.push_back(aSet);
 		}
 
@@ -72,19 +72,19 @@ void ParamComp::calculateParamModelComp(ModelContext* context) {
 		this->evalParamValue(context,&pval);
 		static_cast<ParamSingle*>(param)->setParamValue(pval);
 	}
-	context->addCompValueMap(this, param);
+	context.addCompValueMap(this, param);
 }
 
-void ParamComp::calculateParamModelComp(ModelContext* context,vector<string>& dumVars,vector<SetComp*>& comps,vector<Set*>& sets, int curr, ParamMult* param)
+void ParamComp::calculateParamModelComp(ModelContext& ctx,vector<string>& dumVars,vector<SetComp*>& comps,vector<Set*>& sets, uint curr, ParamMult* param)
 {
 	if(curr == sets.size())
 	{
 		PValue* pval = NULL;
-		this->evalParamValue(context,&pval);
+		this->evalParamValue(ctx,&pval);
 		ostringstream oss;
 		for(vector<string>::iterator it = dumVars.begin();it!=dumVars.end();it++)
 		{
-			oss<<context->getDummyValue(*it);
+			oss<<ctx.getDummyValue(*it);
 		}
 		param->addParamValue(oss.str(),pval);
 	}
@@ -94,14 +94,14 @@ void ParamComp::calculateParamModelComp(ModelContext* context,vector<string>& du
 		for(;val!=sets.at(curr)->setValues_data_order.end();val++)
 		{
 			string value = *val;
-			context->addDummyCompValueMapTemp(dumVars[curr],comps[curr],value);
-			this->calculateParamModelComp(context,dumVars,comps,sets,curr+1,param);
-			context->removeDummySetValueMapTemp(dumVars[curr]);
+			ctx.addDummyCompValueMapTemp(dumVars[curr],comps[curr],value);
+			this->calculateParamModelComp(ctx,dumVars,comps,sets,curr+1,param);
+			ctx.removeDummySetValueMapTemp(dumVars[curr]);
 		}
 	}
 }
 
-void ParamComp::evalParamValue(ModelContext* ctx,PValue** rval)
+void ParamComp::evalParamValue(ModelContext& ctx,PValue** rval)
 {
 	assert(*rval == NULL);
 	assert(this->attributes->opCode == COMMA);
@@ -142,4 +142,10 @@ void ParamComp::dump(ostream& fout,int counter)
 	if (indexing) {
 		fout <<"\t"<<"indexing: " << indexing << "\n";
 	}
+}
+
+void ParamComp::calculateMemoryUsage(ulong& size)
+{
+	ModelComp::calculateMemoryUsage(size);
+	size += sizeof(ParamComp);
 }

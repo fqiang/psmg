@@ -33,21 +33,21 @@ VarComp::~VarComp() {
 	// TODO Auto-generated destructor stub
 }
 
-void VarComp::calculateVarDimCard(ModelContext* context, uint& card) {
-	LOG( "calculateLocalVar -- in model["<<this->model->name<<"] id["<<this->name<<"]");
+void VarComp::calculateVarDimCard(ModelContext& context, uint& card) {
+	TRACE( "calculateLocalVar -- in model["<<this->model->name<<"] id["<<this->name<<"]");
 	assert(this->type==TVAR);
 	card = 1;
 	this->dim = 0;
 	if (this->indexing!=NULL) {
 		this->indexing->calculateVarDimCard(context,this->dim,card);
 	}
-	LOG( "calculateLocalVar -- in model["<<this->model->name<<"] id["<<this->name<<"] -- varCard["<<card<<"] varDim["<<dim<<"]");
+	TRACE( "calculateLocalVar -- in model["<<this->model->name<<"] id["<<this->name<<"] -- varCard["<<card<<"] varDim["<<dim<<"]");
 }
 
-void VarComp::calculateVarComp(ModelContext* ctx)
+void VarComp::calculateVarComp(ModelContext& ctx)
 {
 	assert(this->type==TVAR);
-	LOG("calculateVarComp - model["<<this->model->name<<"] comp["<<this->name<<"]");
+	TRACE("calculateVarComp - model["<<this->model->name<<"] comp["<<this->name<<"]");
 	Var* var = new Var(this->name);
 	if(this->indexing!=NULL)
 	{
@@ -62,17 +62,17 @@ void VarComp::calculateVarComp(ModelContext* ctx)
 			vector<string>::iterator it=set->setValues_data_order.begin();
 			for(;it!=set->setValues_data_order.end();it++)
 			{
-				ctx->addDummyCompValueMapTemp(dummy,comp,*it);
+				ctx.addDummyCompValueMapTemp(dummy,comp,*it);
 				//compute variable bounds
 				double upper = INFINITY_D;
 				double lower = NEG_INFINITY_D;
 				if(this->attributes != NULL){
 					this->attributes->calculateVarBounds(ctx,upper,lower);
 				}
-				AutoDiff::Node* v =  AutoDiff::create_var_node(1.0);
-				VarSingle* varsingle = new VarSingle(*it,upper,lower,v);
+//				AutoDiff::Node* v =  AutoDiff::create_var_node(1.0);
+				VarSingle* varsingle = new VarSingle(*it,upper,lower);
 				var->varMultiMap.push_back(varsingle);
-				ctx->removeDummySetValueMapTemp(dummy);
+				ctx.removeDummySetValueMapTemp(dummy);
 			}
 		}
 		else if(iset->tuples.size()==2)
@@ -88,29 +88,29 @@ void VarComp::calculateVarComp(ModelContext* ctx)
 			vector<string>::iterator i = set1->setValues_data_order.begin();
 			for(;i!=set1->setValues_data_order.end();i++)
 			{
-				ctx->addDummyCompValueMapTemp(dummy1,comp1,*i);
+				ctx.addDummyCompValueMapTemp(dummy1,comp1,*i);
 				vector<string>::iterator j = set2->setValues_data_order.begin();
 				for(;j!=set2->setValues_data_order.end();j++)
 				{
-					ctx->addDummyCompValueMapTemp(dummy2,comp2,*j);
+					ctx.addDummyCompValueMapTemp(dummy2,comp2,*j);
 					//compute variable bounds
 					double upper = INFINITY_D;
 					double lower = NEG_INFINITY_D;
 					if(this->attributes != NULL){
 						this->attributes->calculateVarBounds(ctx,upper,lower);
 					}
-					AutoDiff::Node* v =  AutoDiff::create_var_node(1.0);
+//					AutoDiff::Node* v =  AutoDiff::create_var_node(1.0);
 					string varkey = *i + *j;
-					VarSingle* varsingle = new VarSingle(varkey,upper,lower,v);
+					VarSingle* varsingle = new VarSingle(varkey,upper,lower);
 					var->varMultiMap.push_back(varsingle);
-					ctx->removeDummySetValueMapTemp(dummy2);
+					ctx.removeDummySetValueMapTemp(dummy2);
 				}
-				ctx->removeDummySetValueMapTemp(dummy1);
+				ctx.removeDummySetValueMapTemp(dummy1);
 			}
 		}
 		else
 		{
-			LOG("only support upto 2 indexed variables declaration!");
+			TRACE("only support upto 2 indexed variables declaration!");
 			assert(false);
 		}
 		delete iset;
@@ -123,13 +123,13 @@ void VarComp::calculateVarComp(ModelContext* ctx)
 			this->attributes->calculateVarBounds(ctx,upper,lower);
 		}
 		string varkey = "";
-		AutoDiff::Node* v =  AutoDiff::create_var_node(1.0);
-		VarSingle* varsingle = new VarSingle(varkey,upper,lower,v);
+//		AutoDiff::Node* v =  AutoDiff::create_var_node(1.0);
+		VarSingle* varsingle = new VarSingle(varkey,upper,lower);
 		var->varMultiMap.push_back(varsingle);
 	}
 
-	ctx->addCompValueMap(this,var);
-	LOG("calculateVarComp -- model["<<this->model->name<<"] comp["<<this->name<<"] card["<< (uint)(var->varMultiMap.size()) <<"] dim["<<this->dim<<"]");
+	ctx.addCompValueMap(this,var);
+	TRACE("calculateVarComp -- model["<<this->model->name<<"] comp["<<this->name<<"] card["<< (uint)(var->varMultiMap.size()) <<"] dim["<<this->dim<<"]");
 }
 
 /* ---------------------------------------------------------------------------
@@ -145,4 +145,10 @@ void VarComp::dump(ostream& fout,int counter)
 	if (indexing) {
 		fout << "\t"<<"indexing: " << indexing << "\n";
 	}
+}
+
+void VarComp::calculateMemoryUsage(ulong& size)
+{
+	ModelComp::calculateMemoryUsage(size);
+	size += sizeof(VarComp);
 }

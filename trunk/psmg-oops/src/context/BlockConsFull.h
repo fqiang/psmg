@@ -8,7 +8,7 @@
 #ifndef BLOCKCONSFULL_H_
 #define BLOCKCONSFULL_H_
 
-#include "autodiff.h"
+#include "../autodiff/autodiff.h"
 #include <vector>
 
 class BlockDep;

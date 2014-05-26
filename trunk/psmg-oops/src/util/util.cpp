@@ -10,10 +10,14 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include "compile_marco.h"
 #include "util.h"
+#include "../metric/Stat.h"
+#include "../metric/TimeStamp.h"
+#include "../sml/Config.h"
+#include "../model/SyntaxNode.h"
 
 using namespace std;
-using namespace __gnu_cxx;
 
 
 void print_mem_usage(string name)
@@ -52,5 +56,11 @@ void print_mem_usage(string name)
    vm_usage     = vsize / 1024.0;
    resident_set = rss * page_size_kb;
    cout<<"["<<GV(rank)<<"/"<<GV(size)<<"] LOG_SYS_MEM["<<name<<"]"<<" Pid["<<pid<<"]"<<" VM[ "<<vm_usage<<" ] RSS[ "<<resident_set<<" ]"<<endl;
-
 }
+
+void print(SyntaxNode* node) {
+	ostringstream ost;
+	ost << node;
+	cout<<ost.str()<<endl;
+}
+

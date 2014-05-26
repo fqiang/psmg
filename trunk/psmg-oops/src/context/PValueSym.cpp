@@ -5,7 +5,6 @@
  *      Author: s0965328
  */
 
-#include <cassert>
 #include <typeinfo>
 #include <sstream>
 #include "../util/util.h"
@@ -17,14 +16,14 @@ PValueSym::PValueSym(const string& v) : PValue(), value(v){
 
 PValueSym::PValueSym(const PValueSym& other) : PValue(other), value(other.value)
 {
-	LOG("PValueSym copy "<<this->toString());
+	TRACE("PValueSym copy "<<this->toString());
 }
 PValueSym::~PValueSym() {
-	LOG("PValueSym delete "<<this->toString());
+	TRACE("PValueSym delete "<<this->toString());
 }
 PValueSym* PValueSym::clone()
 {
-	LOG("PValueSym clone "<<this->toString());
+	TRACE("PValueSym clone "<<this->toString());
 	return new PValueSym(*this);
 }
 
@@ -79,6 +78,7 @@ string PValueSym::toString(){
 void PValueSym::calculateMemoryUsage(unsigned long& size)
 {
 	size+=sizeof(PValueSym);
+	size+=this->value.size() + 1;
 }
 
 PValueSym* PValueSym::error()

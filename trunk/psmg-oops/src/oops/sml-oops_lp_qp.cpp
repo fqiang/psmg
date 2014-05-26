@@ -40,7 +40,6 @@
 #include <cstdlib>
 #include <cmath>
 #include <iostream>
-#include <cassert>
 #include <vector>
 
 using namespace std;
@@ -84,7 +83,7 @@ void SML_OOPS_driver_LP_QP(ExpandedModel *root) {
 	vl->fillCallBack(FillLowBndVector);
 
 	if (GV(writeMatlab)) {
-		LOG("Writing matlab file:mat.m");
+		TRACE("Writing matlab file:mat.m");
 		string mfile = GV(logdir)+ "mat.m";
 		FILE *mout = fopen(mfile.c_str(), "w");
 		PrintMatrixMatlab(mout, A, "A");
@@ -97,7 +96,7 @@ void SML_OOPS_driver_LP_QP(ExpandedModel *root) {
 	}
 
 	if (GV(writeMPS)) {
-		LOG("Writing mps file:mat.m");
+		TRACE("Writing mps file:mat.m");
 		string mfile = GV(logdir)+"test.mps";
 		FILE *mps_file = fopen(mfile.c_str(), "w");
 		Write_MpsFile(mps_file, AlgAug, vb, vc, vu, vl, 1, NULL, NULL);
@@ -116,8 +115,10 @@ void SML_OOPS_driver_LP_QP(ExpandedModel *root) {
 	prob_ptr = &Prob;
 
 	if (GV(solve)) {
+		TIMER_START("OOPS_SOLVE");
 		cout << "Calling OOPS..." << endl;
 		Prob.solve(stdout);
+		TIMER_STOP("OOPS_SOLVE");
 	}
 
 	//Feng the solution upload routine has some bug for parallel version
@@ -144,13 +145,13 @@ static void SMLCallBackQ(CallBackInterfaceType *cbi);
  --------------------------------------------------------------------------- */
 /* This routine sets up the matrix A from the ExpandedModelInterface tree */
 Algebra* createA(ExpandedModel *em) {
-	LOG("createA for em->getName ["<<em->name<<"]");
+	TRACE("createA for em->getName ["<<em->name<<"]");
 	Algebra *Alg = NULL;
 
 	//if (!A->localVarInfoSet) A->setLocalVarInfo();
 	if (em->children.size() == 0) {
 		// this is final node: read in *.nl file to get dimensions
-		LOG("creatA leaf node: ");
+		TRACE("creatA leaf node: ");
 		OOPSBlock *obl = new OOPSBlock(em, em);
 		obl->prob = prob_ptr; obl->i = 0;
 		Alg = NewAlgebraSparse(em->numLocalCons, em->numLocalVars,
@@ -164,7 +165,7 @@ Algebra* createA(ExpandedModel *em) {
 		 - Off-diagonals with *.nl file from children and col file from parent
 		 - bottom from this *.nl file and col from the children              */
 
-		LOG("PSMG - Create complex node:["<< em->numLocalCons<<"] x ["<< em->numLocalVars << "] nchd = " <<em->children.size());
+		TRACE("PSMG - Create complex node:["<< em->numLocalCons<<"] x ["<< em->numLocalVars << "] nchd = " <<em->children.size());
 
 		/* every child is a diagonal block */
 		Algebra **D, **B, **R;
@@ -176,11 +177,11 @@ Algebra* createA(ExpandedModel *em) {
 		R = (Algebra **) calloc(nblk, sizeof(Algebra *));
 
 		for (i = 0; i < nblk; i++) {
-			LOG("--------------------------------------------- em["<<em->name<<"] ["<<i<<"]");
+			TRACE("--------------------------------------------- em["<<em->name<<"] ["<<i<<"]");
 			D[i] = createA((em->children).at(i));
 			B[i] = createBottomBord(em, (em->children).at(i));
 			R[i] = createRHSBord((em->children).at(i),em);
-			LOG("--------------------------------------------- end em["<<em->name<<"] ["<<i<<"]");
+			TRACE("--------------------------------------------- end em["<<em->name<<"] ["<<i<<"]");
 		}
 
 		/* The final D[nblk] block is defined by local constraints/variables */
@@ -201,11 +202,11 @@ Algebra* createA(ExpandedModel *em) {
 }
 
 Algebra* createBottomBord(ExpandedModel *emrow, ExpandedModel *emcol) {
-	LOG("createBottom for emrow["<<emrow->name<<"] emcol["<<emcol->name<<"]");
+	TRACE("createBottom for emrow["<<emrow->name<<"] emcol["<<emcol->name<<"]");
 	Algebra *Alg = NULL;
 	if (emcol->children.size() == 0)
 	{
-		LOG("createBottom leaf node ");
+		TRACE("createBottom leaf node ");
 		OOPSBlock *obl = new OOPSBlock(emrow, emcol);
 		obl->prob = prob_ptr; obl->i = 0;
 		Alg = NewAlgebraSparse(emrow->numLocalCons, emcol->numLocalVars,
@@ -235,10 +236,10 @@ Algebra* createBottomBord(ExpandedModel *emrow, ExpandedModel *emcol) {
 }
 
 Algebra* createRHSBord(ExpandedModel *emrow, ExpandedModel *emcol) {
-	LOG("createRhs for emrow["<<emrow->name<<"] emcol["<<emcol->name<<"]");
+	TRACE("createRhs for emrow["<<emrow->name<<"] emcol["<<emcol->name<<"]");
 	Algebra *Alg = NULL;
 	if (emrow->children.size() == 0) {
-		LOG("createRhs leaf node ");
+		TRACE("createRhs leaf node ");
 		OOPSBlock *obl = new OOPSBlock(emrow, emcol);
 		obl->prob = prob_ptr; obl->i = 0;
 		Alg = NewAlgebraSparse(emrow->numLocalCons, emcol->numLocalVars,
@@ -298,7 +299,7 @@ createQ(ExpandedModel *em) {
 				 - Diagonals from children (call createA again)
 				 - Off-diagonals with *.nl file from children and col file from parent
 				 - bottom from this *.nl file and col from the children              */
-		LOG("PSMG - Create complex node:["<< em->numLocalVars<<"] x ["<< em->numLocalVars << "] nchd = " <<em->children.size());
+		TRACE("PSMG - Create complex node:["<< em->numLocalVars<<"] x ["<< em->numLocalVars << "] nchd = " <<em->children.size());
 
 		/* every child is a diagonal block */
 		Algebra **D, **B, **R;
@@ -310,11 +311,11 @@ createQ(ExpandedModel *em) {
 		R = (Algebra **) calloc(nblk, sizeof(Algebra *));
 
 		for (i = 0; i < nblk; i++) {
-			LOG("--------------------------------------------- em["<<em->name<<"] ["<<i<<"]");
+			TRACE("--------------------------------------------- em["<<em->name<<"] ["<<i<<"]");
 			D[i] = createQ(em->children.at(i));
 			B[i] = createBottmBordQ(em, (em->children).at(i));
 			R[i] = createRHSBordQ((em->children).at(i),em);
-			LOG("--------------------------------------------- end em["<<em->name<<"] ["<<i<<"]");
+			TRACE("--------------------------------------------- end em["<<em->name<<"] ["<<i<<"]");
 		}
 
 		OOPSBlock *obl = new OOPSBlock(em, em);
@@ -332,7 +333,7 @@ createQ(ExpandedModel *em) {
 }
 
 Algebra* createBottmBordQ(ExpandedModel *emrow, ExpandedModel *emcol) {
-	LOG("createBottmBorderQ for emrow["<<emrow->name<<"] emcol["<<emcol->name<<"]");
+	TRACE("createBottmBorderQ for emrow["<<emrow->name<<"] emcol["<<emcol->name<<"]");
 	Algebra *Alg;
 	/* This is a bottom block:
 	 take the local constraints from the diag block and
@@ -340,7 +341,7 @@ Algebra* createBottmBordQ(ExpandedModel *emrow, ExpandedModel *emcol) {
 
 	if (emcol->children.size() == 0)
 	{
-		LOG("createBottom leaf node ");
+		TRACE("createBottom leaf node ");
 		OOPSBlock *obl = new OOPSBlock(emrow, emcol);
 		obl->prob = prob_ptr; obl->i = 0;
 
@@ -371,10 +372,10 @@ Algebra* createBottmBordQ(ExpandedModel *emrow, ExpandedModel *emcol) {
 }
 
 Algebra* createRHSBordQ(ExpandedModel *emrow, ExpandedModel *emcol) {
-	LOG("createRhs for emrow["<<emrow->name<<"] emcol["<<emcol->name<<"]");
+	TRACE("createRhs for emrow["<<emrow->name<<"] emcol["<<emcol->name<<"]");
 	Algebra *Alg = NULL;
 	if (emrow->children.size() == 0) {
-		LOG("createRhs leaf node ");
+		TRACE("createRhs leaf node ");
 		OOPSBlock *obl = new OOPSBlock(emrow, emcol);
 		obl->prob = prob_ptr; obl->i = 0;
 
@@ -420,28 +421,28 @@ void SMLCallBack(CallBackInterfaceType *cbi) {
 	 void *id
 	 */
 
-	LOG("SMLCallBack - called -- ");
+	TRACE("SMLCallBack - called -- ");
 	OOPSBlock *obl = (OOPSBlock*) cbi->id;
 	if (cbi->row_nbs == NULL) {
 //		LOG_TIME(""<<Stat::numNZJacLPCall<<" row: "<<obl->emrow->name<<"  col: "<<obl->emcol->name<<" ");
 //		TIMER_START("nz_cons_jacobs_lp");
 		cbi->nz = obl->emrow->nz_cons_jacobs_lp_qp(obl->emcol);
 //		TIMER_STOP("nz_cons_jacobs_lp");
-		LOG("SMLCallBack  nz - "<<cbi->nz);
+		TRACE("SMLCallBack  nz - "<<cbi->nz);
 	} else {
-		LOG("SMLCallBack  fill -"<<cbi->nz);
+		TRACE("SMLCallBack  fill -"<<cbi->nz);
 //		LOG_TIME(""<<Stat::numJacLPCall<<" row: "<<obl->emrow->name<<"  col: "<<obl->emcol->name<<" ");
 //		TIMER_START("cons_jacobs_lp");
 		if(cbi->nz!=0) {
 			col_compress_matrix block(obl->emrow->numLocalCons,obl->emcol->numLocalVars,cbi->nz);
 			ColSparseMatrix m(cbi->element,cbi->row_nbs,cbi->col_beg,cbi->col_len);
 			obl->emrow->cons_jacobs_lp_qp(obl->emcol, block);
-			LOG(""<<block);
+			TRACE(""<<block);
 			ExpandedModel::convertToColSparseMatrix(block,m);
 		}
 //		TIMER_STOP("cons_jacobs_lp");
 	}
-	LOG("end SMLCallBack --");
+	TRACE("end SMLCallBack --");
 }
 
 /* ---------------------------------------------------------------------------
@@ -458,45 +459,47 @@ void SMLCallBackQ(CallBackInterfaceType *cbi) {
 	 double *element
 	 void *id
 	 */
+	TRACE("SMLCalBackQ - called --");
 	if(GV(solvetype).compare("lp")==0) {
 		cbi->nz = 0; //lp solver, therefore no Q matrix
 		return;
 	}
-	LOG("SMLCalBackQ - called --");
-	OOPSBlock* obl = (OOPSBlock*)cbi->id;
-	int rowlevel = obl->emrow->model->level;
-	int collevel = obl->emcol->model->level;
-	if(rowlevel == collevel) assert(obl->emrow == obl->emcol);
-	if(cbi->row_nbs==NULL) {
-		if(rowlevel<collevel){
-			cbi->nz = obl->emcol->nz_obj_hess_qp(obl->emrow);
+	else
+	{
+		OOPSBlock* obl = (OOPSBlock*)cbi->id;
+		int rowlevel = obl->emrow->model->level;
+		int collevel = obl->emcol->model->level;
+		if(rowlevel == collevel) assert(obl->emrow == obl->emcol);
+		if(cbi->row_nbs==NULL) {
+			if(rowlevel<collevel){
+				cbi->nz = obl->emcol->nz_obj_hess_qp(obl->emrow);
+			}
+			else{
+				cbi->nz = obl->emrow->nz_obj_hess_qp(obl->emcol);
+			}
 		}
 		else{
-			cbi->nz = obl->emrow->nz_obj_hess_qp(obl->emcol);
-		}
-	}
-	else{
-		if(cbi->nz != 0)
-		{
-			if(rowlevel<collevel){ //compute the transpose
-				col_compress_matrix block(obl->emcol->numLocalVars,obl->emrow->numLocalVars,cbi->nz);
-				obl->emcol->obj_hess_qp(obl->emrow,block);
-				ColSparseMatrix m(cbi->element,cbi->row_nbs,cbi->col_beg,cbi->col_len);
-				block = boost::numeric::ublas::trans(block);
-				ExpandedModel::convertToColSparseMatrix(block,m);
-			}
-			else
+			if(cbi->nz != 0)
 			{
-				col_compress_matrix block(obl->emrow->numLocalVars,obl->emcol->numLocalVars,cbi->nz);
-				obl->emrow->obj_hess_qp(obl->emcol,block);
-				ColSparseMatrix m(cbi->element,cbi->row_nbs,cbi->col_beg,cbi->col_len);
-				block = boost::numeric::ublas::trans(block);
-				ExpandedModel::convertToColSparseMatrix(block,m);
+				if(rowlevel<collevel){ //compute the transpose
+					col_compress_matrix block(obl->emcol->numLocalVars,obl->emrow->numLocalVars,cbi->nz);
+					obl->emcol->obj_hess_qp(obl->emrow,block);
+					ColSparseMatrix m(cbi->element,cbi->row_nbs,cbi->col_beg,cbi->col_len);
+					block = boost::numeric::ublas::trans(block);
+					ExpandedModel::convertToColSparseMatrix(block,m);
+				}
+				else
+				{
+					col_compress_matrix block(obl->emrow->numLocalVars,obl->emcol->numLocalVars,cbi->nz);
+					obl->emrow->obj_hess_qp(obl->emcol,block);
+					ColSparseMatrix m(cbi->element,cbi->row_nbs,cbi->col_beg,cbi->col_len);
+					block = boost::numeric::ublas::trans(block);
+					ExpandedModel::convertToColSparseMatrix(block,m);
+				}
 			}
 		}
 	}
-	LOG("end SMLCalBackQ - called");
-
+	TRACE("end SMLCalBackQ - called");
 }
 
 /* ---------------------------------------------------------------------------

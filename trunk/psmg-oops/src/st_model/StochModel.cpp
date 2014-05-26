@@ -58,7 +58,7 @@ using namespace std;
 /** Constructor */
 StochModel::StochModel(const string& name, SyntaxNode *stochsets, AmplModel *par) : AmplModel(name,NULL,par)
 {
-	LOG("StochModel -- name["<<name<<"] parent["<<par->name<<"]");
+	TRACE("StochModel -- name["<<name<<"] parent["<<par->name<<"]");
 	assert(stochsets!=NULL && stochsets->nchild()==4);
 	SyntaxNode::iterator i = stochsets->begin();
 	this->nodeset = *i; i++;
@@ -66,12 +66,12 @@ StochModel::StochModel(const string& name, SyntaxNode *stochsets, AmplModel *par
 	this->probs = *i; i++;
 	this->stageset = *i;
 
-	LOG("end StochModel constructor-- ");
+	TRACE("end StochModel constructor-- ");
 }
 
 StochModel::~StochModel()
 {
-	LOG("StochModel ~ Desctructor ");
+	TRACE("StochModel ~ Desctructor ");
 	delete nodeset;
 	delete ancestor;
 	delete probs;
@@ -93,7 +93,7 @@ ExpandedModel* StochModel::createExpandedModel(string dummyVar,SetComp* comp,str
 	return NULL;
 }
 
-AmplModel* StochModel::convertToAmplModel(ModelContext* parCtx)
+AmplModel* StochModel::convertToAmplModel(ModelContext& parCtx)
 {
 	SCTX::reset(); //reseting static values;
 	StochCtx* curr_sctx = new StochCtx(NULL);
@@ -122,7 +122,7 @@ AmplModel* StochModel::convertToAmplModel(ModelContext* parCtx)
 	}
 
 	AmplModel* prev_model = parent; //the ample model above
-	Set* stset = static_cast<Set*>(parCtx->getCompValue(SCTX::stSetComp));
+	Set* stset = static_cast<Set*>(parCtx.getCompValue(SCTX::stSetComp));
 	for(uint i = 0; i < stset->setValues_data_order.size(); i++)
 	{
 		if(i==0) {
@@ -170,7 +170,7 @@ AmplModel* StochModel::convertToAmplModel(ModelContext* parCtx)
 		{
 			if(this->isInCurrentStage(setcomp->stage,curr_sctx->stagename,parCtx))
 			{
-				LOG("setcomp ["<<setcomp->name<<"] is in model["<<curr_sctx->model->name<<"]");
+				TRACE("setcomp ["<<setcomp->name<<"] is in model["<<curr_sctx->model->name<<"]");
 				SyntaxNode* index = setcomp->indexing==NULL? NULL :setcomp->indexing->clone();
 				SyntaxNode* attr = setcomp->attributes==NULL? NULL :setcomp->attributes->clone();
 				SetComp* nsetcomp = new SetComp(setcomp->name,index,attr,curr_sctx->model);
@@ -181,7 +181,7 @@ AmplModel* StochModel::convertToAmplModel(ModelContext* parCtx)
 		{
 			if(this->isInCurrentStage(paramcomp->stage,curr_sctx->stagename,parCtx))
 			{
-				LOG("paramcomp ["<<paramcomp->name<<"] is in model["<<curr_sctx->model->name<<"]");
+				TRACE("paramcomp ["<<paramcomp->name<<"] is in model["<<curr_sctx->model->name<<"]");
 				SyntaxNode* index = paramcomp->indexing==NULL? NULL : paramcomp->indexing->clone();
 				SyntaxNode* attr = paramcomp->attributes==NULL? NULL :paramcomp->attributes->clone();
 				ParamComp* nparamcomp = new ParamComp(paramcomp->name,index,attr,curr_sctx->model);
@@ -193,7 +193,7 @@ AmplModel* StochModel::convertToAmplModel(ModelContext* parCtx)
 			if(varcomp->isDet == true && this->isInCurrentStage(varcomp->stage,curr_sctx->stagename,parCtx))
 			{ //deterministic var comp -- only one for each valid time stage in stageset - therefore need to create this varcomp in stoch root model
 				//ie. var A deterministic
-				LOG("varcomp ["<<varcomp->name<<"] is in DETERMINISTRIC");
+				TRACE("varcomp ["<<varcomp->name<<"] is in DETERMINISTRIC");
 				//deterministic varcomp only allow to reference modelcomp in stochroot and above, therefore set currCtx to rootCtx
 				SCTX::currCtx = SCTX::rootCtx;
 				SyntaxNode* index = varcomp->indexing==NULL? NULL: varcomp->indexing->clone();
@@ -206,7 +206,7 @@ AmplModel* StochModel::convertToAmplModel(ModelContext* parCtx)
 			}
 			else if(this->isInCurrentStage(varcomp->stage,curr_sctx->stagename,parCtx))
 			{
-				LOG("varcomp ["<<varcomp->name<<"] is in model["<<curr_sctx->model->name<<"]");
+				TRACE("varcomp ["<<varcomp->name<<"] is in model["<<curr_sctx->model->name<<"]");
 				SyntaxNode* index = varcomp->indexing==NULL? NULL : varcomp->indexing->clone();
 				SyntaxNode* attr = varcomp->attributes==NULL? NULL : varcomp->attributes->clone();
 				VarComp* nvarcomp = new VarComp(varcomp->name,index,attr,curr_sctx->model);
@@ -218,7 +218,7 @@ AmplModel* StochModel::convertToAmplModel(ModelContext* parCtx)
 		{
 			if(this->isInCurrentStage(concomp->stage,curr_sctx->stagename,parCtx))
 			{
-				LOG("concomp ["<<concomp->name<<"] is in model["<<curr_sctx->model->name<<"]");
+				TRACE("concomp ["<<concomp->name<<"] is in model["<<curr_sctx->model->name<<"]");
 				//handling Exp operator:
 				//if there is Exp in constraint, need to move this constraint to stage 0
 				//create stage level sets and sum over the weight expr involved in the Exp
@@ -254,7 +254,7 @@ AmplModel* StochModel::convertToAmplModel(ModelContext* parCtx)
 		{
 			if(this->isInCurrentStage(obj_comp->stage,curr_sctx->stagename,parCtx))
 			{
-				LOG("obj_comp ["<<obj_comp->name<<"] is in model["<<curr_sctx->model->name<<"]");
+				TRACE("obj_comp ["<<obj_comp->name<<"] is in model["<<curr_sctx->model->name<<"]");
 				assert(obj_comp->indexing == NULL);  //single objective no indexing
 				bool exp = obj_comp->attributes->hasExp();
 				assert(exp == false); //obj can't has expectation opcode, because objective in always weighted by the probs that reach it's stage
@@ -294,7 +294,7 @@ AmplModel* StochModel::convertToAmplModel(ModelContext* parCtx)
 /*
  * Is the stagename in the stage represented by stage expression in stage
  */
-bool StochModel::isInCurrentStage(SyntaxNode* stage, string& stagename, ModelContext* ctx)
+bool StochModel::isInCurrentStage(SyntaxNode* stage, string& stagename, ModelContext& ctx)
 {
 	if(stage == NULL) return true; //by default if in stochastic model, and no stage related to a model comp, then it belong to all stages
 	boost::unordered_map<SyntaxNode*,boost::unordered_set<string>* >::iterator it = this->stageSetMap.find(stage);

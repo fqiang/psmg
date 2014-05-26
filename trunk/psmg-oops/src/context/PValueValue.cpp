@@ -5,7 +5,6 @@
  *      Author: s0965328
  */
 
-#include <cassert>
 #include <typeinfo>
 #include <cmath>
 #include <sstream>
@@ -17,16 +16,16 @@ PValueValue::PValueValue(double v) : PValue(), value(v){
 }
 PValueValue::PValueValue(const PValueValue& other) : PValue(other), value(other.value)
 {
-	LOG("PValueVaule copy "<<this->toString());
+	TRACE("PValueVaule copy "<<this->toString());
 }
 
 PValueValue::~PValueValue() {
-	LOG("PValueVaule delete "<<this->toString());
+	TRACE("PValueVaule delete "<<this->toString());
 }
 
 PValueValue* PValueValue::clone()
 {
-	LOG("PValueValue::clone() -- "<<this->toString());
+	TRACE("PValueValue::clone() -- "<<this->toString());
 	return new PValueValue(*this);
 }
 

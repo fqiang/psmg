@@ -25,12 +25,11 @@
 
 using namespace std;
 
-//PrintLevelValues GlobalVariables::prtLvl;
 
 /* ----------------------------------------------------------------------------
 OOPSBlock::OOPSBlock(ExpandedModelInterface*, list<string>*)
 ---------------------------------------------------------------------------- */
 OOPSBlock::OOPSBlock(ExpandedModel *rowmod, ExpandedModel *colmod):emrow(rowmod),emcol(colmod)
 {
-  LOG("OOPSBlock: col: " << colmod->name << "/ row: " << rowmod->name <<" -- (" << rowmod->numLocalCons << "x" << colmod->numLocalVars << ")");
+  TRACE("OOPSBlock: col: " << colmod->name << "/ row: " << rowmod->name <<" -- (" << rowmod->numLocalCons << "x" << colmod->numLocalVars << ")");
 }

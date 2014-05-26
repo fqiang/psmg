@@ -21,6 +21,7 @@
 #include <list>
 #include <string>
 #include <vector>
+#include "../util/compile_marco.h"
 
 class SyntaxNode;
 class AmplModel;
@@ -89,7 +90,7 @@ class ModelComp{
 	/** Detailed debugging output */
 	virtual void dump(std::ostream& fout,int) = 0;
 
-	void calculateMemoryUsage(unsigned long& size);
+	void calculateMemoryUsage(ulong& size);
 
 };
 

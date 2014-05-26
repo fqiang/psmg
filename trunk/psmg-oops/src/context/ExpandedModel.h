@@ -15,11 +15,11 @@
 #include <boost/numeric/ublas/matrix_sparse.hpp>
 #include <boost/numeric/ublas/io.hpp>
 #include <boost/foreach.hpp>
-#include "autodiff.h"
+#include "../autodiff/autodiff.h"
 
 #include "ColSparseMatrix.h"
+#include "ModelContext.h"
 
-class ModelContext;
 class ModelComp;
 class AmplModel;
 class ConsComp;
@@ -45,9 +45,9 @@ public:
 	static ExpandedModel *root;
 
 	AmplModel* model;   //the prototype model
-	ModelContext* ctx;  //data is hold
-
 	ExpandedModel *parent;
+	ModelContext ctx;  //data is hold
+
 
 	uint numLocalVars;
 	uint numLocalCons;
@@ -59,8 +59,7 @@ public:
 	//  block ID {a in ARCS} -- a --> ARCS
 //	boost::unordered_map<string,ModelComp*> dummySetMap;
 	//! the map from dummy variable to the value of this variable for this local problem.
-	//  a ---> "A1"
-//	boost::unordered_map<string,string> dummyValueMap;
+	//  a ---> (Comp* "A1")
 	boost::unordered_map<string,model_dummy_t> dummyMap;
 
 
@@ -102,7 +101,7 @@ public:
 	//the reason for storing the BlockLP for each different emcol is that:
 	// we will use the AutoDiff::Node* con saved in the BlockLP to compute nz_jacobian and jacobian of intersection
 	BlockALPQP* getBlockA_LP_QP(ExpandedModel* emcol);
-	boost::unordered_map<ExpandedModel*, BlockALPQP*> lp_cblockMap;    //constructed using partial attributes
+	boost::unordered_map<ExpandedModel*, BlockALPQP*> lp_qp_cblockMap;    //constructed using partial attributes
 
 	BlockQQP* getBlockQ_QP(ExpandedModel* emcol);
 	boost::unordered_map<ExpandedModel*, BlockQQP*> qp_oblockMap;    //constructed using partial attributes
@@ -116,7 +115,7 @@ public:
 //	BlockHV* getBlockHVPartial(ExpandedModel* emcol);
 //	boost::unordered_map<ExpandedModel*, BlockHV*> nlp_hvblockMap_lo;   //constructed using *partial attributes*
 
-	ExpandedModel(AmplModel* _mod,ModelContext* _context);
+	ExpandedModel(AmplModel* _mod,ExpandedModel* par);
 	virtual ~ExpandedModel();
 
 	//Both LP and NLP
@@ -202,20 +201,20 @@ public:
 	 */
 	void getAllEM(vector<ExpandedModel*>& ems);
 	void getParentEM(vector<ExpandedModel*>& ems);
-	void addModelDummy(string dummyVar, ModelComp* comp, string value);
+	void addModelDummy(string& dummyVar, ModelComp* comp, string value);
 	void addChildren(ExpandedModel* em2);
-	void clearAllContextTreeKeepRoot();
 	void levelTraversal(vector<ExpandedModel*>& em2List,int level);
 	static void convertToColSparseMatrix(col_compress_matrix& m,ColSparseMatrix& sm);
 	/*
 	 * Utility methods
 	 */
-	ModelContext* locateCtx(AmplModel* model, string& dummyval);
+	void dropCtxRecKeepRoot();
+	ModelContext* locateChildCtx(AmplModel* model, string& dummyval);
 	void logEMRecursive(string& line,ostream&);
 	void calculateMemoryUsage(unsigned long& size_str,unsigned long& size_data);
 	string qualifiedName();
 private:
-	ModelContext* recursiveInitContext();
+//	ModelContext* recursiveInitContext();
 	void copyVariables(boost::unordered_set<AutoDiff::Node*>&);
 	void copyVariables(std::vector<AutoDiff::Node*>&);
 };

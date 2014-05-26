@@ -39,7 +39,6 @@
 #include <cstdlib>
 #include <cmath>
 #include <iostream>
-#include <cassert>
 #include <vector>
 
 using namespace std;
@@ -98,7 +97,7 @@ void SML_OOPS_driver_NLP(ExpandedModel *root) {
 	vl->fillCallBack(FillLowBndVector);
 
 	if (GV(writeMatlab)) {
-		LOG("Writing matlab file: "<<GV(matlabFile));
+		TRACE("Writing matlab file: "<<GV(matlabFile));
 		string mfile = GV(logdir)+ GV(matlabFile);
 		FILE *mout = fopen(mfile.c_str(), "w");
 		PrintMatrixMatlab(mout, A, "A");
@@ -111,7 +110,7 @@ void SML_OOPS_driver_NLP(ExpandedModel *root) {
 	}
 
 	if (GV(writeMPS)) {
-		LOG("Writing mps file:"<<GV(mpsFile));
+		TRACE("Writing mps file:"<<GV(mpsFile));
 		string mfile = GV(logdir)+GV(mpsFile);
 		FILE *mps_file = fopen(mfile.c_str(), "w");
 		Write_MpsFile(mps_file, AlgAug, vb, vc, vu, vl, 1, NULL, NULL);
@@ -130,8 +129,10 @@ void SML_OOPS_driver_NLP(ExpandedModel *root) {
 	prob_ptr = &Prob;
 	assert(prob_ptr!=NULL);
 	if (GV(solve)) {
+		TIMER_START("OOPS_SOLVE");
 		cout << "Calling OOPS..." << endl;
 		Prob.solve(stdout);
+		TIMER_STOP("OOPS_SOLVE");
 	}
 
 	//Feng the solution upload routine has some bug for parallel version
@@ -151,13 +152,13 @@ void SML_OOPS_driver_NLP(ExpandedModel *root) {
  --------------------------------------------------------------------------- */
 /* This routine sets up the matrix A from the ExpandedModelInterface tree */
 Algebra* createA(ExpandedModel *em) {
-	LOG("createA for em->getName ["<<em->name<<"]");
+	TRACE("createA for em->getName ["<<em->name<<"]");
 	Algebra *Alg = NULL;
 
 	//if (!A->localVarInfoSet) A->setLocalVarInfo();
 	if (em->children.size() == 0) {
 		// this is final node: read in *.nl file to get dimensions
-		LOG("creatA leaf node: ");
+		TRACE("creatA leaf node: ");
 		OOPSBlock *obl = new OOPSBlock(em, em);
 		obl->prob = prob_ptr; obl->i = 0;
 		Alg = NewAlgebraSparse(em->numLocalCons, em->numLocalVars,
@@ -171,7 +172,7 @@ Algebra* createA(ExpandedModel *em) {
 		 - Off-diagonals with *.nl file from children and col file from parent
 		 - bottom from this *.nl file and col from the children              */
 
-		LOG("PSMG - Create complex node:["<< em->numLocalCons<<"] x ["<< em->numLocalVars << "] nchd = " <<em->children.size());
+		TRACE("PSMG - Create complex node:["<< em->numLocalCons<<"] x ["<< em->numLocalVars << "] nchd = " <<em->children.size());
 
 		/* every child is a diagonal block */
 		Algebra **D, **B, **R;
@@ -183,11 +184,11 @@ Algebra* createA(ExpandedModel *em) {
 		R = (Algebra **) calloc(nblk, sizeof(Algebra *));
 
 		for (i = 0; i < nblk; i++) {
-			LOG("--------------------------------------------- em["<<em->name<<"] ["<<i<<"]");
+			TRACE("--------------------------------------------- em["<<em->name<<"] ["<<i<<"]");
 			D[i] = createA((em->children).at(i));
 			B[i] = createBottomBord(em, (em->children).at(i));
 			R[i] = createRHSBord((em->children).at(i),em);
-			LOG("--------------------------------------------- end em["<<em->name<<"] ["<<i<<"]");
+			TRACE("--------------------------------------------- end em["<<em->name<<"] ["<<i<<"]");
 		}
 
 		/* The final D[nblk] block is defined by local constraints/variables */
@@ -208,11 +209,11 @@ Algebra* createA(ExpandedModel *em) {
 }
 
 Algebra* createBottomBord(ExpandedModel *emrow, ExpandedModel *emcol) {
-	LOG("createBottom for emrow["<<emrow->name<<"] emcol["<<emcol->name<<"]");
+	TRACE("createBottom for emrow["<<emrow->name<<"] emcol["<<emcol->name<<"]");
 	Algebra *Alg = NULL;
 	if (emcol->children.size() == 0)
 	{
-		LOG("createBottom leaf node ");
+		TRACE("createBottom leaf node ");
 		OOPSBlock *obl = new OOPSBlock(emrow, emcol);
 		obl->prob = prob_ptr; obl->i = 0;
 		Alg = NewAlgebraSparse(emrow->numLocalCons, emcol->numLocalVars,
@@ -242,10 +243,10 @@ Algebra* createBottomBord(ExpandedModel *emrow, ExpandedModel *emcol) {
 }
 
 Algebra* createRHSBord(ExpandedModel *emrow, ExpandedModel *emcol) {
-	LOG("createRhs for emrow["<<emrow->name<<"] emcol["<<emcol->name<<"]");
+	TRACE("createRhs for emrow["<<emrow->name<<"] emcol["<<emcol->name<<"]");
 	Algebra *Alg = NULL;
 	if (emrow->children.size() == 0) {
-		LOG("createRhs leaf node ");
+		TRACE("createRhs leaf node ");
 		OOPSBlock *obl = new OOPSBlock(emrow, emcol);
 		obl->prob = prob_ptr; obl->i = 0;
 		Alg = NewAlgebraSparse(emrow->numLocalCons, emcol->numLocalVars,
@@ -305,7 +306,7 @@ createQ(ExpandedModel *em) {
 				 - Diagonals from children (call createA again)
 				 - Off-diagonals with *.nl file from children and col file from parent
 				 - bottom from this *.nl file and col from the children              */
-		LOG("PSMG - Create complex node:["<< em->numLocalVars<<"] x ["<< em->numLocalVars << "] nchd = " <<em->children.size());
+		TRACE("PSMG - Create complex node:["<< em->numLocalVars<<"] x ["<< em->numLocalVars << "] nchd = " <<em->children.size());
 
 		/* every child is a diagonal block */
 		Algebra **D, **B, **R;
@@ -317,11 +318,11 @@ createQ(ExpandedModel *em) {
 		R = (Algebra **) calloc(nblk, sizeof(Algebra *));
 
 		for (i = 0; i < nblk; i++) {
-			LOG("--------------------------------------------- em["<<em->name<<"] ["<<i<<"]");
+			TRACE("--------------------------------------------- em["<<em->name<<"] ["<<i<<"]");
 			D[i] = createQ(em->children.at(i));
 			B[i] = createBottmBordQ(em, (em->children).at(i));
 			R[i] = createRHSBordQ((em->children).at(i),em);
-			LOG("--------------------------------------------- end em["<<em->name<<"] ["<<i<<"]");
+			TRACE("--------------------------------------------- end em["<<em->name<<"] ["<<i<<"]");
 		}
 
 		OOPSBlock *obl = new OOPSBlock(em, em);
@@ -339,7 +340,7 @@ createQ(ExpandedModel *em) {
 }
 
 Algebra* createBottmBordQ(ExpandedModel *emrow, ExpandedModel *emcol) {
-	LOG("createBottmBorderQ for emrow["<<emrow->name<<"] emcol["<<emcol->name<<"]");
+	TRACE("createBottmBorderQ for emrow["<<emrow->name<<"] emcol["<<emcol->name<<"]");
 	Algebra *Alg;
 	/* This is a bottom block:
 	 take the local constraints from the diag block and
@@ -347,7 +348,7 @@ Algebra* createBottmBordQ(ExpandedModel *emrow, ExpandedModel *emcol) {
 
 	if (emcol->children.size() == 0)
 	{
-		LOG("createBottom leaf node ");
+		TRACE("createBottom leaf node ");
 		OOPSBlock *obl = new OOPSBlock(emrow, emcol);
 		obl->prob = prob_ptr; obl->i = 0;
 
@@ -378,10 +379,10 @@ Algebra* createBottmBordQ(ExpandedModel *emrow, ExpandedModel *emcol) {
 }
 
 Algebra* createRHSBordQ(ExpandedModel *emrow, ExpandedModel *emcol) {
-	LOG("createRhs for emrow["<<emrow->name<<"] emcol["<<emcol->name<<"]");
+	TRACE("createRhs for emrow["<<emrow->name<<"] emcol["<<emcol->name<<"]");
 	Algebra *Alg = NULL;
 	if (emrow->children.size() == 0) {
-		LOG("createRhs leaf node ");
+		TRACE("createRhs leaf node ");
 		OOPSBlock *obl = new OOPSBlock(emrow, emcol);
 		obl->prob = prob_ptr; obl->i = 0;
 
@@ -427,14 +428,14 @@ void SMLCallBack(CallBackInterfaceType *cbi) {
 	 void *id
 	 */
 
-	LOG("SMLCallBack - called -- ");
+	TRACE("SMLCallBack - called -- ");
 	OOPSBlock *obl = (OOPSBlock*) cbi->id;
 //	assert(obl->prob!=NULL);
 	//update primal vriables x solution for bellow emrow
 	//			and ancestor and parent of emrow
 
 	if (cbi->row_nbs == NULL) {
-		LOG("get nz_cons_jacobs --- ");
+		TRACE("get nz_cons_jacobs --- ");
 		//
 		//before update the current x in PSMG, the Block need to be initialized by calling getBlockLocal
 		obl->emrow->getBlockDep();
@@ -448,7 +449,7 @@ void SMLCallBack(CallBackInterfaceType *cbi) {
 		//2. compute the non zero for jacob of intersection emrow x emcol
 		cbi->nz = obl->emrow->nz_cons_jacobs_nlp_local(obl->emcol);
 	} else {
-		LOG("jacobs - want to fill in matrices");
+		TRACE("jacobs - want to fill in matrices");
 		//2. computing jacob of intersection emrow X emcol
 		//   use the current point offered by previous call
 		col_compress_matrix block(obl->emrow->numLocalCons,obl->emcol->numLocalVars);
@@ -456,7 +457,7 @@ void SMLCallBack(CallBackInterfaceType *cbi) {
 		ColSparseMatrix m(cbi->element,cbi->row_nbs,cbi->col_beg,cbi->col_len);
 		ExpandedModel::convertToColSparseMatrix(block,m);
 	}
-	LOG("end SMLCallBack --");
+	TRACE("end SMLCallBack --");
 }
 
 /* ---------------------------------------------------------------------------
@@ -487,11 +488,11 @@ void SMLCallBackQ(CallBackInterfaceType *cbi) {
 	 * We also assume the solver will call the get function evluation before evaluating the lagrangian hessian, therefore
 	 * the current point X is already update to date. We will need to update Y before evaluate lagrangian hessian.
 	 */
-	LOG("SMLCalBackQ - called");
+	TRACE("SMLCalBackQ - called");
 	OOPSBlock *obl = (OOPSBlock*) cbi->id;
 
 	if (cbi->row_nbs == NULL) {
-		LOG("get nz laghess --- ");
+		TRACE("get nz laghess --- ");
 		//before update the current x in PSMG, the Block need to be initialized by calling getBlockLocal
 		obl->emrow->getBlockDep();
 		//first need to update the primal varibles value
@@ -506,7 +507,7 @@ void SMLCallBackQ(CallBackInterfaceType *cbi) {
 	}
 	else
 	{
-		LOG("laghess ---  fill in matrices");
+		TRACE("laghess ---  fill in matrices");
 		//2. computing jacob of intersection emrow X emcol
 		//   use the current point offered by previous call
 		col_compress_matrix block;
@@ -514,7 +515,7 @@ void SMLCallBackQ(CallBackInterfaceType *cbi) {
 		ColSparseMatrix m(cbi->element,cbi->row_nbs,cbi->col_beg,cbi->col_len);
 		ExpandedModel::convertToColSparseMatrix(block,m);
 	}
-	LOG("end SMLCalBackQ - called");
+	TRACE("end SMLCalBackQ - called");
 
 }
 
@@ -562,7 +563,7 @@ void OOPS_update_sol_x_all_bellow(ExpandedModel* em, Vector *vx)
 	Tree * tx = vx->node;
 	if(!tx->local)
 	{
-		LOG("OOPS_update_sol_x_all_bellow -- em["<<em->name<<"]  - solution is not on this proc");
+		TRACE("OOPS_update_sol_x_all_bellow -- em["<<em->name<<"]  - solution is not on this proc");
 	}
 	int nchild = em->children.size();
 	assert((nchild == 0 && tx->nb_sons==0) || tx->nb_sons == nchild + 1);
@@ -596,7 +597,7 @@ void OOPS_update_x_parent_only(ExpandedModel* emrow, vector<int>& path)
 	for(int i=0;i<path.size();i++)
 	{
 		if(!currvx->node->local){
-			LOG("OOPS_update_sol_x_parent_only -- em["<<currem->name<<"]  - solution is not on this proc");
+			TRACE("OOPS_update_sol_x_parent_only -- em["<<currem->name<<"]  - solution is not on this proc");
 		}
 
 		int ci = path[i];
@@ -626,7 +627,7 @@ void OOPS_update_sol_y_all_bellow(ExpandedModel* em, Vector *vy)
 	Tree * tx = vy->node;
 	if(!tx->local)
 	{
-		LOG("OOPS_update_sol_x_all_bellow -- em["<<em->name<<"]  - solution is not on this proc");
+		TRACE("OOPS_update_sol_x_all_bellow -- em["<<em->name<<"]  - solution is not on this proc");
 	}
 	int nchild = em->children.size();
 	assert((nchild == 0 && tx->nb_sons==0) || tx->nb_sons == nchild + 1);
@@ -660,7 +661,7 @@ void OOPS_update_y_parent_only(ExpandedModel* emrow, vector<int>& path)
 	for(int i=0;i<path.size();i++)
 	{
 		if(!currvy->node->local){
-			LOG("OOPS_update_sol_x_parent_only -- em["<<currem->name<<"]  - solution is not on this proc");
+			TRACE("OOPS_update_sol_x_parent_only -- em["<<currem->name<<"]  - solution is not on this proc");
 		}
 
 		int ci = path[i];

@@ -9,9 +9,8 @@
 #include "Config.h"
 #include "../util/util.h"
 #include "mpi.h"
-#include "pugixml.hpp"
+#include "../xml/pugixml.hpp"
 #include <cstdlib>
-#include <cassert>
 
 using namespace std;
 
@@ -19,7 +18,7 @@ Config* Config::singleton = NULL;
 
 Config::Config(): hostname("UNSET_HOSTNAME"),rank(-1),size(-1),solve(false), solvetype("lp"),configFilename("./psmg_conf.xml"),
 		modelfilename(""),datafilename(""),root_stage_parent_name("null"),node_dummy_prefix("n"),stage_dummy_prefix("st"),var_det_prefix(""),
-		logdir("./log/"),debug(false),writeMatlab("false"),matlabFile("mat.m"),writeMPS(false),mpsFile("mps.mps"),
+		logdir("./log/"),assertion(false),writeMatlab("false"),matlabFile("mat.m"),writeMPS(false),mpsFile("mps.mps"),
 		logEM(true),logBlock(true),logModel(true),modfile_suffix(".mdat"),emfile_suffix(".emdat")
 {
 
@@ -77,7 +76,7 @@ void Config::initConfig(string& conf_filename)
 	singleton->matlabFile = debugn.attribute("matlabFile").as_string();
 	singleton->writeMPS = debugn.attribute("writeMPS").as_bool();
 	singleton->mpsFile = debugn.attribute("mpsFile").as_string();
-	singleton->debug = debugn.attribute("debug").as_bool();
+	singleton->assertion = debugn.attribute("assertion").as_bool();
 	singleton->logdir = debugn.attribute("logdir").as_string();
 
 	singleton->logEM = debugn.attribute("logEM").as_bool();
@@ -103,7 +102,7 @@ void Config::printAll()
 	cout<<"Opt: "<<"stage_dummy_prefix ["<<conf->stage_dummy_prefix<<"]"<<endl;
 	cout<<"Opt: "<<"var_det_prefix ["<<conf->var_det_prefix<<"]"<<endl;
 
-	cout<<"Opt: "<<"Debug["<<conf->debug<<"]"<<endl;
+	cout<<"Opt: "<<"assertion["<<conf->assertion<<"]"<<endl;
 	cout<<"Opt: "<<"write matlab ["<<conf->writeMatlab<<"]"<<endl;
 	cout<<"Opt: "<<"write MPS ["<<conf->writeMPS<<"]"<<endl;
 	cout<<"Opt: "<<"logEM["<<GV(logEM)<<"]"<<endl;

@@ -24,7 +24,6 @@
 #include "../context/ExpandedModel.h"
 #include "../parser/sml.tab.h"
 #include "SyntaxNodeValue.h"
-#include <cassert>
 #include <cstdlib>
 #include <iostream>
 
@@ -53,35 +52,35 @@ ModelComp::ModelComp(const string& id, compType type, SyntaxNode* indexing, Synt
 	:name(id), type(type), indexing(indexing),attributes(attribute), model(owner)
 {
 
-	LOG("ModelComp constructor  - id=["<<id<<"] indexing["<<this->indexing<<"] attribute["<<this->attributes<<"] type["<<type<<"] -- in Model["<<owner<<"]");
+	TRACE("ModelComp constructor  - id=["<<id<<"] indexing["<<this->indexing<<"] attribute["<<this->attributes<<"] type["<<type<<"] -- in Model["<<owner<<"]");
 
 }
 
 
 ModelComp::~ModelComp() {
-	LOG("enter ModelComp destructor called...["<<this->name<<"]");
+	TRACE("enter ModelComp destructor called...["<<this->name<<"]");
 	if (attributes != NULL) {
-		LOG(" --- delete attributes ");
+		TRACE(" --- delete attributes ");
 		//delete attributes;
 		attributes = NULL;
 	}
 	if (indexing != NULL) {
-		LOG(" --- delete indexing ");
+		TRACE(" --- delete indexing ");
 		//delete indexing;
 		indexing = NULL;
 	}
-	LOG("exit ModelComp destructor called...["<<this->name<<"]");
+	TRACE("exit ModelComp destructor called...["<<this->name<<"]");
 }
 
-void ModelComp::calculateMemoryUsage(unsigned long& size) {
-	LOG_MEM("ModelComp::calculateMemoryUsage -- comp["<<this->name<<"]");
-	size += sizeof(ModelComp);
+void ModelComp::calculateMemoryUsage(ulong& size) {
+	MEM("ModelComp::calculateMemoryUsage -- comp["<<this->name<<"]");
+	size += name.size()+1;
 	if (this->attributes != NULL) {
-		LOG_MEM(" --- attribute ["<<this->attributes->print()<<"]");
+		MEM(" --- attribute ["<<this->attributes<<"]");
 		this->attributes->calculateMemoryUsage(size);
 	}
 	if (this->indexing != NULL) {
-		LOG_MEM(" --- indexing ["<<this->indexing->print()<<"]");
+		MEM(" --- indexing ["<<this->indexing<<"]");
 		this->indexing->calculateMemoryUsage(size);
 	}
 }

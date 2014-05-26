@@ -16,7 +16,10 @@
  */
 
 #include "../util/util.h"
-#include "../sml/Sml.h"
+#include "../util/compile_marco.h"
+
+#include "Sml.h"
+#include "Config.h"
 #include "../metric/Stat.h"
 #include "../model/AmplModel.h"
 #include "../context/ModelContext.h"
@@ -58,12 +61,12 @@ void Sml::deleteInstance()
 
 Sml::Sml()
 {
-	LOG("PSMG processor created...");
+	TRACE("PSMG processor created...");
 }
 
 Sml::~Sml()
 {
-	LOG("Sml destructor called...");
+	TRACE("Sml destructor called...");
 }
 
 void Sml::processModelfile()
@@ -88,7 +91,7 @@ void Sml::processModelfile()
 	stat(GV(logdir).c_str(),&s);
 	if(S_ISDIR(s.st_mode))
 	{
-		LOG("log directory exist");
+		TRACE("log directory exist");
 	}
 	else{
 		int errcode = mkdir(GV(logdir).c_str(),S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
@@ -101,23 +104,23 @@ void Sml::processModelfile()
 
 void Sml::generateExpandedModel()
 {
-	LOG("============== ExpandedModel2 Generation =============================");
+	TRACE("============== ExpandedModel2 Generation =============================");
 	//step 1: create expandedmodel recursively
 	AmplModel::root->splitConstraints();  //split constraints according to model levels
 	ExpandedModel::root = AmplModel::root->createExpandedModel("",NULL,"",NULL);
-	LOG("============== END ExpandedModel2 Generation =============================");
+	TRACE("============== END ExpandedModel2 Generation =============================");
 }
 
 void Sml::resetContextTree()
 {
-	LOG("============== resetContextTree =============================");
-	ExpandedModel::root->clearAllContextTreeKeepRoot();
-	LOG("============== END resetContextTree =============================");
+	TRACE("============== resetContextTree =============================");
+	ExpandedModel::root->dropCtxRecKeepRoot();
+	TRACE("============== END resetContextTree =============================");
 }
 
 void Sml::logEM(string filename="")
 {
-	LOG("============== printEMStructure =============================");
+	TRACE("============== printEMStructure =============================");
 	string line="   ";
 	if(filename.compare("")==0){
 		ExpandedModel::root->logEMRecursive(line,cout);
@@ -126,7 +129,7 @@ void Sml::logEM(string filename="")
 		ofstream file(filename.c_str(),ofstream::out);
 		ExpandedModel::root->logEMRecursive(line,file);
 	}
-	LOG("============== END printEMStructure =============================");
+	TRACE("============== END printEMStructure =============================");
 }
 
 //oops properties
@@ -142,8 +145,11 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	string default_conf = "./psmg_conf.xml";
-	Config::initConfig(default_conf);
+	{
+		string default_conf = "./psmg_conf.xml";
+		Config::initConfig(default_conf);
+	}
+
 	for(int i=1;i<argc;i++)
 	{ //if provide any model and data files
 		GV(modelfilename) = argv[i];
@@ -160,10 +166,10 @@ int main(int argc, char **argv)
 
 
 
-	LOG("Process started on host["<<GV(hostname)<<"]");
-	TIMER_START("SML_PARSE_MODEL");
+	TRACE("Process started on host["<<GV(hostname)<<"]");
+	TIMER_START("PARSE_MODEL");
 	Sml::instance()->processModelfile();
-	TIMER_STOP("SML_PARSE_MODEL");
+	TIMER_STOP("PARSE_MODEL");
 
 	//log the model file
 	if(GV(logModel) && GV(rank) == 0) {
@@ -177,10 +183,10 @@ int main(int argc, char **argv)
 	AmplModel::root->calculateMemoryUsage(mem_size_flat);
 	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"]-Flat AmplModel Memory Usage Size ["<<mem_size_flat<<"] bytes"<<endl;
 
-	TIMER_START("SML_EM2_GENERATION");
+	TIMER_START("EM_GENERATION");
 	Sml::instance()->generateExpandedModel();
-	assert(ExpandedModel::root->ctx != NULL);
-	TIMER_STOP("SML_EM2_GENERATION");
+//	assert(ExpandedModel::root->ctx != NULL);
+	TIMER_STOP("EM_GENERATION");
 
 	//log the split constrained mode file
 	if(GV(logModel) && GV(rank) == 0 ) {
@@ -189,7 +195,14 @@ int main(int argc, char **argv)
 		oss<<GV(logdir)<<datname<<"_partial"<<GV(modfile_suffix);
 		AmplModel::root->logModel(oss.str().c_str());
 	}
+
+//	cout<<"pausing.... "<<endl;
+//	getchar();
+//	cout<<"continuing.... "<<endl;
 	Sml::instance()->resetContextTree();
+//	cout<<"pausing.... "<<endl;
+//	getchar();
+//	cout<<"continuing.... "<<endl;
 
 	unsigned long mem_size_em2 = 0;
 	unsigned long mem_size_ctx = 0;
@@ -202,7 +215,7 @@ int main(int argc, char **argv)
 //	//Testing Section start
 //	Sml::instance()->testInterfaceLocal(ExpandedModel::root);
 //	//Testing Section end
-
+	AutoDiff::autodiff_setup(); //setting up tape and stack
 	SML_OOPS_driver_LP_QP(ExpandedModel::root);
 
 	if(GV(logEM)){
@@ -219,7 +232,7 @@ int main(int argc, char **argv)
 	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"]-Data Memory Usage After Solve [ "<<mem_size_ctx<<" ] bytes"<<endl;
 
 
-
+	AutoDiff::autodiff_cleanup();  //delete the tape and stack
 	delete ExpandedModel::root;
 	delete AmplModel::root;
 	Sml::deleteInstance();
@@ -270,14 +283,14 @@ int main(int argc, char **argv)
 //	vector<double> ograd;
 //	emrow->obj_grad_local(emcol,ograd);
 //	assert(emrow->model->obj_comp==NULL || ograd.size() == nc);
-//	LOG("Objective gradient vector  -- ograd size["<<ograd.size()<<"]   ------ ["<<emrow->name<<"] X ["<<emcol->name<<"]");
+//	TRACE("Objective gradient vector  -- ograd size["<<ograd.size()<<"]   ------ ["<<emrow->name<<"] X ["<<emcol->name<<"]");
 //
 //	//Objective Hessian declared by (variables from emrow) X (variables from emcol)
 //	nz = emrow->nz_obj_hess_local(emcol);
 //	boost::numeric::ublas::compressed_matrix<double> objhess;
 //	emrow->obj_hess_local(emcol,objhess);
 //	assert(objhess.size1()==emrow->getNLocalVars() && objhess.size2() == nc);
-//	LOG("Objective Hessian block  -- ["<<objhess.size1()<<" X "<<objhess.size2()<<"]   -- nz["<<nz<<"]  -------  ["<<emrow->name<<"] X ["<<emcol->name<<"]");
+//	TRACE("Objective Hessian block  -- ["<<objhess.size1()<<" X "<<objhess.size2()<<"]   -- nz["<<nz<<"]  -------  ["<<emrow->name<<"] X ["<<emcol->name<<"]");
 //	objhess.clear();
 //
 //	//Constraints Jacobian submatrix declared by (constraints from emrow) X (variables from emcol)
@@ -285,7 +298,7 @@ int main(int argc, char **argv)
 //	boost::numeric::ublas::compressed_matrix<double> consjac;
 //	emrow->cons_jacobs_local(emcol,consjac);
 //	assert(consjac.size1()==nr && consjac.size2() == nc);
-//	LOG("Jacobian block  -- ["<<consjac.size1()<<" X "<<consjac.size2()<<"]   -- nz["<<nz<<"]  ------ ["<<emrow->name<<"] X ["<<emcol->name<<"]");
+//	TRACE("Jacobian block  -- ["<<consjac.size1()<<" X "<<consjac.size2()<<"]   -- nz["<<nz<<"]  ------ ["<<emrow->name<<"] X ["<<emcol->name<<"]");
 //	consjac.clear();
 //
 //	//Constraints Hessian submatrix declared by (variables from emrow) X (variables from emcol)
@@ -293,7 +306,7 @@ int main(int argc, char **argv)
 //	boost::numeric::ublas::compressed_matrix<double> conshess;
 //	emrow->cons_hess_local(emcol,conshess);
 //	assert(conshess.size1()==emrow->numLocalVars && conshess.size2() == nc);  //hessian is square matrix
-//	LOG("Hessian block  -- ["<<conshess.size1()<<" X "<<conshess.size2()<<"]   -- nz["<<nz<<"]  -------  ["<<emrow->name<<"] X ["<<emcol->name<<"]");
+//	TRACE("Hessian block  -- ["<<conshess.size1()<<" X "<<conshess.size2()<<"]   -- nz["<<nz<<"]  -------  ["<<emrow->name<<"] X ["<<emcol->name<<"]");
 //	conshess.clear();
 //}
 //
@@ -327,13 +340,13 @@ int main(int argc, char **argv)
 //	//for diagonal blocks
 //	double oval;
 //	root->obj_feval_local(oval);
-//	LOG("Objective Eval -- ["<<"< oval["<<oval<<"]  ------ ["<<root->name<<"] X ["<<root->name<<"]");
+//	TRACE("Objective Eval -- ["<<"< oval["<<oval<<"]  ------ ["<<root->name<<"] X ["<<root->name<<"]");
 //	assert(root->model->obj_comp!=NULL || (isnan(oval) && root->model->obj_comp == NULL));
 //
 //	vector<double> fval;
 //	root->cons_feval_local(fval);
 //	assert(fval.size()==nr);
-//	LOG("Constraint Eval -- ["<<"<fval size ["<<fval.size()<<"]  ------ ["<<root->name<<"] X ["<<root->name<<"]");
+//	TRACE("Constraint Eval -- ["<<"<fval size ["<<fval.size()<<"]  ------ ["<<root->name<<"] X ["<<root->name<<"]");
 //	fval.clear();
 //
 //	//calling Local inteface calls for Gradient and Hessian of the diagonal block
