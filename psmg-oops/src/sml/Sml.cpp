@@ -179,9 +179,9 @@ int main(int argc, char **argv)
 		AmplModel::root->logModel(oss.str().c_str());
 	}
 
-	unsigned long mem_size_flat = 0;
-	AmplModel::root->calculateMemoryUsage(mem_size_flat);
-	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"]-Flat AmplModel Memory Usage Size ["<<mem_size_flat<<"] bytes"<<endl;
+	unsigned long mem_size_prototype_tree = 0;
+	AmplModel::root->calculateMemoryUsage(mem_size_prototype_tree);
+	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"]-Prototype tree Memory Usage Size ["<<mem_size_prototype_tree<<"] bytes"<<endl;
 
 	TIMER_START("EM_GENERATION");
 	Sml::instance()->generateExpandedModel();
@@ -204,11 +204,9 @@ int main(int argc, char **argv)
 //	getchar();
 //	cout<<"continuing.... "<<endl;
 
-	unsigned long mem_size_em2 = 0;
-	unsigned long mem_size_ctx = 0;
-	ExpandedModel::root->calculateMemoryUsage(mem_size_em2,mem_size_ctx);
-	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"]-Structure Memory Usage [ "<<mem_size_em2<<" ] bytes"<<endl;
-	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"]-Data Memory Usage Before Solve [ "<<mem_size_ctx<<" ] bytes"<<endl;
+	unsigned long mem_size = 0;
+	ExpandedModel::root->calculateMemoryUsage(mem_size);
+	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"]- Memory Usage Before Solve [ "<<mem_size<<" ] bytes"<<endl;
 
 	assert(ExpandedModel::root != NULL);
 
@@ -225,11 +223,9 @@ int main(int argc, char **argv)
 		Sml::instance()->logEM(oss.str());
 	}
 
-	mem_size_em2=0;
-	mem_size_ctx=0;
-	ExpandedModel::root->calculateMemoryUsage(mem_size_em2,mem_size_ctx);
-	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"]-Structure Memory Usage After Solve [ "<<mem_size_em2<<" ] bytes"<<endl;
-	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"]-Data Memory Usage After Solve [ "<<mem_size_ctx<<" ] bytes"<<endl;
+	mem_size=0;
+	ExpandedModel::root->calculateMemoryUsage(mem_size);
+	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"]- Memory Usage After Solve [ "<<mem_size<<" ] bytes"<<endl;
 
 
 	AutoDiff::autodiff_cleanup();  //delete the tape and stack
