@@ -61,12 +61,12 @@ void SML_OOPS_driver_LP_QP(ExpandedModel *root) {
 	Vector *vb, *vc, *vu, *vl;
 	Vector *vx, *vy, *vz;
 
+	TIMER_START("OOPS_PROBLEM_SETUP");
 	Algebra *A = createA(root);
 	Algebra *Q = createQ(root);
 	if(GV(rank)==0)
 		cout<<"Problem Size: row[ "<<A->nb_row<<" ]col[ "<<A->nb_col<<" ]"<<endl;
 
-	TIMER_START("OOPS_PROBLEM_SETUP");
 	AlgAug = OOPSSetup(A, Q);
 
 	// FIXME: should the stuff below be included in OOPSSetup?

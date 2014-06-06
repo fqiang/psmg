@@ -211,7 +211,7 @@ public:
 	void dropCtxRecKeepRoot();
 	ModelContext* locateChildCtx(AmplModel* model, string& dummyval);
 	void logEMRecursive(string& line,ostream&);
-	void calculateMemoryUsage(unsigned long& size_str,unsigned long& size_data);
+	void calculateMemoryUsage(unsigned long& size);
 	string qualifiedName();
 private:
 //	ModelContext* recursiveInitContext();

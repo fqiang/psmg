@@ -1242,34 +1242,29 @@ ModelContext* ExpandedModel::locateChildCtx(AmplModel* model, string& dummyval)
   *
   *  calculateMemoryUsage
  */
-void ExpandedModel::calculateMemoryUsage(unsigned long& size_str,unsigned long& size_data)
+void ExpandedModel::calculateMemoryUsage(unsigned long& size)
 {
 	MEM("ExpandedModel2::calculateMemoryUsage  -- name["<<name<<"]");
-	unsigned long pre = size_data;
+	unsigned long pre = size;
 
-	ctx.calculateMemoryUsage(size_data);
+	ctx.calculateMemoryUsage(size);
 	MEM(" --- context memory usage ["<<size_data-pre<<"]");
 
 
 	for(boost::unordered_map<string,model_dummy_t>::iterator it=dummyMap.begin();it!=dummyMap.end();it++)
 	{
-		size_str += sizeof(pair<string,model_dummy_t>);
-		size_str += (*it).first.size() + 1;
-		size_str += (*it).second.second.size() +1;
+		size += sizeof(pair<string,model_dummy_t>);
+		size += (*it).first.size() + 1;
+		size += (*it).second.second.size() +1;
 	}
 
-	size_str += sizeof(ExpandedModel);
-	size_str += name.size() + 1;
-	pre = size_str;
-	MEM(" --- solution std::vector usage ["<<size_str-pre<<"]");
-
-	pre = size_str;
-	MEM(" --- holder usage ["<<size_str-pre<<"]");
+	size += sizeof(ExpandedModel);
+	size += name.size() + 1;
 
 	for(std::vector<ExpandedModel*>::iterator it=children.begin();it!=children.end();it++)
 	{
-		size_str += sizeof(ExpandedModel*);
-		(*it)->calculateMemoryUsage(size_str,size_data);
+		size += sizeof(ExpandedModel*);
+		(*it)->calculateMemoryUsage(size);
 	}
 }
 
