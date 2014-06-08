@@ -1,0 +1,1 @@
+for i in {1..20}; do let r=5*i; ./msnd 30 $r; done

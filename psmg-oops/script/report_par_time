@@ -1,0 +1,23 @@
+what=$1
+if [ "$1" == "structure" ]
+then
+	what=EM_GENERATION
+elif [ "$1" == "generate" ]
+then
+	what=OOPS_PROBLEM_SETUP
+else
+	echo "usage: ./report_time_usage [structure|generate]"
+	exit 0;
+fi
+
+
+echo -ne "LogFile \t\t num_procs \t DataFile \t NR \t MAX \t MIN \t STD \t AVE "
+echo ""
+for f in *.o*
+do
+	datfile=`grep 'Opt: data file' $f | cut -d'[' -f2 | cut -d']' -f1`
+	process=`grep "Opt: Size" $f | cut -d'[' -f2 | cut -d']' -f1`
+	time_usage=`grep $what $f | grep STOP | cut -d'[' -f5 | cut -d']' -f1 | awk '{sum+=$1;sumsq+=$1*$1} NR==1{max=$1;min=$1} max<$1{max=$1} min>$1{min=$1} END {print NR, "\t", max , "\t", min, "\t",sqrt(sumsq/NR-(sum/NR)^2),"\t", sum/NR}'`
+	echo -ne "$f \t $process \t $datfile \t$time_usage"
+	echo ""
+done

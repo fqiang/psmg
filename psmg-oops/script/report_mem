@@ -1,0 +1,6 @@
+echo "Protype tree Usage"
+grep "Prototype tree Memory Usage" *.out | cut -d'[' -f3 | cut -d']' -f1
+echo "structure memory usage"
+grep "Before Solve" *.out | cut -d'[' -f3 | cut -d']' -f1
+echo "memory usage  after solve"
+grep "After Solve" *.out | cut -d'[' -f3 | cut -d']' -f1
