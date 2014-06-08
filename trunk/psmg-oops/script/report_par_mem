@@ -1,0 +1,22 @@
+for f in *.o*
+do
+	datfile=`grep 'Opt: data file' $f | cut -d'[' -f2 | cut -d']' -f1`
+	process=`grep "Opt: Size" $f | cut -d'[' -f2 | cut -d']' -f1`
+
+	proto=`grep "Prototype tree Memory Usage" $f | cut -d'[' -f3 | cut -d']' -f1 | awk '{sum+=$1} END {print sum}'`
+	before=`grep "Memory Usage Before Solve" $f | cut -d'[' -f3 | cut -d']' -f1  | awk '{sum+=$1} END {print sum}'`
+	after=`grep "Memory Usage After Solve" $f | cut -d'[' -f3 | cut -d']' -f1    | awk '{sum+=$1} END {print sum}'`
+
+	
+	num_proto=`grep "Prototype tree Memory Usage" "$f" | awk 'END {print NR}'`
+
+	num_before=`grep "Memory Usage Before Solve" "$f"  | awk 'END {print NR}'`
+
+	num_after=`grep "Memory Usage After Solve" "$f"    | awk 'END {print NR}'`
+
+	
+	echo -ne "$f \t $datfile \t $proto \t $before  \t $after \t $num_proto \t $num_before \t $num_after"
+	echo ""
+	#./parallel_log_mem.sh $f | sort -n +2 -3
+done
+

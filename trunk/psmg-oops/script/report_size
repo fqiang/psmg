@@ -1,0 +1,6 @@
+echo "Row size"  
+grep "Problem Size" *.out | cut -d' ' -f4 
+echo ""
+echo "Col size"
+grep "Problem Size" *.out | cut -d' ' -f6
+
