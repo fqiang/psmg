@@ -468,7 +468,7 @@ uint ExpandedModel::nz_cons_jacobs_nlp_local(ExpandedModel *emcol)
 	}
 
 	TRACE("end nz_cons_jacobs_local -- this["<<this->name<<"] emcol["<<emcol->name<<"]  - Num of Nonzero["<<nz<<"]");
-	Stat::numNZConsJacLocalCall++;
+	Stat::numNZConsJac_NLP_LocalCall++;
 	return nz;
 }
 
@@ -522,7 +522,7 @@ void ExpandedModel::cons_jacobs_nlp_local(ExpandedModel *emcol, col_compress_mat
 	TRACE("submatrix -- ["<<this->numLocalCons<<"] x ["<<emcol->numLocalVars<<"]");
 	block = mr; //TODO: can possibly reduce a copy by setting ColSparseMatrix pointer directly
 
-	Stat::numConsJacLocalCall++;
+	Stat::numConsJac_NLP_LocalCall++;
 	TRACE("end cons_jacobs_distribute - emrow["<<this->name<<"] emcol["<<emcol->name<<"] -- nnz["<<block.nnz()<<"]");
 }
 
@@ -560,7 +560,7 @@ uint ExpandedModel::nz_lag_hess_nlp_local(ExpandedModel* emcol)
 	uint nz = nzHess(edgeSet,colvSet,rowvSet);
 	TRACE("nonlinearEdges - removed other edges - -"<<edgeSet.toString());
 	TRACE("end nz_cons_hess_local -- this["<<this->name<<"] emcol["<<emcol->name<<"]  - Num of Nonzero["<<nz<<"]");
-	Stat::numNZConsHessLocalCall++;
+	Stat::numNZLagHess_NLP_LocalCall++;
 	return nz;
 }
 
@@ -644,7 +644,7 @@ void ExpandedModel::lag_hess_nlp_local(ExpandedModel* emcol,col_compress_matrix&
 	TRACE("submatrix -- ["<<this->numLocalVars<<"] x ["<<emcol->numLocalVars<<"]");
 	block = mr;
 
-	Stat::numConsHessLocalCall++;
+	Stat::numLagHess_NLP_LocalCall++;
 	TRACE("end lag_hess_local - emrow["<<this->name<<"] emcol"<<emcol->name<<"]");
 }
 
