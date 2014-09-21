@@ -1,0 +1,103 @@
+!OOPS Control Variable file
+!options are in the form
+XXXXXX value !comment
+!
+!
+!
+PRTLEV           3
+!-------------------------------------------------------------------------
+!             Options About HOPDM
+!-------------------------------------------------------------------------
+FORCE_FEAS       0  !Reduce barrier by 0.5 (instead of 0.1) if 
+                    !err_feas>10*err_gap
+!
+DET_NUM_PROB     0  !Detect near convergence mode, and return if increase  
+CURE_NUM_PROB    0  !But try reducing the PushVar amounts first
+RO_REG 		 1e-8  ! in num_factAS(pdreg in qnmfct) (1e-8)
+INIT_REGXY       1e-8	 !Initialise a value for primal/dual regularization 
+ITER_LIMIT       75  !Iterations Limit
+CONV_TOL        1e-4
+DEF_PDREGTH     0 ! Set a different default Theta regularization (1e-12)
+!
+!-------------------------------------------------------------------------
+!		Options about Linear Algebra
+!-------------------------------------------------------------------------
+SPARSE_ORD	  0  ! 0:Metis; 1:MMD; -1:No Ordering; -2:MA57  (0)
+USE_SPARSE_SCHUR  0  ! 0:use dense Schur Martix  1: sparse Schur
+!
+!
+!-------------------------------------------------------------------------
+!             Options governing the warmstart procedure
+!-------------------------------------------------------------------------
+WS_DO             0   !Do Any Warmstart at all
+!WS_ADJUST_BNDS    0   !(1) Adjust x if bounds have changed
+!WS_ADJUST_Z       0   !(1) Adjust z if objective has changed
+!WS_BALANCE_XZ     0   !(1.0) project x_i*z_i in [mu/par, mu*par]
+!                     ! if this is 0, then no projection
+!WS_GAP_ADV_CEN  5.e-3 !duality gap (mu) of advanced center to return
+!WS_GAP_ADV_CEN  1.e-5 !duality gap (mu) of advanced center to return
+WS_BEG_CEN_IT     0   !number of centering iterations at beginning of new prob
+!WS_BEG_CEN_IT     0   !number of centering iterations at beginning of new prob
+!WS_RET_ADV_CEN_IT  0   !number of centering iterations before advanced center
+WS_RET_ADV_CEN_IT  0   !number of centering iterations before advanced center
+                       !is returned
+DIFFDIR            0   !Split computation of directions 
+#DIFFDIR           0   !For 3 Iterations
+!
+!-------------------------------------------------------------------------
+!             Options governing the unblocking procedure
+!-------------------------------------------------------------------------
+
+WS_UNBLK          0   !Switch Unblocking on/off
+!WS_N_UNBLK_IT     2   !Number of unblocking iterations
+!WS_UNBLK_LEV      -10  !Level below which blocking components are treated
+!
+WS_FS_TW_Ana      0   !Do ForwardSens Analysis for x_i, z_i of worst block comp
+WS_FS_TW_Step     0   !Take Step suggested by ForwardSens Analysis
+!
+WS_use_start_point 0
+!
+!
+!-------------------------------------------------------------------------
+!             Options about Init Point Alg
+!-------------------------------------------------------------------------
+InitAlg		2 ! 2: use IPOPT Init Alg (default is 1, using Mehrotra's method
+def_theta      	1  ! 1: default way (using ipopt)  2:J's way--do two inverse to get thetax
+!
+!-------------------------------------------------------------------------
+!             Options about Iterative Refinement
+!-------------------------------------------------------------------------
+MinIR		0 ! Min number of IR (1)
+MaxIR		6 ! Max number of IR (10)
+!
+!-------------------------------------------------------------------------
+!               Options About regularization
+!-------------------------------------------------------------------------
+ForceReg       0 ! 0:default(use IPOPT alg) 1: do regularization at each step
+DoDualReg      0  ! 0:default(use IPOPT alg) 1: compute dualReg at the same time
+!
+!-------------------------------------------------------------------------
+!             Options about how to do the IR when we are solving a column of B to build Schur matrix 
+!-------------------------------------------------------------------------
+SchurMaxIR	0 	! Max number of IR (1)
+SchurIRerr	1e-10	! tolerence (1e-8)
+!
+!-------------------------------------------------------------------------
+!             Options About senario generation
+!-------------------------------------------------------------------------
+SenarioGen	0 !use senario generation (0)
+!
+!-------------------------------------------------------------------------
+!             Options About linear solver
+!-------------------------------------------------------------------------
+LinearAlgSolver	  0 ! 0: MA57 (default)   1: Jacek's F routing
+!
+! ! 1=yes, 0=no (1)
+is_sparse         1
+!
+! Use_SG
+Use_SG  	0	! (0) or -4(use)
+SetActGap	1e-10	! (1e-8)
+!
+! LPorNLP
+LPorNLP	1
