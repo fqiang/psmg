@@ -2176,7 +2176,8 @@ AutoDiff::Node* SyntaxNode::buildAutoDiffDAG(ExpandedModel* emrow,ExpandedModel*
 			else
 			{	//if the queue is empty which means there is no element constructed over the summation set. Therefore
 				//create a 0 node.
-				con = AutoDiff::create_param_node(0);
+				double val = 0.0;
+				con = AutoDiff::create_param_node(val);
 			}
 		}
 	}

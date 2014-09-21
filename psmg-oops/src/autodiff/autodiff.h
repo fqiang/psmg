@@ -91,25 +91,25 @@ namespace AutoDiff{
 
 	//single constraint version
 	extern double eval_function(Node* root);
-	extern unsigned int nzGrad(Node* root);
+	extern uint nzGrad(Node* root);
 	extern double grad_reverse(Node* root,vector<Node*>& nodes, vector<double>& grad);
-	extern unsigned int nzHess(EdgeSet&);
+	extern uint nzHess(EdgeSet&);
 	extern double hess_reverse(Node* root, vector<Node*>& nodes, vector<double>& dhess);
 
 	//multiple constraints version
-	extern unsigned int nzGrad(Node* root, boost::unordered_set<Node*>& vnodes);
+	extern uint nzGrad(Node* root, boost::unordered_set<Node*>& vnodes);
 	extern double grad_reverse(Node* root, vector<Node*>& nodes, col_compress_matrix_row& rgrad);
-	extern unsigned int nzHess(EdgeSet&,boost::unordered_set<Node*>& set1, boost::unordered_set<Node*>& set2);
+	extern uint nzHess(EdgeSet&,boost::unordered_set<Node*>& set1, boost::unordered_set<Node*>& set2);
 	extern double hess_reverse(Node* root, vector<Node*>& nodes, col_compress_matrix_col& chess);
 
 #if FORWARD_ENDABLED
 	//forward methods
-	extern void hess_forward(Node* root, unsigned int nvar, double** hess_mat);
+	extern void hess_forward(Node* root, uint nvar, double** hess_mat);
 #endif
 
 	//utiliy methods
 	extern void nonlinearEdges(Node* root, EdgeSet& edges);
-	extern unsigned int numTotalNodes(Node*);
+	extern uint numTotalNodes(Node*);
 	extern string tree_expr(Node* root);
 	extern void print_tree(Node* root);
 	extern void autodiff_setup();

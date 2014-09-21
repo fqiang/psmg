@@ -28,7 +28,7 @@ void PNode::inorder_visit(int level,ostream& oss){
 	oss<<this->toString(level)<<endl;
 }
 
-void PNode::collect_vnodes(boost::unordered_set<Node*>& nodes,unsigned int& total)
+void PNode::collect_vnodes(boost::unordered_set<Node*>& nodes,uint& total)
 {
 	//do not fill this to nodes, as this is a parameter node
 	total++;
@@ -68,7 +68,7 @@ void PNode::update_adj(double& v)
 	//no adj for PNode
 }
 
-unsigned int PNode::hess_reverse_0()
+uint PNode::hess_reverse_0()
 {
 	if(index==0)
 	{
@@ -79,7 +79,7 @@ unsigned int PNode::hess_reverse_0()
 	return index;
 }
 
-void PNode::hess_reverse_0_get_values(unsigned int i,double& x,double& x_bar,double& w,double& w_bar)
+void PNode::hess_reverse_0_get_values(uint i,double& x,double& x_bar,double& w,double& w_bar)
 {
 	x = TT->get(--i);
 	x_bar = 0;
@@ -87,32 +87,32 @@ void PNode::hess_reverse_0_get_values(unsigned int i,double& x,double& x_bar,dou
 	w_bar = 0;
 }
 
-void PNode::hess_reverse_1(unsigned int i)
+void PNode::hess_reverse_1(uint i)
 {
 	n_in_arcs--;
 	//leaf node do nothing
 }
 
-void PNode::hess_reverse_1_init_x_bar(unsigned int)
+void PNode::hess_reverse_1_init_x_bar(uint)
 {
 	//do nothing as Parameter does not have x_bar
 }
 
-void PNode::update_x_bar(unsigned int i ,double v)
+void PNode::update_x_bar(uint i ,double v)
 {
 	//do nothing as Parameter does not have x_bar
 }
-void PNode::update_w_bar(unsigned int i ,double v)
+void PNode::update_w_bar(uint i ,double v)
 {
 	//do nothing as Parameter does not have w_bar
 }
-void PNode::hess_reverse_1_get_xw(unsigned int i, double& w,double& x)
+void PNode::hess_reverse_1_get_xw(uint i, double& w,double& x)
 {
 	//do nothing as Parameter does not have w
 	x = TT->get(i-1);
 	w = 0;
 }
-void PNode::hess_reverse_get_x(unsigned int i, double& x)
+void PNode::hess_reverse_get_x(uint i, double& x)
 {
 	x = TT->get(i-1);
 }
@@ -134,7 +134,7 @@ void PNode::nonlinearEdges(EdgeSet& edges)
 }
 
 #if FORWARD_ENABLED
-void PNode::hess_forward(unsigned int len, double** ret_vec)
+void PNode::hess_forward(uint len, double** ret_vec)
 {
 	//it's a scalar
 	(*ret_vec) = new double[len];

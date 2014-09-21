@@ -10,7 +10,7 @@
 
 namespace AutoDiff {
 
-unsigned int Node::DEFAULT_INDEX = 0;
+uint Node::DEFAULT_INDEX = 0;
 Node::Node():index(Node::DEFAULT_INDEX),n_in_arcs(0){
 }
 

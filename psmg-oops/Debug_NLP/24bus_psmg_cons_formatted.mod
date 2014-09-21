@@ -91,7 +91,7 @@ var slackEnd{l in LUT} <= MaxFlow[l]^2;
 subject to KCLP{b in Bus}:
 	sum{g in Generator: Location[g] == b} (PpowerGen[g])
 	- sum{l in LUT: StartBus[l] == b} ( FlowStartP[l])
-	- sum{l in LUT: EndBus[l] == b} (FlowEndQ[l])
+	- sum{l in LUT: EndBus[l] == b} (FlowEndP[l])
 	- GS[b]*(Voltages[b]^2)
 	= 
 	demScaleDemand*DemandP[b] 
@@ -270,7 +270,7 @@ block Contingency{c in Contingencies}: {
 	subject to KCLP{b in Bus}:
 		sum{g in Generator: Location[g] == b} (cPpowerGen[g]) 
 		- sum{l in LUTDIFF: StartBus[l] == b} (cFlowStartP[l])
-		- sum{l in LUTDIFF: EndBus[l] == b} (cFlowEndQ[l])
+		- sum{l in LUTDIFF: EndBus[l] == b} (cFlowEndP[l])
 		- GS[b]*(cVoltages[b]^2)
 		=
 		demScaleDemand*DemandP[b] 

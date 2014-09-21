@@ -10,6 +10,9 @@
 
 #include <stack>
 
+#include "auto_diff_types.h"
+
+
 namespace AutoDiff {
 
 using namespace std;
@@ -22,7 +25,7 @@ public:
 	double pop_back();
 	void push_back(double& v);
 	double& peek();
-	unsigned int size();
+	uint size();
 	void clear();
 	virtual ~Stack();
 

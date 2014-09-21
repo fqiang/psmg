@@ -50,7 +50,7 @@ void BinaryOPNode::inorder_visit(int level,ostream& oss){
 	}
 }
 
-void BinaryOPNode::collect_vnodes(boost::unordered_set<Node*>& nodes,unsigned int& total){
+void BinaryOPNode::collect_vnodes(boost::unordered_set<Node*>& nodes,uint& total){
 	total++;
 	if (left != NULL) {
 		left->collect_vnodes(nodes,total);
@@ -191,12 +191,12 @@ void BinaryOPNode::hess_reverse_1_clear_index()
 	this->Node::hess_reverse_1_clear_index();
 }
 
-unsigned int BinaryOPNode::hess_reverse_0()
+uint BinaryOPNode::hess_reverse_0()
 {
 	assert(this->left!=NULL && right!=NULL);
 	if(index==0)
 	{
-		unsigned int lindex=0, rindex=0;
+		uint lindex=0, rindex=0;
 		lindex = left->hess_reverse_0();
 		rindex = right->hess_reverse_0();
 		assert(lindex!=0 && rindex !=0);
@@ -283,7 +283,7 @@ unsigned int BinaryOPNode::hess_reverse_0()
 	return index;
 }
 
-void BinaryOPNode::hess_reverse_0_get_values(unsigned int i,double& x, double& x_bar, double& w, double& w_bar)
+void BinaryOPNode::hess_reverse_0_get_values(uint i,double& x, double& x_bar, double& w, double& w_bar)
 {
 	--i; // skip the r_dh (ie, dh/du)
 	--i; // skip the l_dh (ie. dh/dv)
@@ -293,14 +293,14 @@ void BinaryOPNode::hess_reverse_0_get_values(unsigned int i,double& x, double& x
 	x = TT->get(--i);
 }
 
-void BinaryOPNode::hess_reverse_1(unsigned int i)
+void BinaryOPNode::hess_reverse_1(uint i)
 {
 	n_in_arcs--;
 	if(n_in_arcs==0)
 	{
 		assert(right!=NULL && left!=NULL);
-		unsigned int rindex = II->get(--(II->index));
-		unsigned int lindex = II->get(--(II->index));
+		uint rindex = II->get(--(II->index));
+		uint lindex = II->get(--(II->index));
 	//	cout<<"ri["<<rindex<<"]\tli["<<lindex<<"]\t"<<this->toString(0)<<endl;
 		double r_dh = TT->get(--i);
 		double l_dh = TT->get(--i);
@@ -372,24 +372,24 @@ void BinaryOPNode::hess_reverse_1(unsigned int i)
 		this->left->hess_reverse_1(lindex);
 	}
 }
-void BinaryOPNode::hess_reverse_1_init_x_bar(unsigned int i)
+void BinaryOPNode::hess_reverse_1_init_x_bar(uint i)
 {
 	TT->at(i-5) = 1;
 }
-void BinaryOPNode::update_x_bar(unsigned int i ,double v)
+void BinaryOPNode::update_x_bar(uint i ,double v)
 {
 	TT->at(i-5) += v;
 }
-void BinaryOPNode::update_w_bar(unsigned int i ,double v)
+void BinaryOPNode::update_w_bar(uint i ,double v)
 {
 	TT->at(i-3) += v;
 }
-void BinaryOPNode::hess_reverse_1_get_xw(unsigned int i,double& w,double& x)
+void BinaryOPNode::hess_reverse_1_get_xw(uint i,double& w,double& x)
 {
 	w = TT->get(i-4);
 	x = TT->get(i-6);
 }
-void BinaryOPNode::hess_reverse_get_x(unsigned int i,double& x)
+void BinaryOPNode::hess_reverse_get_x(uint i,double& x)
 {
 	x = TT->get(i-6);
 }
@@ -458,7 +458,7 @@ void BinaryOPNode::nonlinearEdges(EdgeSet& edges)
 
 #if FORWARD_ENABLED
 
-void BinaryOPNode::hess_forward(unsigned int len, double** ret_vec)
+void BinaryOPNode::hess_forward(uint len, double** ret_vec)
 {
 	double* lvec = NULL;
 	double* rvec = NULL;
@@ -476,12 +476,12 @@ void BinaryOPNode::hess_forward(unsigned int len, double** ret_vec)
 	delete[] rvec;
 }
 
-void BinaryOPNode::hess_forward_calc0(unsigned int& len, double* lvec, double* rvec, double* ret_vec)
+void BinaryOPNode::hess_forward_calc0(uint& len, double* lvec, double* rvec, double* ret_vec)
 {
 	double hu = NaN_Double, hv= NaN_Double;
 	double lval = NaN_Double, rval = NaN_Double;
 	double val = NaN_Double;
-	unsigned int index = 0;
+	uint index = 0;
 	switch (op)
 	{
 	case OP_PLUS:
@@ -490,15 +490,15 @@ void BinaryOPNode::hess_forward_calc0(unsigned int& len, double* lvec, double* r
 		val = lval + rval;
 		SV->push_back(val);
 		//calculate the first order derivatives
-		for(unsigned int i=0;i<AutoDiff::num_var;++i)
+		for(uint i=0;i<AutoDiff::num_var;++i)
 		{
 			ret_vec[i] = lvec[i]+rvec[i];
 		}
 		//calculate the second order
 		index = AutoDiff::num_var;
-		for(unsigned int i=0;i<AutoDiff::num_var;++i)
+		for(uint i=0;i<AutoDiff::num_var;++i)
 		{
-			for(unsigned int j=i;j<AutoDiff::num_var;++j){
+			for(uint j=i;j<AutoDiff::num_var;++j){
 				ret_vec[index] = lvec[index] + 0 + rvec[index] + 0;
 				++index;
 			}
@@ -511,15 +511,15 @@ void BinaryOPNode::hess_forward_calc0(unsigned int& len, double* lvec, double* r
 		val = lval + rval;
 		SV->push_back(val);
 		//calculate the first order derivatives
-		for(unsigned int i=0;i<AutoDiff::num_var;++i)
+		for(uint i=0;i<AutoDiff::num_var;++i)
 		{
 			ret_vec[i] = lvec[i] - rvec[i];
 		}
 		//calculate the second order
 		index = AutoDiff::num_var;
-		for(unsigned int i=0;i<AutoDiff::num_var;++i)
+		for(uint i=0;i<AutoDiff::num_var;++i)
 		{
-			for(unsigned int j=i;j<AutoDiff::num_var;++j){
+			for(uint j=i;j<AutoDiff::num_var;++j){
 				ret_vec[index] = lvec[index] + 0 - rvec[index] + 0;
 				++index;
 			}
@@ -534,15 +534,15 @@ void BinaryOPNode::hess_forward_calc0(unsigned int& len, double* lvec, double* r
 		hu = rval;
 		hv = lval;
 		//calculate the first order derivatives
-		for(unsigned int i =0;i<AutoDiff::num_var;++i)
+		for(uint i =0;i<AutoDiff::num_var;++i)
 		{
 			ret_vec[i] = hu*lvec[i] + hv*rvec[i];
 		}
 		//calculate the second order
 		index = AutoDiff::num_var;
-		for(unsigned int i=0;i<AutoDiff::num_var;++i)
+		for(uint i=0;i<AutoDiff::num_var;++i)
 		{
-			for(unsigned int j=i;j<AutoDiff::num_var;++j)
+			for(uint j=i;j<AutoDiff::num_var;++j)
 			{
 				ret_vec[index] = hu * lvec[index] + lvec[i] * rvec[j]+hv * rvec[index] + rvec[i] * lvec[j];
 				++index;
@@ -567,15 +567,15 @@ void BinaryOPNode::hess_forward_calc0(unsigned int& len, double* lvec, double* r
 			{
 				double coeff = pow(log(lval),2)*pow(lval,rval);
 				//calculate the first order derivatives
-				for(unsigned int i =0;i<AutoDiff::num_var;++i)
+				for(uint i =0;i<AutoDiff::num_var;++i)
 				{
 					ret_vec[i] = hu*lvec[i] + hv*rvec[i];
 				}
 				//calculate the second order
 				index = AutoDiff::num_var;
-				for(unsigned int i=0;i<AutoDiff::num_var;++i)
+				for(uint i=0;i<AutoDiff::num_var;++i)
 				{
-					for(unsigned int j=i;j<AutoDiff::num_var;++j)
+					for(uint j=i;j<AutoDiff::num_var;++j)
 					{
 						ret_vec[index] = 0 + 0 + hv * rvec[index] + rvec[i] * coeff * rvec[j];
 						++index;
@@ -586,15 +586,15 @@ void BinaryOPNode::hess_forward_calc0(unsigned int& len, double* lvec, double* r
 			{
 				double coeff = rval*(rval-1)*pow(lval,rval-2);
 				//calculate the first order derivatives
-				for(unsigned int i =0;i<AutoDiff::num_var;++i)
+				for(uint i =0;i<AutoDiff::num_var;++i)
 				{
 					ret_vec[i] = hu*lvec[i] + hv*rvec[i];
 				}
 				//calculate the second order
 				index = AutoDiff::num_var;
-				for(unsigned int i=0;i<AutoDiff::num_var;++i)
+				for(uint i=0;i<AutoDiff::num_var;++i)
 				{
-					for(unsigned int j=i;j<AutoDiff::num_var;++j)
+					for(uint j=i;j<AutoDiff::num_var;++j)
 					{
 						ret_vec[index] = hu*lvec[index] + lvec[i] * coeff * lvec[j] + 0 + 0;
 						++index;
@@ -618,15 +618,15 @@ void BinaryOPNode::hess_forward_calc0(unsigned int& len, double* lvec, double* r
 		double coeff;
 		coeff = -val; //=sin(left->val); -- and avoid cross initialisation
 		//calculate the first order derivatives
-		for(unsigned int i =0;i<AutoDiff::num_var;++i)
+		for(uint i =0;i<AutoDiff::num_var;++i)
 		{
 			ret_vec[i] = hu*lvec[i] + 0;
 		}
 		//calculate the second order
 		index = AutoDiff::num_var;
-		for(unsigned int i=0;i<AutoDiff::num_var;++i)
+		for(uint i=0;i<AutoDiff::num_var;++i)
 		{
-			for(unsigned int j=i;j<AutoDiff::num_var;++j)
+			for(uint j=i;j<AutoDiff::num_var;++j)
 			{
 				ret_vec[index] = hu*lvec[index] + lvec[i] * coeff * lvec[j] + 0 + 0;
 				++index;

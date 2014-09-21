@@ -24,12 +24,12 @@ namespace AutoDiff
 
 #if FORWARD_ENABLED
 
-unsigned int num_var = 0;
+uint num_var = 0;
 
-void hess_forward(Node* root, unsigned int nvar, double** hess_mat)
+void hess_forward(Node* root, uint nvar, double** hess_mat)
 {
 	assert(nvar == num_var);
-	unsigned int len = (nvar+3)*nvar/2;
+	uint len = (nvar+3)*nvar/2;
 	root->hess_forward(len,hess_mat);
 }
 
@@ -109,8 +109,9 @@ double grad_reverse(Node* root, vector<Node*>& vnodes, col_compress_matrix_row& 
 	assert(SD->size()==0);
 	double val = SV->pop_back();
 	assert(SV->size()==0);
-	unsigned int i =0;
-	uint n = 0, z = 0;
+	uint i =0;  //var index
+	uint n = 0; //non zero
+	uint z = 0; //zero
 	BOOST_FOREACH(Node* node, vnodes)
 	{
 		assert((node)->getType()==VNode_Type);
@@ -123,13 +124,13 @@ double grad_reverse(Node* root, vector<Node*>& vnodes, col_compress_matrix_row& 
 		}
 		i++;
 	}
-	TRACE(" grad_reverse -  this expression has -- ["<<n<<"] non zero grad - "<<z<<" zero value");
+	assert(i == vnodes.size());
+	WARN(" grad_reverse -  this expression has -- ["<<n<<"] non zero grad - in which "<<z<<" zero value");
 	//all nodes are VNode and adj == NaN_Double -- this reset adj for this expression tree by root
-	assert(i==vnodes.size());
 	return val;
 }
 
-double hess_reverse(Node* root,vector<Node*>& vnodes,vector<double>& dhess)
+double hess_reverse(Node* root,vector<Node*>& vnodes,vector<double>& chess)
 {
 	TT->clear();
 	II->clear();
@@ -137,7 +138,7 @@ double hess_reverse(Node* root,vector<Node*>& vnodes,vector<double>& dhess)
 	assert(II->empty());
 	assert(TT->index==0);
 	assert(II->index==0);
-	dhess.clear();
+	chess.clear();
 
 //	for(vector<Node*>::iterator it=nodes.begin();it!=nodes.end();it++)
 //	{
@@ -168,7 +169,7 @@ double hess_reverse(Node* root,vector<Node*>& vnodes,vector<double>& dhess)
 	for(vector<Node*>::iterator it=vnodes.begin();it!=vnodes.end();it++)
 	{
 		assert((*it)->getType()==VNode_Type);
-		dhess.push_back(TT->get((*it)->index-1));
+		chess.push_back(TT->get((*it)->index-1));
 	}
 
 	TT->clear();
@@ -213,7 +214,7 @@ double hess_reverse(Node* root,vector<Node*>& vnodes,col_compress_matrix_col& ch
 //	cout<<II->toString();
 //	cout<<"======================================= hess_reverse_1"<<endl;
 
-	unsigned int i =0;
+	uint i =0;
 	BOOST_FOREACH(Node* node, vnodes)
 	{
 		assert(node->getType() == VNode_Type);
@@ -229,15 +230,15 @@ double hess_reverse(Node* root,vector<Node*>& vnodes,col_compress_matrix_col& ch
 		i++;
 	}
 	assert(i==vnodes.size());
-	root->hess_reverse_1_clear_index();
+	root->hess_reverse_1_clear_index(); //clear node index on tape
 	TT->clear();
 	II->clear();
 	return val;
 }
 
-unsigned int nzGrad(Node* root)
+uint nzGrad(Node* root)
 {
-	unsigned int nzgrad,total = 0;
+	uint nzgrad,total = 0;
 	boost::unordered_set<Node*> nodes;
 	root->collect_vnodes(nodes,total);
 	nzgrad = nodes.size();
@@ -247,23 +248,27 @@ unsigned int nzGrad(Node* root)
 /*
  * number of non-zero gradient in constraint tree root that also belong to vSet
  */
-unsigned int nzGrad(Node* root, boost::unordered_set<Node*>& vSet)
+uint nzGrad(Node* root, boost::unordered_set<Node*>& vSet)
 {
-	unsigned int nzgrad=0, total=0;
+	uint nzg= 0;   //non zero grad
+	uint zg = 0;   //zero grad , vnode not in the expression rooted by root
+	uint nnodes=0; //total nodes in this expression rooted by root
 	boost::unordered_set<Node*> vnodes;
-	root->collect_vnodes(vnodes,total);
-	TRACE("nzGrad - vnodes in expression - size["<<vnodes.size()<<"] -- total node["<<total<<"]");
+	root->collect_vnodes(vnodes,nnodes);
+	TRACE("nzGrad - vnodes in expression - size["<<vnodes.size()<<"] -- number node["<<nnodes<<"]");
 	BOOST_FOREACH(Node* n, vnodes)
 	{
 		if(vSet.find(n) != vSet.end())
 		{
-			nzgrad++;
+			nzg++;
 		}
 		else{
-			TRACE(" "<<n->toString(0)<<" not in vSet");
+			WARN(" "<<n->toString(0)<<" not in vSet");
+			zg++;
 		}
 	}
-	return nzgrad;
+	assert(nzg+zg == vnodes.size());
+	return nzg;
 }
 
 void nonlinearEdges(Node* root, EdgeSet& edges)
@@ -271,7 +276,7 @@ void nonlinearEdges(Node* root, EdgeSet& edges)
 	root->nonlinearEdges(edges);
 }
 
-unsigned int nzHess(EdgeSet& eSet,boost::unordered_set<Node*>& set1, boost::unordered_set<Node*>& set2)
+uint nzHess(EdgeSet& eSet,boost::unordered_set<Node*>& set1, boost::unordered_set<Node*>& set2)
 {
 	if(eSet.edges.size()==0)
 	{
@@ -296,21 +301,21 @@ unsigned int nzHess(EdgeSet& eSet,boost::unordered_set<Node*>& set1, boost::unor
 			i = eSet.edges.erase(i);
 		}
 	}
-	unsigned int diag=eSet.numSelfEdges();
-	unsigned int nzHess = (eSet.size())*2 - diag;
+	uint diag=eSet.numSelfEdges();
+	uint nzHess = (eSet.size())*2 - diag;
 	return nzHess;
 }
 
-unsigned int nzHess(EdgeSet& edges)
+uint nzHess(EdgeSet& edges)
 {
-	unsigned int diag=edges.numSelfEdges();
-	unsigned int nzHess = (edges.size())*2 - diag;
+	uint diag=edges.numSelfEdges();
+	uint nzHess = (edges.size())*2 - diag;
 	return nzHess;
 }
 
-unsigned int numTotalNodes(Node* root)
+uint numTotalNodes(Node* root)
 {
-	unsigned int total = 0;
+	uint total = 0;
 	boost::unordered_set<Node*> nodes;
 	root->collect_vnodes(nodes,total);
 	return total;
@@ -336,7 +341,7 @@ void autodiff_setup()
 {
 	Stack::diff = new Stack();
 	Stack::vals = new Stack();
-	Tape<unsigned int>::indexTape = new Tape<unsigned int>();
+	Tape<uint>::indexTape = new Tape<uint>();
 	Tape<double>::valueTape = new Tape<double>();
 }
 
@@ -344,7 +349,7 @@ void autodiff_cleanup()
 {
 	delete Stack::diff;
 	delete Stack::vals;
-	delete Tape<unsigned int>::indexTape;
+	delete Tape<uint>::indexTape;
 	delete Tape<double>::valueTape;
 }
 

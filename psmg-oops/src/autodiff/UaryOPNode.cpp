@@ -57,7 +57,7 @@ void UaryOPNode::inorder_visit(int level,ostream& oss){
 	oss<<this->toString(level)<<endl;
 }
 
-void UaryOPNode::collect_vnodes(boost::unordered_set<Node*>& nodes,unsigned int& total)
+void UaryOPNode::collect_vnodes(boost::unordered_set<Node*>& nodes,uint& total)
 {
 	total++;
 	if(left!=NULL){
@@ -150,12 +150,12 @@ void UaryOPNode::hess_reverse_1_clear_index()
 	this->Node::hess_reverse_1_clear_index();
 }
 
-unsigned int UaryOPNode::hess_reverse_0()
+uint UaryOPNode::hess_reverse_0()
 {
 	assert(left!=NULL);
 	if(index==0)
 	{
-		unsigned int lindex=0;
+		uint lindex=0;
 		lindex = left->hess_reverse_0();
 		assert(lindex!=0);
 		II->set(lindex);
@@ -198,7 +198,7 @@ unsigned int UaryOPNode::hess_reverse_0()
 	return index;
 }
 
-void UaryOPNode::hess_reverse_0_get_values(unsigned int i,double& x, double& x_bar, double& w, double& w_bar)
+void UaryOPNode::hess_reverse_0_get_values(uint i,double& x, double& x_bar, double& w, double& w_bar)
 {
 	--i; // skip the l_dh (ie, dh/du)
 	w_bar = TT->get(--i);
@@ -207,7 +207,7 @@ void UaryOPNode::hess_reverse_0_get_values(unsigned int i,double& x, double& x_b
 	x = TT->get(--i);
 }
 
-void UaryOPNode::hess_reverse_1(unsigned int i)
+void UaryOPNode::hess_reverse_1(uint i)
 {
 	n_in_arcs--;
 	if(n_in_arcs==0)
@@ -247,25 +247,25 @@ void UaryOPNode::hess_reverse_1(unsigned int i)
 	}
 }
 
-void UaryOPNode::hess_reverse_1_init_x_bar(unsigned int i)
+void UaryOPNode::hess_reverse_1_init_x_bar(uint i)
 {
 	TT->at(i-4) = 1;
 }
 
-void UaryOPNode::update_x_bar(unsigned int i ,double v)
+void UaryOPNode::update_x_bar(uint i ,double v)
 {
 	TT->at(i-4) += v;
 }
-void UaryOPNode::update_w_bar(unsigned int i ,double v)
+void UaryOPNode::update_w_bar(uint i ,double v)
 {
 	TT->at(i-2) += v;
 }
-void UaryOPNode::hess_reverse_1_get_xw(unsigned int i,double& w,double& x)
+void UaryOPNode::hess_reverse_1_get_xw(uint i,double& w,double& x)
 {
 	w = TT->get(i-3);
 	x = TT->get(i-5);
 }
-void UaryOPNode::hess_reverse_get_x(unsigned int i, double& x)
+void UaryOPNode::hess_reverse_get_x(uint i, double& x)
 {
 	x = TT->get(i-5);
 }
@@ -312,7 +312,7 @@ void UaryOPNode::nonlinearEdges(EdgeSet& edges)
 }
 
 #if FORWARD_ENABLED
-void UaryOPNode::hess_forward(unsigned int len, double** ret_vec)
+void UaryOPNode::hess_forward(uint len, double** ret_vec)
 {
 	double* lvec = NULL;
 	if(left!=NULL){
@@ -324,12 +324,12 @@ void UaryOPNode::hess_forward(unsigned int len, double** ret_vec)
 	delete[] lvec;
 }
 
-void UaryOPNode::hess_forward_calc0(unsigned int& len, double* lvec, double* ret_vec)
+void UaryOPNode::hess_forward_calc0(uint& len, double* lvec, double* ret_vec)
 {
 	double hu = NaN_Double;
 	double lval = NaN_Double;
 	double val = NaN_Double;
-	unsigned int index = 0;
+	uint index = 0;
 	switch (op)
 	{
 	case OP_SIN:
@@ -342,15 +342,15 @@ void UaryOPNode::hess_forward_calc0(unsigned int& len, double* lvec, double* ret
 		double coeff;
 		coeff = -val; //=sin(left->val); -- and avoid cross initialisation
 		//calculate the first order derivatives
-		for(unsigned int i =0;i<AutoDiff::num_var;++i)
+		for(uint i =0;i<AutoDiff::num_var;++i)
 		{
 			ret_vec[i] = hu*lvec[i] + 0;
 		}
 		//calculate the second order
 		index = AutoDiff::num_var;
-		for(unsigned int i=0;i<AutoDiff::num_var;++i)
+		for(uint i=0;i<AutoDiff::num_var;++i)
 		{
-			for(unsigned int j=i;j<AutoDiff::num_var;++j)
+			for(uint j=i;j<AutoDiff::num_var;++j)
 			{
 				ret_vec[index] = hu*lvec[index] + lvec[i] * coeff * lvec[j] + 0 + 0;
 				++index;

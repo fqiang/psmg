@@ -13,30 +13,31 @@
 #include <sstream>
 #include <iostream>
 
+#include "auto_diff_types.h"
 
 namespace AutoDiff {
 
 using namespace std;
 #define TT 	(Tape<double>::valueTape)
-#define II 	(Tape<unsigned int>::indexTape)
+#define II 	(Tape<uint>::indexTape)
 
 template<typename T> class Tape {
 public:
 	Tape<T> () : index(0){};
-	T& at(const unsigned int index);
-	const T& get(const unsigned int index);
+	T& at(const uint index);
+	const T& get(const uint index);
 	void set(T& v);
-	unsigned int size();
+	uint size();
 	void clear();
 	bool empty();
 	string toString();
 	virtual ~Tape();
 
 	vector<T> vals;
-	unsigned int index;
+	uint index;
 
 	static Tape<double>* valueTape;
-	static Tape<unsigned int>* indexTape;
+	static Tape<uint>* indexTape;
 };
 
 
@@ -46,12 +47,12 @@ template<typename T> Tape<T>::~Tape<T>()
 	vals.clear();
 }
 
-template<typename T> T& Tape<T>::at(const unsigned int i)
+template<typename T> T& Tape<T>::at(const uint i)
 {
 	assert(this->vals.size()>i);
 	return vals[i];
 }
-template<typename T> const T& Tape<T>::get(const unsigned int i)
+template<typename T> const T& Tape<T>::get(const uint i)
 {
 	assert(this->vals.size()>i);
 	return vals[i];
@@ -62,7 +63,7 @@ template <typename T> void Tape<T>::set(T& v)
 	index++;
 }
 
-template<typename T> unsigned int Tape<T>::size()
+template<typename T> uint Tape<T>::size()
 {
 	return this->vals.size();
 }
@@ -85,7 +86,7 @@ template<typename T>  string Tape<T>::toString()
 	assert(vals.size()>=index);
 	ostringstream oss;
 	oss<<"Tape size["<<vals.size()<<"]";
-	for(unsigned int i=0;i<vals.size();i++){
+	for(uint i=0;i<vals.size();i++){
 		if(i%10==0) oss<<endl;
 		oss<<vals[i]<<",";
 	}
