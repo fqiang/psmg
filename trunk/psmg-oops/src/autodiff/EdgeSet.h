@@ -20,9 +20,9 @@ public:
 
 	void insertEdge(Edge& e);
 	bool containsEdge(Edge& e);
-	unsigned int numSelfEdges();
+	uint numSelfEdges();
 	void clear();
-	unsigned int size();
+	uint size();
 	std::string toString();
 
 

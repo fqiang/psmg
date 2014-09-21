@@ -43,7 +43,7 @@ double& Stack::peek()
 {
 	return this->lifo.top();
 }
-unsigned int Stack::size()
+uint Stack::size()
 {
 	return this->lifo.size();
 }

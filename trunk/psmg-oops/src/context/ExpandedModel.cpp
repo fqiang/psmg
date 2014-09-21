@@ -856,19 +856,20 @@ uint ExpandedModel::nz_cons_jacobs_nlp_local(ExpandedModel *emcol)
 	emcol->copyVariables(vSet);
 	assert(vSet.size()==emcol->numLocalVars);
 
-	uint nz = 0;
-	uint i = 0;
+	uint nnz = 0;
+	uint i = 0;  //cons index
 	BOOST_FOREACH(AutoDiff::Node* con, banlp->cons)
 	{
 //		TRACE("con \n"<<tree_expr(con)<<"");
-		nz+=con==NULL?0:nzGrad(con,vSet);
-		TRACE("["<<i<<"] nz now "<<nz);
+		uint nz = con==NULL?0:nzGrad(con,vSet);
+		nnz += nz;
+		WARN("[ "<<i<<" ] nz "<<nz<<" nnz "<<nnz);
 		i++;
 	}
-
-	TRACE("end nz_cons_jacobs_local -- this["<<this->name<<"] emcol["<<emcol->name<<"]  - Num of Nonzero["<<nz<<"]");
+	assert(i==this->numLocalCons);
+	TRACE("end nz_cons_jacobs_local -- this["<<this->name<<"] emcol["<<emcol->name<<"]  - nnz["<<nnz<<"]");
 	Stat::numNZConsJac_NLP_LocalCall++;
-	return nz;
+	return nnz;
 }
 
 /* ----------------------------------------------------------------------------
@@ -912,7 +913,7 @@ void ExpandedModel::cons_jacobs_nlp_local(ExpandedModel *emcol, col_compress_mat
 	TRACE("vnode size -"<<vnodes.size());
 //	assert(blockdep->getNumDepVars()==vnodes.size());
 	col_compress_matrix m(banlp->cons.size(),vnodes.size());
-	uint r = 0;
+	uint r = 0;  //con index
 	BOOST_FOREACH(AutoDiff::Node* con, banlp->cons)
 	{
 		col_compress_matrix_row rgrad(m,r);
@@ -924,8 +925,9 @@ void ExpandedModel::cons_jacobs_nlp_local(ExpandedModel *emcol, col_compress_mat
 			assert(rgrad.size() == vnodes.size());
 //			TRACE(" "<<rgrad);
 		}
-		else
-			TRACE("con is NULL");
+		else {
+			WARN("[ "<<r<<" ] con is NULL");
+		}
 		r++;
 //		TRACE("jacobian now"<<m);
 	}

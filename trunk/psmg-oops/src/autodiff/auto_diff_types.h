@@ -8,11 +8,15 @@
 #ifndef AUTO_DIFF_TYPES_H_
 #define AUTO_DIFF_TYPES_H_
 
+
+typedef unsigned int uint;
+typedef unsigned long ulong;
+
 namespace AutoDiff{
 
 #define FORWARD_ENABLED 0
 #if FORWARD_ENABLED
-extern unsigned int num_var;
+extern uint num_var;
 #endif
 
 #define NaN_Double std::numeric_limits<double>::quiet_NaN()

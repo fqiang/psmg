@@ -46,12 +46,12 @@ void EdgeSet::clear() {
 	edges.clear();
 }
 
-unsigned int EdgeSet::size(){
+uint EdgeSet::size(){
 	return edges.size();
 }
 
-unsigned int EdgeSet::numSelfEdges(){
-	unsigned int diag = 0;
+uint EdgeSet::numSelfEdges(){
+	uint diag = 0;
 	list<Edge>::iterator it = edges.begin();
 	for(;it!=edges.end();it++)
 	{

@@ -39,7 +39,7 @@ VNode::~VNode() {
 	TRACE("delete varaible "<<this->toString(0));
 }
 
-void VNode::collect_vnodes(boost::unordered_set<Node*>& nodes,unsigned int& total)
+void VNode::collect_vnodes(boost::unordered_set<Node*>& nodes,uint& total)
 {
 	total++;
 	boost::unordered_set<Node*>::iterator it = nodes.find(this);
@@ -61,7 +61,7 @@ string VNode::toString(int level)
 {
 	ostringstream oss;
 	string s(level,'\t');
-	oss<<s<<"[VNode](index:"<<index<<",val:"<<val()<<",u:"<<u<<") - "<<this;
+	oss<<s<<"[VNode](index:"<<index<<",idx:"<<idx<<",val:"<<val()<<",u:"<<u<<") - "<<this;
 	return oss.str();
 }
 
@@ -78,7 +78,7 @@ void VNode::grad_reverse_1()
 }
 
 #if FORWARD_ENABLED
-void VNode::hess_forward(unsigned int len, double** ret_vec)
+void VNode::hess_forward(uint len, double** ret_vec)
 {
 	assert(id!=DEFAULT_ID);
 	(*ret_vec) = new double[len];
@@ -88,7 +88,7 @@ void VNode::hess_forward(unsigned int len, double** ret_vec)
 }
 #endif
 
-unsigned int VNode::hess_reverse_0()
+uint VNode::hess_reverse_0()
 {
 	if(index==0)
 	{//this node is not on tape
@@ -103,7 +103,7 @@ unsigned int VNode::hess_reverse_0()
 	return index;
 }
 
-void VNode::hess_reverse_0_get_values(unsigned int i,double& x, double& x_bar, double& w, double& w_bar)
+void VNode::hess_reverse_0_get_values(uint i,double& x, double& x_bar, double& w, double& w_bar)
 {
 	w_bar = TT->get(--i);
 	w = TT->get(--i);
@@ -111,35 +111,35 @@ void VNode::hess_reverse_0_get_values(unsigned int i,double& x, double& x_bar, d
 	x = TT->get(--i);
 }
 
-void VNode::hess_reverse_1(unsigned int i)
+void VNode::hess_reverse_1(uint i)
 {
 	n_in_arcs--;
 	//leaf node do nothing
 }
 
-void VNode::hess_reverse_1_init_x_bar(unsigned int i)
+void VNode::hess_reverse_1_init_x_bar(uint i)
 {
 	TT->at(i-3) = 1;
 }
 
-void VNode::update_x_bar(unsigned int i ,double v)
+void VNode::update_x_bar(uint i ,double v)
 {
 //	cout<<toString(0)<<"  --- "<<__FUNCTION__<<"  v="<<TT->at(i-3)<<"+"<<v<<endl;
 	TT->at(i-3) = isnan(TT->get(i-3))? v: TT->get(i-3) + v;
 }
 
-void VNode::update_w_bar(unsigned int i,double v)
+void VNode::update_w_bar(uint i,double v)
 {
 //	cout<<toString(0)<<"  --- "<<__FUNCTION__<<"  v="<<TT->at(i-1)<<"+"<<v<<endl;
 	TT->at(i-1) = isnan(TT->get(i-1))? v: TT->get(i-1) + v;
 }
-void VNode::hess_reverse_1_get_xw(unsigned int i, double& w,double& x)
+void VNode::hess_reverse_1_get_xw(uint i, double& w,double& x)
 {
 	//cout<<toString(0)<<"  --- "<<__FUNCTION__<<"  w="<<TT->get(i-2)<<"-- "<<"x="<<TT->get(i-4)<<endl;
 	w = TT->get(i-2);
 	x = TT->get(i-4);
 }
-void VNode::hess_reverse_get_x(unsigned int i ,double& x)
+void VNode::hess_reverse_get_x(uint i ,double& x)
 {
 	x = TT->get(i-4);
 }
