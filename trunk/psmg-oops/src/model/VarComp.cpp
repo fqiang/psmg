@@ -44,10 +44,11 @@ void VarComp::calculateVarDimCard(ModelContext& context, uint& card) {
 	TRACE( "calculateLocalVar -- in model["<<this->model->name<<"] id["<<this->name<<"] -- varCard["<<card<<"] varDim["<<dim<<"]");
 }
 
-void VarComp::calculateVarComp(ModelContext& ctx)
+void VarComp::calculateVarComp(uint& idx, ModelContext& ctx)
 {
 	assert(this->type==TVAR);
 	TRACE("calculateVarComp - model["<<this->model->name<<"] comp["<<this->name<<"]");
+
 	Var* var = new Var(this->name);
 	if(this->indexing!=NULL)
 	{
@@ -70,7 +71,8 @@ void VarComp::calculateVarComp(ModelContext& ctx)
 					this->attributes->calculateVarBounds(ctx,upper,lower);
 				}
 //				AutoDiff::Node* v =  AutoDiff::create_var_node(1.0);
-				VarSingle* varsingle = new VarSingle(*it,upper,lower);
+				VarSingle* varsingle = new VarSingle(*it,idx,upper,lower);
+				idx++;
 				var->varMultiMap.push_back(varsingle);
 				ctx.removeDummySetValueMapTemp(dummy);
 			}
@@ -101,7 +103,8 @@ void VarComp::calculateVarComp(ModelContext& ctx)
 					}
 //					AutoDiff::Node* v =  AutoDiff::create_var_node(1.0);
 					string varkey = *i + *j;
-					VarSingle* varsingle = new VarSingle(varkey,upper,lower);
+					VarSingle* varsingle = new VarSingle(varkey,idx,upper,lower);
+					idx++;
 					var->varMultiMap.push_back(varsingle);
 					ctx.removeDummySetValueMapTemp(dummy2);
 				}
@@ -124,10 +127,10 @@ void VarComp::calculateVarComp(ModelContext& ctx)
 		}
 		string varkey = "";
 //		AutoDiff::Node* v =  AutoDiff::create_var_node(1.0);
-		VarSingle* varsingle = new VarSingle(varkey,upper,lower);
+		VarSingle* varsingle = new VarSingle(varkey,idx,upper,lower);
+		idx++;
 		var->varMultiMap.push_back(varsingle);
 	}
-
 	ctx.addCompValueMap(this,var);
 	TRACE("calculateVarComp -- model["<<this->model->name<<"] comp["<<this->name<<"] card["<< (uint)(var->varMultiMap.size()) <<"] dim["<<this->dim<<"]");
 }

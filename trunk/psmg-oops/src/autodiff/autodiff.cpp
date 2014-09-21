@@ -36,12 +36,16 @@ void hess_forward(Node* root, unsigned int nvar, double** hess_mat)
 #endif
 
 
-PNode* create_param_node(double value){
-	return new PNode(value);
+PNode* create_param_node(uint idx){
+	return new PIndex(idx);
 }
-VNode* create_var_node(double v)
+
+PNode* create_param_node(double& val){
+	return new PVal(val);
+}
+VNode* create_var_node(uint idx)
 {
-	return new VNode(v);
+	return new VNode(idx);
 }
 OPNode* create_binary_op_node(OPCODE code, Node* left, Node* right)
 {
@@ -106,16 +110,20 @@ double grad_reverse(Node* root, vector<Node*>& vnodes, col_compress_matrix_row& 
 	double val = SV->pop_back();
 	assert(SV->size()==0);
 	unsigned int i =0;
+	uint n = 0, z = 0;
 	BOOST_FOREACH(Node* node, vnodes)
 	{
 		assert((node)->getType()==VNode_Type);
 		double diff = static_cast<VNode*>(node)->adj;
 		if(!isnan(diff)){
+			n++;
 			rgrad(i) = diff;
 			static_cast<VNode*>(node)->adj = NaN_Double;
+			if(diff == 0)  z++;
 		}
 		i++;
 	}
+	TRACE(" grad_reverse -  this expression has -- ["<<n<<"] non zero grad - "<<z<<" zero value");
 	//all nodes are VNode and adj == NaN_Double -- this reset adj for this expression tree by root
 	assert(i==vnodes.size());
 	return val;
@@ -244,13 +252,15 @@ unsigned int nzGrad(Node* root, boost::unordered_set<Node*>& vSet)
 	unsigned int nzgrad=0, total=0;
 	boost::unordered_set<Node*> vnodes;
 	root->collect_vnodes(vnodes,total);
-	//cout<<"nzGrad - vnodes size["<<vnodes.size()<<"] -- total node["<<total<<"]"<<endl;
-	for(boost::unordered_set<Node*>::iterator it=vnodes.begin();it!=vnodes.end();it++)
+	TRACE("nzGrad - vnodes in expression - size["<<vnodes.size()<<"] -- total node["<<total<<"]");
+	BOOST_FOREACH(Node* n, vnodes)
 	{
-		Node* n = *it;
 		if(vSet.find(n) != vSet.end())
 		{
 			nzgrad++;
+		}
+		else{
+			TRACE(" "<<n->toString(0)<<" not in vSet");
 		}
 	}
 	return nzgrad;
@@ -263,6 +273,11 @@ void nonlinearEdges(Node* root, EdgeSet& edges)
 
 unsigned int nzHess(EdgeSet& eSet,boost::unordered_set<Node*>& set1, boost::unordered_set<Node*>& set2)
 {
+	if(eSet.edges.size()==0)
+	{
+		return 0;
+	}
+
 	list<Edge>::iterator i = eSet.edges.begin();
 	for(;i!=eSet.edges.end();)
 	{

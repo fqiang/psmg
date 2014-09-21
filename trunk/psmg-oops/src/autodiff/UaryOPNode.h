@@ -39,7 +39,7 @@ public:
 
 	void nonlinearEdges(EdgeSet&);
 
-	string toString(int level) const;
+	string toString(int level);
 
 private:
 	UaryOPNode(OPCODE op, Node* left);

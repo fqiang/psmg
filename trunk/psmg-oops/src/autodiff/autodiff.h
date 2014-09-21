@@ -13,10 +13,13 @@
 #include <boost/numeric/ublas/matrix_sparse.hpp>
 #include <boost/numeric/ublas/io.hpp>
 #include "auto_diff_types.h"
+#include "../util/util.h"
 #include "Node.h"
 #include "VNode.h"
 #include "OPNode.h"
 #include "PNode.h"
+#include "PIndex.h"
+#include "PVal.h"
 #include "ActNode.h"
 #include "EdgeSet.h"
 
@@ -79,8 +82,10 @@ typedef boost::numeric::ublas::matrix_column<col_compress_matrix  > col_compress
 namespace AutoDiff{
 
 	//node creation methods
-	extern PNode* create_param_node(double value);
-	extern VNode* create_var_node(double v=NaN_Double);
+	extern VNode* create_var_node(double& v);
+	extern PNode* create_param_node(double& val);
+	extern PNode* create_param_node(uint idx);
+//	extern VNode* create_var_node(double& v);
 	extern OPNode* create_uary_op_node(OPCODE code, Node* left);
 	extern OPNode* create_binary_op_node(OPCODE code, Node* left,Node* right);
 

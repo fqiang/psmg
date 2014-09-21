@@ -25,15 +25,13 @@ class ExpandedModel;
 class PDProblem;
 
 class OOPSBlock {
- public:
-  ExpandedModel *emrow;    //!< Expanded Model giving row information
-  ExpandedModel *emcol;    //!< Expanded Model giving col information
-  PDProblem* prob;
-  int i;
-  // --------------------------- methods -----------------------------------
-  /** constrct an OOPS block from the cross section of two ExpandedModelInterface's
-   *  @param rowmod       The model giving the row information
-   *  @param colmod       The model giving the column information
-   */
-  OOPSBlock(ExpandedModel *rowmod, ExpandedModel *colmod);
+public:
+	ExpandedModel *emrow;    //!< Expanded Model giving row information
+	ExpandedModel *emcol;    //!< Expanded Model giving col information
+	// --------------------------- methods -----------------------------------
+	/** constrct an OOPS block from the cross section of two ExpandedModelInterface's
+	 *  @param rowmod       The model giving the row information
+	 *  @param colmod       The model giving the column information
+	 */
+	OOPSBlock(ExpandedModel *rowmod, ExpandedModel *colmod);
 };

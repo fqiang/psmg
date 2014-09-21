@@ -24,6 +24,7 @@ public:
 	unordered_map<int,SyntaxNode*> const_partial;
 	unordered_map<int,SyntaxNode*> first_partial;
 	unordered_map<int,SyntaxNode*> higher_partial;
+//	unordered_map<int,SyntaxNode*> full_partial;
 
 //	unordered_map<int,SyntaxNode*> partial;
 

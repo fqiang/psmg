@@ -108,6 +108,11 @@ void Sml::generateExpandedModel()
 	//step 1: create expandedmodel recursively
 	AmplModel::root->splitConstraints();  //split constraints according to model levels
 	ExpandedModel::root = AmplModel::root->createExpandedModel("",NULL,"",NULL);
+	int rbeg = 0, cbeg = 0;
+	ExpandedModel::root->setIndex(rbeg, cbeg);
+	ExpandedModel::n_col = cbeg;
+	ExpandedModel::n_row = rbeg;
+	TRACE("Total row ["<<rbeg <<"]  col["<<cbeg<<"]");
 	TRACE("============== END ExpandedModel2 Generation =============================");
 }
 
@@ -148,6 +153,25 @@ int main(int argc, char **argv)
 	{
 		string default_conf = "./psmg_conf.xml";
 		Config::initConfig(default_conf);
+
+		if(GV(solvetype).compare("lp") == 0) {
+			ExpandedModel::ptype = LP;
+		}
+		else if(GV(solvetype).compare("qp") == 0) {
+			ExpandedModel::ptype = QP;
+		}
+		else {
+			assert(GV(solvetype).compare("nlp")==0);
+			ExpandedModel::ptype = NLP;
+		}
+
+		if(GV(ifacetype).compare("local")==0){
+			ExpandedModel::itype = LOCAL;
+		}
+		else {
+			assert(GV(ifacetype).compare("distribute"));
+			ExpandedModel::itype = DIST;
+		}
 	}
 
 	for(int i=1;i<argc;i++)
@@ -214,7 +238,14 @@ int main(int argc, char **argv)
 //	Sml::instance()->testInterfaceLocal(ExpandedModel::root);
 //	//Testing Section end
 	AutoDiff::autodiff_setup(); //setting up tape and stack
-	SML_OOPS_driver_LP_QP(ExpandedModel::root);
+
+	if(ExpandedModel::ptype == LP || ExpandedModel::ptype == QP){
+		SML_OOPS_driver_LP_QP(ExpandedModel::root);
+	}
+	else{
+		assert(ExpandedModel::ptype == NLP);
+		SML_OOPS_driver_NLP(ExpandedModel::root);
+	}
 
 	if(GV(logEM)){
 		string datname = GV(datafilename).substr(0, GV(datafilename).find(".", 0));

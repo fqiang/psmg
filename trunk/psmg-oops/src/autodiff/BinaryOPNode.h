@@ -42,7 +42,7 @@ public:
 	void nonlinearEdges(EdgeSet& a);
 
 	void inorder_visit(int level,ostream& oss);
-	string toString(int level) const;
+	string toString(int level);
 
 	Node* right;
 

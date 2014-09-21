@@ -13,7 +13,8 @@
 namespace AutoDiff {
 class VNode: public ActNode {
 public:
-	VNode(double v=NaN_Double);
+//	VNode(double v=NaN_Double);
+	VNode(uint idx);
 	virtual ~VNode();
 	void collect_vnodes(boost::unordered_set<Node*>& nodes,unsigned int& total);
 	void eval_function();
@@ -31,8 +32,10 @@ public:
 	void nonlinearEdges(EdgeSet&);
 
 	void inorder_visit(int level,ostream& oss);
-	string toString(int level) const;
+	string toString(int level);
 	TYPE getType();
+
+	double& val();
 
 #if FORWARD_ENABLED
 	void hess_forward(unsigned int nvar, double** ret_vec);
@@ -41,7 +44,8 @@ public:
 	int id;
 	static int DEFAULT_ID;
 #endif
-	double val;
+//	double val;
+	uint idx;
 	double u;
 
 

@@ -46,7 +46,7 @@ public:
 
 	//other utility methods
 	virtual void inorder_visit( int level,ostream& oss) = 0;
-	virtual string toString(int levl) const = 0;
+	virtual string toString(int levl)  = 0;
 	virtual TYPE getType() = 0;
 
 

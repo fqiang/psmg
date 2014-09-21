@@ -18,13 +18,19 @@ class Stat{
 	static int numConsJac_NLP_LocalCall;
 	static int numNZLagHess_NLP_LocalCall;
 	static int numLagHess_NLP_LocalCall;
+	static int numObjGrad_NLP_LocalCall;
 
-	static int numNZObjHessLocalCall;
-	static int numObjHessLocalCall;
+//	static int numNZObjHessLocalCall;
+//	static int numObjHessLocalCall;
 
 	static int numGradObjCCall;
 	static int numConsFevalLocalCall;
-	static int numObjFevalCall;
+	static int numObjFevalLocalCall;
+
+
+	static int nnzJacA_LP_QP;
+	static int nnzHessQ_QP;
+	static int nnzLagHess_NLP;
 
 	static void logStatistics(ostream& out);
 };

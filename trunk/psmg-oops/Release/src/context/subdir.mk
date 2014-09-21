@@ -22,6 +22,7 @@ CPP_SRCS += \
 ../src/context/ParamSingle.cpp \
 ../src/context/Set.cpp \
 ../src/context/SetOrdered.cpp \
+../src/context/SetSets.cpp \
 ../src/context/SetSimple.cpp \
 ../src/context/Var.cpp \
 ../src/context/VarSingle.cpp 
@@ -45,6 +46,7 @@ OBJS += \
 ./src/context/ParamSingle.o \
 ./src/context/Set.o \
 ./src/context/SetOrdered.o \
+./src/context/SetSets.o \
 ./src/context/SetSimple.o \
 ./src/context/Var.o \
 ./src/context/VarSingle.o 
@@ -68,6 +70,7 @@ CPP_DEPS += \
 ./src/context/ParamSingle.d \
 ./src/context/Set.d \
 ./src/context/SetOrdered.d \
+./src/context/SetSets.d \
 ./src/context/SetSimple.d \
 ./src/context/Var.d \
 ./src/context/VarSingle.d 

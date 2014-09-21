@@ -52,8 +52,8 @@ void SetSimple::addSetValue(const string& value)
 	{
 		if(this->contains(value))
 		{
-			ERROR("SetSimple -- already has["<<value<<"]");
-			assert(false);
+			TRACE("SetSimple -- already has["<<value<<"]  -- skiping ... ");
+//			assert(false);
 		}
 	}
 

@@ -5,6 +5,6 @@
  *      Author: s0965328
  */
 
-#define NDEBUG  //disable assertion
+//#define NDEBUG  //disable assertion
 
 #include <cassert>

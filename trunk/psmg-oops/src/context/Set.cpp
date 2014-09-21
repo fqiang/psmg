@@ -20,7 +20,7 @@ Set::Set(string& name, int dim):name(name),dim(dim),card(0)
 
 }
 
-Set::Set(SetComp* comp):dim(comp->setDim),name(comp->name),card(0) {
+Set::Set(SetComp* comp):name(comp->name),dim(comp->setDim),card(0) {
 	TRACE("create Set name["<<name<<"] dim["<<dim<<"] card["<<card<<"]");
 }
 

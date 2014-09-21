@@ -42,6 +42,7 @@
 #include <boost/unordered_map.hpp>
 
 #include "../autodiff/autodiff.h"
+#include "../context/ExpandedModel.h"
 
 class SetComp;
 class StochCtx;
@@ -51,7 +52,7 @@ class Set;
 class SetOrdered;
 class IndexSet;
 class SetSimple;
-class ExpandedModel;
+//class ExpandedModel;
 class PValue;
 
 struct CPart;
@@ -141,8 +142,7 @@ public:
 	void calculateLinearNonLinearParts(CPart&);
 	void calculatePartialConstraints(boost::unordered_map<int,SyntaxNode*>&);
 	ModelContext* locateCtx(ModelContext& rowctx, ModelContext& currCtx);
-	AutoDiff::Node* buildAutoDiffDAG(ExpandedModel* emrow, ExpandedModel* emcol=NULL, bool isLP=false);
-
+	AutoDiff::Node* buildAutoDiffDAG(ExpandedModel* emrow, ExpandedModel* emcol, ProbType pType, InterfaceType iType);
 	void calculateBaseValueVector(unsigned long& size);
 	virtual void calculateMemoryUsage(unsigned long& size);
 

@@ -22,9 +22,9 @@ public:
 	virtual ~ConsComp();
 
 	CPart cpart;
-//	boost::unordered_map<int,SyntaxNode*> const_partial;
-//	boost::unordered_map<int,SyntaxNode*> first_partial;
-//	boost::unordered_map<int,SyntaxNode*> higher_partial;
+	boost::unordered_map<int,SyntaxNode*> const_partial;
+	boost::unordered_map<int,SyntaxNode*> first_partial;
+	boost::unordered_map<int,SyntaxNode*> higher_partial;
 
 	boost::unordered_map<int,SyntaxNode*> partial;
 	void calculatePartialConstraints();

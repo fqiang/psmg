@@ -50,6 +50,7 @@ class Config{
 	 string modelfilename;
 	 bool solve;
 	 string solvetype;
+	 string ifacetype;
 
 	 string root_stage_parent_name;
 	 string node_dummy_prefix;

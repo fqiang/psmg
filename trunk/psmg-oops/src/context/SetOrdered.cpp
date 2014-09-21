@@ -48,7 +48,7 @@ void SetOrdered::addSetValue(const string& value)
 		this->setKeys.insert(pair<int,string>(card,value));
 	}
 	else{
-		TRACE("OrderedSet --- already has ["<<value<<"]");
+		TRACE("OrderedSet --- already has ["<<value<<"]  --- skipping ... ");
 	}
 //	TRACE("OrderedSet --addSetValue- set contains "<<this->toString());
 }

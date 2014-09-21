@@ -20,8 +20,8 @@ public:
 	static void deleteSet(Set* set);
 	static Set* createSet(SetComp*);
 
-	int dim; //same as in ModelComp
 	string name;
+	int dim; //same as in ModelComp
 	int card;
 
 	vector<string> setValues_data_order;

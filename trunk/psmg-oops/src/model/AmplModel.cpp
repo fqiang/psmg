@@ -27,6 +27,7 @@
 #include "../context/ExpandedModel.h"
 #include "../context/IndexSet.h"
 #include "../context/Set.h"
+#include "../context/Var.h"
 #include "../st_model/StochModel.h"
 #include "../parser/sml.tab.h"
 #include "../util/util.h"
@@ -40,7 +41,7 @@
 
 using namespace std;
 
-using namespace __gnu_cxx;
+//using namespace __gnu_cxx;
 
 //list<changeitem> AmplModel::changes; // initialize to empty list
 
@@ -217,7 +218,7 @@ ExpandedModel* AmplModel::createExpandedModel(string dummyVar,SetComp* comp,stri
 		currEm->numLocalCons += card;
 		TRACE("add cons -- EM["<<currEm->name<<"] -- varcomp["<<card<<"] numLocalCons["<<currEm->numLocalCons<<"]");
 	}
-	assert(currEm->y==NULL); currEm->y = new double[currEm->numLocalCons];
+//	assert(currEm->y==NULL); currEm->y = new double[currEm->numLocalCons];
 
 	if(obj_comp!=NULL)
 	{
@@ -251,20 +252,26 @@ ExpandedModel* AmplModel::createExpandedModel(string dummyVar,SetComp* comp,stri
 	//anytime the AmplModel::root point to a valid up-to-date model tree
 	if(smodel!=NULL) {
 		AmplModel* stochroot = smodel->convertToAmplModel(currCtx);
+
+		/*
+		 * this rootset calculate is not need any more as the new algorithm using compound sets child instead of
+		 * a the orignal Parent parameter.
+		 */
 		//calculate root node set
-		ModelComp* comp = static_cast<SyntaxNodeIDREF*>(stochroot->indexing->values[0]->values[0]->values[0]->values[1])->ref;
-		assert(comp->type==TSET);
-		SetComp* rootset = static_cast<SetComp*>(comp);
-		assert(currCtx.getCompValue(rootset) == NULL);
-		TRACE("stoch root set   SET comp["<<rootset->name<<"] -- "<<rootset);
-		rootset->setSetDim();
-		rootset->calculateSetModelComp(currCtx);
-		TRACE("end calculateSetModelComp   -- ["<<rootset->name<<"] -- "<<rootset);
-		assert(currCtx.getCompValue(rootset)!=NULL);
+//		ModelComp* comp = static_cast<SyntaxNodeIDREF*>(stochroot->indexing->values[0]->values[0]->values[0]->values[1])->ref;
+//		assert(comp->type==TSET);
+//		SetComp* rootset = static_cast<SetComp*>(comp);
+//		assert(currCtx.getCompValue(rootset) == NULL);
+//		TRACE("stoch root set   SET comp["<<rootset->name<<"] -- "<<rootset);
+//		rootset->setSetDim();
+//		rootset->calculateSetModelComp(currCtx);
+//		TRACE("end calculateSetModelComp   -- ["<<rootset->name<<"] -- "<<rootset);
+//		assert(currCtx.getCompValue(rootset)!=NULL);
+		/********************************************************************/
 		delete smodel;
 		smodel = NULL;
 	}
-	assert(smodel== NULL); //ensure the smodel is delete and not avalible anymore at this point.
+	assert(smodel== NULL); //ensure the smodel is delete and not available anymore at this point.
 	/*
 	 * End Stochastic model pre-processing
 	 */
@@ -490,19 +497,25 @@ void AmplModel::calculateModelCompRecursive(ModelContext& ctx)
 void AmplModel::calculateLocalVar(ModelContext& ctx)
 {
 	TRACE("calculateLocalVar - context["<<ctx.em->name<<"] -- on Model["<<this->name<<"] - ");
+	uint idx = ctx.em->colbeg;
 	vector<VarComp*>::iterator it_varComp =this->var_comps.begin();
 	for(;it_varComp!=this->var_comps.end();it_varComp++)
 	{
 		VarComp* comp = *it_varComp;
 		assert(comp->type==TVAR);
-		if(ctx.getCompValue(comp)==NULL)
+		Var* var = static_cast<Var*>(ctx.getCompValue(comp));
+		if(var==NULL)
 		{
 			TRACE("calculateLocalVar    VAR comp["<<comp->name<<"]");
-			comp->calculateVarComp(ctx);
+			comp->calculateVarComp(idx,ctx);
 			TRACE("calculateLocalVar    VAR comp["<<comp->name<<"]");
 			assert(ctx.getCompValue(comp)!=NULL);
 		}
+		else{
+			idx += var->varMultiMap.size();
+		}
 	}
+	assert(idx == ctx.em->colbeg + ctx.em->numLocalVars);
 	TRACE("calculateLocalVar - context"<<ctx.em->name<<"] -- on Model["<<this->name<<"] --DONE");
 }
 

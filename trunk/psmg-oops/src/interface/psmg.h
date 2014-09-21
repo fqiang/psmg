@@ -11,6 +11,8 @@
 #include <vector>
 #include <string>
 
+#include "../util/compile_marco.h"
+
 class ExpandedModel;
 class ColSparseMatrix;
 
