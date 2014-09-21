@@ -16,7 +16,7 @@ using namespace std;
 
 Config* Config::singleton = NULL;
 
-Config::Config(): hostname("UNSET_HOSTNAME"),rank(-1),size(-1),solve(false), solvetype("lp"),configFilename("./psmg_conf.xml"),
+Config::Config(): hostname("UNSET_HOSTNAME"),rank(-1),size(-1),solve(false), solvetype("lp"),ifacetype("local"),configFilename("./psmg_conf.xml"),
 		modelfilename(""),datafilename(""),root_stage_parent_name("null"),node_dummy_prefix("n"),stage_dummy_prefix("st"),var_det_prefix(""),
 		logdir("./log/"),assertion(false),writeMatlab("false"),matlabFile("mat.m"),writeMPS(false),mpsFile("mps.mps"),
 		logEM(true),logBlock(true),logModel(true),modfile_suffix(".mdat"),emfile_suffix(".emdat")
@@ -65,6 +65,7 @@ void Config::initConfig(string& conf_filename)
 	singleton->datafilename = psmgn.attribute("datafile").as_string();
 	singleton->solve = psmgn.attribute("solve").as_bool();
 	singleton->solvetype = psmgn.attribute("solvetype").as_string();
+	singleton->ifacetype = psmgn.attribute("ifacetype").as_string();
 	const pugi::xml_node& stoch = conf.child("STOCH");
 	singleton->root_stage_parent_name = stoch.attribute("root_stage_parent_name").as_string();
 	singleton->node_dummy_prefix = stoch.attribute("node_dummy_prefix").as_string();
@@ -97,6 +98,7 @@ void Config::printAll()
 	cout<<"Opt: "<<"data file [" << conf->datafilename << "]"<<endl;
 	cout<<"Opt: "<<"solve ["<<conf->solve<<"]"<<endl;
 	cout<<"Opt: "<<"solvetype ["<<conf->solvetype<<"]"<<endl;
+	cout<<"Opt: "<<"ifacetype ["<<conf->solvetype<<"]"<<endl;
 	cout<<"Opt: "<<"root_stage_parent_name ["<<conf->root_stage_parent_name<<"]"<<endl;
 	cout<<"Opt: "<<"node_dummy_prefix ["<<conf->node_dummy_prefix<<"]"<<endl;
 	cout<<"Opt: "<<"stage_dummy_prefix ["<<conf->stage_dummy_prefix<<"]"<<endl;

@@ -1,4 +1,4 @@
-#./run_prof_all [model_file]
+#./run_all [model_file]
 for f in *.dat; do 
 ./psmg-oops $1 $f | tee `basename $f`.out
 done

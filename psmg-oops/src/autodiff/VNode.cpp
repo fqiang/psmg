@@ -8,6 +8,7 @@
 #include "VNode.h"
 #include "Tape.h"
 #include "Stack.h"
+#include "../context/ExpandedModel.h"
 #include "../util/util.h"
 
 using namespace std;
@@ -18,12 +19,21 @@ namespace AutoDiff {
 int VNode::DEFAULT_ID = -1;
 #endif
 
-VNode::VNode(double v) : ActNode(), val(v),u(NaN_Double)
+//VNode::VNode(double v) : ActNode(), val(v),u(NaN_Double)
+//#if FORWARD_ENABLED
+//,id(DEFAULT_ID)
+//#endif
+//{
+//}
+
+VNode::VNode(uint idx) : ActNode(), idx(idx),u(NaN_Double)
 #if FORWARD_ENABLED
 ,id(DEFAULT_ID)
 #endif
 {
+	TRACE("create -- "<<toString(0));
 }
+
 
 VNode::~VNode() {
 	TRACE("delete varaible "<<this->toString(0));
@@ -44,21 +54,21 @@ void VNode::inorder_visit(int level,ostream& oss)
 
 void VNode::eval_function()
 {
-	SV->push_back(val);
+	SV->push_back(val());
 }
 
-string VNode::toString(int level) const
+string VNode::toString(int level)
 {
 	ostringstream oss;
 	string s(level,'\t');
-	oss<<s<<"[VNode](index:"<<index<<",val:"<<val<<",u:"<<u<<") - "<<this;
+	oss<<s<<"[VNode](index:"<<index<<",val:"<<val()<<",u:"<<u<<") - "<<this;
 	return oss.str();
 }
 
 void VNode::grad_reverse_0()
 {
 	this->adj = 0;
-	SV->push_back(val);
+	SV->push_back(val());
 }
 
 void VNode::grad_reverse_1()
@@ -83,7 +93,7 @@ unsigned int VNode::hess_reverse_0()
 	if(index==0)
 	{//this node is not on tape
 		double nan = NaN_Double;
-		TT->set(val);  	//x_i
+		TT->set(val());  	//x_i
 		TT->set(nan);		//x_bar_i
 		TT->set(u);    	//w_i
 		TT->set(nan);    	//w_bar_i
@@ -148,4 +158,21 @@ TYPE VNode::getType()
 {
 	return VNode_Type;
 }
+
+double& VNode::val()
+{
+	assert(idx < ExpandedModel::n_col);
+	if(ExpandedModel::X!=NULL) {
+		return ExpandedModel::X[idx];
+	}
+	else{
+		if (ExpandedModel::X0!=NULL){
+			return ExpandedModel::X0[idx];
+		}
+		else {
+			return ExpandedModel::ONE; //whatever a default value
+		}
+	}
+}
+
 }

@@ -642,7 +642,7 @@ void BinaryOPNode::hess_forward_calc0(unsigned int& len, double* lvec, double* r
 #endif
 
 
-string BinaryOPNode::toString(int level) const{
+string BinaryOPNode::toString(int level){
 	ostringstream oss;
 	string s(level,'\t');
 	oss<<s<<"[BinaryOPNode]("<<op<<")";

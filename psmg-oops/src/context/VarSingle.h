@@ -21,10 +21,10 @@ public:
 	double lb;
 	AutoDiff::VNode adv;
 
-	VarSingle(string& indicies_, double ub_, double lb_);
+	VarSingle(string& indicies_, uint idx, double ub_, double lb_);
 	virtual ~VarSingle();
 
-	string toString() const;
+	string toString();
 	void calculateMemoryUsage(unsigned long& size) const;
 };
 

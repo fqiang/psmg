@@ -14,7 +14,7 @@ namespace AutoDiff {
 using namespace std;
 class PNode: public Node {
 public:
-	PNode(double value);
+	PNode();
 	virtual ~PNode();
 	void collect_vnodes(boost::unordered_set<Node*>& nodes,unsigned int& total);
 	void eval_function();
@@ -35,10 +35,11 @@ public:
 	void nonlinearEdges(EdgeSet&);
 
 	void inorder_visit(int level,ostream& oss);
-	string toString(int level) const;
+	string toString(int level);
 	TYPE getType();
 
-	double pval;
+	virtual double& pval() = 0;
+//	double pval;
 
 };
 

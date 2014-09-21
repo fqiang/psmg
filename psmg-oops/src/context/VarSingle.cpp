@@ -14,16 +14,16 @@
 using namespace std;
 using namespace AutoDiff;
 
-VarSingle::VarSingle(string& i,double u, double l)
-:indicies(i),ub(u),lb(l), adv(1.0){
-	TRACE("VarSingle::VarSingle indicies["<<indicies<<"] - ub["<<ub<<"] lb["<<lb<<"]");
+VarSingle::VarSingle(string& i, uint idx, double u, double l)
+:indicies(i),ub(u),lb(l), adv(idx){
+	TRACE("VarSingle::VarSingle indicies["<<indicies<<"] - idx ["<<idx<<"] ub["<<ub<<"] lb["<<lb<<"]");
 }
 
 VarSingle::~VarSingle() {
 	TRACE("VarSingle --- delete --- "<<this->toString());
 }
 
-string VarSingle::toString() const
+string VarSingle::toString()
 {
 	ostringstream oss;
 	oss<<"{"<<lb<<"<["<<indicies<<"]<"<<ub<<"}  ---  {"<<this->adv.toString(0)<<"}";

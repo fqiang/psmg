@@ -8,7 +8,7 @@
 #ifndef UTIL_H_
 #define UTIL_H_
 
-#define NDEBUG     //enable or disable assert
+//#define NDEBUG     //enable or disable assert
 #include <cassert>
 
 

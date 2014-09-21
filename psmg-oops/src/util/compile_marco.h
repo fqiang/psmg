@@ -16,6 +16,7 @@ typedef unsigned long ulong;
 #if DEBUG
 #define TRACE_PRINT_ENABLED 1
 #define TRACE_PARSER_ENABLED 1
+#define WARN_PRINT_ENABLED
 #define MEM_ENABLED 1
 #define TIMER_ENABLED 1
 #endif
@@ -23,6 +24,7 @@ typedef unsigned long ulong;
 #if RELEASE
 #define TRACE_PRINT_ENABLED 0
 #define TRACE_PARSER_ENABLED 0
+#define WARN_PRINT_ENABLED 1
 #define MEM_ENABLED 0
 #define TIMER_ENABLED 1
 #endif
@@ -34,7 +36,12 @@ typedef unsigned long ulong;
 #endif
 
 #define ERROR(arg) (std::cout<<"ERROR **** ["<<GV(rank)<<"/"<<GV(size)<<"]-"<<arg<<std::endl)
-#define WARN(arg) (std::cout<<"ERROR **** ["<<GV(rank)<<"/"<<GV(size)<<"]-"<<arg<<std::endl)
+
+#if WARN_PRINT_ENABLED
+#define WARN(arg) (std::cout<<"WARN **** ["<<GV(rank)<<"/"<<GV(size)<<"]-"<<arg<<std::endl)
+#else
+#define WARN(arg) ((void)0)
+#endif
 
 #if 0
 #define YAC(arg) (std::cout<<"YAC==>"<<arg<<std::endl)

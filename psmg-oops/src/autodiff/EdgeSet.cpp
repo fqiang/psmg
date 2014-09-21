@@ -15,6 +15,7 @@ namespace AutoDiff {
 
 EdgeSet::EdgeSet() {
 	// TODO Auto-generated constructor stub
+	edges.clear();
 
 }
 

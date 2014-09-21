@@ -46,6 +46,11 @@
 #include "../context/ExpandedModel.h"
 #include "../context/ModelContext.h"
 #include "../context/Set.h"
+#include "../context/SetSets.h"
+#include "../context/Param.h"
+#include "../context/ParamMult.h"
+#include "../context/PValueSym.h"
+
 
 #include "../parser/sml.tab.h"
 
@@ -120,6 +125,26 @@ AmplModel* StochModel::convertToAmplModel(ModelContext& parCtx)
 		SCTX::stSetComp = static_cast<SyntaxNodeIDREF*>(this->stageset->values[1])->ref;
 		SCTX::st = static_cast<SyntaxNodeID*>(this->stageset->values[0]->values[0])->id;
 	}
+	//now computing the compound set - translate parent into children
+	/*
+	 * below is the algorithm for building child compound set based on the Parent set
+	 */
+	SyntaxNode* node_idref = new SyntaxNodeIDREF(new SyntaxNodeID(SCTX::ndSetComp->name),SCTX::ndSetComp);
+	SetComp* childsetcomp = new SetComp("Child",node_idref,NULL,parent);
+	parent->addComp(childsetcomp);
+	ParamMult* params = static_cast<ParamMult*>(static_cast<Param*>(parCtx.getCompValue(SCTX::paSetComp)));
+	TRACE("Parent is "<<params->toString());
+	SetSets* child = new SetSets(childsetcomp);
+	for(boost::unordered_map<string,PValue*>::iterator i = params->paramValues.begin();i!=params->paramValues.end();i++)
+	{
+		const string& key = i->first;
+		const string& value = (static_cast<PValueSym*>(i->second))->value;
+		child->addSetValue(value,key);
+	}
+	TRACE("child set has -- "<<child->toString());
+	parCtx.addCompValueMap(childsetcomp,child);
+
+	//****************************************************************
 
 	AmplModel* prev_model = parent; //the ample model above
 	Set* stset = static_cast<Set*>(parCtx.getCompValue(SCTX::stSetComp));
@@ -129,19 +154,24 @@ AmplModel* StochModel::convertToAmplModel(ModelContext& parCtx)
 			SCTX::rootCtx = curr_sctx;
 		}
 
-		//create node set in prev_model that the current stage model is repeated on.
 		curr_sctx->stagename = stset->setValues_data_order[i];
 		curr_sctx->stage_level  = i;
 		curr_sctx->model_dummy = GV(node_dummy_prefix) + curr_sctx->stagename;
 
-		string model_set_name = "model_set" + curr_sctx->stagename;
-		//NODES
-		SyntaxNode* node_idref = new SyntaxNodeIDREF(new SyntaxNodeID(SCTX::ndSetComp->name),SCTX::ndSetComp);
-		//n0 in NODES
-		SyntaxNode* node_set_index_list = new SyntaxNode(COMMA,new SyntaxNode(IN, new SyntaxNode(COMMA, new SyntaxNodeID(curr_sctx->model_dummy)),node_idref));
-		//Parent
-		SyntaxNode* node_paref = new SyntaxNodeIDREF(new SyntaxNodeID(SCTX::paSetComp->name),SCTX::paSetComp);
-		node_paref->push_back(new SyntaxNode(COMMA,new SyntaxNodeID(curr_sctx->model_dummy)));  //Parent[n0]
+		//create node set in prev_model that the current stage model is repeated on.
+		/*
+		 * The algorithm below has a exponential runtime complexity on the number of scenarios.
+		 * It is create a indexing set of n_current in {Parent[n_current] == n_previous}
+		 * This alogrithm is now replace by setting up the model index using child set computed above
+		 */
+//		string model_set_name = "model_set" + curr_sctx->stagename;
+//		//NODES
+//		SyntaxNode* node_idref = new SyntaxNodeIDREF(new SyntaxNodeID(SCTX::ndSetComp->name),SCTX::ndSetComp);
+//		//n0 in NODES
+//		SyntaxNode* node_set_index_list = new SyntaxNode(COMMA,new SyntaxNode(IN, new SyntaxNode(COMMA, new SyntaxNodeID(curr_sctx->model_dummy)),node_idref));
+//		//Parent
+//		SyntaxNode* node_paref = new SyntaxNodeIDREF(new SyntaxNodeID(SCTX::paSetComp->name),SCTX::paSetComp);
+//		node_paref->push_back(new SyntaxNode(COMMA,new SyntaxNodeID(curr_sctx->model_dummy)));  //Parent[n0]
 		SyntaxNode* prev_model_dummy = NULL;
 		if(i == 0){
 			prev_model_dummy = new SyntaxNodeString(GV(root_stage_parent_name));
@@ -149,18 +179,29 @@ AmplModel* StochModel::convertToAmplModel(ModelContext& parCtx)
 		else{
 			prev_model_dummy = new SyntaxNodeID(curr_sctx->parent->model_dummy);
 		}
-		SyntaxNode* node_set_cond = new SyntaxNode(EQ,node_paref,prev_model_dummy); // Parent[n0] == "null"
-		SyntaxNode* node_set = new SyntaxNode(LBRACE,new SyntaxNode(COLON,node_set_index_list,node_set_cond)); //{n0 in NODES: Parent[n0] == "null" }
-		SyntaxNode* node_set_attr = new SyntaxNode(ASSIGN, node_set); // = {n0 in NODES: Parent[n0] == "null"}
-		SyntaxNode* node_set_attributes = new SyntaxNode(COMMA,node_set_attr);
-		SetComp* model_set = new SetComp(model_set_name,NULL, node_set_attributes,prev_model);
-		prev_model->addComp(model_set);
+//		SyntaxNode* node_set_cond = new SyntaxNode(EQ,node_paref,prev_model_dummy); // Parent[n0] == "null"
+//		SyntaxNode* node_set = new SyntaxNode(LBRACE,new SyntaxNode(COLON,node_set_index_list,node_set_cond)); //{n0 in NODES: Parent[n0] == "null" }
+//		SyntaxNode* node_set_attr = new SyntaxNode(ASSIGN, node_set); // = {n0 in NODES: Parent[n0] == "null"}
+//		SyntaxNode* node_set_attributes = new SyntaxNode(COMMA,node_set_attr);
+//		SetComp* model_set = new SetComp(model_set_name,NULL, node_set_attributes,prev_model);
+//		prev_model->addComp(model_set);
 
 		//create indexing for curr_model
-		SyntaxNode* model_set_ref = new SyntaxNodeIDREF(new SyntaxNodeID(model_set->name),model_set);
-		SyntaxNode* model_index_list = new SyntaxNode(COMMA, new SyntaxNode(IN, new SyntaxNode(COMMA, new SyntaxNodeID(curr_sctx->model_dummy)), model_set_ref));
-		SyntaxNode* model_index = new SyntaxNode(LBRACE,new SyntaxNode(COLON, model_index_list, NULL));
+//		SyntaxNode* model_set_ref = new SyntaxNodeIDREF(new SyntaxNodeID(model_set->name),model_set);
+//		SyntaxNode* model_index_list = new SyntaxNode(COMMA, new SyntaxNode(IN, new SyntaxNode(COMMA, new SyntaxNodeID(curr_sctx->model_dummy)), model_set_ref));
+//		SyntaxNode* model_index = new SyntaxNode(LBRACE,new SyntaxNode(COLON, model_index_list, NULL));
+/*××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××*/
 
+		/*
+		 * new algorithm for using child[prev_model_dummy] as the model indexing
+		 */
+		SyntaxNode* child_idref = new SyntaxNodeIDREF(new SyntaxNodeID(child->name),childsetcomp);  // Child
+		child_idref->push_back(new SyntaxNode(COMMA,prev_model_dummy));                      // Child[prev] e.g. Child[null] or Child[n0]
+		SyntaxNode* curr_model_dummy = new SyntaxNodeID(curr_sctx->model_dummy);			 // curr e.g. n0 n1, ..
+		//n0 in Child[prev]
+		SyntaxNode* child_dummy_list = new SyntaxNode(COMMA,new SyntaxNode(IN,new SyntaxNode(COMMA,curr_model_dummy),child_idref));
+		//{ n0 in Child[prev] }
+		SyntaxNode* model_index = new SyntaxNode(LBRACE, new SyntaxNode(COLON, child_dummy_list, NULL));
 		//create the curr_model for current stage
 		string model_name = this->name + "STAGE" + curr_sctx->stagename;
 		curr_sctx->model = new AmplModel(model_name, model_index ,prev_model);

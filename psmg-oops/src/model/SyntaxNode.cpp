@@ -26,6 +26,7 @@
 #include "../context/ExpandedModel.h"
 #include "../context/SetSimple.h"
 #include "../context/SetOrdered.h"
+#include "../context/SetSets.h"
 #include "../context/ParamMult.h"
 #include "../context/ParamSingle.h"
 #include "../context/PValueValue.h"
@@ -783,8 +784,29 @@ IndexSet* SyntaxNode::createIndexSet(ModelContext& ctx)
 				SyntaxNode* dummy_list = setexpr->values[0];
 				assert(dummy_list->opCode == COMMA && dummy_list->nchild()==1); //TODO support 1 dummy var only!
 				dummy = static_cast<SyntaxNodeID*>(dummy_list->values[0])->id;
-				comp = static_cast<SyntaxNodeIDREF*>(setexpr->values[1])->ref;
-				aSet = static_cast<Set*>(ctx.getCompValue(comp));
+				//now check for possible compound set
+				SyntaxNodeIDREF* setidref = static_cast<SyntaxNodeIDREF*>(setexpr->values[1]);
+				comp = setidref->ref;
+				if(setidref->values.size()==2)
+				{//compound set
+					assert(setidref->values[1]->opCode == COMMA);
+					SyntaxNode* dummy_list = setidref->values[1];
+					assert(dummy_list->nchild()==1); // support only one index in the compound set
+					string key="";
+					if(dummy_list->values[0]->opCode == STRING){
+						key = static_cast<SyntaxNodeString*>(dummy_list->values[0])->val;
+					}
+					else{
+						assert(dummy_list->values[0]->opCode == ID);
+						string& id = static_cast<SyntaxNodeID*>(dummy_list->values[0])->id;
+						key = ctx.getDummyValue(id);
+					}
+					aSet = static_cast<SetSets*>(ctx.getCompValue(comp))->getSet(key);
+				}
+				else
+				{
+					aSet = static_cast<Set*>(ctx.getCompValue(comp));
+				}
 				iset->addSet(dummy,aSet,static_cast<SetComp*>(comp));
 			}
 			else if(setexpr->opCode == IDREF) //ie. {SET1, SET2...}
@@ -1124,8 +1146,8 @@ void SyntaxNode::calcStageSet(ModelContext& ctx, boost::unordered_set<string>* s
 	else if(set_expr->opCode == DOTDOT)
 	{
 		TRACE("calcStageSet -- DOTDOT -- "<<set_expr);
-		int start;
-		int end;
+		int start = -1;
+		int end = -1;
 		if (set_expr->values[0]->opCode == VALUE) {
 			SyntaxNodeValue* valn = static_cast<SyntaxNodeValue*>(set_expr->values[0]);
 			start = valn->val;
@@ -1399,9 +1421,9 @@ void SyntaxNode::calculateLinearNonLinearParts(CPart& cpart)
 		}
 		else if(right.constant!=NULL && right.first == NULL && right.higher == NULL)
 		{//divided by constant
-			cpart.constant = new SyntaxNode(DIVID,left.constant,right.constant);
-			cpart.first = new SyntaxNode(DIVID,left.first,right.constant);
-			cpart.higher = new SyntaxNode(DIVID,left.higher, right.constant);
+			if(left.constant!=NULL) cpart.constant = new SyntaxNode(DIVID,left.constant,right.constant);
+			if(left.first!=NULL) cpart.first = new SyntaxNode(DIVID,left.first,right.constant);
+			if(left.higher!=NULL) cpart.higher = new SyntaxNode(DIVID,left.higher, right.constant);
 		}
 		else
 		{//anything else - only higher order term
@@ -1586,8 +1608,7 @@ void SyntaxNode::calculatePartialConstraints(boost::unordered_map<int,SyntaxNode
 		if((left.size()==1 && li!=left.end()) && (right.size()==1 && ri!=right.end()))
 		{// const ^ const
 			partials.insert(pair<int,SyntaxNode*>(-1,new SyntaxNode(POWER,li->second,ri->second)));
-		}
-		else if(left.size()==1 && li!=left.end())
+		}		else if(left.size()==1 && li!=left.end())
 		{//const ^ all other
 			SyntaxNode* rnode = NULL;
 			for(ri=right.begin();ri!=right.end();ri++){
@@ -1595,9 +1616,14 @@ void SyntaxNode::calculatePartialConstraints(boost::unordered_map<int,SyntaxNode
 			}
 			assert(rnode!=NULL);
 			SyntaxNode* newnode = new SyntaxNode(POWER,li->second,rnode);
+
+			int high = -1;
 			for(ri=right.begin();ri!=right.end();ri++){
-				partials.insert(pair<int,SyntaxNode*>(ri->first,newnode));
+//				partials.insert(pair<int,SyntaxNode*>(ri->first,newnode)); //local version!
+				//new implementation is distributed evaluation
+				high = high < ri->first? ri->first:high;
 			}
+			partials.insert(pair<int, SyntaxNode*>(high,newnode));
 		}
 		else if(right.size()==1 && ri!=right.end())
 		{//all other ^ const
@@ -1607,29 +1633,42 @@ void SyntaxNode::calculatePartialConstraints(boost::unordered_map<int,SyntaxNode
 			}
 			assert(lnode!=NULL);
 			SyntaxNode* newnode= new SyntaxNode(POWER,lnode,ri->second);
+
+			int high = -1;
 			for(li=left.begin();li!=left.end();li++){
-				partials.insert(pair<int,SyntaxNode*>(li->first,newnode));
+				//local version !
+//				partials.insert(pair<int,SyntaxNode*>(li->first,newnode));
+				//the new implementation is distributed evaluation
+				//therefore, only create the part on the highest level.
+				high = high<li->first?li->first:high;
 			}
+			partials.insert(pair<int,SyntaxNode*>(high,newnode));
 		}
 		else
 		{
+			int high = -1;
 			SyntaxNode* rnode = NULL;
 			for(ri=right.begin();ri!=right.end();ri++){
 				rnode = rnode==NULL?ri->second:new SyntaxNode(PLUS,rnode,ri->second);
+				high = high<ri->first?ri->first:high;
 			}
 			SyntaxNode* lnode = NULL;
 			for(li=left.begin();li!=left.end();li++){
 				lnode = lnode==NULL?li->second:new SyntaxNode(PLUS,lnode,li->second);
+				high = high<li->first?li->first:high;
 			}
 			SyntaxNode* newnode = new SyntaxNode(POWER,lnode,rnode);
-			for(ri=right.begin();ri!=right.end();ri++)
-			{
-				if(partials.find(ri->first)==partials.end()) partials.insert(pair<int,SyntaxNode*>(ri->first,newnode));
-			}
-			for(li=left.begin();li!=left.end();li++)
-			{
-				if(partials.find(li->first)==partials.end()) partials.insert(pair<int,SyntaxNode*>(li->first,newnode));
-			}
+			partials.insert(pair<int,SyntaxNode*>(high,newnode));
+
+			//old local version!
+//			for(ri=right.begin();ri!=right.end();ri++)
+//			{
+//				if(partials.find(ri->first)==partials.end()) partials.insert(pair<int,SyntaxNode*>(ri->first,newnode));
+//			}
+//			for(li=left.begin();li!=left.end();li++)
+//			{
+//				if(partials.find(li->first)==partials.end()) partials.insert(pair<int,SyntaxNode*>(li->first,newnode));
+//			}
 		}
 	}
 	else if(this->opCode == DIVID)
@@ -1654,9 +1693,13 @@ void SyntaxNode::calculatePartialConstraints(boost::unordered_map<int,SyntaxNode
 			}
 			assert(rnode!=NULL);
 			SyntaxNode* newnode = new SyntaxNode(DIVID,li->second,rnode);
+
+			int high = -1;
 			for(ri=right.begin();ri!=right.end();ri++){
-				partials.insert(pair<int,SyntaxNode*>(ri->first,newnode));
+//				partials.insert(pair<int,SyntaxNode*>(ri->first,newnode));
+				high =high<ri->first?ri->first:high;
 			}
+			partials.insert(pair<int,SyntaxNode*>(high,newnode));
 		}
 		else if(right.size()==1 && ri!=right.end())
 		{//all other / const
@@ -1668,22 +1711,26 @@ void SyntaxNode::calculatePartialConstraints(boost::unordered_map<int,SyntaxNode
 		else
 		{
 			SyntaxNode* rnode = NULL;
+			int high  = -1;
 			for(ri=right.begin();ri!=right.end();ri++){
 				rnode = rnode==NULL?ri->second:new SyntaxNode(PLUS,rnode,ri->second);
+				high = high<ri->first?ri->first:high;
 			}
 			SyntaxNode* lnode = NULL;
 			for(li=left.begin();li!=left.end();li++){
 				lnode = lnode==NULL?li->second:new SyntaxNode(PLUS,lnode,li->second);
+				high = high<li->first?li->first:high;
 			}
 			SyntaxNode* newnode = new SyntaxNode(DIVID,lnode,rnode);
-			for(ri=right.begin();ri!=right.end();ri++)
-			{
-				if(partials.find(ri->first)==partials.end()) partials.insert(pair<int,SyntaxNode*>(ri->first,newnode));
-			}
-			for(li=left.begin();li!=left.end();li++)
-			{
-				if(partials.find(li->first)==partials.end()) partials.insert(pair<int,SyntaxNode*>(li->first,newnode));
-			}
+			partials.insert(pair<int,SyntaxNode*>(high,newnode));
+//			for(ri=right.begin();ri!=right.end();ri++)
+//			{
+//				if(partials.find(ri->first)==partials.end()) partials.insert(pair<int,SyntaxNode*>(ri->first,newnode));
+//			}
+//			for(li=left.begin();li!=left.end();li++)
+//			{
+//				if(partials.find(li->first)==partials.end()) partials.insert(pair<int,SyntaxNode*>(li->first,newnode));
+//			}
 		}
 	}
 	else if(this->opCode == TIMES)
@@ -1736,14 +1783,15 @@ void SyntaxNode::calculatePartialConstraints(boost::unordered_map<int,SyntaxNode
 					if(newnode!=NULL) partials[i] = newnode;
 				}
 				else
-				{//put on both i ,j level
-					boost::unordered_map<int,SyntaxNode*>::iterator iti = partials.find(i);
+				{//put on the one higher (i, if i>j, j otherwise)
+					int high = i>j?i:j;
+					boost::unordered_map<int,SyntaxNode*>::iterator iti = partials.find(high);
 					if(newnode!=NULL && iti!=partials.end()) newnode = new SyntaxNode(PLUS,iti->second,newnode);
-					if(newnode!=NULL) partials[i] = newnode;
+					if(newnode!=NULL) partials[high] = newnode;
 
-					boost::unordered_map<int,SyntaxNode*>::iterator itj = partials.find(j);
-					if(newnode!=NULL && itj!=partials.end()) newnode = new SyntaxNode(PLUS,itj->second,newnode);
-					if(newnode!=NULL) partials[j] = newnode;
+//					boost::unordered_map<int,SyntaxNode*>::iterator itj = partials.find(j);
+//					if(newnode!=NULL && itj!=partials.end()) newnode = new SyntaxNode(PLUS,itj->second,newnode);
+//					if(newnode!=NULL) partials[j] = newnode;
 				}
 			}
 		}
@@ -1756,21 +1804,25 @@ void SyntaxNode::calculatePartialConstraints(boost::unordered_map<int,SyntaxNode
 		this->values.at(0)->calculatePartialConstraints(conspart);
 
 		SyntaxNode* lnode = NULL;
+		int high = -1;
 		for(i=conspart.begin();i!=conspart.end();i++){
+			high=high<i->first?i->first:high;
 			lnode = lnode==NULL?i->second:new SyntaxNode(PLUS,lnode,i->second);
 		}
 		assert(lnode!=NULL);
 		SyntaxNode* newnode = new SyntaxNode(opCode,lnode);
-		if(conspart.size()==1 && conspart.find(-1)!=conspart.end())
-		{//const only cos/sin(const_)
-			partials.insert(pair<int,SyntaxNode*>(-1,newnode));
-		}
-		else
-		{
-			for(i=conspart.begin();i!=conspart.end();i++){//can't be a const anymore . ie. cos(const+TVAR....) is on TVAR's level
-				if(i->first!=-1) partials.insert(pair<int,SyntaxNode*>(i->first,newnode));
-			}
-		}
+		partials.insert(pair<int,SyntaxNode*>(high,newnode));
+
+//		if(conspart.size()==1 && conspart.find(-1)!=conspart.end())
+//		{//const only cos/sin(const_)
+//			partials.insert(pair<int,SyntaxNode*>(-1,newnode));
+//		}
+//		else
+//		{
+//			for(i=conspart.begin();i!=conspart.end();i++){//can't be a const anymore . ie. cos(const+TVAR....) is on TVAR's level
+//				if(i->first!=-1) partials.insert(pair<int,SyntaxNode*>(i->first,newnode));
+//			}
+//		}
 	}
 	else
 	{
@@ -1828,14 +1880,14 @@ ModelContext* SyntaxNode::locateCtx(ModelContext& rowctx, ModelContext& currCtx)
 //	3.	Finally, the string name of dummy variable declared in the sum indexing expression should be the
 //		same as the string name of dummy variable used in the emcol's model index expression.
 //		This condition is placed intentionally so that the modeller will be able explictly enable this optimization routine.
-AutoDiff::Node* SyntaxNode::buildAutoDiffDAG(ExpandedModel* emrow,ExpandedModel* emcol, bool isLP)
+AutoDiff::Node* SyntaxNode::buildAutoDiffDAG(ExpandedModel* emrow,ExpandedModel* emcol, ProbType pType, InterfaceType iType)
 {
 	TRACE("enter - createAutoDiffConsDAG  - emrow["<<emrow->name<<"] emcol["<<(emcol==NULL?"null":emcol->name)<<"] --- "<<this);
 	ModelContext& rowctx = emrow->ctx;
 	AutoDiff::Node* con = NULL;
 	if(this->opCode==ASSIGN)
 	{
-		con = this->values[0]->buildAutoDiffDAG(emrow,emcol, isLP);
+		con = this->values[0]->buildAutoDiffDAG(emrow,emcol, pType, iType);
 	}
 	else if(this->opCode == IDREF)
 	{	//implicit idref lookup, - will lookup from emrow->ctx and it's parent recursively.
@@ -1843,21 +1895,44 @@ AutoDiff::Node* SyntaxNode::buildAutoDiffDAG(ExpandedModel* emrow,ExpandedModel*
 		//therefore, the idref (TVAR) type only generates a AutoDiff::VNode (adv) by looking up var initialized in emcol->ctx,
 		//otherwise indicating an error made in partial constraint computation.
 		//for nonlinear constraint, the implicit variable can be anything from rowctx or above.
-		if(isLP==true)
+
+		if(iType==DIST)
 		{//IMPLICIT idref look up in LP
 			SyntaxNodeIDREF* idref = static_cast<SyntaxNodeIDREF*>(this);
 			ModelComp* ref = idref->ref;
 			if(ref->type == TVAR )
-			{	//varaible must be in found in emcol. use emcolctx to lookup variable
-				assert(idref->ref->model == emcol->model); //must be in emcol
-				boost::unordered_map<ModelComp*,CompDescr*>::iterator itt = emcol->ctx.compValueMap.find(ref);
-				assert(itt!=emcol->ctx.compValueMap.end());
+			{
+				ExpandedModel* var_lookup_em = NULL;
+				if(pType == LP || pType == QP) {
+					//varaible must be in found in emcol. use emcolctx to lookup variable
+					assert(idref->ref->model == emcol->model); //must be in emcol
+					var_lookup_em = emcol;
+				}
+				else
+				{
+					assert(pType == NLP);
+					if(idref->ref->model == emcol->model)
+					{
+						var_lookup_em = emcol;
+					}
+					else
+					{
+						assert(idref->ref->model == emrow->model);
+						var_lookup_em = emrow;
+					}
+
+				}
+
+				//now looking up the variable
+				boost::unordered_map<ModelComp*,CompDescr*>::iterator itt = var_lookup_em->ctx.compValueMap.find(ref);
+				assert(itt!=var_lookup_em->ctx.compValueMap.end());
 				Var* var = static_cast<Var*>(itt->second);
 				assert(var!=NULL);
 				string varIndex = "";
 				if (idref->nchild() == 2) {//build varIndex if there is one
 					idref->values[1]->getIndiciesKey(rowctx, varIndex);
 				}
+
 				var_multi_map_by_indicies::iterator it = var->varMultiMap.get<1>().find(varIndex);
 				if (it != var->varMultiMap.get<1>().end()) {
 					con = &((*it)->adv);
@@ -1892,8 +1967,10 @@ AutoDiff::Node* SyntaxNode::buildAutoDiffDAG(ExpandedModel* emrow,ExpandedModel*
 			assert(con!=NULL); //should be initialised always, (parent variable should not be in the partial constarint at emcol->model->level
 		}
 		else
-		{//implicit look up for nonlinear-
-		 //nonlinear case variable can be referenced from any level in rowctx or above
+		{	//implicit look up for variable can be referenced from any level in rowctx or above
+			//variables declared below rowctx is handled by DOT operator later
+			assert(iType == LOCAL);
+			assert(emcol == NULL || (emcol!=NULL && (pType == LP || pType == QP))); //caling local interface is setting emcol == NULL
 			SyntaxNodeIDREF* idref = static_cast<SyntaxNodeIDREF*>(this);
 			ModelComp* ref = idref->ref;
 			CompDescr* compdescr = rowctx.getCompValue(ref);
@@ -1946,11 +2023,12 @@ AutoDiff::Node* SyntaxNode::buildAutoDiffDAG(ExpandedModel* emrow,ExpandedModel*
 		boost::unordered_map<ModelComp*,CompDescr*>::iterator itt = explicitCtx.compValueMap.find(ref);
 		assert(itt!=explicitCtx.compValueMap.end());
 		CompDescr* compdescr = explicitCtx.compValueMap.find(ref)->second;
-		if(isLP==true)
+		if(iType==DIST)
 		{
+			assert(emcol!=NULL);
 			if(ref->type == TVAR)
 			{
-				assert(explicitCtx==emcol->ctx); //if this refer an variable, the context must be point to emcol->ctx for LP case, using partial attributes
+				assert(explicitCtx==emcol->ctx); //if this refer an variable, the context must be point to emcol->ctx
 				Var* var = static_cast<Var*>(compdescr);
 				assert(var!=NULL);
 				string varIndex = "";
@@ -1975,7 +2053,9 @@ AutoDiff::Node* SyntaxNode::buildAutoDiffDAG(ExpandedModel* emrow,ExpandedModel*
 			}
 		}
 		else
-		{// for Nonlinear attributes of NLP, the context must be initialised
+		{// for Local interface calling, the context must be initialised
+			assert(iType == LOCAL);
+			assert(emcol == NULL || (emcol!=NULL && (pType == LP || pType == QP))); //caling local interface is setting emcol == NULL
 			if (ref->type == TVAR) {
 				Var* var = static_cast<Var*>(compdescr);
 				assert(var!=NULL);
@@ -2042,7 +2122,7 @@ AutoDiff::Node* SyntaxNode::buildAutoDiffDAG(ExpandedModel* emrow,ExpandedModel*
 			string& dummyval = emcol->dummyMap.begin()->second.second;
 			TRACE("Exact matches found for {"<<dummySum<<" in "<<compSum->name<<"} == {"<<dummyEmcol<<" in "<<compEmcol->name<<"} - Sum explict ["<<dummySum<<" -> ["<<dummyval<<"]");
 			rowctx.addDummyCompValueMapTemp(dummySum, compSum, dummyval);
-			con = this->values[1]->buildAutoDiffDAG(emrow,emcol, isLP);
+			con = this->values[1]->buildAutoDiffDAG(emrow,emcol, pType, iType);
 			rowctx.removeDummySetValueMapTemp(dummySum);
 		}
 		else
@@ -2073,7 +2153,7 @@ AutoDiff::Node* SyntaxNode::buildAutoDiffDAG(ExpandedModel* emrow,ExpandedModel*
 
 				string value = *setv;
 				rowctx.addDummyCompValueMapTemp(dummy, comp, value);
-				AutoDiff::Node* n = this->values[1]->buildAutoDiffDAG(emrow,emcol, isLP);
+				AutoDiff::Node* n = this->values[1]->buildAutoDiffDAG(emrow,emcol, pType, iType);
 				assert(n!=NULL);
 				nodes.push(n);
 				rowctx.removeDummySetValueMapTemp(dummy);
@@ -2120,7 +2200,7 @@ AutoDiff::Node* SyntaxNode::buildAutoDiffDAG(ExpandedModel* emrow,ExpandedModel*
 			}
 			assert(num==sumexpn->nProbs); //sanity check!
 			//then, build con by using expr (this->values[0]);
-			con = this->values[0]->buildAutoDiffDAG(emrow,emcol,isLP);
+			con = this->values[0]->buildAutoDiffDAG(emrow,emcol,pType, iType);
 			//finally, remove the dummy from emcol's model dummy to restore emrow
 			for(ExpandedModel* c = emcol;c!=emrow;c=c->parent) {
 				assert(c->dummyMap.size()==1); //assume only 1 model dummy support!
@@ -2148,14 +2228,14 @@ AutoDiff::Node* SyntaxNode::buildAutoDiffDAG(ExpandedModel* emrow,ExpandedModel*
 		if(this->values.size()==1)
 		{
 			assert(this->values[0]!=NULL);
-			AutoDiff::Node* left = this->values[0]->buildAutoDiffDAG(emrow,emcol, isLP);
+			AutoDiff::Node* left = this->values[0]->buildAutoDiffDAG(emrow,emcol, pType, iType);
 			con = create_uary_op_node(AutoDiff::OP_NEG,left);
 		}
 		else
 		{
 			assert(this->values.size()==2);
-			AutoDiff::Node* left = this->values[0]->buildAutoDiffDAG(emrow,emcol, isLP);
-			AutoDiff::Node* right = this->values[1]->buildAutoDiffDAG(emrow,emcol, isLP);
+			AutoDiff::Node* left = this->values[0]->buildAutoDiffDAG(emrow,emcol, pType, iType);
+			AutoDiff::Node* right = this->values[1]->buildAutoDiffDAG(emrow,emcol, pType, iType);
 			con = create_binary_op_node(AutoDiff::OP_MINUS,left,right);
 		}
 	}
@@ -2164,47 +2244,47 @@ AutoDiff::Node* SyntaxNode::buildAutoDiffDAG(ExpandedModel* emrow,ExpandedModel*
 		if(this->values.size()==1)
 		{
 			assert(this->values[0]!=NULL);
-			con = this->values[0]->buildAutoDiffDAG(emrow,emcol, isLP);
+			con = this->values[0]->buildAutoDiffDAG(emrow,emcol, pType, iType);
 		}
 		else
 		{
 			assert(this->values.size()==2);
-			AutoDiff::Node* left = this->values[0]->buildAutoDiffDAG(emrow,emcol, isLP);
-			AutoDiff::Node* right = this->values[1]->buildAutoDiffDAG(emrow,emcol, isLP);
+			AutoDiff::Node* left = this->values[0]->buildAutoDiffDAG(emrow,emcol, pType, iType);
+			AutoDiff::Node* right = this->values[1]->buildAutoDiffDAG(emrow,emcol, pType, iType);
 			con = create_binary_op_node(AutoDiff::OP_PLUS,left,right);
 		}
 	}
 	else if(this->opCode == TIMES)
 	{
 		assert(this->nchild()==2);
-		AutoDiff::Node* left = this->values[0]->buildAutoDiffDAG(emrow,emcol, isLP);
-		AutoDiff::Node* right = this->values[1]->buildAutoDiffDAG(emrow,emcol, isLP);
+		AutoDiff::Node* left = this->values[0]->buildAutoDiffDAG(emrow,emcol, pType, iType);
+		AutoDiff::Node* right = this->values[1]->buildAutoDiffDAG(emrow,emcol, pType, iType);
 		con = create_binary_op_node(AutoDiff::OP_TIMES,left,right);
 	}
 	else if(this->opCode == DIVID)
 	{
 		assert(this->nchild()==2);
-		AutoDiff::Node* left = this->values[0]->buildAutoDiffDAG(emrow,emcol, isLP);
-		AutoDiff::Node* right = this->values[1]->buildAutoDiffDAG(emrow,emcol, isLP);
+		AutoDiff::Node* left = this->values[0]->buildAutoDiffDAG(emrow,emcol, pType, iType);
+		AutoDiff::Node* right = this->values[1]->buildAutoDiffDAG(emrow,emcol, pType, iType);
 		con = create_binary_op_node(AutoDiff::OP_DIVID,left,right);
 	}
 	else if(this->opCode == POWER)
 	{
 		assert(this->nchild()==2);
-		AutoDiff::Node* left = this->values[0]->buildAutoDiffDAG(emrow,emcol, isLP);
-		AutoDiff::Node* right = this->values[1]->buildAutoDiffDAG(emrow,emcol, isLP);
+		AutoDiff::Node* left = this->values[0]->buildAutoDiffDAG(emrow,emcol, pType, iType);
+		AutoDiff::Node* right = this->values[1]->buildAutoDiffDAG(emrow,emcol, pType, iType);
 		con = AutoDiff::create_binary_op_node(AutoDiff::OP_POW,left,right);
 	}
 	else if(this->opCode == COS)
 	{
 		assert(this->nchild()==1);
-		AutoDiff::Node* left = this->values[0]->buildAutoDiffDAG(emrow,emcol, isLP);
+		AutoDiff::Node* left = this->values[0]->buildAutoDiffDAG(emrow,emcol, pType, iType);
 		con = AutoDiff::create_uary_op_node(AutoDiff::OP_COS,left);
 	}
 	else if(this->opCode == SIN)
 	{
 		assert(this->nchild()==1);
-		AutoDiff::Node* left = this->values[0]->buildAutoDiffDAG(emrow,emcol, isLP);
+		AutoDiff::Node* left = this->values[0]->buildAutoDiffDAG(emrow,emcol, pType, iType);
 		con = AutoDiff::create_uary_op_node(AutoDiff::OP_SIN,left);
 	}
 	else

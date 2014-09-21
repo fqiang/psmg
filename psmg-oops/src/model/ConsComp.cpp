@@ -42,18 +42,20 @@ void ConsComp::calculatePartialConstraints()
 	SyntaxNode* assign_expr = attributes->findDirectChild(ASSIGN);
 	assert(assign_expr->nchild()==2); //TODO: for now- only equality constraint supported
 
-//	assert(cpart.constant == NULL && cpart.first==NULL && cpart.higher==NULL);
-//	assign_expr->values[0]->calculateLinearNonLinearParts(cpart);
+	if(ExpandedModel::ptype == NLP) {
+		assert(cpart.constant == NULL && cpart.first==NULL && cpart.higher==NULL);
+		assign_expr->values[0]->calculateLinearNonLinearParts(cpart);
+		assert(const_partial.size()==0 && first_partial.size() == 0 && higher_partial.size()==0);
 
-//	assert(const_partial.size()==0 && first_partial.size() == 0 && higher_partial.size()==0);
-//	cpart.constant->calculatePartialConstraints(const_partial);
-//	cpart.first->calculatePartialConstraints(first_partial);
-//	cpart.higher->calculatePartialConstraints(higher_partial);
+		if(cpart.constant!=NULL) cpart.constant->calculatePartialConstraints(const_partial);
+		if(cpart.first!=NULL) cpart.first->calculatePartialConstraints(first_partial);
+		if(cpart.higher!=NULL) cpart.higher->calculatePartialConstraints(higher_partial);
+	}
 
 	assert(this->partial.size() == 0);
 	assign_expr->values[0]->calculatePartialConstraints(this->partial);
 
-	//sanity check!
+	//sanity check! - for constraint formulation
 	assert(partial.find(-1)==partial.end()); //TODO: for now - place all constant term on LHS
 	assert(assign_expr->values.at(1)->isContainsIDREF_TVAR_in_child() == false);  //TODO: for now - place all variables term on RHS
 }

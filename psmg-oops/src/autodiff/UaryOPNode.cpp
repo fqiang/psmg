@@ -7,7 +7,8 @@
 
 #include "UaryOPNode.h"
 #include "BinaryOPNode.h"
-#include "PNode.h"
+#include "PVal.h"
+#include "PIndex.h"
 #include "Stack.h"
 #include "Tape.h"
 #include "Edge.h"
@@ -30,12 +31,12 @@ OPNode* UaryOPNode::createUnaryOpNode(OPCODE op, Node* left)
 	if(op == OP_SQRT)
 	{
 		double param = 0.5;
-		node = BinaryOPNode::createBinaryOpNode(OP_POW,left,new PNode(param));
+		node = BinaryOPNode::createBinaryOpNode(OP_POW,left,new PVal(param));
 	}
 	else if(op == OP_NEG)
 	{
 		double param = -1;
-		node = BinaryOPNode::createBinaryOpNode(OP_TIMES,left,new PNode(param));
+		node = BinaryOPNode::createBinaryOpNode(OP_TIMES,left,new PVal(param));
 	}
 	else
 	{
@@ -364,7 +365,7 @@ void UaryOPNode::hess_forward_calc0(unsigned int& len, double* lvec, double* ret
 }
 #endif
 
-string UaryOPNode::toString(int level) const
+string UaryOPNode::toString(int level)
 {
 	ostringstream oss;
 	string s(level,'\t');

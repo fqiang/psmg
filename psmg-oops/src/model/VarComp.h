@@ -25,7 +25,7 @@ public:
 	//different size depending on the indexing set.
 //	uint card; //number of variables for this declared varcomp
 
-	void calculateVarComp(ModelContext& ctx);
+	void calculateVarComp(uint& idx, ModelContext& ctx);
 	void calculateVarDimCard(ModelContext& context, uint& card);
 	void dump(ostream& fout,int counter);
 	void calculateMemoryUsage(ulong& size);

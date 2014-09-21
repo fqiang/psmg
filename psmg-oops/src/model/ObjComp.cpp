@@ -33,6 +33,8 @@ void ObjComp::calculatePartialConstraints()
 	if(cpart.first!=NULL) cpart.first->calculatePartialConstraints(first_partial);
 	if(cpart.higher!=NULL) cpart.higher->calculatePartialConstraints(higher_partial);
 
+//	attributes->calculatePartialConstraints(full_partial);
+
 	//validation of the objective
 	// this is for LP and QP problem
 	// LP and QP , we will need to compute the c vector (the coefficient of the linear part of the objective)

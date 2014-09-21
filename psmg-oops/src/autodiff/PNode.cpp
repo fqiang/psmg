@@ -13,8 +13,12 @@
 
 namespace AutoDiff {
 
-PNode::PNode(double value):pval(value) {
-	assert(!isnan(value));
+//PNode::PNode(double value):pval(value) {
+//	assert(!isnan(value));
+//}
+
+PNode::PNode(){
+
 }
 
 PNode::~PNode() {
@@ -32,20 +36,20 @@ void PNode::collect_vnodes(boost::unordered_set<Node*>& nodes,unsigned int& tota
 
 void PNode::eval_function()
 {
-	SV->push_back(pval);
+	SV->push_back(pval());
 }
 
-string PNode::toString(int level) const
+string PNode::toString(int level)
 {
 	ostringstream oss;
 	string s(level,'\t');
-	oss<<s<<"[PNode]("<<pval<<")";
+	oss<<s<<"[PNode]("<<pval()<<")";
 	return oss.str();
 }
 
 void PNode::grad_reverse_0()
 {
-	SV->push_back(pval);
+	SV->push_back(pval());
 }
 void PNode::grad_reverse_1_init_adj()
 {
@@ -68,7 +72,7 @@ unsigned int PNode::hess_reverse_0()
 {
 	if(index==0)
 	{
-		TT->set(pval);
+		TT->set(pval());
 		assert(TT->index == TT->index);
 		index = TT->index;
 	}
@@ -135,7 +139,7 @@ void PNode::hess_forward(unsigned int len, double** ret_vec)
 	//it's a scalar
 	(*ret_vec) = new double[len];
 	std::fill_n(*ret_vec,len,0);
-	SV->push_back(this->pval);
+	SV->push_back(this->pval());
 	assert(SV->size()==1);
 }
 #endif
