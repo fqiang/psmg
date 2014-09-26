@@ -23,4 +23,12 @@ double& PVal::pval() {
 	return value;
 }
 
+string PVal::toString(int level)
+{
+	ostringstream oss;
+	string s(level,'\t');
+	oss<<s<<"[PVal]("<<this->value<<")"<<this;
+	return oss.str();
+}
+
 } /* namespace AutoDiff */

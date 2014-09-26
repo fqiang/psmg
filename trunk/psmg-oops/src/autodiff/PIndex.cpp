@@ -34,4 +34,13 @@ double& PIndex::pval(){
 	}
 }
 
+string PIndex::toString(int level)
+{
+	ostringstream oss;
+	string s(level,'\t');
+	oss<<s<<"[PIndex]("<<this->idx<<")"<<this;
+	return oss.str();
+}
+
+
 } /* namespace AutoDiff */

@@ -24,10 +24,10 @@ BinaryOPNode::BinaryOPNode(OPCODE op_, Node* left_, Node* right_):OPNode(op_,lef
 {
 }
 
-OPNode* BinaryOPNode::createBinaryOpNode(OPCODE op, Node* left, Node* right)
+Node* BinaryOPNode::createBinaryOpNode(OPCODE op, Node* left, Node* right)
 {
 	assert(left!=NULL && right!=NULL);
-	OPNode* node = NULL;
+	Node* node = NULL;
 	node = new BinaryOPNode(op,left,right);
 	return node;
 }
@@ -645,7 +645,7 @@ void BinaryOPNode::hess_forward_calc0(uint& len, double* lvec, double* rvec, dou
 string BinaryOPNode::toString(int level){
 	ostringstream oss;
 	string s(level,'\t');
-	oss<<s<<"[BinaryOPNode]("<<op<<")";
+	oss<<s<<"[BinaryOPNode]("<<op<<")"<<this;
 	return oss.str();
 }
 

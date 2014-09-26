@@ -17,7 +17,7 @@ class EdgeSet;
 class BinaryOPNode: public OPNode {
 public:
 
-	static OPNode* createBinaryOpNode(OPCODE op, Node* left, Node* right);
+	static Node* createBinaryOpNode(OPCODE op, Node* left, Node* right);
 	virtual ~BinaryOPNode();
 
 	void collect_vnodes(boost::unordered_set<Node*>& nodes,uint& total);

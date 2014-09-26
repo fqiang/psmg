@@ -20,6 +20,7 @@ public:
 	virtual ~PIndex();
 
 	double& pval() ;
+	string toString(int level);
 };
 
 } /* namespace AutoDiff */

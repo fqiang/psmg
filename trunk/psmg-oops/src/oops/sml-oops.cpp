@@ -378,7 +378,7 @@ void fill_cons_val_local(Vector *vcons)
 	DenseVector *dense = GetDenseVectorFromVector(vcons);
 	Algebra *A = (Algebra*) T->nodeOfAlg;
 	OOPSBlock *obl = (OOPSBlock*)A->id;
-	assert(obl->emcol->numLocalVars == T->end - T->begin);
+	assert(obl->emcol->numLocalCons == T->end - T->begin);
 	assert(obl->emrow == obl->emcol);
 	obl->emrow->cons_feval_local(dense->elts);
 }

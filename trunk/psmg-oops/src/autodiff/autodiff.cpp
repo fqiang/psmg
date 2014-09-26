@@ -36,22 +36,22 @@ void hess_forward(Node* root, uint nvar, double** hess_mat)
 #endif
 
 
-PNode* create_param_node(uint idx){
+PIndex* create_param_node(uint idx){
 	return new PIndex(idx);
 }
 
-PNode* create_param_node(double& val){
+PVal* create_param_node(double& val){
 	return new PVal(val);
 }
 VNode* create_var_node(uint idx)
 {
 	return new VNode(idx);
 }
-OPNode* create_binary_op_node(OPCODE code, Node* left, Node* right)
+Node* create_binary_op_node(OPCODE code, Node* left, Node* right)
 {
 	return BinaryOPNode::createBinaryOpNode(code,left,right);
 }
-OPNode* create_uary_op_node(OPCODE code, Node* left)
+Node* create_uary_op_node(OPCODE code, Node* left)
 {
 	return UaryOPNode::createUnaryOpNode(code,left);
 }
@@ -208,15 +208,16 @@ double hess_reverse(Node* root,vector<Node*>& vnodes,col_compress_matrix_col& ch
 	assert(root->n_in_arcs == 1);
 	root->hess_reverse_1(TT->index);
 	assert(root->n_in_arcs == 0);
-	assert(II->index==0);
 //	cout<<TT->toString();
 //	cout<<endl;
 //	cout<<II->toString();
 //	cout<<"======================================= hess_reverse_1"<<endl;
+	assert(II->index==0);
 
 	uint i =0;
 	BOOST_FOREACH(Node* node, vnodes)
 	{
+		assert(node->n_in_arcs == 0);
 		assert(node->getType() == VNode_Type);
 		//node->index = 0 means this VNode is not in the tree
 		if(node->index!=0)

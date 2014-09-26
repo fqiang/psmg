@@ -85,7 +85,7 @@ template<typename T>  string Tape<T>::toString()
 {
 	assert(vals.size()>=index);
 	ostringstream oss;
-	oss<<"Tape size["<<vals.size()<<"]";
+	oss<<"Tape size["<<vals.size()<<"] - index["<<index<<"]";
 	for(uint i=0;i<vals.size();i++){
 		if(i%10==0) oss<<endl;
 		oss<<vals[i]<<",";

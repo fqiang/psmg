@@ -199,7 +199,7 @@ public:
 	void addModelDummy(string& dummyVar, ModelComp* comp, string value);
 	void addChildren(ExpandedModel* em2);
 	void levelTraversal(vector<ExpandedModel*>& em2List,int level);
-	static void convertToColSparseMatrix(col_compress_matrix& m,ColSparseMatrix& sm);
+	static void convertToColSparseMatrix(col_compress_matrix& m,ColSparseMatrix& sm, uint max_nz);
 	/*
 	 * Utility methods
 	 */

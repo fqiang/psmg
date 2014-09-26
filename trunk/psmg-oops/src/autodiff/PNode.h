@@ -35,9 +35,9 @@ public:
 	void nonlinearEdges(EdgeSet&);
 
 	void inorder_visit(int level,ostream& oss);
-	string toString(int level);
 	TYPE getType();
 
+	string toString(int level) = 0;
 	virtual double& pval() = 0;
 //	double pval;
 
