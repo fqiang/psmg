@@ -64,7 +64,7 @@ param: 	Generator: 	Location 	MaxGenP 	MinGenP	MaxGenQ 	MinGenQ 	GenQuad 	GenLin
    	g33 	b23 	       3.5 	       1.4 	       1.5 	     -0.25 	    0.0049 	      11.8 	       665	;
 
 param: 	Line: 	LStartBus 	LEndBus 	LReactance 	LResistance 	LBsh 	LMaxFlow 	LContMaxFlow 	LNminus1 :=
-   	l1 	b1 	b2 	    0.0139 	    0.0026 	     0.461 	      1.75 	         2 	         0
+   	l1 	b1 	b2 	    0.0139 	    0.0026 	     0.461 	      1.75 	         2 	         1
    	l2 	b1 	b3 	     0.211 	    0.0546 	    0.0572 	      1.75 	       2.2 	         0
    	l3 	b1 	b5 	    0.0845 	    0.0218 	    0.0229 	      1.75 	       2.2 	         0
    	l4 	b2 	b4 	     0.127 	    0.0328 	    0.0343 	      1.75 	       2.2 	         0
@@ -98,10 +98,10 @@ param: 	Line: 	LStartBus 	LEndBus 	LReactance 	LResistance 	LBsh 	LMaxFlow 	LCon
    	l32 	b20 	b23 	    0.0216 	    0.0028 	    0.0455 	         5 	      6.25 	         0
    	l33 	b21 	b22 	    0.0678 	    0.0087 	     0.142 	         5 	      6.25 	         0	;
 
-param: 	Transformer: 	TStartBus 	TEndBus 	TReactance 	TResistance 	TBsh 	TMaxFlow 	TContMaxFlow 	TNminus1 	MaxTap 	MinTap 	ExTap :=
-   	t1 	b3 	b24 	    0.0839 	    0.0023 	         0 	         4 	         6 	         0 	       1.1 	       0.9 	      1.03
-   	t2 	b9 	b11 	    0.0839 	    0.0023 	         0 	         4 	         6 	         0 	       1.1 	       0.9 	      1.03
-   	t3 	b9 	b12 	    0.0839 	    0.0023 	         0 	         4 	         6 	         0 	       1.1 	       0.9 	      1.03
-   	t4 	b10 	b11 	    0.0839 	    0.0023 	         0 	         4 	         6 	         0 	       1.1 	       0.9 	      1.02
-   	t5 	b10 	b12 	    0.0839 	    0.0023 	         0 	         4 	         6 	         0 	       1.1 	       0.9 	      1.02	;
+param: 	Transformer: 	TStartBus 	TEndBus 	TReactance 	TResistance 	TBsh 	TMaxFlow 	TContMaxFlow 	TNminus1 	ExTap :=
+   	t1 	b3 	b24 	    0.0839 	    0.0023 	         0 	         4 	         6 	         1 	       1.03
+   	t2 	b9 	b11 	    0.0839 	    0.0023 	         0 	         4 	         6 	         0 	       1.03
+   	t3 	b9 	b12 	    0.0839 	    0.0023 	         0 	         4 	         6 	         0 	       1.03
+   	t4 	b10 	b11 	    0.0839 	    0.0023 	         0 	         4 	         6 	         0 	   1.02
+   	t5 	b10 	b12 	    0.0839 	    0.0023 	         0 	         4 	         6 	         0 	   1.02	;
 

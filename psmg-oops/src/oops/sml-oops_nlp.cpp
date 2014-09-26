@@ -38,10 +38,9 @@ void SML_OOPS_driver_NLP(ExpandedModel *root) {
 
 	//starting point / default value for decision variable
 	//TODO: implement functionality to take default value from model file and data file
-	std::vector<double> x(ExpandedModel::n_col,0.089876223423);
-	for(uint i=0;i<x.size();i++) x[i] = x[i]+1.32123232;
+	std::vector<double> x(ExpandedModel::n_col,1);
+//	for(uint i=0;i<x.size();i++) x[i] = x[i];
 	ExpandedModel::X0 = &x[0];
-
 
 	OopsOpt Opt;
 	Opt.readFile();
@@ -470,14 +469,16 @@ void psmg_callback_a_nlp(CallBackInterfaceType *cbi) {
 	}
 	else {
 		TRACE("jacobs - want to fill in matrices");
+		assert(cbi->nz>=0);
+		uint max_nz = cbi->nz;
 		if(cbi->nz!=0) {
 			//2. computing jacob of intersection emrow X emcol
 			//   use the current point offered by previous call
 			col_compress_matrix block(obl->emrow->numLocalCons,obl->emcol->numLocalVars,cbi->nz);
 			obl->emrow->cons_jacobs_nlp_local(obl->emcol, block);
+			assert(block.nnz()<=cbi->nz);
 			ColSparseMatrix m(cbi->element,cbi->row_nbs,cbi->col_beg,cbi->col_len);
-			ExpandedModel::convertToColSparseMatrix(block,m);
-
+			ExpandedModel::convertToColSparseMatrix(block,m,max_nz);
 			if(cbi->nz != block.nnz()) {
 				WARN("psmg_callback_a_nlp,zero value possible - "<<obl->emrow->name<<" X "<<obl->emcol->name<<" cbi["<<cbi->nz<<"] nnz["<<block.nnz()<<"]");
 			}
@@ -537,24 +538,28 @@ void psmg_callback_q_nlp(CallBackInterfaceType *cbi) {
 	else
 	{
 		TRACE("laghess ---  fill in matrices");
+		assert(cbi->nz>=0);
+		uint max_nz = cbi->nz;
 		if(cbi->nz!=0) {
 			//2. computing jacob of intersection emrow X emcol
 			//   use the current point offered by previous call
 			if(rowlev < collev) {  //computing Bottom border Q.
 				col_compress_matrix block(obl->emcol->numLocalVars,obl->emrow->numLocalVars,cbi->nz);
 				obl->emcol->lag_hess_nlp_local(obl->emrow, block);          //computing RHS Q instead, and taking transpose later.
+				assert(block.nnz()<=cbi->nz);
 				block = boost::numeric::ublas::trans(block);  				//taking transpose,
 				ColSparseMatrix m(cbi->element,cbi->row_nbs,cbi->col_beg,cbi->col_len);
-				ExpandedModel::convertToColSparseMatrix(block,m);
+				ExpandedModel::convertToColSparseMatrix(block,m,max_nz);
 				if(cbi->nz != block.nnz()) {
 					WARN("psmg_callback_q_nlp,zero value possible - "<<obl->emrow->name<<" X "<<obl->emcol->name<<" cbi["<<cbi->nz<<"] nnz["<<block.nnz()<<"]");
 				}
 			}
 			else {  //computing RHS Q.
-				col_compress_matrix block(obl->emrow->numLocalVars,obl->emcol->numLocalVars,cbi->nz);
+				col_compress_matrix block(obl->emrow->numLocalVars,obl->emcol->numLocalVars,max_nz);
 				obl->emrow->lag_hess_nlp_local(obl->emcol, block);
+				assert(block.nnz()<=cbi->nz);
 				ColSparseMatrix m(cbi->element,cbi->row_nbs,cbi->col_beg,cbi->col_len);
-				ExpandedModel::convertToColSparseMatrix(block,m);
+				ExpandedModel::convertToColSparseMatrix(block,m,cbi->nz);
 				if(cbi->nz != block.nnz()) {
 					WARN("psmg_callback_q_nlp,zero value possible - "<<obl->emrow->name<<" X "<<obl->emcol->name<<" cbi["<<cbi->nz<<"] nnz["<<block.nnz()<<"]");
 				}

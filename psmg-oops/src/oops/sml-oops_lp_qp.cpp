@@ -156,12 +156,15 @@ void psmg_callback_a_lp_qp(CallBackInterfaceType *cbi) {
 		TRACE("SMLCallBack  fill -"<<cbi->nz);
 //		LOG_TIME(""<<Stat::numJacLPCall<<" row: "<<obl->emrow->name<<"  col: "<<obl->emcol->name<<" ");
 //		TIMER_START("cons_jacobs_lp");
+		assert(cbi->nz>=0);
+		uint max_nz = cbi->nz;
 		if(cbi->nz!=0) {
 			col_compress_matrix block(obl->emrow->numLocalCons,obl->emcol->numLocalVars,cbi->nz);
 			ColSparseMatrix m(cbi->element,cbi->row_nbs,cbi->col_beg,cbi->col_len);
 			obl->emrow->cons_jacobs_lp_qp(obl->emcol, block);
+			assert(block.nnz()<=cbi->nz);
 //			TRACE(""<<block);
-			ExpandedModel::convertToColSparseMatrix(block,m);
+			ExpandedModel::convertToColSparseMatrix(block,m,max_nz);
 			if(cbi->nz != block.nnz()) {
 				WARN("psmg_callback_q_lp_qp,zero value possible - "<<obl->emrow->name<<" X "<<obl->emcol->name<<" cbi["<<cbi->nz<<"] nnz["<<block.nnz()<<"]");
 			}
@@ -207,6 +210,8 @@ void psmg_callback_q_lp_qp(CallBackInterfaceType *cbi) {
 			}
 		}
 		else{
+			assert(cbi->nz>=0);
+			uint max_nz = cbi->nz;
 			if(cbi->nz != 0)
 			{
 				if(rowlevel<collevel){ //computing the bottom border Q.
@@ -214,7 +219,8 @@ void psmg_callback_q_lp_qp(CallBackInterfaceType *cbi) {
 					obl->emcol->obj_hess_qp(obl->emrow,block);    //computing RHS Q, then take transpose
 					block = boost::numeric::ublas::trans(block);  //taking transpose,
 					ColSparseMatrix m(cbi->element,cbi->row_nbs,cbi->col_beg,cbi->col_len);
-					ExpandedModel::convertToColSparseMatrix(block,m);
+					ExpandedModel::convertToColSparseMatrix(block,m,max_nz);
+					assert(block.nnz()<=cbi->nz);
 					if(cbi->nz != block.nnz()) {
 						WARN("psmg_callback_q_lp_qp,zero value possible - "<<obl->emrow->name<<" X "<<obl->emcol->name<<" cbi["<<cbi->nz<<"] nnz["<<block.nnz()<<"]");
 					}
@@ -224,7 +230,8 @@ void psmg_callback_q_lp_qp(CallBackInterfaceType *cbi) {
 					col_compress_matrix block(obl->emrow->numLocalVars,obl->emcol->numLocalVars,cbi->nz);
 					obl->emrow->obj_hess_qp(obl->emcol,block);
 					ColSparseMatrix m(cbi->element,cbi->row_nbs,cbi->col_beg,cbi->col_len);
-					ExpandedModel::convertToColSparseMatrix(block,m);
+					ExpandedModel::convertToColSparseMatrix(block,m,max_nz);
+					assert(block.nnz()<=cbi->nz);
 					if(cbi->nz != block.nnz()) {
 						WARN("psmg_callback_q_lp_qp,zero value possible - "<<obl->emrow->name<<" X "<<obl->emcol->name<<" cbi["<<cbi->nz<<"] nnz["<<block.nnz()<<"]");
 					}

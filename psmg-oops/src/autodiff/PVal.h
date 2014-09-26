@@ -21,6 +21,8 @@ public:
 	virtual ~PVal();
 
 	double& pval();
+
+	string toString(int level);
 };
 
 } /* namespace AutoDiff */

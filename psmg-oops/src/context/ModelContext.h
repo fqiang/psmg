@@ -38,7 +38,7 @@ public:
 	boost::unordered_map<string,string> dummyEmcolTempMap;  //this is used for storing emcol model dummy for SUMEXP handling
 
 	//! temporary IndexSet storage - mainly for sum{...} node
-	boost::unordered_map<SyntaxNode*,IndexSet*> tempISetMap;
+	boost::unordered_map<string,IndexSet*> tempISetMap;
 
 	ModelContext(ExpandedModel* par);
 	virtual ~ModelContext();
@@ -55,8 +55,8 @@ public:
 //	string getContextId();
 	bool operator==(const ModelContext& other) const;
 
-	bool getCalcSumSet(SyntaxNode*,IndexSet** iset);
-	void addCalcSumSet(SyntaxNode*,IndexSet* iset);
+	bool getCalcSumSet(string&,IndexSet** iset);
+	void addCalcSumSet(string&,IndexSet* iset);
 
 	void calculateMemoryUsage(unsigned long& size);
 };

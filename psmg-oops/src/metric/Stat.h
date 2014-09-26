@@ -23,7 +23,7 @@ class Stat{
 //	static int numNZObjHessLocalCall;
 //	static int numObjHessLocalCall;
 
-	static int numGradObjCCall;
+	static int numGradObj_LP_QP_Call;
 	static int numConsFevalLocalCall;
 	static int numObjFevalLocalCall;
 

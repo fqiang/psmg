@@ -30,7 +30,7 @@ BlockA::~BlockA() {
 void BlockA::logBlock(ExpandedModel* emrow)
 {
 	ostringstream oss;
-	oss<<GV(logdir)<<emrow->qualifiedName()<<".fullblk";
+	oss<<GV(logdir)<<emrow->qualifiedName()<<".fullablk";
 	ofstream out(oss.str().c_str());
 
 	out<<"Constraint Block"<<endl;
@@ -68,7 +68,7 @@ void BlockA::logBlock(ExpandedModel* emrow)
 void BlockA::logBlock(ExpandedModel* emrow, ExpandedModel* emcol)
 {
 	ostringstream oss;
-	oss<<GV(logdir)<<emrow->qualifiedName()<<"-"<<emcol->qualifiedName()<<".partblk";
+	oss<<GV(logdir)<<emrow->qualifiedName()<<"-"<<emcol->qualifiedName()<<".ablk";
 	ofstream out(oss.str().c_str());
 
 	out<<"Constraint Block"<<endl;

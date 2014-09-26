@@ -17,6 +17,8 @@
 #include "Node.h"
 #include "VNode.h"
 #include "OPNode.h"
+#include "BinaryOPNode.h"
+#include "UaryOPNode.h"
 #include "PNode.h"
 #include "PIndex.h"
 #include "PVal.h"
@@ -82,12 +84,11 @@ typedef boost::numeric::ublas::matrix_column<col_compress_matrix  > col_compress
 namespace AutoDiff{
 
 	//node creation methods
-	extern VNode* create_var_node(double& v);
-	extern PNode* create_param_node(double& val);
-	extern PNode* create_param_node(uint idx);
-//	extern VNode* create_var_node(double& v);
-	extern OPNode* create_uary_op_node(OPCODE code, Node* left);
-	extern OPNode* create_binary_op_node(OPCODE code, Node* left,Node* right);
+	extern VNode* create_var_node(uint& idx);
+	extern PVal* create_param_node(double& val);
+	extern PIndex* create_param_node(uint idx);
+	extern Node* create_uary_op_node(OPCODE code, Node* left);
+	extern Node* create_binary_op_node(OPCODE code, Node* left,Node* right);
 
 	//single constraint version
 	extern double eval_function(Node* root);

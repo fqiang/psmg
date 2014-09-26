@@ -108,6 +108,8 @@ ExpandedModel::~ExpandedModel() {
 
 	for(unordered_map<ExpandedModel*, BlockHV*>::iterator it=nlp_hvblockMap_local.begin();it!=nlp_hvblockMap_local.end();it++)
 	{
+		cout<<this->name<<" -- "<<it->first->name<<endl;
+		cout<<AutoDiff::tree_expr(it->second->node)<<endl;
 		delete it->second;
 	}
 	nlp_hvblockMap_local.clear();
@@ -338,7 +340,6 @@ void ExpandedModel::obj_hess_qp(ExpandedModel* emcol, col_compress_matrix& m)
 		//calculate the column c for Hessian m
 		col_compress_matrix_col hess_col(hess,c);
 		hess_reverse(bq->objective,vnodes,hess_col); //accumulate the column of hess
-		c++;
 	}
 
 //	TRACE("Full hessian: "<<hess);
@@ -520,7 +521,7 @@ void ExpandedModel::obj_grad_c_lp_qp(double* vals)
 		}
 		delete obj_c;
 	}
-	Stat::numGradObjCCall++;
+	Stat::numGradObj_LP_QP_Call++;
 	TRACE("end obj_grad_c - emrow["<<this->name<<"] size["<<this->numLocalVars<<"]");
 
 }
@@ -595,7 +596,7 @@ double& ExpandedModel::obj_feval_local(double& oval)
 		}
 	}
 	assert(!isnan(oval));
-	TRACE("end obj_feval - this["<<this->name<<"] - oval["<<oval<<"]");
+	TRACE("end obj_feval_local - this["<<this->name<<"] - oval["<<oval<<"]");
 	Stat::numObjFevalLocalCall++;
 	return oval;
 }
@@ -623,8 +624,8 @@ BlockObj* ExpandedModel::getBlockObj_Grad()
 			Node* onode = NULL;
 			if(em->model->obj_comp!=NULL)
 			{
-				SyntaxNode* attr = em->model->obj_comp->attributes;
-				Node* onode0 = attr==NULL?NULL:attr->buildAutoDiffDAG(this,NULL,ptype, itype);
+				SyntaxNode* attr = em->model->obj_comp->attributes; //the full attributes (both first and higher order)
+				onode = attr==NULL?NULL:attr->buildAutoDiffDAG(this,this,ptype, itype);
 			}
 			if(node!=NULL && onode!=NULL)
 			{
@@ -652,7 +653,7 @@ void ExpandedModel::obj_grad_nlp_local(double* vals)
 		std::vector<AutoDiff::Node*> vnodes;
 		this->copyVariables(vnodes);
 		TRACE("objective expression  ---- ");
-		TRACE("--- "<<tree_expr(ob->objective));
+//		TRACE("--- "<<tree_expr(ob->objective));
 		std::vector<double> grad(this->numLocalVars);
 		grad_reverse(ob->objective,vnodes,grad);
 		for(uint i=0;i<grad.size();i++)
@@ -740,14 +741,15 @@ BlockA* ExpandedModel::getBlockA_NLP_Local(ExpandedModel* emcol)
 		banlp = (*it).second;
 	}
 	else{
-		if(this->model->level < emcol->model->level) //this is above emcol
-		{
-			emcol->initFullDepEms();
-		}
-		else // this is below emcol
-		{
-			this->initFullDepEms();
-		}
+//		if(this->model->level < emcol->model->level) //this is above emcol
+//		{
+//			emcol->initFullDepEms();
+//		}
+//		else // this is below emcol
+//		{
+//			this->initFullDepEms();
+//		}
+		this->initFullDepEms();
 
 		banlp = new BlockA();
 		BOOST_FOREACH(ConsComp* con, this->model->con_comps)
@@ -775,7 +777,7 @@ BlockA* ExpandedModel::getBlockA_NLP_Local(ExpandedModel* emcol)
 					for(int i=emcol->model->level;i<=AmplModel::MAX_LEVEL;i++){
 						unordered_map<int,SyntaxNode*>::iterator it1 = con->partial.find(i);
 						SyntaxNode* attribute = it1 ==con->partial.end()?NULL:it1->second;
-						Node* acon0 = attribute==NULL?NULL:attribute->buildAutoDiffDAG(this,NULL,ptype, itype);
+						Node* acon0 = attribute==NULL?NULL:attribute->buildAutoDiffDAG(this,emcol,ptype, itype);
 						if(attribute == NULL) TRACE("acon0 - at this level "<<i<<" is NULL");
 
 						if(acon0 != NULL && acon != NULL)
@@ -802,7 +804,7 @@ BlockA* ExpandedModel::getBlockA_NLP_Local(ExpandedModel* emcol)
 				for(int i=emcol->model->level;i<=AmplModel::MAX_LEVEL;i++){
 					unordered_map<int,SyntaxNode*>::iterator it1 = con->partial.find(i);
 					SyntaxNode* attribute = it1 ==con->partial.end()?NULL:it1->second;
-					Node* acon0 = attribute==NULL?NULL:attribute->buildAutoDiffDAG(this,NULL,ptype, itype);
+					Node* acon0 = attribute==NULL?NULL:attribute->buildAutoDiffDAG(this,emcol,ptype, itype);
 					if(acon0 != NULL && acon != NULL)
 					{
 						acon = create_binary_op_node(OP_PLUS,acon,acon0);
@@ -1020,17 +1022,17 @@ BlockHV* ExpandedModel::getBlockHV_NLP_Full(ExpandedModel* emcol)
 																	   //in this and emrow are invovled in the partial expression
 							unordered_map<int,SyntaxNode*>::iterator it1 = con->higher_partial.find(i);
 							SyntaxNode* attribute = it1 ==con->higher_partial.end()?NULL:it1->second;
-							Node* acon0 = attribute==NULL?NULL:attribute->buildAutoDiffDAG(em,NULL,ptype, itype);
+							Node* acon0 = attribute==NULL?NULL:attribute->buildAutoDiffDAG(em,emcol,ptype, itype);
 							if(acon0!=NULL && con_node !=NULL){
-								con_node = create_binary_op_node(OP_PLUS,node,acon0);
+								con_node = create_binary_op_node(OP_PLUS,con_node,acon0);
 							}
 							else{
 								con_node = acon0==NULL?con_node:acon0;
 							}
 						}
 						if(con_node != NULL) {
-							uint idx = con_index + this->rowbeg;
-							con_node = create_binary_op_node(OP_TIMES,new PIndex(idx),con_node);
+							uint idx = con_index + em->rowbeg;
+							con_node = create_binary_op_node(OP_TIMES,create_param_node(idx),con_node);
 						}
 
 						if(node!=NULL && con_node!=NULL) {
@@ -1055,17 +1057,17 @@ BlockHV* ExpandedModel::getBlockHV_NLP_Full(ExpandedModel* emcol)
 					for(int i=this->model->level;i<=AmplModel::MAX_LEVEL;i++){
 						unordered_map<int,SyntaxNode*>::iterator it1 = con->higher_partial.find(i);
 						SyntaxNode* attribute = it1 ==con->higher_partial.end()?NULL:it1->second;
-						Node* acon0 = attribute==NULL?NULL:attribute->buildAutoDiffDAG(em,NULL,ptype, itype);
+						Node* acon0 = attribute==NULL?NULL:attribute->buildAutoDiffDAG(em,emcol,ptype, itype);
 						if(acon0!=NULL && con_node !=NULL){
-							con_node = create_binary_op_node(OP_PLUS,node,acon0);
+							con_node = create_binary_op_node(OP_PLUS,con_node,acon0);
 						}
 						else{
 							con_node = con_node ==NULL? acon0:con_node;
 						}
 					}
 					if(con_node != NULL){
-						uint idx = con_index + this->rowbeg;
-						con_node = create_binary_op_node(OP_TIMES,new PIndex(idx),con_node);
+						uint idx = con_index + em->rowbeg;
+						con_node = create_binary_op_node(OP_TIMES,create_param_node(idx),con_node);
 					}
 
 					if(node!=NULL && con_node != NULL){
@@ -1097,7 +1099,7 @@ BlockHV* ExpandedModel::getBlockHV_NLP_Full(ExpandedModel* emcol)
 					attr = (it == em->model->obj_comp->higher_partial.end()? NULL: it->second);
 				}
 
-				Node* onode0 = attr==NULL?NULL:attr->buildAutoDiffDAG(em,NULL,ptype, itype);
+				Node* onode0 = attr==NULL?NULL:attr->buildAutoDiffDAG(em,emcol,ptype, itype);
 				if(onode0!=NULL && onode !=NULL){
 					onode = create_binary_op_node(OP_PLUS,onode,onode0);
 				}
@@ -1115,11 +1117,12 @@ BlockHV* ExpandedModel::getBlockHV_NLP_Full(ExpandedModel* emcol)
 			}
 		}
 
+		rval->node = node;
+
 		if(GV(logBlock))
 		{
 			rval->logBlock(this,emcol);
 		}
-		rval->node = node;
 		nlp_hvblockMap_local.insert(pair<ExpandedModel*,BlockHV*>(emcol,rval));
 	}
 	return rval;
@@ -1227,7 +1230,7 @@ void ExpandedModel::lag_hess_nlp_local(ExpandedModel* emcol,col_compress_matrix&
 		//calculate the column c for Hessian m
 		col_compress_matrix_col chess(hess,c);
 		hess_reverse(hvb->node,vnodes,chess);
-		c++;
+//		cout<<chess<<endl;
 	}
 
 //	TRACE("Full hessian: "<<fullhess);
@@ -1595,17 +1598,26 @@ void ExpandedModel::logEMRecursive(string& line, ostream& out)
 	line = pre;
 }
 
-void ExpandedModel::convertToColSparseMatrix(col_compress_matrix& m,ColSparseMatrix& sm)
+void ExpandedModel::convertToColSparseMatrix(col_compress_matrix& m,ColSparseMatrix& sm, uint max_nnz)
 {	//assuming index base is 0;
 //	TRACE("convertToColSparseMatrix - "<<m);
 	TRACE("convertToColSparseMatrix - "<<" nz"<<m.nnz());
-	assert(m.nnz()!=0); //otherwise no need to evaluate the block
+	assert(max_nnz!=0); //otherwise no need to evaluate the block
+	assert(m.nnz()<= max_nnz); //can't go over to the max_nnz which already allocated in solver
 	assert(m.index1_data().size() == m.size2()+1);
+
+	//first clean up the previous values;
+	for(uint i=0;i<m.size2()+1;i++) sm.colstarts[i] = 0;
+	for(uint i=0;i<max_nnz;i++) sm.rownos[i] = 0;
+	for(uint i=0;i<max_nnz;i++) sm.values[i] = 0;
+
+	//setting new values
 //		assert(m.index1_data().size() == ncol+1); //assume the index base is 0;
 	for(uint i=0;i<m.index1_data().size();i++) sm.colstarts[i] = m.index1_data()[i];
 	for(uint i=0;i<m.nnz();i++) sm.rownos[i] = m.index2_data()[i];
 	for(uint i=0;i<m.nnz();i++) sm.values[i] = m.value_data()[i];
 
+	//setting collen if it is not NULL
 	if(sm.collen!=NULL)
 	{
 		for(uint i=0;i<m.size2();i++)

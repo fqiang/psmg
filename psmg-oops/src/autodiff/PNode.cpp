@@ -39,14 +39,6 @@ void PNode::eval_function()
 	SV->push_back(pval());
 }
 
-string PNode::toString(int level)
-{
-	ostringstream oss;
-	string s(level,'\t');
-	oss<<s<<"[PNode]("<<pval()<<")";
-	return oss.str();
-}
-
 void PNode::grad_reverse_0()
 {
 	SV->push_back(pval());

@@ -79,7 +79,11 @@ void Config::initConfig(string& conf_filename)
 	singleton->mpsFile = debugn.attribute("mpsFile").as_string();
 	singleton->assertion = debugn.attribute("assertion").as_bool();
 	singleton->logdir = debugn.attribute("logdir").as_string();
-
+	if(singleton->size>1){
+		ostringstream oss;
+		oss<<singleton->logdir<<"/"<<singleton->rank<<"/";
+		singleton->logdir = oss.str();
+	}
 	singleton->logEM = debugn.attribute("logEM").as_bool();
 	singleton->logBlock = debugn.attribute("logBlock").as_bool();
 	singleton->emfile_suffix = debugn.attribute("emfile_suffix").as_string();

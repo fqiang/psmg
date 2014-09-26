@@ -46,7 +46,7 @@ void ModelContext::dropContent()
 	//must delete IndexSet before CompDescr* map
 	//because IndexSet only delete a Set if its name == "TMP_" , once the CompDescr* deleted
 	//it is not possible for IndexSet to test name=="TMP_" for the set already deleted
-	for(boost::unordered_map<SyntaxNode*,IndexSet*>::iterator it=tempISetMap.begin();it!=tempISetMap.end();it++)
+	for(boost::unordered_map<string,IndexSet*>::iterator it=tempISetMap.begin();it!=tempISetMap.end();it++)
 	{
 		delete it->second;
 	}
@@ -115,7 +115,7 @@ string& ModelContext::getDummyValue(string& dummyVar)
 	}
 	else if(rval.empty() && this->parent == NULL)
 	{
-		TRACE("****MODELLING ERROR*****  root node context reached - but not found - dummyVar["<<dummyVar<<"]");
+		ERROR("****MODELLING ERROR*****  root node context reached - but not found - dummyVar["<<dummyVar<<"]");
 		assert(false);
 	}
 	return rval;
@@ -165,11 +165,11 @@ void ModelContext::addCompValueMap(ModelComp* comp,CompDescr* value)
 	assert(ret.second);
 }
 
-bool ModelContext::getCalcSumSet(SyntaxNode* key,IndexSet** iset)
+bool ModelContext::getCalcSumSet(string& key,IndexSet** iset)
 {
 	bool rval = false;
-	TRACE("getCalcTempSet -- look for hashKey["<<key<<"] ");
-	boost::unordered_map<SyntaxNode*,IndexSet* >::iterator it_iset = this->tempISetMap.find(key);
+	TRACE("getCalcTempSet -- look for key["<<key<<"] ");
+	boost::unordered_map<string,IndexSet* >::iterator it_iset = this->tempISetMap.find(key);
 	if(it_iset!=this->tempISetMap.end())
 	{
 		rval = true;
@@ -179,11 +179,11 @@ bool ModelContext::getCalcSumSet(SyntaxNode* key,IndexSet** iset)
 }
 
 //
-void ModelContext::addCalcSumSet(SyntaxNode* key,IndexSet* iset)
+void ModelContext::addCalcSumSet(string& key,IndexSet* iset)
 {
-	TRACE("addCalcSumSet  hashkey["<<key<<"] -- set -- "+iset->toString());
-	pair<boost::unordered_map<SyntaxNode*,IndexSet*>::iterator, bool > ret;
-	ret = this->tempISetMap.insert(pair<SyntaxNode*,IndexSet*>(key,iset));
+	TRACE("addCalcSumSet  key["<<key<<"] -- set -- "+iset->toString());
+	pair<boost::unordered_map<string,IndexSet*>::iterator, bool > ret;
+	ret = this->tempISetMap.insert(pair<string,IndexSet*>(key,iset));
 	assert(ret.second);
 }
 
@@ -210,9 +210,9 @@ void ModelContext::calculateMemoryUsage(unsigned long& size)
 		size += (*it).second.second.size() + 1; //the string
 	}
 
-	for(boost::unordered_map<SyntaxNode*,IndexSet*>::iterator it = tempISetMap.begin();it!=tempISetMap.end();it++)
+	for(boost::unordered_map<string,IndexSet*>::iterator it = tempISetMap.begin();it!=tempISetMap.end();it++)
 	{
-		size += sizeof(pair<SyntaxNode*,IndexSet*>);
+		size += sizeof(pair<string,IndexSet*>);
 		(*it).second->calculateMemoryUsage(size);
 	}
 

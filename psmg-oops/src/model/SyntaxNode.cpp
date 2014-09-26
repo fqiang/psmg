@@ -759,6 +759,71 @@ Set* SyntaxNode::calculateSetValue(ModelContext& context) {
 	return rval;
 }
 
+void SyntaxNode::findSimpleIDNodes(vector<SyntaxNode*>& nodes)
+{
+	if(this->opCode == ID)
+	{
+		nodes.push_back(this);
+	}
+
+	if(this->opCode == IDREFM || this->opCode == IDREF)
+	{
+		assert(this->nchild()<=2);
+		//skip the IDREF and IDREFM entity only, but only considering the index. ie. [...] part
+		if(this->nchild()==2) this->values[1]->findSimpleIDNodes(nodes);
+	}
+	else
+	{
+		BOOST_FOREACH(SyntaxNode* n, this->values)
+		{
+			n->findSimpleIDNodes(nodes);
+		}
+	}
+}
+
+string& SyntaxNode::findIndexSetKey(ModelContext& ctx, string& key)
+{
+	assert(this->opCode == LBRACE);
+	assert(this->nchild() == 1 && this->values[0]->opCode == COLON);
+	SyntaxNode* indexing_set = this->values[0];
+	SyntaxNode* setexpr_list = indexing_set->values[0];
+	SyntaxNode* cond = indexing_set->nchild()==2?indexing_set->values[1]:NULL;
+
+	ostringstream oss;
+	oss<<(void*)this;
+
+	assert(setexpr_list->opCode == COMMA);
+	if(cond == NULL)
+	{//no condition index just the address
+		key = oss.str();
+	}
+	else
+	{
+		assert(setexpr_list->nchild() == 1); //TODO: support only 1 dummy index for now !
+		SyntaxNode* setexpr = setexpr_list->values[0];
+		assert(setexpr->opCode == IN); //has to be "{i in SET: condition} ,because condition is not null
+		SyntaxNode* dummy_list = setexpr->values[0];
+		assert(dummy_list->opCode == COMMA && dummy_list->nchild() == 1); //TODO support 1 dummy var only!
+		string& dummy = static_cast<SyntaxNodeID*>(dummy_list->values[0])->id;
+
+		vector<SyntaxNode*> nodes;
+		cond->findSimpleIDNodes(nodes);
+
+		BOOST_FOREACH(SyntaxNode* n, nodes)
+		{
+			assert(n->opCode == ID);
+			string& dum = static_cast<SyntaxNodeID*>(n)->id;
+			if(!dummy.compare(dum) == 0){
+				string dumval = ctx.getDummyValue(dum);
+				oss<<"_"<<dumval;
+			}
+		}
+
+		key = oss.str();
+	}
+	return key;
+}
+
 IndexSet* SyntaxNode::createIndexSet(ModelContext& ctx)
 {
 	TRACE("createIndexSet - "<<this);
@@ -1970,7 +2035,7 @@ AutoDiff::Node* SyntaxNode::buildAutoDiffDAG(ExpandedModel* emrow,ExpandedModel*
 		{	//implicit look up for variable can be referenced from any level in rowctx or above
 			//variables declared below rowctx is handled by DOT operator later
 			assert(iType == LOCAL);
-			assert(emcol == NULL || (emcol!=NULL && (pType == LP || pType == QP))); //caling local interface is setting emcol == NULL
+//			assert(emcol == NULL || (emcol!=NULL && (pType == LP || pType == QP))); //caling local interface is setting emcol == NULL
 			SyntaxNodeIDREF* idref = static_cast<SyntaxNodeIDREF*>(this);
 			ModelComp* ref = idref->ref;
 			CompDescr* compdescr = rowctx.getCompValue(ref);
@@ -2055,7 +2120,7 @@ AutoDiff::Node* SyntaxNode::buildAutoDiffDAG(ExpandedModel* emrow,ExpandedModel*
 		else
 		{// for Local interface calling, the context must be initialised
 			assert(iType == LOCAL);
-			assert(emcol == NULL || (emcol!=NULL && (pType == LP || pType == QP))); //caling local interface is setting emcol == NULL
+//			assert(emcol!=NULL && (pType == LP || pType == QP)); //caling local interface is setting emcol == NULL
 			if (ref->type == TVAR) {
 				Var* var = static_cast<Var*>(compdescr);
 				assert(var!=NULL);
@@ -2091,7 +2156,7 @@ AutoDiff::Node* SyntaxNode::buildAutoDiffDAG(ExpandedModel* emrow,ExpandedModel*
 			}
 		}
 	}
-	else if(this->opCode == SUM)
+	else if(this->opCode == SUM) //use emcol for optimization
 	{
 		SyntaxNode* indexing_set = this->values[0];
 		assert(indexing_set->opCode == LBRACE);
@@ -2131,11 +2196,14 @@ AutoDiff::Node* SyntaxNode::buildAutoDiffDAG(ExpandedModel* emrow,ExpandedModel*
 			compEmcol!=NULL? TRACE("Emcol over {"<<dummyEmcol<<" in "<<compEmcol->name<<"}") : TRACE("Emcol[null]");
 
 			SyntaxNode* index_set = this->values[0];
+			//TODO: this is a hack! a better implementation to work the index set dependencies when building up from the parser for computing the key
+			string index_set_key = "";
+			this->values[0]->findIndexSetKey(rowctx,index_set_key);
 			IndexSet* iset = NULL;
-			if (!rowctx.getCalcSumSet(index_set, &iset))
+			if (!rowctx.getCalcSumSet(index_set_key, &iset))
 			{
 				iset = this->values[0]->createIndexSet(rowctx);
-				rowctx.addCalcSumSet(index_set, iset);
+				rowctx.addCalcSumSet(index_set_key, iset);
 			}
 			assert(iset!=NULL);
 
@@ -2181,7 +2249,7 @@ AutoDiff::Node* SyntaxNode::buildAutoDiffDAG(ExpandedModel* emrow,ExpandedModel*
 			}
 		}
 	}
-	else if(this->opCode == SUMEXP)
+	else if(this->opCode == SUMEXP)  //using emcol for optimization
 	{
 		assert(nchild()==1);
 		SyntaxNodeSumExp* sumexpn = static_cast<SyntaxNodeSumExp*>(this);

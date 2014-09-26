@@ -39,7 +39,7 @@ void ObjComp::calculatePartialConstraints()
 	// this is for LP and QP problem
 	// LP and QP , we will need to compute the c vector (the coefficient of the linear part of the objective)
 	// for NLP, this part doesn't contribute to HV.
-	assert(first_partial.size() == 1 && first_partial.begin()->first==model->level); //assuming first order term of the objective only contains the variable declared in it's own level
+	assert(first_partial.size()==0 ||(first_partial.size() == 1 && first_partial.begin()->first==model->level)); //assuming first order term of the objective only contains the variable declared in it's own level
 }
 
 /* ---------------------------------------------------------------------------

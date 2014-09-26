@@ -27,7 +27,7 @@ BlockObj::~BlockObj() {
 void BlockObj::logBlock(ExpandedModel* emrow)
 {
 	ostringstream oss;
-	oss<<GV(logdir)<<emrow->qualifiedName()<<".objblk";
+	oss<<GV(logdir)<<emrow->qualifiedName()<<".fullobjblk";
 	ofstream out(oss.str().c_str());
 	string objname = emrow->model->obj_comp==NULL? "null":emrow->model->obj_comp->name;
 	out<<"Objective Block - (Assume to be Partial)"<<endl;

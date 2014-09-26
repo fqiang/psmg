@@ -14,7 +14,7 @@ namespace AutoDiff {
 
 class UaryOPNode: public OPNode {
 public:
-	static OPNode* createUnaryOpNode(OPCODE op, Node* left);
+	static Node* createUnaryOpNode(OPCODE op, Node* left);
 	virtual ~UaryOPNode();
 
 	void inorder_visit(int level,ostream& oss);

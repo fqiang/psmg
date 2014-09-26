@@ -136,6 +136,11 @@ public:
 	bool evalBool(ModelContext& context);
 	void evalTerm(ModelContext& context,PValue**);
 	IndexSet* createIndexSet(ModelContext& context);
+
+	//hack! for computing the index set key of a sum
+	void findSimpleIDNodes(vector<SyntaxNode*>& nodes);
+	string& findIndexSetKey(ModelContext& ctx, string& key);
+
 	bool hasExp();
 	virtual SyntaxNode* appendDOTNotation(StochCtx*);
 

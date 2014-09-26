@@ -24,10 +24,10 @@ namespace AutoDiff {
 UaryOPNode::UaryOPNode(OPCODE op_, Node* left): OPNode(op_,left) {
 }
 
-OPNode* UaryOPNode::createUnaryOpNode(OPCODE op, Node* left)
+Node* UaryOPNode::createUnaryOpNode(OPCODE op, Node* left)
 {
 	assert(left!=NULL);
-	OPNode* node = NULL;
+	Node* node = NULL;
 	if(op == OP_SQRT)
 	{
 		double param = 0.5;
@@ -369,7 +369,7 @@ string UaryOPNode::toString(int level)
 {
 	ostringstream oss;
 	string s(level,'\t');
-	oss<<s<<"[UaryOPNode]("<<op<<")";
+	oss<<s<<"[UaryOPNode]("<<op<<")"<<this;
 	return oss.str();
 }
 
