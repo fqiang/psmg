@@ -41,6 +41,18 @@
 #include "OOPSBlock.h"
 
 /*
+ * getting PSMG 's X0 to vector xx;
+ * xx must be the root of allocation
+ */
+void getPSMG_x0(Vector* xx);
+
+/*
+ * setting psmg 's x vector with values from vx
+ * vx and node as to be at the same node of the problem tree.
+ */
+void setPSMG_x_local(Vector* vx, ExpandedModel* node);
+
+/*
  * Structure setting up
  */
 Algebra *createA(ExpandedModel *em);

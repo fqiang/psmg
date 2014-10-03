@@ -53,7 +53,7 @@ InterfaceType ExpandedModel::itype = LOCAL; //default is Local interface
 double* ExpandedModel::X = NULL;
 double* ExpandedModel::Y = NULL;
 double ExpandedModel::ONE = 1.0;
-double* ExpandedModel::X0 = NULL;
+double* ExpandedModel::X0 = NULL;  //default x values , can be specified in model.
 double* ExpandedModel::Y0 = NULL;
 uint ExpandedModel::n_col = 0;
 uint ExpandedModel::n_row = 0;
@@ -108,8 +108,8 @@ ExpandedModel::~ExpandedModel() {
 
 	for(unordered_map<ExpandedModel*, BlockHV*>::iterator it=nlp_hvblockMap_local.begin();it!=nlp_hvblockMap_local.end();it++)
 	{
-		cout<<this->name<<" -- "<<it->first->name<<endl;
-		cout<<AutoDiff::tree_expr(it->second->node)<<endl;
+		//cout<<this->name<<" -- "<<it->first->name<<endl;
+		//cout<<AutoDiff::tree_expr(it->second->node)<<endl;
 		delete it->second;
 	}
 	nlp_hvblockMap_local.clear();

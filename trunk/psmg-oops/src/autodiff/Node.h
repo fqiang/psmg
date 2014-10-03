@@ -9,7 +9,7 @@
 #define NODE_H_
 
 #include <boost/unordered_set.hpp>
-#include "auto_diff_types.h"
+#include "autodiff_types.h"
 
 using namespace std;
 
