@@ -1,5 +1,5 @@
 /*
- * auto_diff_types.h
+ * autodiff_types.h
  *
  *  Created on: 18 Apr 2013
  *      Author: s0965328
