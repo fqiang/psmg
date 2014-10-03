@@ -13,6 +13,102 @@
 
 #include "sml-oops.h"
 
+void getPSMG_x0_rec(Vector* xx, ExpandedModel* node)
+{
+	assert(ExpandedModel::X0!=NULL);
+	Tree *T = xx->node;
+	if (T->local || T->above) {
+		assert(T->nb_sons == 0); //assuming no leave nodes!
+		DenseVector *v_dense = GetDenseVectorFromVector(xx);
+		assert(v_dense->dim == node->numLocalVars);
+		for(int j=0;j<node->numLocalVars;j++)
+		{
+			uint index = node->colbeg+j;
+			assert(index < ExpandedModel::n_col);
+			v_dense->elts[j] = ExpandedModel::X0[index];
+		}
+	}
+	else {
+//		int nchild = node->children.size();
+		for (int i=0; i < T->nb_sons; i++)
+		{
+			if(i<T->nb_sons-1)
+			{
+				getPSMG_x0_rec(SubVector (xx, i), node->children.at(i));
+			}
+			else
+			{
+				assert(node->children.size() == i);
+				//this maybe errous for more than two level problems,
+				/*
+				 * OOPS storing vector structure need to be sort out
+				 */
+				getPSMG_x0_rec(SubVector (xx, i), node);
+			}
+		}
+	}
+}
+
+void setPSMG_x_above(Vector* vx, ExpandedModel* node)
+{
+	assert(ExpandedModel::itype == LOCAL);
+	assert(ExpandedModel::X != NULL);
+	//in oops vx and above are allocated locally
+	//to be implemented!
+	assert(false);
+	//right now , use a hack !
+	/*
+	 * storing all x variables in an array and copy the pointer to point to the
+	 * dense array (instead of a sparse vector) at each iteration.
+	 */
+}
+
+void setPSMG_x_below(Vector* vx, ExpandedModel* node)
+{
+	assert(ExpandedModel::X!=NULL);
+	assert(ExpandedModel::itype == LOCAL);
+	Tree *T = vx->node;
+	if (T->local || T->above) {
+		assert(T->nb_sons == 0); //assuming no leave nodes!
+		DenseVector *v_dense = GetDenseVectorFromVector(vx);
+		assert(v_dense->dim == node->numLocalVars);
+		for(int j=0;j<node->numLocalVars;j++)
+		{
+			uint index = node->colbeg+j;
+			assert(index < ExpandedModel::n_col);
+			ExpandedModel::X[index] = v_dense->elts[j];
+		}
+	}
+	else {
+		for (int i=0; i < T->nb_sons; i++)
+		{
+			if(i<T->nb_sons-1)
+			{
+				setPSMG_x_below(SubVector (vx, i), node->children.at(i));
+			}
+			else
+			{
+				assert(node->children.size() == i);
+				setPSMG_x_below(SubVector (vx, i), node);  //maybe errous !
+			}
+		}
+	}
+}
+
+
+void getPSMG_x0(Vector* xx)
+{
+	assert(xx->is_root == true);
+	getPSMG_x0_rec(xx,ExpandedModel::root);
+}
+
+
+void setPSMG_x_local(Vector* vx, ExpandedModel* node)
+{
+	setPSMG_x_above(vx, node);
+	setPSMG_x_below(vx, node);
+}
+
 CallBackFunction cbf_a()
 {
 	if(ExpandedModel::ptype == LP || ExpandedModel::ptype == QP) {

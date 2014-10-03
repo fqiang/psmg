@@ -13,7 +13,7 @@
 #include <sstream>
 #include <iostream>
 
-#include "auto_diff_types.h"
+#include "autodiff_types.h"
 
 namespace AutoDiff {
 

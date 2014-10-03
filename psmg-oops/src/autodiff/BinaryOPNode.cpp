@@ -5,7 +5,7 @@
  *      Author: s0965328
  */
 
-#include "auto_diff_types.h"
+#include "autodiff_types.h"
 #include "BinaryOPNode.h"
 #include "PNode.h"
 #include "Stack.h"

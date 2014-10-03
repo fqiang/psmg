@@ -13,7 +13,7 @@
 #include "Tape.h"
 #include "Edge.h"
 #include "EdgeSet.h"
-#include "auto_diff_types.h"
+#include "autodiff_types.h"
 
 #include <list>
 

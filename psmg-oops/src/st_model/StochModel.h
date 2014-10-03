@@ -1,6 +1,6 @@
-/* (c) 2008,2009 Jonathan Hogg and Andreas Grothey, University of Edinburgh
+/* (c) 2014 Feng Qiang and Andreas Grothey, University of Edinburgh
  *
- * This file is part of SML.
+ * This file is part of PSMG.
  *
  * SML is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free

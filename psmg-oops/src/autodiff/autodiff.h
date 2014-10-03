@@ -12,7 +12,7 @@
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/matrix_sparse.hpp>
 #include <boost/numeric/ublas/io.hpp>
-#include "auto_diff_types.h"
+#include "autodiff_types.h"
 #include "../util/util.h"
 #include "Node.h"
 #include "VNode.h"
@@ -67,7 +67,7 @@
  * for loops over each independent variable (ie. assume they are all dependent), for those independent
  * variables that are not dependent at the current node, zero will be produced by computation.
  * By default the forward mode hessian routing is disabled. To enable the forward hessian interface, the
- * compiler marco FORWARD_ENABLED need to be set equal to 1 in auto_diff_types.h
+ * compiler marco FORWARD_ENABLED need to be set equal to 1 in autodiff_types.h
  *
  * + Reverse Hessian*Vector Evaluation:
  * Simple, building a tape in the forward pass, and a reverse pass will evaluate the Hessian*vector. The implemenation
