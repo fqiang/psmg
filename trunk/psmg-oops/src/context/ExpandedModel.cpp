@@ -741,15 +741,15 @@ BlockA* ExpandedModel::getBlockA_NLP_Local(ExpandedModel* emcol)
 		banlp = (*it).second;
 	}
 	else{
-//		if(this->model->level < emcol->model->level) //this is above emcol
-//		{
-//			emcol->initFullDepEms();
-//		}
-//		else // this is below emcol
-//		{
-//			this->initFullDepEms();
-//		}
-		this->initFullDepEms();
+		if(this->model->level < emcol->model->level) //this is above emcol
+		{
+			emcol->initFullDepEms();
+		}
+		else // this is below emcol
+		{
+			this->initFullDepEms();
+		}
+//		this->initFullDepEms();
 
 		banlp = new BlockA();
 		BOOST_FOREACH(ConsComp* con, this->model->con_comps)

@@ -38,8 +38,7 @@ void SML_OOPS_driver_NLP(ExpandedModel *root) {
 
 	//starting point / default value for decision variable
 	//TODO: implement functionality to take default value from model file and data file
-	std::vector<double> x(ExpandedModel::n_col,1);
-//	for(uint i=0;i<x.size();i++) x[i] = x[i];
+	std::vector<double> x(ExpandedModel::n_col,1); //hard code the default X0 to 0s.
 	ExpandedModel::X0 = &x[0];
 
 	OopsOpt Opt;
@@ -64,13 +63,14 @@ void SML_OOPS_driver_NLP(ExpandedModel *root) {
 	//        that would require OOPSSetup to return vectors as well
 
 	vb = new Vector(A->Trow, "vb");
-	vc = new Vector(A->Tcol, "vc"); //Objective gradient
+//	vc = new Vector(A->Tcol, "vc"); //Objective gradient
+	vc = NULL;
 	vu = new Vector(A->Tcol, "vu");
 	vl = new Vector(A->Tcol, "vl");
 	vu->setDoubleValue(1.e+31);
 	vl->setDoubleValue(-1.e+31);
 
-	vc->fillCallBack(fill_obj_grad_nlp); //Objective gradient
+//	vc->fillCallBack(fill_obj_grad_nlp); //Objective gradient         -- feng
 	vb->fillCallBack(fill_cons_bounds);
 	vu->fillCallBack(fill_var_ubound);
 	vl->fillCallBack(fill_var_lbound);
@@ -81,8 +81,9 @@ void SML_OOPS_driver_NLP(ExpandedModel *root) {
 		FILE *mout = fopen(mfile.c_str(), "w");
 		PrintMatrixMatlab(mout, A, "A");
 		PrintMatrixMatlab(mout, Q, "Q");
+		PrintMatrixMatlab(mout, AlgAug, "AlgAug");
 		vb->printMatlab(mout, "b");
-		vc->printMatlab(mout, "c");
+		if(vc!=NULL) vc->printMatlab(mout, "c");
 		vu->printMatlab(mout, "bu");
 		vl->printMatlab(mout, "bl");
 		fclose(mout);
@@ -559,7 +560,7 @@ void psmg_callback_q_nlp(CallBackInterfaceType *cbi) {
 				obl->emrow->lag_hess_nlp_local(obl->emcol, block);
 				assert(block.nnz()<=cbi->nz);
 				ColSparseMatrix m(cbi->element,cbi->row_nbs,cbi->col_beg,cbi->col_len);
-				ExpandedModel::convertToColSparseMatrix(block,m,cbi->nz);
+				ExpandedModel::convertToColSparseMatrix(block,m,max_nz);
 				if(cbi->nz != block.nnz()) {
 					WARN("psmg_callback_q_nlp,zero value possible - "<<obl->emrow->name<<" X "<<obl->emcol->name<<" cbi["<<cbi->nz<<"] nnz["<<block.nnz()<<"]");
 				}

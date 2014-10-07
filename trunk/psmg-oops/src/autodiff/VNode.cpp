@@ -162,17 +162,8 @@ TYPE VNode::getType()
 double& VNode::val()
 {
 	assert(idx < ExpandedModel::n_col);
-	if(ExpandedModel::X!=NULL) {
-		return ExpandedModel::X[idx];
-	}
-	else{
-		if (ExpandedModel::X0!=NULL){
-			return ExpandedModel::X0[idx];
-		}
-		else {
-			return ExpandedModel::ONE; //whatever a default value
-		}
-	}
+	assert(ExpandedModel::X!=NULL);
+	return ExpandedModel::X[idx];
 }
 
 }

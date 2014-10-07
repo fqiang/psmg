@@ -21,17 +21,17 @@ PIndex::~PIndex() {
 
 double& PIndex::pval(){
 	assert(idx < ExpandedModel::n_row);
-	if(ExpandedModel::Y!=NULL){
-		return ExpandedModel::Y[idx];
-	}
-	else {
-		if (ExpandedModel::Y0!=NULL){
-			return ExpandedModel::Y0[idx];
-		}
-		else {
-			return ExpandedModel::ONE; //whatever a default value
-		}
-	}
+	assert(ExpandedModel::Y!=NULL);
+	return ExpandedModel::Y[idx];
+//	}
+//	else {
+//		if (ExpandedModel::Y0!=NULL){
+//			return ExpandedModel::Y0[idx];
+//		}
+//		else {
+//			return ExpandedModel::ONE; //whatever a default value
+//		}
+//	}
 }
 
 string PIndex::toString(int level)
