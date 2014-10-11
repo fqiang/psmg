@@ -38,8 +38,11 @@ void SML_OOPS_driver_NLP(ExpandedModel *root) {
 
 	//starting point / default value for decision variable
 	//TODO: implement functionality to take default value from model file and data file
-	std::vector<double> x(ExpandedModel::n_col,1); //hard code the default X0 to 0s.
+	std::vector<double> x(ExpandedModel::n_col,0); //hard code the default X0 to 0s.
 	ExpandedModel::X0 = &x[0];
+
+	assert(ExpandedModel::X==NULL && ExpandedModel::X0!=NULL);
+	ExpandedModel::X = ExpandedModel::X0;
 
 	OopsOpt Opt;
 	Opt.readFile();
@@ -440,17 +443,6 @@ void fill_obj_grad_nlp(Vector *vc) {
  CallBackFunction: SMLCallBack
  ---------------------------------------------------------------------------- */
 void psmg_callback_a_nlp(CallBackInterfaceType *cbi) {
-	/*
-	 where CallBackInterface is a struct of the following form
-	 int nz
-	 int max_nz
-	 int *row_nbs
-	 int *col_beg
-	 int *col_len
-	 double *element
-	 void *id
-	 */
-
 	TRACE("psmg_callback_a_nlp - called -- ");
 	OOPSBlock *obl = (OOPSBlock*) cbi->id;
 //	assert(obl->prob!=NULL);
@@ -472,7 +464,7 @@ void psmg_callback_a_nlp(CallBackInterfaceType *cbi) {
 		TRACE("jacobs - want to fill in matrices");
 		assert(cbi->nz>=0);
 		uint max_nz = cbi->nz;
-		if(cbi->nz!=0) {
+		if(cbi->nz!=0 && cbi->nlp_str == false) {
 			//2. computing jacob of intersection emrow X emcol
 			//   use the current point offered by previous call
 			col_compress_matrix block(obl->emrow->numLocalCons,obl->emcol->numLocalVars,cbi->nz);
@@ -483,6 +475,14 @@ void psmg_callback_a_nlp(CallBackInterfaceType *cbi) {
 			if(cbi->nz != block.nnz()) {
 				WARN("psmg_callback_a_nlp,zero value possible - "<<obl->emrow->name<<" X "<<obl->emcol->name<<" cbi["<<cbi->nz<<"] nnz["<<block.nnz()<<"]");
 			}
+		}
+		else if(cbi->nz!=0){
+			assert(cbi->nlp_str==true);
+			col_compress_imatrix block(obl->emrow->numLocalCons,obl->emcol->numLocalVars,cbi->nz);
+			uint nnz = obl->emrow->nz_cons_jacobs_nlp_local(obl->emcol,block);
+			assert(block.nnz()==cbi->nz);
+			ColSparseMatrix m(cbi->element,cbi->row_nbs,cbi->col_beg,cbi->col_len);
+			ExpandedModel::convertToColSparseMatrix(block,m,max_nz);
 		}
 	}
 	TRACE("end psmg_callback_a_nlp --");
@@ -538,10 +538,10 @@ void psmg_callback_q_nlp(CallBackInterfaceType *cbi) {
 	}
 	else
 	{
-		TRACE("laghess ---  fill in matrices");
 		assert(cbi->nz>=0);
 		uint max_nz = cbi->nz;
-		if(cbi->nz!=0) {
+		if(cbi->nz!=0 && cbi->nlp_str==false) {
+			TRACE("laghess ---  fill in matrices");
 			//2. computing jacob of intersection emrow X emcol
 			//   use the current point offered by previous call
 			if(rowlev < collev) {  //computing Bottom border Q.
@@ -564,6 +564,27 @@ void psmg_callback_q_nlp(CallBackInterfaceType *cbi) {
 				if(cbi->nz != block.nnz()) {
 					WARN("psmg_callback_q_nlp,zero value possible - "<<obl->emrow->name<<" X "<<obl->emcol->name<<" cbi["<<cbi->nz<<"] nnz["<<block.nnz()<<"]");
 				}
+			}
+		}
+		else if(cbi->nz!=0 ) {
+			TRACE("laghess ---  get nz matrix structure");
+			assert(cbi->nlp_str == true);
+			//2. computing jacob of intersection emrow X emcol
+			//   use the current point offered by previous call
+			if(rowlev < collev) {  //computing Bottom border Q.
+				col_compress_imatrix block(obl->emcol->numLocalVars,obl->emrow->numLocalVars,cbi->nz);
+				obl->emcol->nz_lag_hess_nlp_local(obl->emrow, block);          //computing RHS Q instead, and taking transpose later.
+				block = boost::numeric::ublas::trans(block);  				//taking transpose,
+				ColSparseMatrix m(cbi->element,cbi->row_nbs,cbi->col_beg,cbi->col_len);
+				ExpandedModel::convertToColSparseMatrix(block,m,max_nz);
+				assert(cbi->nz == block.nnz());
+			}
+			else {  //computing RHS Q.
+				col_compress_imatrix block(obl->emrow->numLocalVars,obl->emcol->numLocalVars,max_nz);
+				obl->emrow->nz_lag_hess_nlp_local(obl->emcol, block);
+				ColSparseMatrix m(cbi->element,cbi->row_nbs,cbi->col_beg,cbi->col_len);
+				ExpandedModel::convertToColSparseMatrix(block,m,max_nz);
+				assert(cbi->nz == block.nnz());
 			}
 		}
 	}

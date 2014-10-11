@@ -145,8 +145,10 @@ public:
 	//NLP interface - specific
 	//! Return the nonzeros in the Jacobian of a section of the model
 	uint nz_cons_jacobs_nlp_local(ExpandedModel* emcol);
+	uint nz_cons_jacobs_nlp_local(ExpandedModel* emcol, col_compress_imatrix& m);
 	void cons_jacobs_nlp_local(ExpandedModel *emcol, col_compress_matrix& m);
 	uint nz_lag_hess_nlp_local(ExpandedModel* emcol);
+	uint nz_lag_hess_nlp_local(ExpandedModel* emcol, col_compress_imatrix& m);
 	void lag_hess_nlp_local(ExpandedModel* emcol,col_compress_matrix&);
 	void obj_grad_nlp_local(double* vals);
 
@@ -172,7 +174,10 @@ public:
 	//! Setting the primal variable soln / the values for the local variables
 	void update_primal_x(double *elts);
 	//! Setting the lagrangian mulitpler for local constraints
-	void update_lag(double* elts);
+	void update_dual_y(double* elts);
+
+	void get_default_x0(double* x0s);
+	void get_default_y0(double* y0s);
 
 	/*
 	 * Common inteface methods for Both Local and Distributed Inteface calls
@@ -200,6 +205,7 @@ public:
 	void addChildren(ExpandedModel* em2);
 	void levelTraversal(vector<ExpandedModel*>& em2List,int level);
 	static void convertToColSparseMatrix(col_compress_matrix& m,ColSparseMatrix& sm, uint max_nz);
+	static void convertToColSparseMatrix(col_compress_imatrix& m,ColSparseMatrix& sm, uint max_nz);
 	/*
 	 * Utility methods
 	 */
@@ -213,6 +219,7 @@ private:
 //	ModelContext* recursiveInitContext();
 	void copyVariables(boost::unordered_set<AutoDiff::Node*>&);
 	void copyVariables(std::vector<AutoDiff::Node*>&);
+	void copyVariables(boost::unordered_map<AutoDiff::Node*,uint>&);
 };
 
 #endif /* EXPANDEDMODEL_H_ */
