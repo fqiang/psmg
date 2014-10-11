@@ -8,6 +8,7 @@
 #ifndef AUTODIFF_H_
 #define AUTODIFF_H_
 #include <boost/unordered_set.hpp>
+#include <boost/unordered_map.hpp>
 #include <boost/numeric/ublas/matrix_proxy.hpp>
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/matrix_sparse.hpp>
@@ -78,8 +79,14 @@
  * */
 
 typedef boost::numeric::ublas::compressed_matrix<double,boost::numeric::ublas::column_major,0,std::vector<std::size_t>,std::vector<double> >  col_compress_matrix;
-typedef boost::numeric::ublas::matrix_row<col_compress_matrix > col_compress_matrix_row;
-typedef boost::numeric::ublas::matrix_column<col_compress_matrix  > col_compress_matrix_col;
+typedef boost::numeric::ublas::matrix_row<col_compress_matrix> col_compress_matrix_row;
+typedef boost::numeric::ublas::matrix_column<col_compress_matrix> col_compress_matrix_col;
+typedef boost::numeric::ublas::matrix_range<col_compress_matrix > col_compress_matrix_range;
+
+typedef boost::numeric::ublas::compressed_matrix<uint,boost::numeric::ublas::column_major,0,std::vector<std::size_t>,std::vector<uint> >  col_compress_imatrix;
+typedef boost::numeric::ublas::matrix_row<col_compress_imatrix> col_compress_imatrix_row;
+typedef boost::numeric::ublas::matrix_column<col_compress_imatrix> col_compress_imatrix_col;
+typedef boost::numeric::ublas::matrix_range<col_compress_imatrix > col_compress_imatrix_range;
 
 namespace AutoDiff{
 
@@ -99,8 +106,10 @@ namespace AutoDiff{
 
 	//multiple constraints version
 	extern uint nzGrad(Node* root, boost::unordered_set<Node*>& vnodes);
+	extern uint nzGrad(Node* root, std::vector<Node*>& vlist, col_compress_imatrix_row& rgrad);
 	extern double grad_reverse(Node* root, vector<Node*>& nodes, col_compress_matrix_row& rgrad);
 	extern uint nzHess(EdgeSet&,boost::unordered_set<Node*>& set1, boost::unordered_set<Node*>& set2);
+	extern uint nzHess(EdgeSet&,boost::unordered_map<Node*,uint>& colvMap, boost::unordered_map<Node*,uint>& rowvMap,col_compress_imatrix& m);
 	extern double hess_reverse(Node* root, vector<Node*>& nodes, col_compress_matrix_col& chess);
 
 #if FORWARD_ENDABLED

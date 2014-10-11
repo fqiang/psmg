@@ -257,9 +257,9 @@ uint nzGrad(Node* root, boost::unordered_set<Node*>& vSet)
 	boost::unordered_set<Node*> vnodes;
 	root->collect_vnodes(vnodes,nnodes);
 	TRACE("nzGrad - vnodes in expression - size["<<vnodes.size()<<"] -- number node["<<nnodes<<"]");
-	BOOST_FOREACH(Node* n, vnodes)
+	BOOST_FOREACH(Node* n, vSet)
 	{
-		if(vSet.find(n) != vSet.end())
+		if(vnodes.find(n) != vnodes.end())
 		{
 			nzg++;
 		}
@@ -268,7 +268,32 @@ uint nzGrad(Node* root, boost::unordered_set<Node*>& vSet)
 			zg++;
 		}
 	}
-	assert(nzg+zg == vnodes.size());
+	assert(nzg+zg == vSet.size());
+	return nzg;
+}
+
+uint nzGrad(Node* root, std::vector<Node*>& vlist, col_compress_imatrix_row& rgrad)
+{
+	uint nzg = 0;
+	uint zg = 0;
+	uint nnodes = 0;
+	boost::unordered_set<Node*> vnodes;
+	root->collect_vnodes(vnodes,nnodes);
+	uint c = 0;
+	BOOST_FOREACH(Node* n, vlist)
+	{
+		if(vnodes.find(n)!=vnodes.end())
+		{
+			rgrad(c) = 1; //setting structure non-zero.
+			nzg ++;
+		}
+		else
+		{
+			zg++;
+		}
+		c++;
+	}
+	assert(nzg+zg == vlist.size());
 	return nzg;
 }
 
@@ -283,28 +308,88 @@ uint nzHess(EdgeSet& eSet,boost::unordered_set<Node*>& set1, boost::unordered_se
 	{
 		return 0;
 	}
-
+	uint nzh = 0;
+	uint nzd = 0;
 	list<Edge>::iterator i = eSet.edges.begin();
-	for(;i!=eSet.edges.end();)
+	for(;i!=eSet.edges.end();i++)
 	{
 		Edge e =*i;
 		Node* a = e.a;
 		Node* b = e.b;
-		if((set1.find(a)!=set1.end() && set2.find(b)!=set2.end())
-			||
-			(set1.find(b)!=set1.end() && set2.find(a)!=set2.end()))
+
+		boost::unordered_set<Node*>::iterator itcol = set1.find(a);
+		boost::unordered_set<Node*>::iterator itrow = set2.find(b);
+
+		//case diagonal
+		if(itcol!=set1.end()&& itrow!=set2.end())
 		{
-			//e is connected between set1 and set2
-			i++;
+			if(a==b) nzd++; //only for diagnal block in Q matrix
 		}
-		else
-		{
-			i = eSet.edges.erase(i);
+
+		//case 1;
+		if(itcol!=set1.end() && itrow!=set2.end()){
+			//e is connected between set1 and set2
+			nzh ++;
+		}
+
+		//case 2;
+		itcol = set1.find(b);
+		itrow = set2.find(a);
+		if(itcol!=set1.end() && itrow!=set2.end()){
+			nzh ++;
 		}
 	}
-	uint diag=eSet.numSelfEdges();
-	uint nzHess = (eSet.size())*2 - diag;
-	return nzHess;
+
+	nzh -= nzd;
+	return nzh;
+}
+
+uint nzHess(EdgeSet& eSet,boost::unordered_map<Node*,uint>& colvMap, boost::unordered_map<Node*,uint>& rowvMap,col_compress_imatrix& m)
+{
+	uint nzh = 0;
+	uint nzd = 0;
+	if(eSet.edges.size() == 0)
+	{
+		return 0;
+	}
+	list<Edge>::iterator i = eSet.edges.begin();
+	for(;i!=eSet.edges.end();i++)
+	{
+		Edge e =*i;
+		Node* a = e.a;
+		Node* b = e.b;
+
+		//case 1.
+		boost::unordered_map<Node*,uint>::iterator itcol = colvMap.find(a);
+		boost::unordered_map<Node*,uint>::iterator itrow = rowvMap.find(b);
+
+		if(itcol!=colvMap.end()&& itrow!=rowvMap.end())
+		{
+			if(a==b) nzd++; //only for diagnal block in Q matrix
+		}
+		if(itcol!=colvMap.end() && itrow!=rowvMap.end())
+		{
+			uint row = itrow->second;
+			uint col = itcol->second;
+			m(row,col) = 1;
+			nzh++;
+		}
+		//case 2
+		itcol = colvMap.find(b);
+		itrow = rowvMap.find(a);
+		if(itcol!=colvMap.end() && itrow!=rowvMap.end())
+		{
+			uint row = itrow->second;
+			uint col = itcol->second;
+			m(row,col) = 1;
+			nzh++;
+		}
+		//otherwise edge is not connect colvMap and rowvMap.
+	}
+	//diagnoal will be double counted!
+	nzh -= nzd;
+	assert(nzh == m.nnz());
+	return nzh;
 }
 
 uint nzHess(EdgeSet& edges)

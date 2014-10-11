@@ -17,6 +17,12 @@ typedef boost::numeric::ublas::matrix_row<col_compress_matrix> col_compress_matr
 typedef boost::numeric::ublas::matrix_column<col_compress_matrix> col_compress_matrix_col;
 typedef boost::numeric::ublas::matrix_range<col_compress_matrix > col_compress_matrix_range;
 
+typedef boost::numeric::ublas::compressed_matrix<uint,boost::numeric::ublas::column_major,0,std::vector<std::size_t>,std::vector<uint> >  col_compress_imatrix;
+typedef boost::numeric::ublas::matrix_row<col_compress_imatrix> col_compress_imatrix_row;
+typedef boost::numeric::ublas::matrix_column<col_compress_imatrix> col_compress_imatrix_col;
+typedef boost::numeric::ublas::matrix_range<col_compress_imatrix > col_compress_imatrix_range;
+
+
 class ColSparseMatrix {
 
 

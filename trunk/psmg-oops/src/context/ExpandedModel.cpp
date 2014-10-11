@@ -874,6 +874,37 @@ uint ExpandedModel::nz_cons_jacobs_nlp_local(ExpandedModel *emcol)
 	return nnz;
 }
 
+uint ExpandedModel::nz_cons_jacobs_nlp_local(ExpandedModel *emcol, col_compress_imatrix& m)
+{
+	assert(itype == LOCAL);
+	assert(ptype == NLP);
+
+	assert(this!=emcol || (this->model->level == emcol->model->level && this==emcol)); //sanity check!
+	BlockA* banlp = this->getBlockA_NLP_Local(emcol);
+	assert(banlp->cons.size() == this->numLocalCons);
+
+	//create variable map for emcol only
+	std::vector<AutoDiff::Node*> vlist;
+	emcol->copyVariables(vlist);
+	assert(vlist.size()==emcol->numLocalVars);
+
+	uint nnz = 0;
+	uint r = 0;  //cons index
+	BOOST_FOREACH(AutoDiff::Node* con, banlp->cons)
+	{
+		col_compress_imatrix_row rgrad(m,r);
+//		TRACE("con \n"<<tree_expr(con)<<"");
+		uint nz = con==NULL?0:AutoDiff::nzGrad(con,vlist,rgrad);
+		nnz += nz;
+		WARN("[ "<<i<<" ] nz "<<nz<<" nnz "<<nnz);
+		r++;
+	}
+	assert(r==this->numLocalCons);
+	TRACE("end nz_cons_jacobs_local -- this["<<this->name<<"] emcol["<<emcol->name<<"]  - nnz["<<nnz<<"]");
+	Stat::numNZConsJac_NLP_LocalCall++;
+	return nnz;
+}
+
 /* ----------------------------------------------------------------------------
 ExpandedModel::cons_jacobs_distribute
 ---------------------------------------------------------------------------- */
@@ -913,7 +944,6 @@ void ExpandedModel::cons_jacobs_nlp_local(ExpandedModel *emcol, col_compress_mat
 		assert(vnodes.size() == currcol);
 	}
 	TRACE("vnode size -"<<vnodes.size());
-//	assert(blockdep->getNumDepVars()==vnodes.size());
 	col_compress_matrix m(banlp->cons.size(),vnodes.size());
 	uint r = 0;  //con index
 	BOOST_FOREACH(AutoDiff::Node* con, banlp->cons)
@@ -1135,6 +1165,45 @@ uint ExpandedModel::nz_lag_hess_nlp_local(ExpandedModel* emcol)
 	assert(ptype == NLP);
 
 	TRACE("enter nz_lag_hess_nlp_local called -- this["<<this->name<<"] emcol["<<emcol->name<<"]");
+	assert(this->model->level >= emcol->model->level);
+
+	//the nonlinear edges from all constraints in the block
+	AutoDiff::EdgeSet edgeSet;
+	BlockHV* hvb = this->getBlockHV_NLP_Full(emcol);
+
+	if(hvb->node!=NULL){
+		TRACE("constraint expression  ---- ");
+//		TRACE("-- "<<tree_expr(hvb->node));
+		nonlinearEdges(hvb->node,edgeSet);
+		TRACE("nonlinearEdges - now: -- "<<edgeSet.size());
+//		ERROR(""<<edgeSet.toString());
+	}
+	else
+	{
+		TRACE("this hv block is zero!");
+		return 0;
+	}
+	//create variable map for emcol and emrow
+	boost::unordered_set<Node*> colvSet;
+	emcol->copyVariables(colvSet);
+	boost::unordered_set<Node*> rowvSet;
+	this->copyVariables(rowvSet);
+	TRACE("rowvSet size["<<rowvSet.size()<<"]  -- colvSet size["<<colvSet.size()<<"]");
+
+	uint nz = AutoDiff::nzHess(edgeSet,colvSet,rowvSet);
+	TRACE("nonlinearEdges - removed other edges - -"<<edgeSet.toString());
+	TRACE("end nz_lag_hess_nlp_local -- this["<<this->name<<"] emcol["<<emcol->name<<"]  - Num of Nonzero["<<nz<<"]");
+	Stat::numNZLagHess_NLP_LocalCall++;
+	return nz;
+}
+
+uint ExpandedModel::nz_lag_hess_nlp_local(ExpandedModel* emcol,col_compress_imatrix& m)
+{
+	assert(itype == LOCAL);
+	assert(ptype == NLP);
+
+	TRACE("enter nz_lag_hess_nlp_local called -- this["<<this->name<<"] emcol["<<emcol->name<<"]");
+	assert(this->model->level >= emcol->model->level);
 
 	//the nonlinear edges from all constraints in the block
 	AutoDiff::EdgeSet edgeSet;
@@ -1152,13 +1221,13 @@ uint ExpandedModel::nz_lag_hess_nlp_local(ExpandedModel* emcol)
 		return 0;
 	}
 	//create variable map for emcol and emrow
-	boost::unordered_set<Node*> colvSet;
-	emcol->copyVariables(colvSet);
-	boost::unordered_set<Node*> rowvSet;
-	this->copyVariables(rowvSet);
-	TRACE("rowvSet size["<<rowvSet.size()<<"]  -- colvSet size["<<colvSet.size()<<"]");
+	boost::unordered_map<Node*,uint> colvMap;
+	emcol->copyVariables(colvMap);
+	boost::unordered_map<Node*,uint> rowvMap;
+	this->copyVariables(rowvMap);
+	TRACE("rowvSet size["<<rowvMap.size()<<"]  -- colvSet size["<<colvMap.size()<<"]");
 
-	uint nz = nzHess(edgeSet,colvSet,rowvSet);
+	uint nz = AutoDiff::nzHess(edgeSet,colvMap,rowvMap,m);
 	TRACE("nonlinearEdges - removed other edges - -"<<edgeSet.toString());
 	TRACE("end nz_lag_hess_nlp_local -- this["<<this->name<<"] emcol["<<emcol->name<<"]  - Num of Nonzero["<<nz<<"]");
 	Stat::numNZLagHess_NLP_LocalCall++;
@@ -1479,7 +1548,7 @@ void ExpandedModel::update_primal_x(double *elts)
 
 }
 
-void ExpandedModel::update_lag(double* elts)
+void ExpandedModel::update_dual_y(double* elts)
 {
 	assert(itype == LOCAL);
 	assert(ptype == LP || ptype == NLP || ptype == QP);
@@ -1487,9 +1556,10 @@ void ExpandedModel::update_lag(double* elts)
 	//		a better way to use sparse array instead.
 	assert(ExpandedModel::Y != NULL);
 	TRACE("update_lag -- ["<<this->name<<"] numOfLocalVar["<<numLocalVars<<"]");
-	for(uint i = this->rowbeg;i<this->numLocalCons;i++)
+	for(uint i = 0;i<this->numLocalCons;i++)
 	{
-		ExpandedModel::Y[i] = elts[i];
+		uint index = i + this->rowbeg;
+		ExpandedModel::Y[index] = elts[i];
 	}
 }
 
@@ -1628,6 +1698,32 @@ void ExpandedModel::convertToColSparseMatrix(col_compress_matrix& m,ColSparseMat
 }
 
 
+void ExpandedModel::convertToColSparseMatrix(col_compress_imatrix& m,ColSparseMatrix& sm, uint max_nnz)
+{	//assuming index base is 0;
+	assert(max_nnz == m.nnz());
+	TRACE("convertToColSparseMatrix - "<<" nz"<<m.nnz());
+	assert(max_nnz!=0); //otherwise no need to evaluate the block
+	assert(m.nnz()<= max_nnz); //can't go over to the max_nnz which already allocated in solver
+	assert(m.index1_data().size() == m.size2()+1);
+
+
+	//setting new values
+//		assert(m.index1_data().size() == ncol+1); //assume the index base is 0;
+	for(uint i=0;i<m.index1_data().size();i++) sm.colstarts[i] = m.index1_data()[i];
+	for(uint i=0;i<m.nnz();i++) sm.rownos[i] = m.index2_data()[i];
+	for(uint i=0;i<m.nnz();i++) sm.values[i] = m.value_data()[i];
+
+	//setting collen if it is not NULL
+	if(sm.collen!=NULL)
+	{
+		for(uint i=0;i<m.size2();i++)
+		{
+			sm.collen[i] = sm.colstarts[i+1] - sm.colstarts[i];;
+		}
+	}
+}
+
+
 /*
  * used for quick lookup for computing nz of matrix block
  */
@@ -1647,6 +1743,27 @@ void ExpandedModel::copyVariables(boost::unordered_set<AutoDiff::Node*>& vSet)
 		TRACE("copyVariables - "<<var->name<<" -- "<<vSet.size());
 	}
 	assert(vSet.size() == this->numLocalVars);
+}
+
+void ExpandedModel::copyVariables(boost::unordered_map<AutoDiff::Node*,uint>& vSet)
+{
+	uint idx = 0;
+	BOOST_FOREACH(VarComp* vc, this->model->var_comps)
+	{
+		Var* var = static_cast<Var*>(this->ctx.getCompValue(vc));
+		assert(var!=NULL);
+		var_multi_map_by_order& var_by_order = var->varMultiMap.get<0>();
+		var_multi_map_by_order::iterator i = var_by_order.begin();
+		for(;i!=var_by_order.end();i++)
+		{
+			vSet.insert(std::make_pair<AutoDiff::Node*,uint>(&((*i)->adv),idx));
+//			TRACE("copyVariables - ["<<v.toString()<<"]");
+			idx++;
+		}
+		TRACE("copyVariables - "<<var->name<<" -- "<<vSet.size());
+	}
+	assert(vSet.size() == this->numLocalVars);
+	assert(idx == this->numLocalVars);
 }
 
 void ExpandedModel::copyVariables(std::vector<AutoDiff::Node*>& vSet)
