@@ -29,7 +29,6 @@
 
 using namespace std;
 
-using namespace __gnu_cxx;
 
 Param::Param(ParamComp* comp):numIndicies(comp->numIndicies),name(comp->name),card(0)
 {
