@@ -28,7 +28,6 @@
 #include "../util/util.h"
 
 using namespace std;
-using namespace __gnu_cxx;
 
 SetSimple::SetSimple(string& name, int dim):Set(name,dim)
 {

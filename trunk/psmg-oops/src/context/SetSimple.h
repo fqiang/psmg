@@ -7,7 +7,6 @@
 class SetComp;
 
 using namespace std;
-using namespace __gnu_cxx;
 
 class SetSimple: public Set{
 	private:
