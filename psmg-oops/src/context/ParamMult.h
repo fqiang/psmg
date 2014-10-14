@@ -14,7 +14,6 @@
 #include "PValue.h"
 
 using namespace std;
-using namespace __gnu_cxx;
 
 class ParamMult : public Param {
 public:

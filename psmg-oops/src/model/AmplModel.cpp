@@ -41,7 +41,6 @@
 
 using namespace std;
 
-//using namespace __gnu_cxx;
 
 //list<changeitem> AmplModel::changes; // initialize to empty list
 
