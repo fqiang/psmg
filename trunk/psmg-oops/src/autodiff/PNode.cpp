@@ -62,10 +62,9 @@ void PNode::update_adj(double& v)
 
 uint PNode::hess_reverse_0()
 {
-	if(index==0)
+	if(index== Node::DEFAULT_INDEX)
 	{
 		TT->set(pval());
-		assert(TT->index == TT->index);
 		index = TT->index;
 	}
 	return index;
@@ -107,6 +106,45 @@ void PNode::hess_reverse_1_get_xw(uint i, double& w,double& x)
 void PNode::hess_reverse_get_x(uint i, double& x)
 {
 	x = TT->get(i-1);
+}
+
+uint PNode:: hess_reverse_full0()
+{
+	if(index == Node::DEFAULT_INDEX)
+	{
+		TT->set(pval());
+		index = TT->index;
+	}
+	return index;
+}
+
+void PNode::hess_reverse_full1(uint i,EdgeSet& eset)
+{
+	for(std::list<Edge>::iterator it=eset.edges.begin();it!=eset.edges.end();)
+	{
+		Edge e = *it;
+		if(e.a == this || e.b == this)
+		{
+			it = eset.edges.erase(it); //erase invalidate the iterator
+		}
+		else
+		{
+			it++;
+		}
+	}
+}
+
+void PNode::hess_reverse_full0_get_x(uint i, double& v)
+{
+	v = TT->at(i-1);
+}
+void PNode::hess_reverse_full1_init_x_bar(uint)
+{
+	//do nothing as Parameter does not have x_bar
+}
+void PNode:: hess_reverse_full1_update_x_bar(uint i,double& v)
+{
+	//do nothing as Parameter does not have x_bar
 }
 
 void PNode::nonlinearEdges(EdgeSet& edges)

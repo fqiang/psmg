@@ -29,6 +29,13 @@ public:
 	void hess_reverse_1_get_xw(uint,double&,double&);
 	void hess_reverse_get_x(uint,double& x);
 
+
+	uint hess_reverse_full0();
+	void hess_reverse_full0_get_x(uint, double&);
+	void hess_reverse_full1_init_x_bar(uint);
+	void hess_reverse_full1(uint,EdgeSet&);
+	void hess_reverse_full1_update_x_bar(uint i,double& v);
+
 	void nonlinearEdges(EdgeSet&);
 
 	void inorder_visit(int level,ostream& oss);
@@ -45,7 +52,7 @@ public:
 	static int DEFAULT_ID;
 #endif
 //	double val;
-	uint idx;
+	uint idx;  //idx for value look up.
 	double u;
 
 

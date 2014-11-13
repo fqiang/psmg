@@ -184,17 +184,17 @@ void BinaryOPNode::hess_reverse_0_init_n_in_arcs()
 	this->Node::hess_reverse_0_init_n_in_arcs();
 }
 
-void BinaryOPNode::hess_reverse_1_clear_index()
+void BinaryOPNode::hess_reverse_clear_index()
 {
-	this->left->hess_reverse_1_clear_index();
-	this->right->hess_reverse_1_clear_index();
-	this->Node::hess_reverse_1_clear_index();
+	this->left->hess_reverse_clear_index();
+	this->right->hess_reverse_clear_index();
+	this->Node::hess_reverse_clear_index();
 }
 
 uint BinaryOPNode::hess_reverse_0()
 {
 	assert(this->left!=NULL && right!=NULL);
-	if(index==0)
+	if(index== DEFAULT_INDEX)
 	{
 		uint lindex=0, rindex=0;
 		lindex = left->hess_reverse_0();
@@ -211,14 +211,11 @@ uint BinaryOPNode::hess_reverse_0()
 		switch(op)
 		{
 		case OP_PLUS:
-	//		cout<<"lindex="<<lindex<<"\trindex="<<rindex<<"\tI="<<I<<endl;
 			x = lx + rx;
-	//		cout<<lx<<"\t+"<<rx<<"\t="<<x<<"\t\t"<<toString(0)<<endl;
 			x_bar = 0;
 			l_dh = 1;
 			r_dh = 1;
 			w = lw * l_dh  + rw * r_dh;
-	//		cout<<lw<<"\t+"<<rw<<"\t="<<w<<"\t\t"<<toString(0)<<endl;
 			w_bar = 0;
 			break;
 		case OP_MINUS:
@@ -372,6 +369,7 @@ void BinaryOPNode::hess_reverse_1(uint i)
 		this->left->hess_reverse_1(lindex);
 	}
 }
+
 void BinaryOPNode::hess_reverse_1_init_x_bar(uint i)
 {
 	TT->at(i-5) = 1;
@@ -394,31 +392,135 @@ void BinaryOPNode::hess_reverse_get_x(uint i,double& x)
 	x = TT->get(i-6);
 }
 
-
-void BinaryOPNode::nonlinearEdges(EdgeSet& edges)
+uint BinaryOPNode::hess_reverse_full0()
 {
-	for(list<Edge>::iterator it=edges.edges.begin();it!=edges.edges.end();)
+	assert(this->left!=NULL && right!=NULL);
+	if(index== DEFAULT_INDEX)
 	{
-		Edge e = *it;
-		if(e.a==this || e.b == this){
-			if(e.a == this && e.b == this)
+		uint lindex=0, rindex=0;
+		lindex = left->hess_reverse_full0();
+		rindex = right->hess_reverse_full0();
+		assert(lindex!=0 && rindex !=0);
+		II->set(lindex);
+		II->set(rindex);
+		double rx;
+		double lx;
+		double x,x_bar;
+		double hl, hr, hll, hrr, hlr; //dh/dl, dh/dr, d^2 h/dl^2, d^2h/dr^2, d^2h/dldr
+		right->hess_reverse_full0_get_x(rindex,rx);
+		left->hess_reverse_full0_get_x(lindex,lx);
+		switch(op)
+		{
+		case OP_PLUS:
+			x = lx + rx;
+			x_bar = 0;
+			hl = 1;
+			hr = 1;
+			hll = 0;
+			hrr = 0;
+			hlr = 0;
+			break;
+		case OP_MINUS:
+			x = lx - rx;
+			x_bar = 0;
+			hl = 1;
+			hr = -1;
+			hll = 0;
+			hrr = 0;
+			hlr = 0;
+			break;
+		case OP_TIMES:
+			x = lx * rx;
+			x_bar = 0;
+			hl = rx;
+			hr = lx;
+			hll = 0;
+			hrr = 0;
+			hlr = 1;
+			break;
+		case OP_DIVID:
+			x = lx / rx;
+			x_bar = 0;
+			hl = 1/rx;
+			hr = -lx/pow(rx,2);
+			hll = 0;
+			hrr = 2*lx/pow(rx,3);
+			hlr = -1/pow(rx,2);
+			break;
+		case OP_POW:
+			if(right->getType()==PNode_Type) //so that lx can be negative
 			{
-				Edge e1(left,left);
-				Edge e2(right,right);
-				Edge e3(left,right);
-				edges.insertEdge(e1);
-				edges.insertEdge(e2);
-				edges.insertEdge(e3);
+				x = pow(lx,rx);
+				x_bar = 0;
+				hl = rx*pow(lx,(rx-1));
+				hr = 0;
+				hll = rx*(rx-1)*pow(lx,(rx-2));
+				hrr = 0;
+				hlr = 0;
 			}
 			else
 			{
-				Node* o = e.a==this? e.b: e.a;
-				Edge e1(left,o);
-				Edge e2(right,o);
-				edges.insertEdge(e1);
-				edges.insertEdge(e2);
+				assert(lx>0.0); //otherwise log(lx) undefined in real number
+				x = pow(lx,rx);
+				x_bar = 0;
+				hl = rx*pow(lx,(rx-1));
+				hr = pow(lx,rx)*log(lx);   //log(lx) cause -inf when lx=0;
+				hll = rx*(rx-1)*pow(lx,(rx-2));
+				hrr = pow(lx,rx)*pow(log(lx),2);
+				hlr = pow(lx,rx-1) + pow(lx,rx-1)*rx*log(lx);
 			}
-			it = edges.edges.erase(it);
+			break;
+		default:
+			cerr<<"op["<<op<<"] not yet implemented!"<<endl;
+			assert(false);
+			break;
+		}
+		TT->set(x);
+		TT->set(x_bar);
+		TT->set(hl);
+		TT->set(hr);
+		TT->set(hll);
+		TT->set(hrr);
+		TT->set(hlr);
+		index = TT->index;
+	}
+	return index;
+}
+
+void BinaryOPNode::hess_reverse_full1(uint i,EdgeSet& eset)
+{
+	assert(i==index);
+	double hlr = TT->at(i-1);
+	double hrr = TT->at(i-2);
+	double hll = TT->at(i-3);
+	double hr = TT->at(i-4);
+	double hl = TT->at(i-5);
+	double x_bar = TT->at(i-6);
+	//pushing
+	for(list<Edge>::iterator it=eset.edges.begin();it!=eset.edges.end();)
+	{
+		Edge& e = *it;
+		if(e.a == this || e.b == this)
+		{
+			if(e.a==this && e.b == this)
+			{//case II
+				Edge& e1 = eset.createEdge(left,right);
+				Edge& e2 = eset.createEdge(left,left);
+				Edge& e3 = eset.createEdge(right,right);
+				e1.update_w(hlr*e.w);
+				e2.update_w(hll*e.w);
+				e3.update_w(hrr*e.w);
+			}
+			else
+			{//case I, III
+				Node* o = e.a==this? e.b: e.a;
+				Edge& e1 = eset.createEdge(left ,o);
+				assert(e1.a==left && e1.b == o);
+				Edge& e2 = eset.createEdge(right ,o);
+				e1.a == e1.b? e1.update_w(2*hl*e.w):e1.update_w(hl*e.w);
+				e2.a == e2.b? e2.update_w(2*hr*e.w):e1.update_w(hr*e.w);
+			}
+			it = eset.edges.erase(it);
 		}
 		else
 		{
@@ -426,9 +528,7 @@ void BinaryOPNode::nonlinearEdges(EdgeSet& edges)
 		}
 	}
 
-	Edge e1(left,right);
-	Edge e2(left,left);
-	Edge e3(right,right);
+	//creating
 	switch(op)
 	{
 	case OP_PLUS:
@@ -436,16 +536,127 @@ void BinaryOPNode::nonlinearEdges(EdgeSet& edges)
 		//do nothing for linear operator
 		break;
 	case OP_TIMES:
-		edges.insertEdge(e1);
+	{
+		Edge& e1 = eset.createEdge(left,right);
+		e1.update_w(x_bar*hlr);
+		break;
+	}
+	case OP_DIVID:
+	{
+		Edge& e1 = eset.createEdge(left,right);
+		Edge& e3 = eset.createEdge(right,right);
+		e1.update_w(x_bar*hlr);
+		e3.update_w(x_bar*hrr);
+		break;
+	}
+	case OP_POW:
+	{
+		Edge& e1 = eset.createEdge(left,right);
+		Edge& e2 = eset.createEdge(left,left);
+		Edge& e3 = eset.createEdge(right,right);
+		e1.update_w(x_bar*hlr);
+		e2.update_w(x_bar*hll);
+		e3.update_w(x_bar*hrr);
+		break;
+	}
+	default:
+		cerr<<"op["<<op<<"] not yet implmented !"<<endl;
+		assert(false);
+		break;
+	}
+	//adjoint
+	uint rindex = II->at(--(II->index));
+	uint lindex = II->at(--(II->index));
+	double lx_bar = x_bar*hl;
+	double rx_bar = x_bar*hr;
+	left->hess_reverse_full1_update_x_bar(lindex,lx_bar);
+	right->hess_reverse_full1_update_x_bar(rindex,rx_bar);
+
+	//recursive
+	right->hess_reverse_full1(rindex,eset);
+	left->hess_reverse_full1(lindex,eset);
+}
+
+void BinaryOPNode::hess_reverse_full1_update_x_bar(uint i,double& v)
+{
+	TT->at(i-6) += v;
+}
+
+void BinaryOPNode::hess_reverse_full1_init_x_bar(uint i)
+{
+	TT->at(i-6) = 1;
+}
+
+void BinaryOPNode::hess_reverse_full0_get_x(uint i,double& v)
+{
+	v = TT->get(i-7);
+}
+
+void BinaryOPNode::nonlinearEdges(EdgeSet& edges)
+{
+	for(list<Edge>::iterator it=edges.edges.begin();it!=edges.edges.end();)
+	{
+		//carry on the previous nonlinear edges.
+		Edge e = *it;
+		if(e.a==this || e.b == this){
+			if(e.a == this && e.b == this)
+			{ //case II
+//				Edge e1(left,left);
+//				Edge e2(right,right);
+//				Edge e3(left,right);
+//				edges.insertEdge(e1);
+//				edges.insertEdge(e2);
+//				edges.insertEdge(e3);
+				edges.createEdge(left,left);
+				edges.createEdge(right,right);
+				edges.createEdge(left,right);
+			}
+			else
+			{ //case I, III
+				Node* o = e.a==this? e.b: e.a;
+//				Edge e1(left,o);
+//				Edge e2(right,o);
+//				edges.insertEdge(e1);
+//				edges.insertEdge(e2);
+				edges.createEdge(left,o);
+				edges.createEdge(right,o);
+			}
+			it = edges.edges.erase(it);
+		}
+		else
+		{
+			it++;
+		}
+	} //TODO: need to optimized -- as the incoming edges to be hold on seperate taping structure
+
+
+	//introducing new ones.
+//	Edge e1(left,right);
+//	Edge e2(left,left);
+//	Edge e3(right,right);
+	switch(op)
+	{
+	case OP_PLUS:
+	case OP_MINUS:
+		//do nothing for linear operator
+		break;
+	case OP_TIMES:
+//		edges.insertEdge(e1);
+		edges.createEdge(left,right);
 		break;
 	case OP_DIVID:
-		edges.insertEdge(e1);
-		edges.insertEdge(e3);
+//		edges.insertEdge(e1);
+//		edges.insertEdge(e3);
+		edges.createEdge(left,right);
+		edges.createEdge(right,right);
 		break;
 	case OP_POW:
-		edges.insertEdge(e1);
-		edges.insertEdge(e2);
-		edges.insertEdge(e3);
+//		edges.insertEdge(e1);
+//		edges.insertEdge(e2);
+//		edges.insertEdge(e3);
+		edges.createEdge(left,right);
+		edges.createEdge(left,left);
+		edges.createEdge(right,right);
 		break;
 	default:
 		cerr<<"op["<<op<<"] not yet implmented !"<<endl;
@@ -455,6 +666,7 @@ void BinaryOPNode::nonlinearEdges(EdgeSet& edges)
 	left->nonlinearEdges(edges);
 	right->nonlinearEdges(edges);
 }
+
 
 #if FORWARD_ENABLED
 

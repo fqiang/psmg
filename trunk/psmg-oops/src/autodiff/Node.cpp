@@ -24,9 +24,21 @@ void Node::hess_reverse_0_init_n_in_arcs()
 //	cout<<this->toString(0)<<endl;
 }
 
-void Node::hess_reverse_1_clear_index()
+void Node::hess_reverse_clear_index()
 {
 	index = Node::DEFAULT_INDEX;
+}
+
+void Node::print()
+{
+	std::cout<<this->toString(0)<<endl;
+}
+
+void Node::ptree()
+{
+	ostringstream oss;
+	this->inorder_visit(0,oss);
+	std::cout<<oss.str()<<endl;
 }
 
 }

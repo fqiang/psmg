@@ -34,6 +34,13 @@ public:
 	
 	void nonlinearEdges(EdgeSet&);
 
+
+	uint hess_reverse_full0();
+	void hess_reverse_full0_get_x(uint, double&);
+	void hess_reverse_full1_init_x_bar(uint);
+	void hess_reverse_full1(uint,EdgeSet&);
+	void hess_reverse_full1_update_x_bar(uint i,double& v);
+
 	void inorder_visit(int level,ostream& oss);
 	TYPE getType();
 

@@ -23,23 +23,22 @@ EdgeSet::~EdgeSet() {
 	edges.clear();
 }
 
-bool EdgeSet::containsEdge(Edge& e)
+/*
+ * create edge a-b if not already in edge set
+ */
+Edge& EdgeSet::createEdge(Node* a, Node* b)
 {
+	Edge e(a,b);
 	list<Edge>::iterator it = edges.begin();
-	for(;it!= edges.end();it++){
-		Edge eit = *it;
-		if(eit.isEqual(e))
-		{
-			return true;
+	for(;it!=edges.end();it++)
+	{
+		Edge& eit = *it;
+		if(eit.isEqual(e)){
+			return eit;
 		}
 	}
-	return false;
-}
-
-void EdgeSet::insertEdge(Edge& e) {
-	if(!containsEdge(e)){
-		edges.push_front(e);
-	}
+	edges.push_front(e);
+	return edges.front();
 }
 
 void EdgeSet::clear() {
@@ -74,5 +73,6 @@ string EdgeSet::toString()
 	}
 	return oss.str();
 }
+
 
 } /* namespace AutoDiff */

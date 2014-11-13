@@ -36,10 +36,18 @@ public:
 	virtual void update_w_bar(uint,double) = 0;
 	virtual void hess_reverse_1_get_xw(uint, double&,double&) = 0;
 	virtual void hess_reverse_get_x(uint,double& x)=0;
-	virtual void hess_reverse_1_clear_index();
 	//routing for checking non-zero structures
 	virtual void collect_vnodes(boost::unordered_set<Node*>& nodes,uint& total) = 0;
 	virtual void nonlinearEdges(EdgeSet&) = 0;
+
+	virtual uint hess_reverse_full0() = 0;
+	virtual void hess_reverse_full0_get_x(uint, double&) = 0;
+	virtual void hess_reverse_full1_init_x_bar(uint) = 0;
+	virtual void hess_reverse_full1(uint,EdgeSet&) = 0;
+	virtual void hess_reverse_full1_update_x_bar(uint i,double& v) = 0;
+
+	virtual void hess_reverse_clear_index();
+
 #if FORWARD_ENABLED
 	virtual void hess_forward(uint len, double** ret_vec) = 0;
 #endif
@@ -48,6 +56,9 @@ public:
 	virtual void inorder_visit( int level,ostream& oss) = 0;
 	virtual string toString(int levl)  = 0;
 	virtual TYPE getType() = 0;
+
+	virtual void print();
+	virtual void ptree();
 
 
 	//! index on the tape

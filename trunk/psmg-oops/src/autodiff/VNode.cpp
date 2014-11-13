@@ -144,13 +144,42 @@ void VNode::hess_reverse_get_x(uint i ,double& x)
 	x = TT->get(i-4);
 }
 
+
+uint VNode::hess_reverse_full0()
+{
+	if(index == Node::DEFAULT_INDEX)
+	{
+		double nan = NaN_Double;
+		TT->set(val());
+		TT->set(nan);
+		index = TT->index;
+	}
+	return index;
+}
+
+void VNode::hess_reverse_full1(uint i,EdgeSet& eset)
+{
+	//leaf node , do nothing
+}
+
+void VNode::hess_reverse_full0_get_x(uint i, double& v)
+{
+	v = TT->at(i-2);
+}
+
+void VNode::hess_reverse_full1_init_x_bar(uint i)
+{
+	TT->at(i-1) = 1;
+}
+void VNode::hess_reverse_full1_update_x_bar(uint i,double& v)
+{
+	TT->at(i-1) += v;
+}
+
+
 void VNode::nonlinearEdges(EdgeSet& edges)
 {
-//	for(list<Edge>::iterator it = edges.edges.begin();it!=edges.edges.end();)
-//	{
-//		Edge e=*it;
-//
-//	}
+	//leaf node , do nothing
 }
 
 

@@ -144,16 +144,16 @@ void UaryOPNode::hess_reverse_0_init_n_in_arcs()
 	this->Node::hess_reverse_0_init_n_in_arcs();
 }
 
-void UaryOPNode::hess_reverse_1_clear_index()
+void UaryOPNode::hess_reverse_clear_index()
 {
-	this->left->hess_reverse_1_clear_index();
-	this->Node::hess_reverse_1_clear_index();
+	this->left->hess_reverse_clear_index();
+	this->Node::hess_reverse_clear_index();
 }
 
 uint UaryOPNode::hess_reverse_0()
 {
 	assert(left!=NULL);
-	if(index==0)
+	if(index == Node::DEFAULT_INDEX)
 	{
 		uint lindex=0;
 		lindex = left->hess_reverse_0();
@@ -162,11 +162,10 @@ uint UaryOPNode::hess_reverse_0()
 		double lx,lx_bar,lw,lw_bar;
 		double x,x_bar,w,w_bar;
 		double l_dh;
+		left->hess_reverse_0_get_values(lindex,lx,lx_bar,lw,lw_bar);
 		switch(op)
 		{
 		case OP_SIN:
-			assert(left != NULL);
-			left->hess_reverse_0_get_values(lindex,lx,lx_bar,lw,lw_bar);
 			x = sin(lx);
 			x_bar = 0;
 			l_dh = cos(lx);
@@ -174,8 +173,6 @@ uint UaryOPNode::hess_reverse_0()
 			w_bar = 0;
 			break;
 		case OP_COS:
-			assert(left!=NULL);
-			left->hess_reverse_0_get_values(lindex,lx,lx_bar,lw,lw_bar);
 			x = cos(lx);
 			x_bar = 0;
 			l_dh = -sin(lx);
@@ -277,14 +274,17 @@ void UaryOPNode::nonlinearEdges(EdgeSet& edges)
 		Edge& e = *it;
 		if(e.a == this || e.b == this){
 			if(e.a == this && e.b == this)
-			{
-				Edge e1(left,left);
-				edges.insertEdge(e1);
+			{//case II
+//				Edge e1(left,left);
+//				edges.insertEdge(e1);
+				edges.createEdge(left,left);
 			}
-			else{
+			else
+			{ //case I, III
 				Node* o = e.a==this?e.b:e.a;
-				Edge e1(left,o);
-				edges.insertEdge(e1);
+//				Edge e1(left,o);
+//				edges.insertEdge(e1);
+				edges.createEdge(left,o);
 			}
 			it = edges.edges.erase(it);
 		}
@@ -294,14 +294,16 @@ void UaryOPNode::nonlinearEdges(EdgeSet& edges)
 		}
 	}
 
-	Edge e1(left,left);
+//	Edge e1(left,left);
 	switch(op)
 	{
 	case OP_SIN:
-		edges.insertEdge(e1);
+//		edges.insertEdge(e1);
+		edges.createEdge(left,left);
 		break;
 	case OP_COS:
-		edges.insertEdge(e1);
+//		edges.insertEdge(e1);
+		edges.createEdge(left,left);
 		break;
 	default:
 		cerr<<"op["<<op<<"] is not yet implemented !"<<endl;
@@ -309,6 +311,122 @@ void UaryOPNode::nonlinearEdges(EdgeSet& edges)
 		break;
 	}
 	left->nonlinearEdges(edges);
+}
+
+
+
+uint UaryOPNode::hess_reverse_full0()
+{
+	assert(this->left!=NULL);
+	if(index== DEFAULT_INDEX)
+	{
+		uint lindex=0;
+		lindex = left->hess_reverse_full0();
+		assert(lindex!=0);
+		II->set(lindex);
+		double lx,lx_bar;
+		double x,x_bar;
+		double hl, hll; //dh/dl, d^2 h/dl^2
+		left->hess_reverse_full0_get_x(lindex,lx);
+		switch(op)
+		{
+		case OP_SIN:
+			x = sin(lx);
+			x_bar = 0;
+			hl = cos(lx);
+			hll = -sin(lx);
+			break;
+		case OP_COS:
+			x = cos(lx);
+			x_bar = 0;
+			hl = -sin(lx);
+			hll = -cos(lx);
+			break;
+		default:
+			cerr<<"op["<<op<<"] not yet implemented!"<<endl;
+			assert(false);
+			break;
+		}
+		TT->set(x);
+		TT->set(x_bar);
+		TT->set(hl);
+		TT->set(hll);
+		index = TT->index;
+	}
+	return index;
+}
+
+void UaryOPNode::hess_reverse_full1(uint i ,EdgeSet& eset)
+{
+	assert(i == index);
+	double hll = TT->at(i-1);
+	double hl = TT->at(i-2);
+	double x_bar = TT->at(i-3);
+
+	//pushing
+	for(list<Edge>::iterator it=eset.edges.begin();it!=eset.edges.end();)
+	{
+		Edge& e = *it;
+		if(e.a == this || e.b == this)
+		{
+			if(e.a==this && e.b == this)
+			{//case II
+				Edge& e2 = eset.createEdge(left,left);
+				e2.update_w(hll*e.w);
+			}
+			else
+			{//case I, III
+				Node* o = e.a==this? e.b: e.a;
+				Edge& e1 = eset.createEdge(left ,o);
+				e1.a==e1.b?e1.update_w(2*hl*e.w):e1.update_w(hl*e.w);
+			}
+			it = eset.edges.erase(it);
+		}
+		else
+		{
+			it++;
+		}
+	}
+	//creating
+	switch(op)
+	{
+	case OP_SIN:
+	{
+		Edge& e1 = eset.createEdge(left,left);
+		e1.update_w(x_bar*hll);
+		break;
+	}
+	case OP_COS:
+	{
+		Edge& e1 = eset.createEdge(left,left);
+		e1.update_w(x_bar*hll);
+		break;
+	}
+	default:
+		cerr<<"op["<<op<<"] not yet implmented !"<<endl;
+		assert(false);
+		break;
+	}
+	//adjoint
+	uint lindex = II->at(--(II->index));
+	double lx_bar = x_bar*hl;
+	left->hess_reverse_full1_update_x_bar(lindex,lx_bar);
+
+	//recursive
+	left->hess_reverse_full1(lindex,eset);
+}
+
+void UaryOPNode::hess_reverse_full0_get_x(uint i, double& v)
+{
+	v = TT->get(i-4);
+}
+void UaryOPNode::hess_reverse_full1_init_x_bar(uint i)
+{
+	TT->at(i-3) = 1;
+}
+void UaryOPNode::hess_reverse_full1_update_x_bar(uint i,double& v)
+{
+	TT->at(i-3) += v;
 }
 
 #if FORWARD_ENABLED

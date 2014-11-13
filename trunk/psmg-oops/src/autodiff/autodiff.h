@@ -110,7 +110,9 @@ namespace AutoDiff{
 	extern double grad_reverse(Node* root, vector<Node*>& nodes, col_compress_matrix_row& rgrad);
 	extern uint nzHess(EdgeSet&,boost::unordered_set<Node*>& set1, boost::unordered_set<Node*>& set2);
 	extern uint nzHess(EdgeSet&,boost::unordered_map<Node*,uint>& colvMap, boost::unordered_map<Node*,uint>& rowvMap,col_compress_imatrix& m);
-	extern double hess_reverse(Node* root, vector<Node*>& nodes, col_compress_matrix_col& chess);
+	extern double hess_reverse(Node* root, vector<Node*>& nodes, col_compress_matrix& hess);
+	extern double hess_reverse(Node* root, vector<Node*>& nodes, col_compress_matrix_col& hess);
+	extern double hess_reverse_ep(Node* root, boost::unordered_map<Node*,uint>& colvMap, boost::unordered_map<Node*,uint>& rowvMap, col_compress_matrix& hess);
 
 #if FORWARD_ENDABLED
 	//forward methods

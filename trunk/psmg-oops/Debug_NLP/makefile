@@ -54,7 +54,7 @@ all: psmg-oops
 psmg-oops: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	mpic++ -L/home/s0965328/workspace/oops/oops_Argonne_2013/lib/parallel_gnu -L/home/s0965328/research/metis-4.0.3/Lib_gnu -o "psmg-oops" $(OBJS) $(USER_OBJS) $(LIBS)
+	mpic++ -L/home/s0965328/workspace/oops/oops_Argonne_2014/lib/parallel_gnu -L/home/s0965328/workspace/oops/oops_Argonne_2014/lib/metis-5/build/Linux-x86_64/libmetis -o "psmg-oops" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
