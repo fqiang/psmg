@@ -327,20 +327,8 @@ void ExpandedModel::obj_hess_qp(ExpandedModel* emcol, col_compress_matrix& m)
 	}
 
 	col_compress_matrix hess(vnodes.size(),vnodes.size());
-	for(uint c = 0;c<vnodes.size();c++)
-	{
-		//initialize the weight for computing column c of Hessian m
-		//this is required by Autodiff_library
-		BOOST_FOREACH(AutoDiff::Node* v, vnodes)
-		{
-			static_cast<AutoDiff::VNode*>(v)->u = 0;
-		}
-		static_cast<AutoDiff::VNode*>(vnodes[c])->u = 1; //set weight = 1 for column c varible only, rest are 0
 
-		//calculate the column c for Hessian m
-		col_compress_matrix_col hess_col(hess,c);
-		hess_reverse(bq->objective,vnodes,hess_col); //accumulate the column of hess
-	}
+	hess_reverse(bq->objective,vnodes,hess);
 
 //	TRACE("Full hessian: "<<hess);
 	uint colrange = colstart + emcol->numLocalVars;
@@ -896,7 +884,7 @@ uint ExpandedModel::nz_cons_jacobs_nlp_local(ExpandedModel *emcol, col_compress_
 //		TRACE("con \n"<<tree_expr(con)<<"");
 		uint nz = con==NULL?0:AutoDiff::nzGrad(con,vlist,rgrad);
 		nnz += nz;
-		WARN("[ "<<i<<" ] nz "<<nz<<" nnz "<<nnz);
+		WARN("[ "<<r<<" ] nz "<<nz<<" nnz "<<nnz);
 		r++;
 	}
 	assert(r==this->numLocalCons);
@@ -1230,6 +1218,7 @@ uint ExpandedModel::nz_lag_hess_nlp_local(ExpandedModel* emcol,col_compress_imat
 	uint nz = AutoDiff::nzHess(edgeSet,colvMap,rowvMap,m);
 	TRACE("nonlinearEdges - removed other edges - -"<<edgeSet.toString());
 	TRACE("end nz_lag_hess_nlp_local -- this["<<this->name<<"] emcol["<<emcol->name<<"]  - Num of Nonzero["<<nz<<"]");
+	TRACE(""<<m);
 	Stat::numNZLagHess_NLP_LocalCall++;
 	return nz;
 }
@@ -1238,82 +1227,92 @@ void ExpandedModel::lag_hess_nlp_local(ExpandedModel* emcol,col_compress_matrix&
 {
 	assert(itype == LOCAL);
 	assert(ptype == NLP);
-
-	//Symmetric Hessian, computes only upper or lower trangular matrix in block form.
-	//To decide either upper or lower part of Hessian matrix block, the structure setup in
-	//the solver specific callback function routine need to be considered.
+	TRACE("enter nz_lag_hess_nlp_local called -- this["<<this->name<<"] emcol["<<emcol->name<<"]");
 	assert(this->model->level >= emcol->model->level);
 
-	TRACE("enter lag_hess_nlp_local - emrow["<<this->name<<"] emcol"<<emcol->name<<"]");
-	assert(block.size1() == this->numLocalVars && block.size2() == emcol->numLocalVars);
-
+	//the nonlinear edges from all constraints in the block
+	AutoDiff::EdgeSet edgeSet;
 	BlockHV* hvb = this->getBlockHV_NLP_Full(emcol);
 
-	assert(hvb->node!=NULL); //otherwise this method is not need to be called, as nnz==0;
-	//building list of depenedent expanded model nodes.
-//	ExpandedModel* hi_em = NULL;
-//	if(this->model->level < emcol->model->level) //this is above emcol
-//	{
-//		hi_em = emcol;
-//	}
-//	else // this is below emcol
-//	{
-//		hi_em = this;
-//	}
+	//create variable map for emcol and emrow
+	boost::unordered_map<Node*,uint> colvMap;
+	emcol->copyVariables(colvMap);
+	boost::unordered_map<Node*,uint> rowvMap;
+	this->copyVariables(rowvMap);
+	TRACE("rowvSet size["<<rowvMap.size()<<"]  -- colvSet size["<<colvMap.size()<<"]");
 
-	//possible variables involved in this sub-block Hessian of Langrangian.
-	std::vector<ExpandedModel*> ems;
-	this->getParentEM(ems);
-	this->getAllEM(ems);
-
-	//figure out boundary for sub-matrix
-	uint colstart = 0;
-	uint rowstart = 0;
-	uint currvar = 0;
-	std::vector<AutoDiff::Node*> vnodes;
-	BOOST_FOREACH(ExpandedModel* em, ems)
-	{
-		TRACE("em["<<em->name<<"]");
-		if(em == emcol) {
-			colstart = currvar;
-		}
-		if(em == this) {
-			rowstart = currvar;
-		}
-		em->copyVariables(vnodes);
-		currvar += em->numLocalVars;
-		assert(vnodes.size() == currvar);
-	}
-
-	col_compress_matrix hess(vnodes.size(),vnodes.size());
-	for(uint c = 0;c<vnodes.size();c++)
-	{
-		//initialize the weight for computing column c of Hessian m
-		//this is required by Autodiff_library
-		BOOST_FOREACH(AutoDiff::Node* v, vnodes)
-		{
-			static_cast<AutoDiff::VNode*>(v)->u = 0;
-		}
-		static_cast<AutoDiff::VNode*>(vnodes[c])->u = 1; //set weight = 1 for column c varible only, rest are 0
-
-		//calculate the column c for Hessian m
-		col_compress_matrix_col chess(hess,c);
-		hess_reverse(hvb->node,vnodes,chess);
-//		cout<<chess<<endl;
-	}
-
-//	TRACE("Full hessian: "<<fullhess);
-	uint colrange = colstart + emcol->numLocalVars;
-	uint rowrange = rowstart + this->numLocalVars;
-	col_compress_matrix_range mr(hess,range(rowstart,rowrange),range(colstart,colrange));
-	block = mr;
-	assert(mr.size1()==this->numLocalVars);
-	assert(mr.size2()==emcol->numLocalVars);
-	TRACE("submatrix -- ["<<this->numLocalVars<<"] x ["<<emcol->numLocalVars<<"] --");
-
-	Stat::numLagHess_NLP_LocalCall++;
+	AutoDiff::hess_reverse_ep(hvb->node,colvMap,rowvMap,block);
 	TRACE("end lag_hess_nlp_local - emrow["<<this->name<<"] emcol"<<emcol->name<<"] -- nnz["<<block.nnz()<<"]");
+	TRACE(""<<block);
+	Stat::numLagHess_NLP_LocalCall++;
 }
+
+//void ExpandedModel::lag_hess_nlp_local(ExpandedModel* emcol,col_compress_matrix& block)
+//{
+//	assert(itype == LOCAL);
+//	assert(ptype == NLP);
+//
+//	//Symmetric Hessian, computes only upper or lower trangular matrix in block form.
+//	//To decide either upper or lower part of Hessian matrix block, the structure setup in
+//	//the solver specific callback function routine need to be considered.
+//	assert(this->model->level >= emcol->model->level);
+//
+//	TRACE("enter lag_hess_nlp_local - emrow["<<this->name<<"] emcol"<<emcol->name<<"]");
+//	assert(block.size1() == this->numLocalVars && block.size2() == emcol->numLocalVars);
+//
+//	BlockHV* hvb = this->getBlockHV_NLP_Full(emcol);
+//
+//	assert(hvb->node!=NULL); //otherwise this method is not need to be called, as nnz==0;
+//	//building list of depenedent expanded model nodes.
+////	ExpandedModel* hi_em = NULL;
+////	if(this->model->level < emcol->model->level) //this is above emcol
+////	{
+////		hi_em = emcol;
+////	}
+////	else // this is below emcol
+////	{
+////		hi_em = this;
+////	}
+//
+//	//possible variables involved in this sub-block Hessian of Langrangian.
+//	std::vector<ExpandedModel*> ems;
+//	this->getParentEM(ems);
+//	this->getAllEM(ems);
+//
+//	//figure out boundary for sub-matrix
+//	uint colstart = 0;
+//	uint rowstart = 0;
+//	uint currvar = 0;
+//	std::vector<AutoDiff::Node*> vnodes;
+//	BOOST_FOREACH(ExpandedModel* em, ems)
+//	{
+//		TRACE("em["<<em->name<<"]");
+//		if(em == emcol) {
+//			colstart = currvar;
+//		}
+//		if(em == this) {
+//			rowstart = currvar;
+//		}
+//		em->copyVariables(vnodes);
+//		currvar += em->numLocalVars;
+//		assert(vnodes.size() == currvar);
+//	}
+//
+//	col_compress_matrix hess(vnodes.size(),vnodes.size());
+//	hess_reverse(hvb->node,vnodes,hess);
+//
+////	TRACE("Full hessian: "<<fullhess);
+//	uint colrange = colstart + emcol->numLocalVars;
+//	uint rowrange = rowstart + this->numLocalVars;
+//	col_compress_matrix_range mr(hess,range(rowstart,rowrange),range(colstart,colrange));
+//	block = mr;
+//	assert(mr.size1()==this->numLocalVars);
+//	assert(mr.size2()==emcol->numLocalVars);
+//	TRACE("submatrix -- ["<<this->numLocalVars<<"] x ["<<emcol->numLocalVars<<"] --");
+//
+//	Stat::numLagHess_NLP_LocalCall++;
+//	TRACE("end lag_hess_nlp_local - emrow["<<this->name<<"] emcol"<<emcol->name<<"] -- nnz["<<block.nnz()<<"]");
+//}
 
 /*
  * For both Local and Distribute Interface

@@ -18,8 +18,7 @@ public:
 	EdgeSet();
 	virtual ~EdgeSet();
 
-	void insertEdge(Edge& e);
-	bool containsEdge(Edge& e);
+	Edge& createEdge(Node* a, Node* b);
 	uint numSelfEdges();
 	void clear();
 	uint size();

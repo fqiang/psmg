@@ -174,9 +174,10 @@ double hess_reverse(Node* root,vector<Node*>& vnodes,vector<double>& chess)
 
 	TT->clear();
 	II->clear();
-	root->hess_reverse_1_clear_index();
+	root->hess_reverse_clear_index();
 	return val;
 }
+
 
 double hess_reverse(Node* root,vector<Node*>& vnodes,col_compress_matrix_col& chess)
 {
@@ -187,16 +188,6 @@ double hess_reverse(Node* root,vector<Node*>& vnodes,col_compress_matrix_col& ch
 	assert(TT->index==0);
 	assert(II->index==0);
 
-//	for(vector<Node*>::iterator it=nodes.begin();it!=nodes.end();it++)
-//	{
-//		assert((*it)->getType()==VNode_Type);
-//		(*it)->index = 0;
-//	} //this work complete in hess-reverse_0_init_index
-
-	assert(root->n_in_arcs == 0);
-	//reset node index and n_in_arcs - for the Tape location
-	root->hess_reverse_0_init_n_in_arcs();
-	assert(root->n_in_arcs == 1);
 	root->hess_reverse_0();
 	double val = NaN_Double;
 	root->hess_reverse_get_x(TT->index,val);
@@ -205,6 +196,11 @@ double hess_reverse(Node* root,vector<Node*>& vnodes,col_compress_matrix_col& ch
 //	cout<<II->toString();
 //	cout<<"======================================= hess_reverse_0"<<endl;
 	root->hess_reverse_1_init_x_bar(TT->index);
+
+	assert(root->n_in_arcs == 0);
+	//reset node index and n_in_arcs - for the Tape location
+	root->hess_reverse_0_init_n_in_arcs();
+	assert(root->n_in_arcs == 1);
 	assert(root->n_in_arcs == 1);
 	root->hess_reverse_1(TT->index);
 	assert(root->n_in_arcs == 0);
@@ -223,19 +219,150 @@ double hess_reverse(Node* root,vector<Node*>& vnodes,col_compress_matrix_col& ch
 		if(node->index!=0)
 		{
 			double hess = TT->get(node->index -1);
+			assert(!isnan(hess));
+//			chess(i) = hess;
 			if(!isnan(hess))
 			{
-				chess(i) = chess(i) + hess;
+				chess(i) =  hess;
 			}
 		}
 		i++;
 	}
 	assert(i==vnodes.size());
-	root->hess_reverse_1_clear_index(); //clear node index on tape
+	cout<<"-====================="<<chess<<endl;
+	root->hess_reverse_clear_index(); //clear node index on tape
 	TT->clear();
 	II->clear();
 	return val;
 }
+
+
+/*
+ * Reverse Hessian matrix algorithm by computing Hessian-vector product column by column
+ */
+double hess_reverse(Node* root,vector<Node*>& vnodes,col_compress_matrix& hess)
+{
+	double val = NaN_Double;
+
+	for(uint c = 0;c<vnodes.size();c++)
+	{
+		//initialize the weight for computing column c of Hessian m
+		//this is required by Autodiff_library
+		BOOST_FOREACH(AutoDiff::Node* v, vnodes)
+		{
+			static_cast<AutoDiff::VNode*>(v)->u = 0;
+		}
+		static_cast<AutoDiff::VNode*>(vnodes[c])->u = 1; //set weight = 1 for column c varible only, rest are 0
+
+		//calculate the column c for Hessian m
+		col_compress_matrix_col chess(hess,c);
+
+
+		TT->clear();
+		II->clear();
+		assert(TT->empty());
+		assert(II->empty());
+		assert(TT->index==0);
+		assert(II->index==0);
+
+		root->hess_reverse_0();
+		root->hess_reverse_get_x(TT->index,val);
+	//	cout<<TT->toString();
+	//	cout<<endl;
+	//	cout<<II->toString();
+	//	cout<<"======================================= hess_reverse_0"<<endl;
+		root->hess_reverse_1_init_x_bar(TT->index);
+
+		assert(root->n_in_arcs == 0);
+		//reset node index and n_in_arcs - for the Tape location
+		root->hess_reverse_0_init_n_in_arcs();
+		assert(root->n_in_arcs == 1);
+		root->hess_reverse_1(TT->index);
+		assert(root->n_in_arcs == 0);
+	//	cout<<TT->toString();
+	//	cout<<endl;
+	//	cout<<II->toString();
+	//	cout<<"======================================= hess_reverse_1"<<endl;
+		assert(II->index==0);
+
+		uint i =0;
+		BOOST_FOREACH(Node* node, vnodes)
+		{
+			assert(node->n_in_arcs == 0);
+			assert(node->getType() == VNode_Type);
+			//node->index = 0 means this VNode is not in the tree
+			if(node->index!=0)
+			{
+				double hess = TT->get(node->index -1);
+				assert(!isnan(hess));
+	//			chess(i) = hess;
+				if(!isnan(hess))
+				{
+					chess(i) =  hess;
+				}
+			}
+			i++;
+		}
+		assert(i==vnodes.size());
+		root->hess_reverse_clear_index(); //clear node index on tape
+		TT->clear();
+		II->clear();
+	}
+	return val;
+}
+
+/*
+ * More efficient implementation of reverse Hessian algorithm using Edge Pushing
+ *
+ */
+double hess_reverse_ep(Node* root, boost::unordered_map<Node*,uint>& colvMap, boost::unordered_map<Node*,uint>& rowvMap, col_compress_matrix& hess)
+{
+	double val = NaN_Double;
+	TT->clear();
+	II->clear();
+	root->hess_reverse_full0(); //compute x, hl, hr, hlr
+
+	root->hess_reverse_full1_init_x_bar(TT->index); //init x_bar = 1
+	EdgeSet eset;  									// edge set
+	root->hess_reverse_full1(TT->index,eset);		//
+
+	//now recovery the Hessian matrix from EdgeSet
+	if(eset.edges.size() == 0)
+	{
+		return val;
+	}
+	list<Edge>::iterator i = eset.edges.begin();
+	for(;i!=eset.edges.end();i++)
+	{
+		Edge e =*i;
+		Node* a = e.a;
+		Node* b = e.b;
+
+		//case 1.
+		boost::unordered_map<Node*,uint>::iterator itcol = colvMap.find(a);
+		boost::unordered_map<Node*,uint>::iterator itrow = rowvMap.find(b);
+		if(itcol!=colvMap.end() && itrow!=rowvMap.end())
+		{
+			uint row = itrow->second;
+			uint col = itcol->second;
+			hess(row,col) = e.w;
+		}
+		//case 2
+		itcol = colvMap.find(b);
+		itrow = rowvMap.find(a);
+		if(itcol!=colvMap.end() && itrow!=rowvMap.end())
+		{
+			uint row = itrow->second;
+			uint col = itcol->second;
+			hess(row,col) = e.w;
+		}
+		//otherwise edge is not connect colvMap and rowvMap.
+	}
+
+	root->hess_reverse_clear_index();
+	return val;
+}
+
 
 uint nzGrad(Node* root)
 {

@@ -22,11 +22,12 @@ public:
 	bool isEqual(Edge*);
 	bool isEqual(Edge&);
 	std::string toString();
+	void update_w(double v);
 
 	Node* a;
 	Node* b;
 
-
+	double w;
 };
 
 } /* namespace AutoDiff */

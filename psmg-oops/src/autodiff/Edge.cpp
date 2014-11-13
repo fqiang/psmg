@@ -12,8 +12,9 @@
 
 namespace AutoDiff {
 
-Edge::Edge(Node* a_,Node* b_):a(a_),b(b_) {
-
+Edge::Edge(Node* a_,Node* b_):a(a_),b(b_), w(0.0)
+{
+	assert(a!=NULL && b!=NULL);
 }
 
 Edge::~Edge() {
@@ -25,6 +26,7 @@ Edge::Edge(const Edge& e)
 {
 	a = e.a;
 	b = e.b;
+	w = e.w;
 }
 
 bool Edge::isEqual(Edge* e)
@@ -43,6 +45,12 @@ bool Edge::isEqual(Edge* e)
 bool Edge::isEqual(Edge& e)
 {
 	return isEqual(&e);
+}
+
+void Edge::update_w(double v)
+{
+	w += v;
+	std::cout<<this->toString()<<" "<<w<<"\t"<<v<<endl;
 }
 
 string Edge::toString()

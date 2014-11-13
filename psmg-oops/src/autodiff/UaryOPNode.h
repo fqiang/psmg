@@ -35,11 +35,20 @@ public:
 	void update_w_bar(uint, double v);
 	void hess_reverse_1_get_xw(uint, double&,double&);
 	void hess_reverse_get_x(uint,double& x);
-	void hess_reverse_1_clear_index();
+
+
+
+	uint hess_reverse_full0();
+	void hess_reverse_full0_get_x(uint, double&);
+	void hess_reverse_full1_init_x_bar(uint);
+	void hess_reverse_full1(uint,EdgeSet&);
+	void hess_reverse_full1_update_x_bar(uint i,double& v);
 
 	void nonlinearEdges(EdgeSet&);
 
-	string toString(int level);
+	void hess_reverse_clear_index();
+
+	std::string toString(int level);
 
 private:
 	UaryOPNode(OPCODE op, Node* left);
