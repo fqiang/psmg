@@ -20,13 +20,12 @@ public:
 	OPNode(OPCODE op,Node* left);
 	virtual ~OPNode();
 
-	TYPE getType();
 
 	OPCODE op;
 	Node* left;
 	double val;
 
-
+	TYPE getType();
 
 private:
 

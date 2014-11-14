@@ -68,7 +68,7 @@ void BlockHV::logBlock(ExpandedModel* emrow, ExpandedModel* emcol)
 	}
 
 	out<<endl<<"expression"<<endl;
-	string node_expr = this->node==NULL?"NULL":tree_expr(this->node);
+	string node_expr = this->node==NULL?"NULL":texpr(this->node);
 	out<<node_expr<<endl;
 	//printing dependent block information
 	out<<endl;

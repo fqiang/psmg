@@ -16,10 +16,14 @@ public:
 //	VNode(double v=NaN_Double);
 	VNode(uint idx);
 	virtual ~VNode();
-	void collect_vnodes(boost::unordered_set<Node*>& nodes,uint& total);
 	void eval_function();
 	void grad_reverse_0();
 	void grad_reverse_1();
+
+	//Hessian pattern dection
+	void nonlinear_edges(EdgeSet&);
+
+	//reverse Hessian-vector computation
 	uint hess_reverse_0();
 	void hess_reverse_0_get_values(uint i,double& x, double& x_bar, double& w, double& w_bar);
 	void hess_reverse_1(uint i);
@@ -29,19 +33,21 @@ public:
 	void hess_reverse_1_get_xw(uint,double&,double&);
 	void hess_reverse_get_x(uint,double& x);
 
-
+	//edge pushing algorithm for full Hessian
 	uint hess_reverse_full0();
 	void hess_reverse_full0_get_x(uint, double&);
 	void hess_reverse_full1_init_x_bar(uint);
 	void hess_reverse_full1(uint,EdgeSet&);
 	void hess_reverse_full1_update_x_bar(uint i,double& v);
 
-	void nonlinearEdges(EdgeSet&);
 
+	//utility methods
+	void collect_vnodes(boost::unordered_set<Node*>& nodes,uint& total);
 	void inorder_visit(int level,ostream& oss);
 	string toString(int level);
 	TYPE getType();
 
+	//value look up
 	double& val();
 
 #if FORWARD_ENABLED
@@ -51,9 +57,8 @@ public:
 	int id;
 	static int DEFAULT_ID;
 #endif
-//	double val;
 	uint idx;  //idx for value look up.
-	double u;
+	double u;  //weight for Hessian-vector product
 
 
 };

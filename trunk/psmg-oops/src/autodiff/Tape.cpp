@@ -8,7 +8,6 @@
 
 
 #include "Tape.h"
-#include "autodiff_assert.h"
 
 namespace AutoDiff
 {

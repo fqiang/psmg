@@ -56,7 +56,7 @@ void BlockA::logBlock(ExpandedModel* emrow)
 	uint i =0;
 	BOOST_FOREACH(AutoDiff::Node* cnode, this->cons)
 	{
-		string node_expr = cnode==NULL?"NULL":tree_expr(cnode);
+		string node_expr = cnode==NULL?"NULL":texpr(cnode);
 		out<<i<<"\t"<<conNames[i]<<"\t\t"<<node_expr<<endl;
 		i++;
 	}
@@ -95,7 +95,7 @@ void BlockA::logBlock(ExpandedModel* emrow, ExpandedModel* emcol)
 	uint i =0;
 	BOOST_FOREACH(AutoDiff::Node* cnode, this->cons)
 	{
-		string node_expr = cnode==NULL?"NULL":tree_expr(cnode);
+		string node_expr = cnode==NULL?"NULL":texpr(cnode);
 		out<<i<<"\t"<<conNames[i]<<"\t\t"<<node_expr<<endl;
 		i++;
 	}

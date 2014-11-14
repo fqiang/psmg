@@ -9,7 +9,6 @@
 #include "Stack.h"
 #include "Tape.h"
 #include "PNode.h"
-#include "autodiff_assert.h"
 /***********************************************************
 	     h
 	    / \

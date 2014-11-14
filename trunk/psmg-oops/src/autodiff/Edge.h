@@ -21,13 +21,13 @@ public:
 
 	bool isEqual(Edge*);
 	bool isEqual(Edge&);
-	std::string toString();
 	void update_w(double v);
+
+	std::string toString();
 
 	Node* a;
 	Node* b;
-
-	double w;
+	double w; //used by edge pushing algorithm for Hessian computation
 };
 
 } /* namespace AutoDiff */

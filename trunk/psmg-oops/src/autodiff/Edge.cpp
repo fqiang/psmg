@@ -6,7 +6,6 @@
  */
 
 #include "Edge.h"
-#include "autodiff_assert.h"
 #include <iostream>
 #include <sstream>
 
@@ -50,7 +49,7 @@ bool Edge::isEqual(Edge& e)
 void Edge::update_w(double v)
 {
 	w += v;
-	std::cout<<this->toString()<<" "<<w<<"\t"<<v<<endl;
+	AD_TRACE(this->toString()<<" "<<w<<"\t"<<v);
 }
 
 string Edge::toString()
