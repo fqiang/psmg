@@ -50,7 +50,7 @@ void BlockObj::logBlock(ExpandedModel* emrow)
 	}
 
 	out<<endl<<"Object Constraint"<<endl;
-	string node_expr = this->objective==NULL?"NULL":tree_expr(this->objective);
+	string node_expr = this->objective==NULL?"NULL":texpr(this->objective);
 	out<<"\t"<<objname<<"\t\t"<<node_expr<<endl;
 
 	//printing dependent block information
@@ -85,7 +85,7 @@ void BlockObj::logBlock(ExpandedModel* emrow,ExpandedModel* emcol)
 	}
 
 	out<<endl<<"Object Constraint"<<endl;
-	string node_expr = this->objective==NULL?"NULL":tree_expr(this->objective);
+	string node_expr = this->objective==NULL?"NULL":texpr(this->objective);
 	out<<"\t"<<objname<<"\t\t"<<node_expr<<endl;
 
 	//printing dependent block information

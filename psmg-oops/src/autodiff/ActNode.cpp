@@ -6,7 +6,6 @@
  */
 
 #include "ActNode.h"
-#include "autodiff_assert.h"
 
 namespace AutoDiff {
 

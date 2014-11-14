@@ -9,8 +9,6 @@
 #include "Stack.h"
 #include "Tape.h"
 #include "EdgeSet.h"
-#include "autodiff_assert.h"
-
 namespace AutoDiff {
 
 //PNode::PNode(double value):pval(value) {
@@ -24,15 +22,6 @@ PNode::PNode(){
 PNode::~PNode() {
 }
 
-void PNode::inorder_visit(int level,ostream& oss){
-	oss<<this->toString(level)<<endl;
-}
-
-void PNode::collect_vnodes(boost::unordered_set<Node*>& nodes,uint& total)
-{
-	//do not fill this to nodes, as this is a parameter node
-	total++;
-}
 
 void PNode::eval_function()
 {
@@ -147,7 +136,7 @@ void PNode:: hess_reverse_full1_update_x_bar(uint i,double& v)
 	//do nothing as Parameter does not have x_bar
 }
 
-void PNode::nonlinearEdges(EdgeSet& edges)
+void PNode::nonlinear_edges(EdgeSet& edges)
 {
 	for(std::list<Edge>::iterator it=edges.edges.begin();it!=edges.edges.end();)
 	{
@@ -179,4 +168,15 @@ TYPE PNode::getType()
 {
 	return PNode_Type;
 }
+
+void PNode::inorder_visit(int level,ostream& oss){
+	oss<<this->toString(level)<<endl;
+}
+
+void PNode::collect_vnodes(boost::unordered_set<Node*>& nodes,uint& total)
+{
+	//do not fill this to nodes, as this is a parameter node
+	total++;
+}
+
 }

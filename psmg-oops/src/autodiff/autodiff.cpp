@@ -15,7 +15,6 @@
 #include "Tape.h"
 #include "BinaryOPNode.h"
 #include "UaryOPNode.h"
-#include "autodiff_assert.h"
 
 using namespace std;
 
@@ -129,6 +128,169 @@ double grad_reverse(Node* root, vector<Node*>& vnodes, col_compress_matrix_row& 
 	//all nodes are VNode and adj == NaN_Double -- this reset adj for this expression tree by root
 	return val;
 }
+
+uint nzGrad(Node* root)
+{
+	uint nzgrad,total = 0;
+	boost::unordered_set<Node*> nodes;
+	root->collect_vnodes(nodes,total);
+	nzgrad = nodes.size();
+	return nzgrad;
+}
+
+/*
+ * number of non-zero gradient in constraint tree root that also belong to vSet
+ */
+uint nzGrad(Node* root, boost::unordered_set<Node*>& vSet)
+{
+	uint nzg= 0;   //non zero grad
+	uint zg = 0;   //zero grad , vnode not in the expression rooted by root
+	uint nnodes=0; //total nodes in this expression rooted by root
+	boost::unordered_set<Node*> vnodes;
+	root->collect_vnodes(vnodes,nnodes);
+	AD_TRACE("nzGrad - vnodes in expression - size["<<vnodes.size()<<"] -- number node["<<nnodes<<"]");
+	BOOST_FOREACH(Node* n, vSet)
+	{
+		if(vnodes.find(n) != vnodes.end())
+		{
+			nzg++;
+		}
+		else{
+			WARN(" "<<n->toString(0)<<" not in vSet");
+			zg++;
+		}
+	}
+	assert(nzg+zg == vSet.size());
+	return nzg;
+}
+
+uint nzGrad(Node* root, std::vector<Node*>& vlist, col_compress_imatrix_row& rgrad)
+{
+	uint nzg = 0;
+	uint zg = 0;
+	uint nnodes = 0;
+	boost::unordered_set<Node*> vnodes;
+	root->collect_vnodes(vnodes,nnodes);
+	uint c = 0;
+	BOOST_FOREACH(Node* n, vlist)
+	{
+		if(vnodes.find(n)!=vnodes.end())
+		{
+			rgrad(c) = 1; //setting structure non-zero.
+			nzg ++;
+		}
+		else
+		{
+			zg++;
+		}
+		c++;
+	}
+	assert(nzg+zg == vlist.size());
+	return nzg;
+}
+
+void nonlinear_edges(Node* root, EdgeSet& edges)
+{
+	root->nonlinear_edges(edges);
+}
+
+uint nzHess(EdgeSet& eSet,boost::unordered_set<Node*>& set1, boost::unordered_set<Node*>& set2)
+{
+	if(eSet.edges.size()==0)
+	{
+		return 0;
+	}
+	uint nzh = 0;
+	uint nzd = 0;
+	list<Edge>::iterator i = eSet.edges.begin();
+	for(;i!=eSet.edges.end();i++)
+	{
+		Edge e =*i;
+		Node* a = e.a;
+		Node* b = e.b;
+
+		boost::unordered_set<Node*>::iterator itcol = set1.find(a);
+		boost::unordered_set<Node*>::iterator itrow = set2.find(b);
+
+		//case diagonal
+		if(itcol!=set1.end()&& itrow!=set2.end())
+		{
+			if(a==b) nzd++; //only for diagnal block in Q matrix
+		}
+
+		//case 1;
+		if(itcol!=set1.end() && itrow!=set2.end()){
+			//e is connected between set1 and set2
+			nzh ++;
+		}
+
+		//case 2;
+		itcol = set1.find(b);
+		itrow = set2.find(a);
+		if(itcol!=set1.end() && itrow!=set2.end()){
+			nzh ++;
+		}
+	}
+
+	nzh -= nzd;
+	return nzh;
+}
+
+uint nzHess(EdgeSet& eSet,boost::unordered_map<Node*,uint>& colvMap, boost::unordered_map<Node*,uint>& rowvMap,col_compress_imatrix& m)
+{
+	uint nzh = 0;
+	uint nzd = 0;
+	if(eSet.edges.size() == 0)
+	{
+		return 0;
+	}
+	list<Edge>::iterator i = eSet.edges.begin();
+	for(;i!=eSet.edges.end();i++)
+	{
+		Edge e =*i;
+		Node* a = e.a;
+		Node* b = e.b;
+
+		//case 1.
+		boost::unordered_map<Node*,uint>::iterator itcol = colvMap.find(a);
+		boost::unordered_map<Node*,uint>::iterator itrow = rowvMap.find(b);
+
+		if(itcol!=colvMap.end()&& itrow!=rowvMap.end())
+		{
+			if(a==b) nzd++; //only for diagnal block in Q matrix
+		}
+		if(itcol!=colvMap.end() && itrow!=rowvMap.end())
+		{
+			uint row = itrow->second;
+			uint col = itcol->second;
+			m(row,col) = 1;
+			nzh++;
+		}
+		//case 2
+		itcol = colvMap.find(b);
+		itrow = rowvMap.find(a);
+		if(itcol!=colvMap.end() && itrow!=rowvMap.end())
+		{
+			uint row = itrow->second;
+			uint col = itcol->second;
+			m(row,col) = 1;
+			nzh++;
+		}
+		//otherwise edge is not connect colvMap and rowvMap.
+	}
+	//diagnoal will be double counted!
+	nzh -= nzd;
+	assert(nzh == m.nnz());
+	return nzh;
+}
+
+uint nzHess(EdgeSet& edges)
+{
+	uint diag=edges.num_self_edges();
+	uint nzHess = (edges.size())*2 - diag;
+	return nzHess;
+}
+
 
 double hess_reverse(Node* root,vector<Node*>& vnodes,vector<double>& chess)
 {
@@ -360,173 +522,12 @@ double hess_reverse_ep(Node* root, boost::unordered_map<Node*,uint>& colvMap, bo
 	}
 
 	root->hess_reverse_clear_index();
+	TT->clear();
+	II->clear();
 	return val;
 }
 
-
-uint nzGrad(Node* root)
-{
-	uint nzgrad,total = 0;
-	boost::unordered_set<Node*> nodes;
-	root->collect_vnodes(nodes,total);
-	nzgrad = nodes.size();
-	return nzgrad;
-}
-
-/*
- * number of non-zero gradient in constraint tree root that also belong to vSet
- */
-uint nzGrad(Node* root, boost::unordered_set<Node*>& vSet)
-{
-	uint nzg= 0;   //non zero grad
-	uint zg = 0;   //zero grad , vnode not in the expression rooted by root
-	uint nnodes=0; //total nodes in this expression rooted by root
-	boost::unordered_set<Node*> vnodes;
-	root->collect_vnodes(vnodes,nnodes);
-	TRACE("nzGrad - vnodes in expression - size["<<vnodes.size()<<"] -- number node["<<nnodes<<"]");
-	BOOST_FOREACH(Node* n, vSet)
-	{
-		if(vnodes.find(n) != vnodes.end())
-		{
-			nzg++;
-		}
-		else{
-			WARN(" "<<n->toString(0)<<" not in vSet");
-			zg++;
-		}
-	}
-	assert(nzg+zg == vSet.size());
-	return nzg;
-}
-
-uint nzGrad(Node* root, std::vector<Node*>& vlist, col_compress_imatrix_row& rgrad)
-{
-	uint nzg = 0;
-	uint zg = 0;
-	uint nnodes = 0;
-	boost::unordered_set<Node*> vnodes;
-	root->collect_vnodes(vnodes,nnodes);
-	uint c = 0;
-	BOOST_FOREACH(Node* n, vlist)
-	{
-		if(vnodes.find(n)!=vnodes.end())
-		{
-			rgrad(c) = 1; //setting structure non-zero.
-			nzg ++;
-		}
-		else
-		{
-			zg++;
-		}
-		c++;
-	}
-	assert(nzg+zg == vlist.size());
-	return nzg;
-}
-
-void nonlinearEdges(Node* root, EdgeSet& edges)
-{
-	root->nonlinearEdges(edges);
-}
-
-uint nzHess(EdgeSet& eSet,boost::unordered_set<Node*>& set1, boost::unordered_set<Node*>& set2)
-{
-	if(eSet.edges.size()==0)
-	{
-		return 0;
-	}
-	uint nzh = 0;
-	uint nzd = 0;
-	list<Edge>::iterator i = eSet.edges.begin();
-	for(;i!=eSet.edges.end();i++)
-	{
-		Edge e =*i;
-		Node* a = e.a;
-		Node* b = e.b;
-
-		boost::unordered_set<Node*>::iterator itcol = set1.find(a);
-		boost::unordered_set<Node*>::iterator itrow = set2.find(b);
-
-		//case diagonal
-		if(itcol!=set1.end()&& itrow!=set2.end())
-		{
-			if(a==b) nzd++; //only for diagnal block in Q matrix
-		}
-
-		//case 1;
-		if(itcol!=set1.end() && itrow!=set2.end()){
-			//e is connected between set1 and set2
-			nzh ++;
-		}
-
-		//case 2;
-		itcol = set1.find(b);
-		itrow = set2.find(a);
-		if(itcol!=set1.end() && itrow!=set2.end()){
-			nzh ++;
-		}
-	}
-
-	nzh -= nzd;
-	return nzh;
-}
-
-uint nzHess(EdgeSet& eSet,boost::unordered_map<Node*,uint>& colvMap, boost::unordered_map<Node*,uint>& rowvMap,col_compress_imatrix& m)
-{
-	uint nzh = 0;
-	uint nzd = 0;
-	if(eSet.edges.size() == 0)
-	{
-		return 0;
-	}
-	list<Edge>::iterator i = eSet.edges.begin();
-	for(;i!=eSet.edges.end();i++)
-	{
-		Edge e =*i;
-		Node* a = e.a;
-		Node* b = e.b;
-
-		//case 1.
-		boost::unordered_map<Node*,uint>::iterator itcol = colvMap.find(a);
-		boost::unordered_map<Node*,uint>::iterator itrow = rowvMap.find(b);
-
-		if(itcol!=colvMap.end()&& itrow!=rowvMap.end())
-		{
-			if(a==b) nzd++; //only for diagnal block in Q matrix
-		}
-		if(itcol!=colvMap.end() && itrow!=rowvMap.end())
-		{
-			uint row = itrow->second;
-			uint col = itcol->second;
-			m(row,col) = 1;
-			nzh++;
-		}
-		//case 2
-		itcol = colvMap.find(b);
-		itrow = rowvMap.find(a);
-		if(itcol!=colvMap.end() && itrow!=rowvMap.end())
-		{
-			uint row = itrow->second;
-			uint col = itcol->second;
-			m(row,col) = 1;
-			nzh++;
-		}
-		//otherwise edge is not connect colvMap and rowvMap.
-	}
-	//diagnoal will be double counted!
-	nzh -= nzd;
-	assert(nzh == m.nnz());
-	return nzh;
-}
-
-uint nzHess(EdgeSet& edges)
-{
-	uint diag=edges.numSelfEdges();
-	uint nzHess = (edges.size())*2 - diag;
-	return nzHess;
-}
-
-uint numTotalNodes(Node* root)
+uint num_total_nodes(Node* root)
 {
 	uint total = 0;
 	boost::unordered_set<Node*> nodes;
@@ -534,7 +535,7 @@ uint numTotalNodes(Node* root)
 	return total;
 }
 
-string tree_expr(Node* root)
+string texpr(Node* root)
 {
 	ostringstream oss;
 	oss<<"visiting tree == "<<endl;
@@ -543,7 +544,7 @@ string tree_expr(Node* root)
 	return oss.str();
 }
 
-void print_tree(Node* root)
+void ptree(Node* root)
 {
 	cout<<"visiting tree == "<<endl;
 	int level = 0;

@@ -20,14 +20,22 @@ public:
 	static Node* createBinaryOpNode(OPCODE op, Node* left, Node* right);
 	virtual ~BinaryOPNode();
 
-	void collect_vnodes(boost::unordered_set<Node*>& nodes,uint& total);
 	void eval_function();
 
 	void grad_reverse_0();
 	void grad_reverse_1();
 
+#if FORWARD_ENABLED
 	void hess_forward(uint len, double** ret_vec);
+#endif
 
+	//tape based Hessian, clear node index
+	void hess_reverse_clear_index();
+
+	//Hessian pattern detection
+	void nonlinear_edges(EdgeSet& a);
+
+	//reverse Hessian-vector
 	uint hess_reverse_0();
 	void hess_reverse_0_init_n_in_arcs();
 	void hess_reverse_0_get_values(uint,double&, double&, double&, double&);
@@ -38,18 +46,15 @@ public:
 	void hess_reverse_1_get_xw(uint, double&,double&);
 	void hess_reverse_get_x(uint,double& x);
 
-
-
+	//reverse edge pushing for full Hessian
 	uint hess_reverse_full0();
 	void hess_reverse_full0_get_x(uint, double&);
 	void hess_reverse_full1_init_x_bar(uint);
 	void hess_reverse_full1(uint,EdgeSet&);
 	void hess_reverse_full1_update_x_bar(uint i,double& v);
 
-	void hess_reverse_clear_index();
-
-	void nonlinearEdges(EdgeSet& a);
-
+	//utility methods
+	void collect_vnodes(boost::unordered_set<Node*>& nodes,uint& total);
 	void inorder_visit(int level,ostream& oss);
 	string toString(int level);
 

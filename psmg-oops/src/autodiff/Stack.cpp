@@ -10,7 +10,6 @@
 #include <math.h>
 
 #include "Stack.h"
-#include "autodiff_assert.h"
 
 namespace AutoDiff {
 

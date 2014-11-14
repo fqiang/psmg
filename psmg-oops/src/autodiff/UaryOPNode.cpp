@@ -267,7 +267,7 @@ void UaryOPNode::hess_reverse_get_x(uint i, double& x)
 	x = TT->get(i-5);
 }
 
-void UaryOPNode::nonlinearEdges(EdgeSet& edges)
+void UaryOPNode::nonlinear_edges(EdgeSet& edges)
 {
 	for(list<Edge>::iterator it=edges.edges.begin();it!=edges.edges.end();)
 	{
@@ -310,7 +310,7 @@ void UaryOPNode::nonlinearEdges(EdgeSet& edges)
 		assert(false);
 		break;
 	}
-	left->nonlinearEdges(edges);
+	left->nonlinear_edges(edges);
 }
 
 

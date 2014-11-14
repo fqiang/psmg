@@ -88,6 +88,13 @@ void VNode::hess_forward(uint len, double** ret_vec)
 }
 #endif
 
+
+
+void VNode::nonlinear_edges(EdgeSet& edges)
+{
+	//leaf node , do nothing
+}
+
 uint VNode::hess_reverse_0()
 {
 	if(index==0)
@@ -175,13 +182,6 @@ void VNode::hess_reverse_full1_update_x_bar(uint i,double& v)
 {
 	TT->at(i-1) += v;
 }
-
-
-void VNode::nonlinearEdges(EdgeSet& edges)
-{
-	//leaf node , do nothing
-}
-
 
 TYPE VNode::getType()
 {

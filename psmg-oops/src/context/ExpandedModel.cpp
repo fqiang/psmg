@@ -267,7 +267,7 @@ uint ExpandedModel::nz_obj_hess_qp(ExpandedModel* emcol)
 	{
 		TRACE("objective expression  ---- ");
 		TRACE("-- "<<tree_expr(bq->objective));
-		nonlinearEdges(bq->objective,edgeSet);
+		nonlinear_edges(bq->objective,edgeSet);
 		TRACE("nonlinearEdges - now: -- "<<edgeSet.size());
 	}
 
@@ -1162,7 +1162,7 @@ uint ExpandedModel::nz_lag_hess_nlp_local(ExpandedModel* emcol)
 	if(hvb->node!=NULL){
 		TRACE("constraint expression  ---- ");
 //		TRACE("-- "<<tree_expr(hvb->node));
-		nonlinearEdges(hvb->node,edgeSet);
+		nonlinear_edges(hvb->node,edgeSet);
 		TRACE("nonlinearEdges - now: -- "<<edgeSet.size());
 //		ERROR(""<<edgeSet.toString());
 	}
@@ -1200,7 +1200,7 @@ uint ExpandedModel::nz_lag_hess_nlp_local(ExpandedModel* emcol,col_compress_imat
 	if(hvb->node!=NULL){
 		TRACE("constraint expression  ---- ");
 //		TRACE("-- "<<tree_expr(hvb->node));
-		nonlinearEdges(hvb->node,edgeSet);
+		nonlinear_edges(hvb->node,edgeSet);
 		TRACE("nonlinearEdges - now: -- "<<edgeSet.size());
 	}
 	else

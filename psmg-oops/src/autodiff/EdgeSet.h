@@ -19,10 +19,11 @@ public:
 	virtual ~EdgeSet();
 
 	Edge& createEdge(Node* a, Node* b);
-	uint numSelfEdges();
-	void clear();
 	uint size();
+	uint num_self_edges();
+
 	std::string toString();
+	void clear();
 
 
 	std::list<Edge> edges;

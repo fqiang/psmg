@@ -7,12 +7,6 @@
 
 #ifndef AUTODIFF_H_
 #define AUTODIFF_H_
-#include <boost/unordered_set.hpp>
-#include <boost/unordered_map.hpp>
-#include <boost/numeric/ublas/matrix_proxy.hpp>
-#include <boost/numeric/ublas/matrix.hpp>
-#include <boost/numeric/ublas/matrix_sparse.hpp>
-#include <boost/numeric/ublas/io.hpp>
 #include "autodiff_types.h"
 #include "../util/util.h"
 #include "Node.h"
@@ -78,16 +72,6 @@
  * variables.
  * */
 
-typedef boost::numeric::ublas::compressed_matrix<double,boost::numeric::ublas::column_major,0,std::vector<std::size_t>,std::vector<double> >  col_compress_matrix;
-typedef boost::numeric::ublas::matrix_row<col_compress_matrix> col_compress_matrix_row;
-typedef boost::numeric::ublas::matrix_column<col_compress_matrix> col_compress_matrix_col;
-typedef boost::numeric::ublas::matrix_range<col_compress_matrix > col_compress_matrix_range;
-
-typedef boost::numeric::ublas::compressed_matrix<uint,boost::numeric::ublas::column_major,0,std::vector<std::size_t>,std::vector<uint> >  col_compress_imatrix;
-typedef boost::numeric::ublas::matrix_row<col_compress_imatrix> col_compress_imatrix_row;
-typedef boost::numeric::ublas::matrix_column<col_compress_imatrix> col_compress_imatrix_col;
-typedef boost::numeric::ublas::matrix_range<col_compress_imatrix > col_compress_imatrix_range;
-
 namespace AutoDiff{
 
 	//node creation methods
@@ -96,6 +80,9 @@ namespace AutoDiff{
 	extern PIndex* create_param_node(uint idx);
 	extern Node* create_uary_op_node(OPCODE code, Node* left);
 	extern Node* create_binary_op_node(OPCODE code, Node* left,Node* right);
+
+	//for computing nonlinear interaction of variables in the computation graph by root
+	extern void nonlinear_edges(Node* root, EdgeSet& edges);
 
 	//single constraint version
 	extern double eval_function(Node* root);
@@ -120,12 +107,13 @@ namespace AutoDiff{
 #endif
 
 	//utiliy methods
-	extern void nonlinearEdges(Node* root, EdgeSet& edges);
-	extern uint numTotalNodes(Node*);
-	extern string tree_expr(Node* root);
-	extern void print_tree(Node* root);
+	extern uint num_total_nodes(Node*);
 	extern void autodiff_setup();
 	extern void autodiff_cleanup();
+
+	//debug use
+	extern string texpr(Node* root);
+	extern void ptree(Node* root);
 };
 
 #endif /* AUTODIFF_H_ */

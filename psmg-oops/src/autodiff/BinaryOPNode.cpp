@@ -16,7 +16,6 @@
 #include "OPNode.h"
 #include "ActNode.h"
 #include "EdgeSet.h"
-#include "autodiff_assert.h"
 
 namespace AutoDiff {
 
@@ -592,7 +591,7 @@ void BinaryOPNode::hess_reverse_full0_get_x(uint i,double& v)
 	v = TT->get(i-7);
 }
 
-void BinaryOPNode::nonlinearEdges(EdgeSet& edges)
+void BinaryOPNode::nonlinear_edges(EdgeSet& edges)
 {
 	for(list<Edge>::iterator it=edges.edges.begin();it!=edges.edges.end();)
 	{
@@ -663,8 +662,8 @@ void BinaryOPNode::nonlinearEdges(EdgeSet& edges)
 		assert(false);
 		break;
 	}
-	left->nonlinearEdges(edges);
-	right->nonlinearEdges(edges);
+	left->nonlinear_edges(edges);
+	right->nonlinear_edges(edges);
 }
 
 

@@ -7,7 +7,6 @@
 
 #include "EdgeSet.h"
 #include "Edge.h"
-#include "autodiff_assert.h"
 #include <sstream>
 
 using namespace std;
@@ -41,15 +40,11 @@ Edge& EdgeSet::createEdge(Node* a, Node* b)
 	return edges.front();
 }
 
-void EdgeSet::clear() {
-	edges.clear();
-}
-
 uint EdgeSet::size(){
 	return edges.size();
 }
 
-uint EdgeSet::numSelfEdges(){
+uint EdgeSet::num_self_edges(){
 	uint diag = 0;
 	list<Edge>::iterator it = edges.begin();
 	for(;it!=edges.end();it++)
@@ -61,6 +56,10 @@ uint EdgeSet::numSelfEdges(){
 		}
 	}
 	return diag;
+}
+
+void EdgeSet::clear() {
+	edges.clear();
 }
 
 string EdgeSet::toString()
