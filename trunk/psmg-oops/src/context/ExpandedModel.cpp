@@ -109,7 +109,7 @@ ExpandedModel::~ExpandedModel() {
 	for(unordered_map<ExpandedModel*, BlockHV*>::iterator it=nlp_hvblockMap_local.begin();it!=nlp_hvblockMap_local.end();it++)
 	{
 		//cout<<this->name<<" -- "<<it->first->name<<endl;
-		//cout<<AutoDiff::tree_expr(it->second->node)<<endl;
+		//cout<<AutoDiff::texpr(it->second->node)<<endl;
 		delete it->second;
 	}
 	nlp_hvblockMap_local.clear();
@@ -240,7 +240,7 @@ BlockObj* ExpandedModel::getBlockQ_QP(ExpandedModel* emcol)
 		{
 			Node* onode = attr->buildAutoDiffDAG(this,emcol,ptype, itype);
 			rval->objective = onode;
-			TRACE(""<<tree_expr(onode));
+			TRACE(""<<texpr(onode));
 		}
 
 		if(GV(logBlock))
@@ -266,7 +266,7 @@ uint ExpandedModel::nz_obj_hess_qp(ExpandedModel* emcol)
 	if(bq->objective!=NULL);
 	{
 		TRACE("objective expression  ---- ");
-		TRACE("-- "<<tree_expr(bq->objective));
+		TRACE("-- "<<texpr(bq->objective));
 		nonlinear_edges(bq->objective,edgeSet);
 		TRACE("nonlinearEdges - now: -- "<<edgeSet.size());
 	}
@@ -381,7 +381,7 @@ void ExpandedModel::cons_jacobs_lp_qp(ExpandedModel* emcol,col_compress_matrix& 
 		col_compress_matrix_row rgrad(m,r);
 		if(cnode!=NULL) grad_reverse(cnode,vnodes,rgrad);
 		r++;
-		TRACE(" "<< (cnode==NULL?"null":tree_expr(cnode)) );
+		TRACE(" "<< (cnode==NULL?"null":texpr(cnode)) );
 		TRACE("grad r["<<r<<"] "<<rgrad);
 	}
 	assert(r == this->numLocalCons);
@@ -499,7 +499,7 @@ void ExpandedModel::obj_grad_c_lp_qp(double* vals)
 		std::vector<AutoDiff::Node*> vnodes;
 		this->copyVariables(vnodes);
 		TRACE("objective expression  ---- ");
-		TRACE("--- "<<tree_expr(obj_c));
+		TRACE("--- "<<texpr(obj_c));
 		std::vector<double> grad(this->numLocalVars);
 		grad_reverse(obj_c,vnodes,grad);
 		for(uint i=0;i<grad.size();i++)
@@ -540,7 +540,7 @@ BlockObj* ExpandedModel::getBlockObj_Full()
 
 		if(this->model->obj_comp!=NULL){
 			objFull->objective = this->model->obj_comp->attributes->buildAutoDiffDAG(this,NULL,ptype,itype);
-			TRACE(""<<tree_expr(objFull->objective ));
+			TRACE(""<<texpr(objFull->objective ));
 		}
 
 		if(GV(logBlock))
@@ -576,7 +576,7 @@ double& ExpandedModel::obj_feval_local(double& oval)
 		if(ob->objective!=NULL)
 		{
 			oval += eval_function(ob->objective);
-			TRACE(""<<tree_expr(ob->objective));
+			TRACE(""<<texpr(ob->objective));
 			for(int i =0;i<node->children.size();i++)
 			{
 				stack0.push(node->children.at(i));
@@ -641,7 +641,7 @@ void ExpandedModel::obj_grad_nlp_local(double* vals)
 		std::vector<AutoDiff::Node*> vnodes;
 		this->copyVariables(vnodes);
 		TRACE("objective expression  ---- ");
-//		TRACE("--- "<<tree_expr(ob->objective));
+//		TRACE("--- "<<texpr(ob->objective));
 		std::vector<double> grad(this->numLocalVars);
 		grad_reverse(ob->objective,vnodes,grad);
 		for(uint i=0;i<grad.size();i++)
@@ -692,7 +692,7 @@ void ExpandedModel::obj_grad_nlp_local(double* vals)
 //	if(ob->objective!=NULL);
 //	{
 //		oval = eval_function(ob->objective);
-//		TRACE(""<<tree_expr(ob->objective));
+//		TRACE(""<<texpr(ob->objective));
 //		assert(!isnan(oval));
 //	}
 //	TRACE("end obj_feval - this["<<this->name<<"] - oval["<<oval<<"]");
@@ -850,7 +850,7 @@ uint ExpandedModel::nz_cons_jacobs_nlp_local(ExpandedModel *emcol)
 	uint i = 0;  //cons index
 	BOOST_FOREACH(AutoDiff::Node* con, banlp->cons)
 	{
-//		TRACE("con \n"<<tree_expr(con)<<"");
+//		TRACE("con \n"<<texpr(con)<<"");
 		uint nz = con==NULL?0:nzGrad(con,vSet);
 		nnz += nz;
 		WARN("[ "<<i<<" ] nz "<<nz<<" nnz "<<nnz);
@@ -881,7 +881,7 @@ uint ExpandedModel::nz_cons_jacobs_nlp_local(ExpandedModel *emcol, col_compress_
 	BOOST_FOREACH(AutoDiff::Node* con, banlp->cons)
 	{
 		col_compress_imatrix_row rgrad(m,r);
-//		TRACE("con \n"<<tree_expr(con)<<"");
+//		TRACE("con \n"<<texpr(con)<<"");
 		uint nz = con==NULL?0:AutoDiff::nzGrad(con,vlist,rgrad);
 		nnz += nz;
 		WARN("[ "<<r<<" ] nz "<<nz<<" nnz "<<nnz);
@@ -940,7 +940,7 @@ void ExpandedModel::cons_jacobs_nlp_local(ExpandedModel *emcol, col_compress_mat
 		if(con!=NULL)
 		{
 			TRACE("constraint expression  ---- "<<con);
-//			TRACE("--- "<<tree_expr(con));
+//			TRACE("--- "<<texpr(con));
 			AutoDiff::grad_reverse(con,vnodes,rgrad);
 			assert(rgrad.size() == vnodes.size());
 //			TRACE(" "<<rgrad);
@@ -1124,7 +1124,7 @@ BlockHV* ExpandedModel::getBlockHV_NLP_Full(ExpandedModel* emcol)
 				else{
 					onode = onode==NULL? onode0:onode;
 				}
-//				TRACE(""<<tree_expr(onode));
+//				TRACE(""<<texpr(onode));
 			}
 			if(node!=NULL && onode!=NULL)
 			{
@@ -1161,7 +1161,7 @@ uint ExpandedModel::nz_lag_hess_nlp_local(ExpandedModel* emcol)
 
 	if(hvb->node!=NULL){
 		TRACE("constraint expression  ---- ");
-//		TRACE("-- "<<tree_expr(hvb->node));
+//		TRACE("-- "<<texpr(hvb->node));
 		nonlinear_edges(hvb->node,edgeSet);
 		TRACE("nonlinearEdges - now: -- "<<edgeSet.size());
 //		ERROR(""<<edgeSet.toString());
@@ -1199,7 +1199,7 @@ uint ExpandedModel::nz_lag_hess_nlp_local(ExpandedModel* emcol,col_compress_imat
 
 	if(hvb->node!=NULL){
 		TRACE("constraint expression  ---- ");
-//		TRACE("-- "<<tree_expr(hvb->node));
+//		TRACE("-- "<<texpr(hvb->node));
 		nonlinear_edges(hvb->node,edgeSet);
 		TRACE("nonlinearEdges - now: -- "<<edgeSet.size());
 	}
@@ -2144,7 +2144,7 @@ void ExpandedModel::initFullDepEms()
 //	for(std::vector<AutoDiff::Node*>::iterator it=emb->cons.begin();it!=emb->cons.end();it++){
 //		matrix_row<compressed_matrix<double> > rgrad (m,r);
 //		if(*it!=NULL){
-//			TRACE("con - \n"<<tree_expr(*it));
+//			TRACE("con - \n"<<texpr(*it));
 //			AutoDiff::grad_reverse(*it,vnodes,rgrad);
 //		}
 //		r++;

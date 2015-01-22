@@ -39,6 +39,16 @@ void SML_OOPS_driver_LP_QP(ExpandedModel *root) {
 	Vector *vb, *vc, *vu, *vl;
 	Vector *vx, *vy, *vz;
 
+	//starting point / default value for decision variable
+	//TODO: implement functionality to take default value from model file and data file
+	std::vector<double> x(ExpandedModel::n_col,0); //hard code the default X0 to 0s.
+	ExpandedModel::X0 = &x[0];
+
+	assert(ExpandedModel::X==NULL && ExpandedModel::X0!=NULL);
+	ExpandedModel::X = ExpandedModel::X0;
+
+
+
 	TIMER_START("OOPS_PROBLEM_SETUP");
 	Algebra *A = createA(root);
 	Algebra *Q = createQ(root);

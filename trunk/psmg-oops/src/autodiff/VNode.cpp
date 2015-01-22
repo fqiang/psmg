@@ -31,12 +31,12 @@ VNode::VNode(uint idx) : ActNode(), idx(idx),u(NaN_Double)
 ,id(DEFAULT_ID)
 #endif
 {
-	TRACE("create -- "<<toString(0));
+	AD_TRACE("create -- "<<toString(0));
 }
 
 
 VNode::~VNode() {
-	TRACE("delete varaible "<<this->toString(0));
+	AD_TRACE("delete varaible "<<this->toString(0));
 }
 
 void VNode::collect_vnodes(boost::unordered_set<Node*>& nodes,uint& total)
