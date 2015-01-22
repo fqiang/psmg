@@ -40,9 +40,14 @@ void SML_OOPS_driver_NLP(ExpandedModel *root) {
 	//TODO: implement functionality to take default value from model file and data file
 	std::vector<double> x(ExpandedModel::n_col,0); //hard code the default X0 to 0s.
 	ExpandedModel::X0 = &x[0];
+	std::vector<double> y(ExpandedModel::n_row,0); //hard code the default X0 to 0s.
+	ExpandedModel::Y0 = &y[0];
+
 
 	assert(ExpandedModel::X==NULL && ExpandedModel::X0!=NULL);
 	ExpandedModel::X = ExpandedModel::X0;
+	assert(ExpandedModel::Y==NULL && ExpandedModel::Y0!=NULL);
+	ExpandedModel::Y = ExpandedModel::Y0;
 
 	OopsOpt Opt;
 	Opt.readFile();
@@ -58,7 +63,7 @@ void SML_OOPS_driver_NLP(ExpandedModel *root) {
 	if(GV(rank)==0)
 		cout<<"Problem Size: row[ "<<A->nb_row<<" ]col[ "<<A->nb_col<<" ]"<<endl;
 
-	TIMER_START("OOPS_PROBLEM_SETUP_1ST_STEP");
+	TIMER_START("OOPS_PROBLEM_SETUP_STR");
 	//setting up problem in OOPS structure
 	AlgAug = OOPSSetup(A, Q);
 
@@ -66,14 +71,13 @@ void SML_OOPS_driver_NLP(ExpandedModel *root) {
 	//        that would require OOPSSetup to return vectors as well
 
 	vb = new Vector(A->Trow, "vb");
-//	vc = new Vector(A->Tcol, "vc"); //Objective gradient
-	vc = NULL;
+	vc = new Vector(A->Tcol, "vc"); //Objective gradient
 	vu = new Vector(A->Tcol, "vu");
 	vl = new Vector(A->Tcol, "vl");
 	vu->setDoubleValue(1.e+31);
 	vl->setDoubleValue(-1.e+31);
 
-//	vc->fillCallBack(fill_obj_grad_nlp); //Objective gradient         -- feng
+	vc->fillCallBack(fill_obj_grad_nlp); //Objective gradient         -- feng
 	vb->fillCallBack(fill_cons_bounds);
 	vu->fillCallBack(fill_var_ubound);
 	vl->fillCallBack(fill_var_lbound);
@@ -117,7 +121,12 @@ void SML_OOPS_driver_NLP(ExpandedModel *root) {
 
 	TRACE("SolveProblem calls     OOPS.\n");
 
-	TIMER_STOP("OOPS_PROBLEM_SETUP_1ST_STEP");
+	TIMER_STOP("OOPS_PROBLEM_SETUP_STR");
+
+	//Feng nlp to fill the matrix
+	TIMER_START("OOPS_PROBLEM_SETUP_FILLMAT");
+	OOPS_NLP_UPDATE_AQ(A,Q);
+	TIMER_STOP("OOPS_PROBLEM_SETUP_FILLMAT");
 
 	PDProblem Prob(AlgAug, vb, vc, vl, vu, vx, vy, vz);
 	Prob.Opt = Opt;
@@ -132,8 +141,8 @@ void SML_OOPS_driver_NLP(ExpandedModel *root) {
 	if (GV(solve)) {
 		TIMER_START("OOPS_SOLVE");
 		cout << "Calling OOPS - ipopt_nlp..." << endl;
-		hopdm_ret* ret = ipopt_nlp(stdout,&Prob,&Opt, &Prt);
-		int rv = ret->ifail;
+//		hopdm_ret* ret = ipopt_nlp(stdout,&Prob,&Opt, &Prt);
+//		int rv = ret->ifail;
 		TIMER_STOP("OOPS_SOLVE");
 	}
 

@@ -473,18 +473,64 @@ double hess_reverse(Node* root,vector<Node*>& vnodes,col_compress_matrix& hess)
 	return val;
 }
 
+
 /*
  * More efficient implementation of reverse Hessian algorithm using Edge Pushing
  *
+ */
+double hess_reverse_ep(Node* root, col_compress_matrix& hess)
+{
+	double val = NaN_Double;
+	TT->clear();
+	II->clear();
+	root->hess_reverse_full0(); //compute x, hl, hr, hll, hrr, hlr
+	root->hess_reverse_full0_get_x(TT->index,val);
+	root->hess_reverse_full1_init_x_bar(TT->index); // init x_bar = 1
+	EdgeSet eset;  									// edge set
+	root->hess_reverse_full1(TT->index,eset);		//
+
+	//now recovery the Hessian matrix from EdgeSet
+	if(eset.edges.size() == 0)
+	{
+		return val;
+	}
+	boost::unordered_set<Node*> vnodes;
+	uint total =0;
+	root->collect_vnodes(vnodes,total);
+
+	boost::unordered_map<Node*,uint> vMap;
+	uint i = 0;
+	BOOST_FOREACH(Node* v,vnodes)
+	{
+		vMap.insert(std::make_pair<Node*,uint>(v,i));
+		i++;
+	}
+	list<Edge>::iterator it = eset.edges.begin();
+	for(;it!=eset.edges.end();it++)
+	{
+		Edge e =*it;
+		boost::unordered_map<Node*,uint>::iterator itcol = vMap.find(e.a);
+		boost::unordered_map<Node*,uint>::iterator itrow = vMap.find(e.b);
+		assert(itcol!=vMap.end() && itrow!=vMap.end());
+		uint row = itrow->second;
+		uint col = itcol->second;
+		hess(row,col) = e.w;
+	}
+	return val;
+}
+
+/*
+ * More efficient implementation of reverse Hessian algorithm using Edge Pushing
+ * for PSMG
  */
 double hess_reverse_ep(Node* root, boost::unordered_map<Node*,uint>& colvMap, boost::unordered_map<Node*,uint>& rowvMap, col_compress_matrix& hess)
 {
 	double val = NaN_Double;
 	TT->clear();
 	II->clear();
-	root->hess_reverse_full0(); //compute x, hl, hr, hlr
-
-	root->hess_reverse_full1_init_x_bar(TT->index); //init x_bar = 1
+	root->hess_reverse_full0(); //compute x, hl, hr, hll, hrr, hlr
+	root->hess_reverse_full0_get_x(TT->index,val);
+	root->hess_reverse_full1_init_x_bar(TT->index); // init x_bar = 1
 	EdgeSet eset;  									// edge set
 	root->hess_reverse_full1(TT->index,eset);		//
 
