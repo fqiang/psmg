@@ -46,6 +46,8 @@ using namespace boost;
 using namespace AutoDiff;
 using namespace std;
 
+#define SCOPF
+
 ExpandedModel* ExpandedModel::root = NULL; //initialize root to NULL
 ProbType ExpandedModel::ptype = UNDEFINED;
 InterfaceType ExpandedModel::itype = LOCAL; //default is Local interface
@@ -1014,9 +1016,13 @@ BlockHV* ExpandedModel::getBlockHV_NLP_Full(ExpandedModel* emcol)
 		//computing em involved!
 		//constraint part in this HV can be declared in em starting from lo_em above and below
 		std::vector<ExpandedModel*> ems;
+#ifndef SCOPF
 		this->getParentEM(ems);
 		this->getAllEM(ems);
-
+#else
+		this->getParentEM(ems);
+		ems.push_back(this);
+#endif
 		Node* node = NULL;
 		//now computing expression for constraint related part!
 		BOOST_FOREACH(ExpandedModel* em, ems)
@@ -1916,6 +1922,33 @@ void ExpandedModel::initFullDepEms()
 	TRACE("initDepEms - em["<<this->name<<"] ");
 }
 
+
+void ExpandedModel::initParentDepEms()
+{
+	assert(itype==LOCAL);
+	if(this->isDepEmsInitialized == false)
+	{
+		std::vector<ExpandedModel*> ems;
+		//the constraints declared in this, can reference variables declared in all it's descendants and ascendants
+		this->getParentEM(ems);
+
+		ems.push_back(this); // distributed implementation do not require all expanded model below
+
+		for(std::vector<ExpandedModel*>::iterator it = ems.begin();it != ems.end();it++) {
+			(*it)->model->calculateModelCompRecursive((*it)->ctx);
+		}
+		for(std::vector<ExpandedModel*>::iterator it = ems.begin();it != ems.end();it++) {
+			(*it)->model->calculateLocalVar((*it)->ctx);
+		}
+
+		this->isDepEmsInitialized = true;
+	}
+	else
+	{
+		TRACE("getBlockLocal - already initialized");
+	}
+	TRACE("initParentDepEms - em["<<this->name<<"] ");
+}
 
 //
 ///* -------------------------------------------------------------------------
