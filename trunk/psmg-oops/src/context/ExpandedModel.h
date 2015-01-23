@@ -198,7 +198,7 @@ public:
 	/*
 	 * Helper methods
 	 */
-
+	void initParentDepEms();
 	void initFullDepEms(); //every node above and below include this
 	void getAllEM(vector<ExpandedModel*>& ems);
 	void getParentEM(vector<ExpandedModel*>& ems);
