@@ -32,7 +32,7 @@ static PDProblem* prob_ptr = NULL;
 
 
 void SML_OOPS_driver_LP_QP(ExpandedModel *root) {
-	ExpandedModel::ptype = LP; //or QP will set later based on xml config file
+	assert(ExpandedModel::ptype==LP || ExpandedModel::ptype == QP);
 	ExpandedModel::itype = LOCAL;
 
 	Algebra *AlgAug;

@@ -468,6 +468,7 @@ void psmg_callback_a_nlp(CallBackInterfaceType *cbi) {
 
 		//2. compute the non zero for jacob of intersection emrow x emcol
 		cbi->nz = obl->emrow->nz_cons_jacobs_nlp_local(obl->emcol);
+		Stat::nnzJacA_NLP+=cbi->nz;
 	}
 	else {
 		TRACE("jacobs - want to fill in matrices");
@@ -544,6 +545,7 @@ void psmg_callback_q_nlp(CallBackInterfaceType *cbi) {
 		else {
 			cbi->nz = obl->emrow->nz_lag_hess_nlp_local(obl->emcol);
 		}
+		Stat::nnzLagHess_NLP+=cbi->nz;
 	}
 	else
 	{

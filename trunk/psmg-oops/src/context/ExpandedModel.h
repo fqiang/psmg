@@ -15,6 +15,7 @@
 #include <boost/numeric/ublas/matrix_sparse.hpp>
 #include <boost/numeric/ublas/io.hpp>
 #include <boost/foreach.hpp>
+//#include "../autodiff/autodiff_types.h"
 #include "../autodiff/autodiff.h"
 
 #include "ColSparseMatrix.h"
