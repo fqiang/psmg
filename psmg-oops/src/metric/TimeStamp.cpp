@@ -35,6 +35,7 @@ TimeStamp::TimeStamp(string name) {
 	TRACE("create timestamp ["<<name<<"]");
 	this->startTime = 0;
 	this->stopTime = 0;
+	this->elapse = 0;
 	this->name = name;
 }
 
@@ -45,14 +46,14 @@ void TimeStamp::start() {
 
 void TimeStamp::stop() {
 	this->stopTime = clock();
-	clock_t elapse = stopTime - startTime;
-	cout<<'['<<GV(rank)<<"/"<<GV(size)<<"] TimeStamp:["<<name<<"] STOP@:["<<stopTime<<"] Elapse[ "<<elapse/CLOCKS_PER_SEC<<" ]"<<endl;
+	clock_t curr_elapse = stopTime - startTime;
+	this->elapse += curr_elapse;
+	cout<<'['<<GV(rank)<<"/"<<GV(size)<<"] TimeStamp:["<<name<<"] STOP@:["<<stopTime<<"] Elapse[ "<<this->elapse/CLOCKS_PER_SEC<<" ] CElapse[ "<<curr_elapse/CLOCKS_PER_SEC<<" ]"<<endl;
 }
 
 string TimeStamp::toString() const{
 	ostringstream buf;
-	time_t elapse = this->stopTime - this->startTime;
-	buf<<"[name:"<<this->name<<"] [startTime:"<<this->startTime<<"] [stopTime:"<<this->stopTime<<"] [elapse:"<<elapse/CLOCKS_PER_SEC<<"]";
+	buf<<"[name:"<<this->name<<"] [startTime:"<<this->startTime<<"] [stopTime:"<<this->stopTime<<"] [elapse:"<<this->elapse/CLOCKS_PER_SEC<<"]";
 	return buf.str();
 }
 

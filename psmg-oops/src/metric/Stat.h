@@ -30,6 +30,7 @@ class Stat{
 
 	static int nnzJacA_LP_QP;
 	static int nnzHessQ_QP;
+	static int nnzJacA_NLP;
 	static int nnzLagHess_NLP;
 
 	static void logStatistics(ostream& out);

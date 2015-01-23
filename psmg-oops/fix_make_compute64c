@@ -1,1 +1,1 @@
-find . -name *.mk | xargs -I{} perl -pi -e 's/-O3/-O3 -I\/home\/s0965328\/research\/include/g' {}
+find . -name *.mk | xargs -I{} perl -pi -e 's/-O3/-O3 -I\/home\/s0965328\/research\/boost/g' {}

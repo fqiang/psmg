@@ -31,6 +31,7 @@ private:
 	TimeStamp(string name);
 	clock_t startTime;
 	clock_t stopTime;
+	clock_t elapse;
 	string name;
 
 	static bool first;

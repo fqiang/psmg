@@ -596,7 +596,7 @@ void BinaryOPNode::nonlinear_edges(EdgeSet& edges)
 	for(list<Edge>::iterator it=edges.edges.begin();it!=edges.edges.end();)
 	{
 		//carry on the previous nonlinear edges.
-		Edge e = *it;
+		Edge& e = *it;
 		if(e.a==this || e.b == this){
 			if(e.a == this && e.b == this)
 			{ //case II

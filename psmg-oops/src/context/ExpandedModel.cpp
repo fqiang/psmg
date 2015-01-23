@@ -263,7 +263,7 @@ uint ExpandedModel::nz_obj_hess_qp(ExpandedModel* emcol)
 	//the nonlinear edges from all constraints in the block
 	AutoDiff::EdgeSet edgeSet;
 
-	if(bq->objective!=NULL);
+	if(bq->objective!=NULL)
 	{
 		TRACE("objective expression  ---- ");
 		TRACE("-- "<<texpr(bq->objective));
@@ -729,6 +729,7 @@ BlockA* ExpandedModel::getBlockA_NLP_Local(ExpandedModel* emcol)
 		banlp = (*it).second;
 	}
 	else{
+#ifndef SCOPF
 		if(this->model->level < emcol->model->level) //this is above emcol
 		{
 			emcol->initFullDepEms();
@@ -737,7 +738,15 @@ BlockA* ExpandedModel::getBlockA_NLP_Local(ExpandedModel* emcol)
 		{
 			this->initFullDepEms();
 		}
-//		this->initFullDepEms();
+#else
+		if(this->model->level < emcol->model->level){
+			emcol->initParentDepEms();
+		}
+		else
+		{
+			this->initParentDepEms();
+		}
+#endif
 
 		banlp = new BlockA();
 		BOOST_FOREACH(ConsComp* con, this->model->con_comps)
@@ -907,6 +916,7 @@ void ExpandedModel::cons_jacobs_nlp_local(ExpandedModel *emcol, col_compress_mat
 
 
 	std::vector<ExpandedModel*> ems;
+#ifndef SCOPF
 	if(this->model->level < emcol->model->level) //this is above emcol
 	{
 		emcol->getParentEM(ems);
@@ -917,6 +927,18 @@ void ExpandedModel::cons_jacobs_nlp_local(ExpandedModel *emcol, col_compress_mat
 		this->getParentEM(ems);
 		this->getAllEM(ems);
 	}
+#else
+	if(this->model->level < emcol->model->level) //this is above emcol
+	{
+		emcol->getParentEM(ems);
+		ems.push_back(emcol);
+	}
+	else // this is below emcol
+	{
+		this->getParentEM(ems);
+		ems.push_back(this);
+	}
+#endif
 
 	std::vector<AutoDiff::Node*> vnodes;
 	uint colstart  = 0;
@@ -982,26 +1004,12 @@ BlockHV* ExpandedModel::getBlockHV_NLP_Full(ExpandedModel* emcol)
 	}
 	else
 	{
-		//figure out the dependent level of this and emcol
-//		int hi_lev = -1;   //high means above the low in the tree
-//		ExpandedModel* lo_em = NULL;
-//		ExpandedModel* hi_em = NULL;
-//		if(this->model->level < emcol->model->level) //this is above emcol
-//		{
-//			emcol->initFullDepEms();
-//			hi_lev = emcol->model->level;
-//			hi_em = emcol;
-//			lo_em = this;
-//		}
-//		else // this is below emcol
-//		{
-//			this->initFullDepEms();
-//			hi_lev = this->model->level;
-//			hi_em = this;
-//			lo_em = emcol;
-//		}
-		this->initFullDepEms();  //this is below emcol in EM tree.
 
+#ifndef SCOPF
+		this->initFullDepEms();  //this is below emcol in EM tree.
+#else
+		this->initParentDepEms();
+#endif
 		rval = new BlockHV();
 		//computing em involved!
 		//constraint part in this HV can be declared in em starting from lo_em above and below
@@ -1149,6 +1157,7 @@ BlockHV* ExpandedModel::getBlockHV_NLP_Full(ExpandedModel* emcol)
 
 uint ExpandedModel::nz_lag_hess_nlp_local(ExpandedModel* emcol)
 {
+	if(this==emcol&& this->model->level==0) TIMER_START("NZ_LAG_HESS_CORNER");
 	assert(itype == LOCAL);
 	assert(ptype == NLP);
 
@@ -1182,11 +1191,14 @@ uint ExpandedModel::nz_lag_hess_nlp_local(ExpandedModel* emcol)
 	TRACE("nonlinearEdges - removed other edges - -"<<edgeSet.toString());
 	TRACE("end nz_lag_hess_nlp_local -- this["<<this->name<<"] emcol["<<emcol->name<<"]  - Num of Nonzero["<<nz<<"]");
 	Stat::numNZLagHess_NLP_LocalCall++;
+
+	if(this==emcol&& this->model->level==0) TIMER_STOP("NZ_LAG_HESS_CORNER");
 	return nz;
 }
 
 uint ExpandedModel::nz_lag_hess_nlp_local(ExpandedModel* emcol,col_compress_imatrix& m)
 {
+	if(this==emcol && this->model->level==0) TIMER_START("NZ_LAG_HESS_CORNER");
 	assert(itype == LOCAL);
 	assert(ptype == NLP);
 
@@ -1220,11 +1232,13 @@ uint ExpandedModel::nz_lag_hess_nlp_local(ExpandedModel* emcol,col_compress_imat
 	TRACE("end nz_lag_hess_nlp_local -- this["<<this->name<<"] emcol["<<emcol->name<<"]  - Num of Nonzero["<<nz<<"]");
 	TRACE(""<<m);
 	Stat::numNZLagHess_NLP_LocalCall++;
+	if(this==emcol&& this->model->level==0) TIMER_STOP("NZ_LAG_HESS_CORNER");
 	return nz;
 }
 
 void ExpandedModel::lag_hess_nlp_local(ExpandedModel* emcol,col_compress_matrix& block)
 {
+	if(this==emcol&& this->model->level==0) TIMER_START("LAG_HESS_CORNER");
 	assert(itype == LOCAL);
 	assert(ptype == NLP);
 	TRACE("enter nz_lag_hess_nlp_local called -- this["<<this->name<<"] emcol["<<emcol->name<<"]");
@@ -1245,6 +1259,7 @@ void ExpandedModel::lag_hess_nlp_local(ExpandedModel* emcol,col_compress_matrix&
 	TRACE("end lag_hess_nlp_local - emrow["<<this->name<<"] emcol"<<emcol->name<<"] -- nnz["<<block.nnz()<<"]");
 	TRACE(""<<block);
 	Stat::numLagHess_NLP_LocalCall++;
+	if(this==emcol&& this->model->level==0) TIMER_STOP("LAG_HESS_CORNER");
 }
 
 //void ExpandedModel::lag_hess_nlp_local(ExpandedModel* emcol,col_compress_matrix& block)
@@ -1881,6 +1896,8 @@ void ExpandedModel::initFullDepEms()
 		std::vector<ExpandedModel*> ems;
 		//the constraints declared in this, can reference variables declared in all it's descendants and ascendants
 		this->getParentEM(ems);
+
+//		ems.push_back(this); // replace for specail case of scopf model
 		this->getAllEM(ems); // distributed implementation do not require all expanded model below
 
 		for(std::vector<ExpandedModel*>::iterator it = ems.begin();it != ems.end();it++) {

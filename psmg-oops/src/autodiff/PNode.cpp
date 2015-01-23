@@ -140,7 +140,7 @@ void PNode::nonlinear_edges(EdgeSet& edges)
 {
 	for(std::list<Edge>::iterator it=edges.edges.begin();it!=edges.edges.end();)
 	{
-		Edge e = *it;
+		Edge& e = *it;
 		if(e.a == this || e.b == this)
 		{
 			it = edges.edges.erase(it); //erase invalidate the iterator
