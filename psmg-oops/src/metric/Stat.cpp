@@ -35,8 +35,8 @@ int Stat::numGradObj_LP_QP_Call = 0;
 
 int Stat::nnzJacA_LP_QP = 0;
 int Stat::nnzHessQ_QP = 0;
-int Stat::nnzLagHess_NLP =0;
 int Stat::nnzJacA_NLP = 0;
+int Stat::nnzLagHess_NLP =0;
 void Stat::logStatistics(ostream& out)
 {
 	cout<<"["<<GV(rank)<<"/"<<GV(size)<<"] - numConsFevalLocalCall["<<Stat::numConsFevalLocalCall<<"]"<<endl;

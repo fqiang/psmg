@@ -1020,7 +1020,7 @@ BlockHV* ExpandedModel::getBlockHV_NLP_Full(ExpandedModel* emcol)
 		this->getParentEM(ems);
 		this->getAllEM(ems);
 #else
-		this->getParentEM(ems);
+//		this->getParentEM(ems);
 		ems.push_back(this);
 #endif
 		Node* node = NULL;
