@@ -4,3 +4,9 @@ echo ""
 echo "Col size"
 grep "Problem Size" *.out | cut -d' ' -f6
 
+echo "nnzJacA_NLP"
+grep nnzJacA_NLP *.out | rev | cut -d'[' -f1 | rev | cut -d']' -f1
+echo ""
+echo "nnzLagHess_NLP"
+grep nnzLagHess_NLP *.out | rev | cut -d'[' -f1 | rev | cut -d']' -f1
+echo ""

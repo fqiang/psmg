@@ -2,22 +2,31 @@ what=$1
 if [ "$1" == "structure" ]
 then
 	what=EM_GENERATION
-elif [ "$1" == "generate" ]
+elif [ "$1" == "lpqp" ]
 then
 	what=OOPS_PROBLEM_SETUP
+elif [ "$1" == "nlp1" ]
+then
+	what=OOPS_PROBLEM_SETUP_STR
+elif [ "$1" == "nlp2" ]
+then
+	what=OOPS_PROBLEM_SETUP_FILLMAT
 else
-	echo "usage: ./report_time_usage [structure|generate]"
+	echo "usage: ./report_time_usage [structure|lpqp|nlp1|nlp2]"
 	exit 0;
 fi
 
+echo $what
+echo ""
 
-echo -ne "LogFile \t\t num_procs \t DataFile \t NR \t MAX \t MIN \t STD \t AVE "
+echo -ne "LogFile \t\t num_procs \t DataFile \t NR \t\t MAX \t\t MIN \t\t STD \t\t AVE "
 echo ""
 for f in *.o*
 do
 	datfile=`grep 'Opt: data file' $f | cut -d'[' -f2 | cut -d']' -f1`
 	process=`grep "Opt: Size" $f | cut -d'[' -f2 | cut -d']' -f1`
-	time_usage=`grep $what $f | grep STOP | cut -d'[' -f5 | cut -d']' -f1 | awk '{sum+=$1;sumsq+=$1*$1} NR==1{max=$1;min=$1} max<$1{max=$1} min>$1{min=$1} END {print NR, "\t", max , "\t", min, "\t",sqrt(sumsq/NR-(sum/NR)^2),"\t", sum/NR}'`
+	time_usage=`grep $what $f | grep name |rev| cut -d':' -f1 | rev | cut -d']' -f1 | awk '{sum+=$1;sumsq+=$1*$1} NR==1{max=$1;min=$1} max<$1{max=$1} min>$1{min=$1} END {print NR, "\t", max , "\t", min, "\t",sqrt(sumsq/NR-(sum/NR)^2),"\t", sum/NR}'`
 	echo -ne "$f \t $process \t $datfile \t$time_usage"
 	echo ""
 done
+

@@ -4,5 +4,11 @@ echo ""
 echo "Problem setup time"
 grep "PROBLEM_SETUP" *.out | grep STOP | cut -d'[' -f5 | cut -d']' -f 1
 echo ""
+echo "Problem setup nlp1"
+grep "PROBLEM_SETUP_STR" *.out | grep STOP | cut -d'[' -f5 | cut -d']' -f 1
+echo ""
+echo "Problem setup nlp2"
+grep "PROBLEM_SETUP_FILLMAT" *.out | grep STOP | cut -d'[' -f5 | cut -d']' -f 1
+echo ""
 echo "Solve time"
 grep "SOLVE" *.out | grep STOP | cut -d'[' -f5 | cut -d']' -f 1
