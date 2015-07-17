@@ -19,8 +19,8 @@ CPP_DEPS += \
 # Each subdirectory must supply rules for building sources it contributes
 src/sml/%.o: ../src/sml/%.cpp
 	@echo 'Building file: $<'
-	@echo 'Invoking: Intel Intel(R) 64 C++ Compiler '
-	/home/s0965328/usr/local/bin/mpic++ -g -O3 -w2 -opt-prefetch=3 -ipo -nolib-inline -I/home/s0965328/workspace/oops/oops_agr/oops/include -I/home/s0965328/usr/local/include -DRELEASE=1 -DDEBUG=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -c -o "$@" "$<"
+	@echo 'Invoking: GCC C++ Compiler'
+	mpic++ -DRELEASE=1 -DDEBUG=0 -I/home/s0965328/workspace/oops/oops_agr/oops/include -I/home/s0965328/usr/local/include -O3 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

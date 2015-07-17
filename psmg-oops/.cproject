@@ -26,7 +26,7 @@
 							</builder>
 							<tool id="cdt.managedbuild.tool.gnu.archiver.base.1239602748" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
 							<tool command="mpic++" id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.1577126745" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug">
-								<option id="gnu.cpp.compiler.exe.debug.option.optimization.level.321296788" name="Optimization Level" superClass="gnu.cpp.compiler.exe.debug.option.optimization.level" value="gnu.cpp.compiler.optimization.level.most" valueType="enumerated"/>
+								<option id="gnu.cpp.compiler.exe.debug.option.optimization.level.321296788" name="Optimization Level" superClass="gnu.cpp.compiler.exe.debug.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.exe.debug.option.debugging.level.704175475" name="Debug Level" superClass="gnu.cpp.compiler.exe.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.1290521049" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="/home/s0965328/workspace/oops/oops_agr/oops/include"/>
@@ -37,11 +37,11 @@
 									<listOptionValue builtIn="false" value="RELEASE=1"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.undef.653157922" name="Undefined symbols (-U)" superClass="gnu.cpp.compiler.option.preprocessor.undef"/>
-								<option id="gnu.cpp.compiler.option.debugging.gprof.194044611" name="Generate gprof information (-pg)" superClass="gnu.cpp.compiler.option.debugging.gprof" value="false" valueType="boolean"/>
+								<option id="gnu.cpp.compiler.option.debugging.gprof.194044611" name="Generate gprof information (-pg)" superClass="gnu.cpp.compiler.option.debugging.gprof" value="true" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.2027211315" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool command="mpicc" id="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.1639065015" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.debug">
-								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.exe.debug.option.optimization.level.1130104457" name="Optimization Level" superClass="gnu.c.compiler.exe.debug.option.optimization.level" value="gnu.c.optimization.level.none" valueType="enumerated"/>
+								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.exe.debug.option.optimization.level.1130104457" name="Optimization Level" superClass="gnu.c.compiler.exe.debug.option.optimization.level" value="gnu.c.optimization.level.most" valueType="enumerated"/>
 								<option id="gnu.c.compiler.exe.debug.option.debugging.level.1934064035" name="Debug Level" superClass="gnu.c.compiler.exe.debug.option.debugging.level" value="gnu.c.debugging.level.none" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.include.paths.1212322864" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths"/>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.11160656" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
@@ -97,62 +97,58 @@
 				<extensions>
 					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
 					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
-					<extension id="org.eclipse.cdt.core.ICCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
 				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.exe.debug.1427478878.658116758" name="Release" parent="cdt.managedbuild.config.gnu.exe.debug">
 					<folderInfo id="cdt.managedbuild.config.gnu.exe.debug.1427478878.658116758." name="/" resourcePath="">
-						<toolChain id="intel.toolchain.linux.x86_64.exe.dbg_14.0.0.1112260614" name="Intel Toolchain for Executable on Intel(R) 64" superClass="intel.toolchain.linux.x86_64.exe.dbg_14.0.0">
-							<targetPlatform archList="x86_64" binaryParser="org.eclipse.cdt.core.ELF" id="intel.platform.linux.x86_64.exe.dbg.255963080_14.0.0" name="Platform.Executable.Debug" osList="linux" superClass="intel.platform.linux.x86_64.exe.dbg_14.0.0"/>
-							<builder buildPath="${workspace_loc:/psmg-oops}/Release" id="intel.builder.linux.x86_64.exe.dbg.1442063848_14.0.0" keepEnvironmentInBuildfile="false" name="Intel Builder" superClass="intel.builder.linux.x86_64.exe.dbg_14.0.0"/>
-							<tool command="/home/s0965328/usr/local/bin/mpic++" id="intel.cpp.compilestep.linux.x86_64.exe.dbg.1163350536_14.0.0" name="Intel Intel(R) 64 C++ Compiler " superClass="intel.cpp.compilestep.linux.x86_64.exe.dbg_14.0.0">
-								<option id="intel.compilestep.preprocessor.includedirectories.1512719715" name="Additional Include Directories (-I)" superClass="intel.compilestep.preprocessor.includedirectories" valueType="includePath">
+						<toolChain id="cdt.managedbuild.toolchain.gnu.base.1356100376" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.base">
+							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.target.gnu.platform.base.1725067769" name="Debug Platform" osList="linux,hpux,aix,qnx" superClass="cdt.managedbuild.target.gnu.platform.base"/>
+							<builder buildPath="${workspace_loc:/psmg-oops}/Release" id="cdt.managedbuild.target.gnu.builder.base.29904415" keepEnvironmentInBuildfile="false" name="Gnu Make Builder" superClass="cdt.managedbuild.target.gnu.builder.base"/>
+							<tool id="cdt.managedbuild.tool.gnu.archiver.base.1604032509" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
+							<tool command="mpic++" id="cdt.managedbuild.tool.gnu.cpp.compiler.base.1716870094" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base">
+								<option id="gnu.cpp.compiler.option.include.paths.669204881" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="/home/s0965328/workspace/oops/oops_agr/oops/include"/>
 									<listOptionValue builtIn="false" value="/home/s0965328/usr/local/include"/>
 								</option>
-								<option id="intel.compilestep.preprocessor.defsym.1430448694" name="Preprocessor Definitions (-D)" superClass="intel.compilestep.preprocessor.defsym" valueType="definedSymbols">
+								<option id="gnu.cpp.compiler.option.preprocessor.def.264484767" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="RELEASE=1"/>
 									<listOptionValue builtIn="false" value="DEBUG=0"/>
 								</option>
-								<option id="intel.compilestep.optimization.parallel.816935193" name="Parallelization (-parallel)" superClass="intel.compilestep.optimization.parallel" value="false" valueType="boolean"/>
-								<option id="intel.compilestep.optimization.ipo.1752366326" name="Enable Whole Program Optimization (-ipo)" superClass="intel.compilestep.optimization.ipo" value="true" valueType="boolean"/>
-								<option id="intel.compilestep.optimization.no.intrin.inline.323338194" name="Disable Intrinsic Inline Expansion (-nolib-inline)" superClass="intel.compilestep.optimization.no.intrin.inline" value="true" valueType="boolean"/>
-								<option id="intel.compilestep.general.optimization2.1728881571" name="Optimization Level" superClass="intel.compilestep.general.optimization2" value="general.opt.speedHLO" valueType="enumerated"/>
-								<option id="intel.compilestep.general.warninglevel.1094364653" name="Warning Level" superClass="intel.compilestep.general.warninglevel" value="general.warninglevel.remarks" valueType="enumerated"/>
-								<option id="intel.compilestep.general.debug.cpp.x86_64.exe.dbg.1499118691_14.0.0" name="Include Debug Information (-g)" superClass="intel.compilestep.general.debug.cpp.x86_64.exe.dbg_14.0.0" value="true" valueType="boolean"/>
-								<option id="intel.compilestep.general.banner.215072133" name="Show Startup Banner (-V)" superClass="intel.compilestep.general.banner" value="false" valueType="boolean"/>
-								<option id="intel.compilestep.optimization.optprefetch.244069955" name="Enable Prefetch Insertion (-opt-prefetch[=n])" superClass="intel.compilestep.optimization.optprefetch" value="optprefetch.three" valueType="enumerated"/>
-								<option id="intel.compilestep.optimization.ip.337952900" name="Enable Interprocedural Optimization for Single File Compilation (-ip)" superClass="intel.compilestep.optimization.ip" value="false" valueType="boolean"/>
-								<option id="intel.compilestep.perflibs.ipp.467672426" name="Use Intel(R) Integrated Performance Primitives Libraries" superClass="intel.compilestep.perflibs.ipp" value="perflibs.ipp.none" valueType="enumerated"/>
-								<inputType id="intel.cpp.compilestep.input.1657782704" superClass="intel.cpp.compilestep.input"/>
+								<option id="gnu.cpp.compiler.option.optimization.level.974179209" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" value="gnu.cpp.compiler.optimization.level.most" valueType="enumerated"/>
+								<option id="gnu.cpp.compiler.option.debugging.level.1627574108" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
+								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.2117632241" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
-							<tool id="intel.c.compilestep.linux.x86_64.exe.dbg.1730932473_14.0.0" name="Intel Intel(R) 64 C Compiler" superClass="intel.c.compilestep.linux.x86_64.exe.dbg_14.0.0">
-								<option id="intel.compilestep.preprocessor.includedirectories.898361277" name="Additional Include Directories (-I)" superClass="intel.compilestep.preprocessor.includedirectories"/>
-								<option id="intel.compilestep.preprocessor.defsym.232168956" name="Preprocessor Definitions (-D)" superClass="intel.compilestep.preprocessor.defsym"/>
-								<inputType id="intel.c.compilestep.input.1321965929" superClass="intel.c.compilestep.input"/>
+							<tool command="mpicc" id="cdt.managedbuild.tool.gnu.c.compiler.base.270927176" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.base">
+								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.option.optimization.level.571461622" name="Optimization Level" superClass="gnu.c.compiler.option.optimization.level" value="gnu.c.optimization.level.most" valueType="enumerated"/>
+								<option id="gnu.c.compiler.option.debugging.level.1748366293" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
+								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1851305078" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
-							<tool id="intel.c.linkstep.linux.x86_64.exe.dbg.51561609_14.0.0" name="Intel Intel(R) 64 C Linker" superClass="intel.c.linkstep.linux.x86_64.exe.dbg_14.0.0"/>
-							<tool command="/home/s0965328/usr/local/bin/mpic++" id="intel.cpp.linkstep.linux.x86_64.exe.dbg.619547070_14.0.0" name="Intel Intel(R) 64 C++ Linker" superClass="intel.cpp.linkstep.linux.x86_64.exe.dbg_14.0.0">
-								<option id="intel.linkstep.options.static.1825202676" name="Link with Static Libraries (-static)" superClass="intel.linkstep.options.static" value="false" valueType="boolean"/>
-								<option id="intel.linkstep.libpath.494182851" name="Search Directory for Libraries (-L)" superClass="intel.linkstep.libpath" valueType="stringList">
-									<listOptionValue builtIn="false" value="/home/s0965328/workspace/oops/oops_agr/oops/lib/parallel_intel"/>
-									<listOptionValue builtIn="false" value="/home/s0965328/research/metis-4.0.3/Lib_intel"/>
-								</option>
-								<option id="intel.linkstep.libname.986753798" name="Additional Libraries (-l)" superClass="intel.linkstep.libname" valueType="libs">
+							<tool id="cdt.managedbuild.tool.gnu.c.linker.base.1131201823" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.base"/>
+							<tool command="mpic++" id="cdt.managedbuild.tool.gnu.cpp.linker.base.1565278489" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.base">
+								<option id="gnu.cpp.link.option.libs.1715595305" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="paroops"/>
-									<listOptionValue builtIn="false" value="metis"/>
-									<listOptionValue builtIn="false" value="ifcore"/>
 									<listOptionValue builtIn="false" value="lapack"/>
+									<listOptionValue builtIn="false" value="metis"/>
+									<listOptionValue builtIn="false" value="gfortran"/>
 									<listOptionValue builtIn="false" value="fl"/>
 									<listOptionValue builtIn="false" value="dl"/>
 								</option>
-								<option id="intel.linkstep.parallel.247733650" name="Parallelization (-parallel)" superClass="intel.linkstep.parallel" value="false" valueType="boolean"/>
-								<option id="intel.linkstep.general.optimization2.547335100" name="Optimization Level" superClass="intel.linkstep.general.optimization2" value="general.opt.speedHLO" valueType="enumerated"/>
-								<inputType id="intel.linkstep.input.1123195190" superClass="intel.linkstep.input">
+								<option id="gnu.cpp.link.option.paths.343247164" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
+									<listOptionValue builtIn="false" value="/home/s0965328/workspace/oops/oops_agr/oops/lib/parallel_gnu"/>
+									<listOptionValue builtIn="false" value="/home/s0965328/research/metis-4.0.3/Lib_gnu"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.611559579" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
 								</inputType>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.assembler.base.441090245" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.base">
+								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1573622930" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
 						</toolChain>
 					</folderInfo>

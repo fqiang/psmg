@@ -4,5 +4,5 @@
 
 USER_OBJS :=
 
-LIBS := -lparoops -lmetis -lifcore -llapack -lfl -ldl
+LIBS := -lparoops -llapack -lmetis -lgfortran -lfl -ldl
 

@@ -1,2 +1,2 @@
-find . -name makefile | xargs -I{} in_line_replace {}
-find . -name "subdir.mk" | xargs -I{} in_line_replace {}
+find . -name makefile | xargs -I{} ./in_line_replace {}
+find . -name "subdir.mk" | xargs -I{} ./in_line_replace {}

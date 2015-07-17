@@ -52,8 +52,8 @@ all: psmg-oops
 # Tool invocations
 psmg-oops: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
-	@echo 'Invoking: Intel Intel(R) 64 C++ Linker'
-	/home/s0965328/usr/local/bin/mpic++ -L/home/s0965328/workspace/oops/oops_agr/oops/lib/parallel_intel -L/home/s0965328/research/metis-4.0.3/Lib_intel -O3 -o "psmg-oops" $(OBJS) $(USER_OBJS) $(LIBS)
+	@echo 'Invoking: GCC C++ Linker'
+	mpic++ -L/home/s0965328/workspace/oops/oops_agr/oops/lib/parallel_gnu -L/home/s0965328/research/metis-4.0.3/Lib_gnu -o "psmg-oops" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
